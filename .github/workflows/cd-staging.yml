@@ -57,7 +57,7 @@ jobs:
     environment: staging
     steps:
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.SSH_HOST_STAGING }}
           username: ${{ secrets.SSH_USER_STAGING }}
@@ -71,7 +71,7 @@ jobs:
             docker compose -f docker-compose.prod.yml up -d
 
       - name: Healthcheck pós-deploy
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.SSH_HOST_STAGING }}
           username: ${{ secrets.SSH_USER_STAGING }}

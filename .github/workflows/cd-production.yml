@@ -60,7 +60,7 @@ jobs:
       name: production
     steps:
       - name: Backup pré-deploy do banco
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.SSH_HOST_PROD }}
           username: ${{ secrets.SSH_USER_PROD }}
@@ -71,7 +71,7 @@ jobs:
             ./backup/backup-db.sh "pre-deploy-${{ needs.build-and-push.outputs.version }}"
 
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.SSH_HOST_PROD }}
           username: ${{ secrets.SSH_USER_PROD }}
@@ -85,7 +85,7 @@ jobs:
             docker compose -f docker-compose.prod.yml up -d
 
       - name: Healthcheck pós-deploy (com rollback automático)
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.SSH_HOST_PROD }}
           username: ${{ secrets.SSH_USER_PROD }}
