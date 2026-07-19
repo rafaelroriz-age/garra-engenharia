@@ -20,6 +20,18 @@ node_modules/
 .next/
 out/
 
+# Documentos originais do cliente (01_output-context/) — arquivos binários grandes
+# (planilhas XLSM/XLSX, PDFs, PBIX, DOCX). Alguns ultrapassam o limite de 100 MB do
+# GitHub (ex.: relatório fotográfico .xlsx de ~468 MB) e são dados sensíveis do
+# cliente (endereços, laudos técnicos) sem necessidade de versionamento — já ficam
+# preservados no OneDrive local. Apenas os .md convertidos (00_docs/convertidos/ e
+# 01_output-context/*.md) são versionados, pois são a fonte usada pelo sistema.
+01_output-context/*.xlsx
+01_output-context/*.xlsm
+01_output-context/*.pdf
+01_output-context/*.docx
+01_output-context/*.pbix
+
 # OS / editor
 .DS_Store
 Thumbs.db
