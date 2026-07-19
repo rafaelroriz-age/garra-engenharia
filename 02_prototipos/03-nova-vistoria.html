@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nova Vistoria · Garra Engenharia</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = { theme: { extend: {
+      colors: { navy:'#1e3a5f', 'navy-deep':'#152a45', accent:'#f97316', surface:'#f8fafc', ink:'#0f172a', muted:'#64748b', success:'#22c55e', warning:'#eab308', danger:'#ef4444' },
+      fontFamily: { sans:['Inter','sans-serif'], display:['Manrope','sans-serif'] },
+    }}};
+  </script>
+  <style>
+    body{font-family:'Inter',sans-serif}
+    h1,h2,h3,.font-display{font-family:'Manrope',sans-serif}
+    .nav-link{transition:all .2s ease}
+    .nav-link:hover{background:rgba(255,255,255,.08)}
+    .nav-link.active{background:rgba(249,115,22,.15);color:#f97316;border-left:3px solid #f97316}
+    .field{transition:border-color .2s,box-shadow .2s}
+    .field:focus{outline:none;border-color:#f97316;box-shadow:0 0 0 3px rgba(249,115,22,.15)}
+    .step-pane{animation:fade .35s ease}
+    @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .sys-chip{transition:all .18s ease}
+    .sys-chip.sel{background:#1e3a5f;color:#fff;border-color:#1e3a5f}
+    .sys-chip.sel .dot{background:#f97316}
+  </style>
+</head>
+<body class="bg-surface text-ink antialiased">
+<div class="flex min-h-screen">
+
+  <aside class="hidden lg:flex flex-col w-64 bg-navy text-slate-300 fixed inset-y-0">
+    <div class="flex items-center gap-3 px-6 h-16 border-b border-white/10">
+      <div class="w-9 h-9 rounded-lg bg-accent grid place-items-center font-display font-extrabold text-white">G</div>
+      <span class="font-display font-bold text-white tracking-tight">GARRA</span>
+    </div>
+    <nav class="flex-1 py-4 text-sm">
+      <a href="01-dashboard.html" class="nav-link flex items-center gap-3 px-6 py-3"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75"/></svg>Dashboard</a>
+      <a href="02-edificacoes.html" class="nav-link flex items-center gap-3 px-6 py-3"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h6M9 9.75h6M9 12.75h6"/></svg>Edificações</a>
+      <a href="03-nova-vistoria.html" class="nav-link active flex items-center gap-3 px-6 py-3 font-medium"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/></svg>Nova Vistoria</a>
+      <a href="05-relatorios.html" class="nav-link flex items-center gap-3 px-6 py-3"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>Relatórios</a>
+      <a href="06-laudo-preview.html" class="nav-link flex items-center gap-3 px-6 py-3"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>Preview Laudo</a>
+    </nav>
+    <div class="px-6 py-4 border-t border-white/10 text-xs text-slate-400"><a href="index.html" class="hover:text-accent transition-colors">← Voltar ao Hub</a></div>
+  </aside>
+
+  <div class="flex-1 lg:ml-64 pb-24 lg:pb-0">
+    <header class="h-16 bg-white border-b border-slate-200 sticky top-0 z-20 flex items-center justify-between px-4 sm:px-8">
+      <div>
+        <p class="text-xs text-muted">Início / <span class="text-ink font-medium">Nova Vistoria</span></p>
+        <h1 class="font-display font-bold text-lg leading-tight">Nova Vistoria</h1>
+      </div>
+      <div class="w-9 h-9 rounded-full bg-navy grid place-items-center text-white font-semibold text-sm">RR</div>
+    </header>
+
+    <main class="p-4 sm:p-8 max-w-4xl mx-auto">
+
+      <!-- Stepper -->
+      <div class="flex items-center justify-between mb-8">
+        <div class="stepper-item flex-1 flex flex-col items-center" data-i="1">
+          <div class="dot w-9 h-9 rounded-full grid place-items-center font-semibold text-sm bg-accent text-white">1</div>
+          <span class="lbl text-xs mt-2 font-medium text-ink text-center">Dados Gerais</span>
+        </div>
+        <div class="h-0.5 flex-1 bg-slate-200 -mt-6"></div>
+        <div class="stepper-item flex-1 flex flex-col items-center" data-i="2">
+          <div class="dot w-9 h-9 rounded-full grid place-items-center font-semibold text-sm bg-slate-200 text-muted">2</div>
+          <span class="lbl text-xs mt-2 font-medium text-muted text-center">Sistemas</span>
+        </div>
+        <div class="h-0.5 flex-1 bg-slate-200 -mt-6"></div>
+        <div class="stepper-item flex-1 flex flex-col items-center" data-i="3">
+          <div class="dot w-9 h-9 rounded-full grid place-items-center font-semibold text-sm bg-slate-200 text-muted">3</div>
+          <span class="lbl text-xs mt-2 font-medium text-muted text-center">Ocorrências</span>
+        </div>
+        <div class="h-0.5 flex-1 bg-slate-200 -mt-6"></div>
+        <div class="stepper-item flex-1 flex flex-col items-center" data-i="4">
+          <div class="dot w-9 h-9 rounded-full grid place-items-center font-semibold text-sm bg-slate-200 text-muted">4</div>
+          <span class="lbl text-xs mt-2 font-medium text-muted text-center">Resumo</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8">
+
+        <!-- Step 1 -->
+        <div class="pane step-pane" data-pane="1">
+          <h2 class="font-display font-bold text-xl mb-1">Dados Gerais</h2>
+          <p class="text-sm text-muted mb-6">Identifique a edificação e o tipo de serviço.</p>
+          <div class="grid sm:grid-cols-2 gap-5">
+            <div class="sm:col-span-2">
+              <label class="text-sm font-medium">Edificação</label>
+              <select class="field w-full mt-1.5 px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm">
+                <option>Cond. Cortina D'Ampezzo</option>
+                <option>Reforma New York</option>
+                <option>Apartamento 1404</option>
+                <option>+ Cadastrar nova edificação</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-sm font-medium">Tipo de serviço</label>
+              <select class="field w-full mt-1.5 px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm">
+                <option>LTIP — Inspeção Predial</option>
+                <option>RFO — Fiscalização de Obra</option>
+                <option>Vistoria Cautelar</option>
+                <option>Vistoria Residencial</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-sm font-medium">Data da vistoria</label>
+              <input type="date" value="2026-07-08" class="field w-full mt-1.5 px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm" />
+            </div>
+            <div>
+              <label class="text-sm font-medium">Contrato</label>
+              <input type="text" value="CT-2026-014" class="field w-full mt-1.5 px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm" />
+            </div>
+            <div>
+              <label class="text-sm font-medium">ART de Fiscalização</label>
+              <input type="text" placeholder="Nº da ART" class="field w-full mt-1.5 px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="text-sm font-medium">Observações preliminares</label>
+              <textarea rows="3" placeholder="Condições de acesso, fatores limitantes..." class="field w-full mt-1.5 px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="pane step-pane hidden" data-pane="2">
+          <h2 class="font-display font-bold text-xl mb-1">Sistemas Prediais</h2>
+          <p class="text-sm text-muted mb-6">Selecione os sistemas que serão inspecionados (conforme NBR 16747).</p>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="sysGrid">
+            <!-- filled by JS -->
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="pane step-pane hidden" data-pane="3">
+          <div class="flex items-center justify-between mb-1">
+            <h2 class="font-display font-bold text-xl">Ocorrências e Fotos</h2>
+            <a href="04-ocorrencia.html" class="text-sm font-semibold text-accent hover:underline flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>Nova ocorrência
+            </a>
+          </div>
+          <p class="text-sm text-muted mb-6">Registre os desvios encontrados e anexe as fotos.</p>
+
+          <div class="space-y-3">
+            <div class="flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-accent transition">
+              <div class="w-16 h-16 rounded-lg bg-slate-200 grid place-items-center text-muted shrink-0">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M18 9.75h.008v.008H18V9.75Z"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-sm">Infiltração em platibanda</p>
+                <p class="text-xs text-muted">Impermeabilização · Cobertura</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-danger/10 text-danger">Crítico</span>
+            </div>
+            <div class="flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-accent transition">
+              <div class="w-16 h-16 rounded-lg bg-slate-200 grid place-items-center text-muted shrink-0">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M18 9.75h.008v.008H18V9.75Z"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-sm">Fissuras em revestimento de fachada</p>
+                <p class="text-xs text-muted">Revestimentos · Fachada Norte</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-warning/10 text-warning">Médio</span>
+            </div>
+
+            <!-- add area -->
+            <a href="04-ocorrencia.html" class="flex items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed border-slate-300 text-muted hover:border-accent hover:text-accent transition">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z"/></svg>
+              Adicionar ocorrência com foto
+            </a>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="pane step-pane hidden" data-pane="4">
+          <h2 class="font-display font-bold text-xl mb-1">Resumo e Geração</h2>
+          <p class="text-sm text-muted mb-6">Confira os dados antes de gerar o relatório.</p>
+          <div class="rounded-xl bg-surface border border-slate-200 divide-y divide-slate-200 text-sm">
+            <div class="flex justify-between px-4 py-3"><span class="text-muted">Edificação</span><span class="font-semibold">Cond. Cortina D'Ampezzo</span></div>
+            <div class="flex justify-between px-4 py-3"><span class="text-muted">Tipo de serviço</span><span class="font-semibold">LTIP — Inspeção Predial</span></div>
+            <div class="flex justify-between px-4 py-3"><span class="text-muted">Sistemas inspecionados</span><span class="font-semibold">6 sistemas</span></div>
+            <div class="flex justify-between px-4 py-3"><span class="text-muted">Ocorrências registradas</span><span class="font-semibold">2 (1 crítica, 1 média)</span></div>
+            <div class="flex justify-between px-4 py-3"><span class="text-muted">Fotos anexadas</span><span class="font-semibold">2</span></div>
+          </div>
+          <div class="mt-6 flex flex-col sm:flex-row gap-3">
+            <a href="05-relatorios.html" class="flex-1 px-4 py-3 rounded-xl bg-accent text-white font-semibold text-center hover:bg-accent/90 active:scale-95 transition flex items-center justify-center gap-2">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
+              Gerar Relatório
+            </a>
+            <button class="px-4 py-3 rounded-xl border border-slate-200 font-semibold text-muted hover:border-navy hover:text-navy transition">Salvar rascunho</button>
+          </div>
+        </div>
+
+        <!-- Nav buttons -->
+        <div class="flex items-center justify-between mt-8 pt-6 border-t border-slate-100">
+          <button id="btnPrev" class="px-5 py-2.5 rounded-xl border border-slate-200 font-semibold text-muted hover:border-navy hover:text-navy transition disabled:opacity-40 disabled:cursor-not-allowed" disabled>Voltar</button>
+          <span class="text-sm text-muted">Etapa <b id="curNum">1</b> de 4</span>
+          <button id="btnNext" class="px-5 py-2.5 rounded-xl bg-navy text-white font-semibold hover:bg-navy-deep active:scale-95 transition">Continuar</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<nav class="lg:hidden fixed bottom-0 inset-x-0 bg-navy text-slate-300 border-t border-white/10 flex justify-around py-2 z-30">
+  <a href="01-dashboard.html" class="flex flex-col items-center gap-0.5 px-3 py-1"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75"/></svg><span class="text-[10px]">Início</span></a>
+  <a href="02-edificacoes.html" class="flex flex-col items-center gap-0.5 px-3 py-1"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h6M9 12.75h6"/></svg><span class="text-[10px]">Obras</span></a>
+  <a href="03-nova-vistoria.html" class="flex flex-col items-center gap-0.5 px-3 py-1 text-accent"><span class="w-9 h-9 -mt-4 rounded-full bg-accent grid place-items-center text-white shadow-lg"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg></span><span class="text-[10px] mt-0.5">Nova</span></a>
+  <a href="05-relatorios.html" class="flex flex-col items-center gap-0.5 px-3 py-1"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg><span class="text-[10px]">Laudos</span></a>
+  <a href="index.html" class="flex flex-col items-center gap-0.5 px-3 py-1"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg><span class="text-[10px]">Menu</span></a>
+</nav>
+
+<script>
+  // Sistemas prediais (gabarito RFO_INSPECAO)
+  const sistemas = ['Aberturas e Fechamentos','Acessibilidade','Circulações','Cobertura e Telhamento','Elementos Estruturais','Impermeabilização','Instalações de Gás','Telecomunicação','Revestimentos','Esquadrias','Combate a Incêndios','SPDA','Sistemas Elétricos','Hidrossanitários','Vedações Verticais'];
+  const grid = document.getElementById('sysGrid');
+  const preSel = ['Cobertura e Telhamento','Impermeabilização','Revestimentos','Sistemas Elétricos','Hidrossanitários','Elementos Estruturais'];
+  sistemas.forEach(s => {
+    const b = document.createElement('button');
+    const on = preSel.includes(s);
+    b.className = 'sys-chip flex items-center gap-2 px-3 py-2.5 rounded-xl border border-slate-200 text-sm text-left' + (on ? ' sel' : '');
+    b.innerHTML = `<span class="dot w-2 h-2 rounded-full ${on?'bg-accent':'bg-slate-300'}"></span><span class="truncate">${s}</span>`;
+    b.onclick = () => { b.classList.toggle('sel'); const d=b.querySelector('.dot'); d.classList.toggle('bg-accent'); d.classList.toggle('bg-slate-300'); };
+    grid.appendChild(b);
+  });
+
+  // Stepper logic
+  let cur = 1; const total = 4;
+  const panes = document.querySelectorAll('.pane');
+  const items = document.querySelectorAll('.stepper-item');
+  const btnPrev = document.getElementById('btnPrev');
+  const btnNext = document.getElementById('btnNext');
+  const curNum = document.getElementById('curNum');
+  function render(){
+    panes.forEach(p => p.classList.toggle('hidden', +p.dataset.pane !== cur));
+    items.forEach(it => {
+      const i = +it.dataset.i; const dot = it.querySelector('.dot'); const lbl = it.querySelector('.lbl');
+      dot.className = 'dot w-9 h-9 rounded-full grid place-items-center font-semibold text-sm';
+      if(i < cur){ dot.classList.add('bg-success','text-white'); dot.innerHTML='<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>'; }
+      else if(i === cur){ dot.classList.add('bg-accent','text-white'); dot.textContent=i; }
+      else { dot.classList.add('bg-slate-200','text-muted'); dot.textContent=i; }
+      lbl.className = 'lbl text-xs mt-2 font-medium text-center ' + (i<=cur ? 'text-ink' : 'text-muted');
+    });
+    btnPrev.disabled = cur===1;
+    btnNext.textContent = cur===total ? 'Concluir' : 'Continuar';
+    curNum.textContent = cur;
+  }
+  btnNext.onclick = () => { if(cur<total){ cur++; render(); } else { window.location.href='05-relatorios.html'; } };
+  btnPrev.onclick = () => { if(cur>1){ cur--; render(); } };
+  render();
+</script>
+</body>
+</html>

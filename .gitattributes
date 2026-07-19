@@ -1,0 +1,13 @@
+# Normaliza terminadores de linha no repositório (evita diffs de CRLF/LF entre
+# Windows e Linux/CI). Ver 00_docs/projeto/plano-gestao-configuracao.md.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.docx binary
+*.xlsm binary
+*.xlsx binary

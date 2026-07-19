@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preview do Laudo · Garra Engenharia</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = { theme: { extend: {
+      colors: { navy:'#1e3a5f', 'navy-deep':'#152a45', accent:'#f97316', surface:'#f8fafc', ink:'#0f172a', muted:'#64748b', success:'#22c55e', warning:'#eab308', danger:'#ef4444' },
+      fontFamily: { sans:['Inter','sans-serif'], display:['Manrope','sans-serif'] },
+    }}};
+  </script>
+  <style>
+    body{font-family:'Inter',sans-serif}
+    h1,h2,h3,.font-display{font-family:'Manrope',sans-serif}
+    .page{width:100%;max-width:640px;aspect-ratio:1/1.414;background:#fff;box-shadow:0 10px 40px -12px rgba(15,23,42,.35);margin:0 auto}
+    .doc-serif{font-family:'Inter',sans-serif}
+    .toolbar-btn{transition:all .15s}
+  </style>
+</head>
+<body class="bg-slate-800 text-ink antialiased min-h-screen">
+
+  <!-- Toolbar -->
+  <header class="sticky top-0 z-20 bg-navy text-white">
+    <div class="flex items-center justify-between px-4 sm:px-6 h-14">
+      <div class="flex items-center gap-3">
+        <a href="05-relatorios.html" class="toolbar-btn w-9 h-9 rounded-lg grid place-items-center hover:bg-white/10">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+        </a>
+        <div>
+          <p class="text-sm font-semibold leading-tight">Laudo Técnico de Inspeção Predial</p>
+          <p class="text-xs text-slate-300">Cond. Cortina D'Ampezzo · v02 · Prévia</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-success/20 text-success text-xs font-semibold border border-success/30">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+          Fiel ao modelo
+        </span>
+        <button class="toolbar-btn px-3 py-1.5 rounded-lg bg-danger text-white text-sm font-semibold hover:bg-danger/90 flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+          <span class="hidden sm:inline">Baixar</span> PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="py-8 px-3 space-y-8">
+
+    <!-- ===== Page 1: Capa ===== -->
+    <div class="page rounded-sm flex flex-col">
+      <div class="bg-navy text-white px-8 sm:px-12 pt-10 pb-8">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-lg bg-accent grid place-items-center font-display font-extrabold text-white text-lg">G</div>
+          <div>
+            <p class="font-display font-bold tracking-tight">GARRA ENGENHARIA</p>
+            <p class="text-[10px] text-slate-300">Engenharia Diagnóstica · Inspeção Predial</p>
+          </div>
+        </div>
+      </div>
+      <div class="flex-1 flex flex-col justify-center px-8 sm:px-12">
+        <p class="text-accent font-semibold text-xs tracking-widest uppercase mb-3">Laudo Técnico</p>
+        <h1 class="font-display font-extrabold text-2xl sm:text-3xl leading-tight text-navy">Inspeção Predial<br/>Condomínio Cortina D'Ampezzo</h1>
+        <div class="w-16 h-1 bg-accent my-6"></div>
+        <dl class="text-sm space-y-1.5 text-ink">
+          <div class="flex gap-2"><dt class="text-muted w-28">Endereço:</dt><dd class="font-medium">Rua das Acácias, 100 — Goiânia/GO</dd></div>
+          <div class="flex gap-2"><dt class="text-muted w-28">Norma:</dt><dd class="font-medium">NBR 16747 + IBAPE-NA</dd></div>
+          <div class="flex gap-2"><dt class="text-muted w-28">Nível:</dt><dd class="font-medium">Inspeção Nível 2</dd></div>
+          <div class="flex gap-2"><dt class="text-muted w-28">Data:</dt><dd class="font-medium">Julho / 2026</dd></div>
+        </dl>
+      </div>
+      <div class="px-8 sm:px-12 py-6 border-t border-slate-200 text-xs text-muted">
+        <p class="font-semibold text-ink">Eng. Civil Esp. Roniel Ribeiro Costa</p>
+        <p>CREA-GO nº 1020613386/D-GO · ART de Fiscalização nº 000.000/2026</p>
+      </div>
+    </div>
+
+    <!-- ===== Page 2: Sumário ===== -->
+    <div class="page rounded-sm p-8 sm:p-12">
+      <p class="text-[10px] text-muted mb-1">Garra Engenharia · LTIP Cortina D'Ampezzo</p>
+      <h2 class="font-display font-bold text-xl text-navy border-b-2 border-accent pb-2 mb-6">Sumário</h2>
+      <ol class="space-y-3 text-sm">
+        <li class="flex justify-between"><span><b>1.</b> Introdução e Considerações Preliminares</span><span class="text-muted">03</span></li>
+        <li class="flex justify-between"><span><b>2.</b> Objetivo</span><span class="text-muted">05</span></li>
+        <li class="flex justify-between"><span><b>3.</b> Objeto e Caracterização da Edificação</span><span class="text-muted">07</span></li>
+        <li class="flex justify-between"><span><b>4.</b> Metodologia (CMM · GUT · VUP)</span><span class="text-muted">12</span></li>
+        <li class="flex justify-between"><span><b>5.</b> Desenvolvimento — Laudo por Sistema</span><span class="text-muted">18</span></li>
+        <li class="flex justify-between pl-4 text-muted"><span>5.1 Impermeabilização</span><span>18</span></li>
+        <li class="flex justify-between pl-4 text-muted"><span>5.2 Revestimentos</span><span>34</span></li>
+        <li class="flex justify-between pl-4 text-muted"><span>5.3 Sistemas Elétricos</span><span>52</span></li>
+        <li class="flex justify-between"><span><b>6.</b> Relatório Fotográfico por Sistema</span><span class="text-muted">88</span></li>
+        <li class="flex justify-between"><span><b>7.</b> Conclusão e Recomendações</span><span class="text-muted">176</span></li>
+        <li class="flex justify-between"><span><b>8.</b> Encerramento e Anexos</span><span class="text-muted">192</span></li>
+      </ol>
+      <div class="mt-10 rounded-lg bg-surface border border-slate-200 p-4 text-xs text-muted">
+        <p class="font-semibold text-ink mb-1">Legenda de criticidade (CMM)</p>
+        <div class="flex flex-wrap gap-3 mt-2">
+          <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-success"></span>Mínimo</span>
+          <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-warning"></span>Médio</span>
+          <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-danger"></span>Crítico</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Page 3: Ocorrências ===== -->
+    <div class="page rounded-sm p-8 sm:p-12">
+      <p class="text-[10px] text-muted mb-1">Garra Engenharia · LTIP Cortina D'Ampezzo · pág. 18</p>
+      <h2 class="font-display font-bold text-xl text-navy border-b-2 border-accent pb-2 mb-2">5.1 Impermeabilização</h2>
+      <p class="text-sm text-muted mb-6">Sistema predial inspecionado conforme item 5.6.1 da NBR 16747.</p>
+
+      <!-- Ocorrência 1 -->
+      <div class="rounded-lg border border-slate-200 overflow-hidden mb-5">
+        <div class="flex items-center justify-between bg-danger/5 px-4 py-2.5 border-b border-slate-200">
+          <span class="font-semibold text-sm">Ocorrência 5.1.1 — Infiltração em platibanda</span>
+          <span class="px-2.5 py-0.5 rounded-full bg-danger text-white text-[11px] font-semibold">Crítico</span>
+        </div>
+        <div class="p-4 text-sm">
+          <table class="w-full text-xs mb-3">
+            <tbody class="divide-y divide-slate-100">
+              <tr><td class="py-1.5 text-muted w-32">Subsistema</td><td class="py-1.5 font-medium">Platibanda / Manta asfáltica</td></tr>
+              <tr><td class="py-1.5 text-muted">Localização</td><td class="py-1.5 font-medium">Cobertura – Bloco A, face Norte</td></tr>
+              <tr><td class="py-1.5 text-muted">Classificação</td><td class="py-1.5 font-medium">Anomalia + Falha</td></tr>
+              <tr><td class="py-1.5 text-muted">GUT</td><td class="py-1.5 font-medium">G5 × U5 × T5 = <b class="text-accent">125</b> (Prioridade 5)</td></tr>
+            </tbody>
+          </table>
+          <p class="text-ink leading-relaxed">Constatada infiltração ativa na platibanda, com destacamento da manta asfáltica e manchas de umidade na laje inferior. Recomenda-se intervenção imediata para reimpermeabilização e tratamento das armaduras expostas.</p>
+        </div>
+      </div>
+
+      <!-- Ocorrência 2 -->
+      <div class="rounded-lg border border-slate-200 overflow-hidden">
+        <div class="flex items-center justify-between bg-warning/5 px-4 py-2.5 border-b border-slate-200">
+          <span class="font-semibold text-sm">Ocorrência 5.1.2 — Rufos com vedação deficiente</span>
+          <span class="px-2.5 py-0.5 rounded-full bg-warning text-white text-[11px] font-semibold">Médio</span>
+        </div>
+        <div class="p-4 text-sm">
+          <table class="w-full text-xs mb-3">
+            <tbody class="divide-y divide-slate-100">
+              <tr><td class="py-1.5 text-muted w-32">Subsistema</td><td class="py-1.5 font-medium">Calhas e Rufos</td></tr>
+              <tr><td class="py-1.5 text-muted">Localização</td><td class="py-1.5 font-medium">Cobertura – Bloco B</td></tr>
+              <tr><td class="py-1.5 text-muted">Classificação</td><td class="py-1.5 font-medium">Falha de manutenção</td></tr>
+              <tr><td class="py-1.5 text-muted">GUT</td><td class="py-1.5 font-medium">G3 × U3 × T3 = <b class="text-accent">27</b> (Prioridade 3)</td></tr>
+            </tbody>
+          </table>
+          <p class="text-ink leading-relaxed">Vedação dos rufos ressecada, permitindo entrada de água nas juntas. Recomenda-se substituição do selante em até 6 meses.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Page 4: Relatório Fotográfico ===== -->
+    <div class="page rounded-sm p-8 sm:p-12">
+      <p class="text-[10px] text-muted mb-1">Garra Engenharia · LTIP Cortina D'Ampezzo · pág. 88</p>
+      <h2 class="font-display font-bold text-xl text-navy border-b-2 border-accent pb-2 mb-6">6. Relatório Fotográfico — Impermeabilização</h2>
+
+      <div class="grid grid-cols-2 gap-5">
+        <figure>
+          <div class="aspect-[4/3] rounded-lg bg-gradient-to-br from-slate-300 to-slate-400 grid place-items-center text-white/60 border border-slate-200">
+            <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M18 9.75h.008v.008H18V9.75Z"/></svg>
+          </div>
+          <figcaption class="text-[11px] text-muted mt-2"><b class="text-ink">Foto 01.</b> Destacamento de manta na platibanda — face Norte, Bloco A.</figcaption>
+        </figure>
+        <figure>
+          <div class="aspect-[4/3] rounded-lg bg-gradient-to-br from-slate-300 to-slate-400 grid place-items-center text-white/60 border border-slate-200">
+            <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M18 9.75h.008v.008H18V9.75Z"/></svg>
+          </div>
+          <figcaption class="text-[11px] text-muted mt-2"><b class="text-ink">Foto 02.</b> Manchas de umidade na laje inferior à platibanda.</figcaption>
+        </figure>
+        <figure>
+          <div class="aspect-[4/3] rounded-lg bg-gradient-to-br from-slate-300 to-slate-400 grid place-items-center text-white/60 border border-slate-200">
+            <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M18 9.75h.008v.008H18V9.75Z"/></svg>
+          </div>
+          <figcaption class="text-[11px] text-muted mt-2"><b class="text-ink">Foto 03.</b> Vedação ressecada dos rufos — Bloco B.</figcaption>
+        </figure>
+        <figure>
+          <div class="aspect-[4/3] rounded-lg bg-gradient-to-br from-slate-300 to-slate-400 grid place-items-center text-white/60 border border-slate-200">
+            <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M18 9.75h.008v.008H18V9.75Z"/></svg>
+          </div>
+          <figcaption class="text-[11px] text-muted mt-2"><b class="text-ink">Foto 04.</b> Detalhe da junta com entrada de água.</figcaption>
+        </figure>
+      </div>
+
+      <div class="mt-8 pt-4 border-t border-slate-200 flex items-center justify-between text-[10px] text-muted">
+        <span>Documento gerado automaticamente pelo Sistema Garra</span>
+        <span>Eng. Roniel Ribeiro Costa · CREA-GO 1020613386/D-GO</span>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="text-center pb-10 text-slate-400 text-xs">
+    <a href="index.html" class="hover:text-accent transition-colors">← Voltar ao Hub do protótipo</a>
+  </footer>
+
+</body>
+</html>

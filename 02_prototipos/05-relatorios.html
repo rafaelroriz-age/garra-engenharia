@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Relatórios · Garra Engenharia</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = { theme: { extend: {
+      colors: { navy:'#1e3a5f', 'navy-deep':'#152a45', accent:'#f97316', surface:'#f8fafc', ink:'#0f172a', muted:'#64748b', success:'#22c55e', warning:'#eab308', danger:'#ef4444' },
+      fontFamily: { sans:['Inter','sans-serif'], display:['Manrope','sans-serif'] },
+    }}};
+  </script>
+  <style>
+    body{font-family:'Inter',sans-serif}
+    h1,h2,h3,.font-display{font-family:'Manrope',sans-serif}
+    .nav-link{transition:all .2s ease}
+    .nav-link:hover{background:rgba(255,255,255,.08)}
+    .nav-link.active{background:rgba(249,115,22,.15);color:#f97316;border-left:3px solid #f97316}
+    .row-hover{transition:background .15s}
+    .row-hover:hover{background:#f8fafc}
+  </style>
+</head>
+<body class="bg-surface text-ink antialiased">
+<div class="flex min-h-screen">
+
+  <aside class="hidden lg:flex flex-col w-64 bg-navy text-slate-300 fixed inset-y-0">
+    <div class="flex items-center gap-3 px-6 h-16 border-b border-white/10">
+      <div class="w-9 h-9 rounded-lg bg-accent grid place-items-center font-display font-extrabold text-white">G</div>
+      <span class="font-display font-bold text-white tracking-tight">GARRA</span>
+    </div>
+    <nav class="flex-1 py-4 text-sm">
+      <a href="01-dashboard.html" class="nav-link flex items-center gap-3 px-6 py-3"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75"/></svg>Dashboard</a>
+      <a href="02-edificacoes.html" class="nav-link flex items-center gap-3 px-6 py-3"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h6M9 9.75h6M9 12.75h6"/></svg>Edificações</a>
+      <a href="03-nova-vistoria.html" class="nav-link flex items-center gap-3 px-6 py-3"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/></svg>Nova Vistoria</a>
+      <a href="05-relatorios.html" class="nav-link active flex items-center gap-3 px-6 py-3 font-medium"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>Relatórios</a>
+      <a href="06-laudo-preview.html" class="nav-link flex items-center gap-3 px-6 py-3"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>Preview Laudo</a>
+    </nav>
+    <div class="px-6 py-4 border-t border-white/10 text-xs text-slate-400"><a href="index.html" class="hover:text-accent transition-colors">← Voltar ao Hub</a></div>
+  </aside>
+
+  <div class="flex-1 lg:ml-64 pb-20 lg:pb-0">
+    <header class="h-16 bg-white border-b border-slate-200 sticky top-0 z-20 flex items-center justify-between px-4 sm:px-8">
+      <div>
+        <p class="text-xs text-muted">Início / <span class="text-ink font-medium">Relatórios</span></p>
+        <h1 class="font-display font-bold text-lg leading-tight">Relatórios Gerados</h1>
+      </div>
+      <div class="w-9 h-9 rounded-full bg-navy grid place-items-center text-white font-semibold text-sm">RR</div>
+    </header>
+
+    <main class="p-4 sm:p-8 space-y-6">
+
+      <!-- Filtros pills -->
+      <div class="flex flex-wrap gap-2">
+        <button class="px-4 py-2 rounded-full bg-navy text-white text-sm font-semibold">Todos</button>
+        <button class="px-4 py-2 rounded-full bg-white border border-slate-200 text-sm font-medium text-muted hover:border-accent hover:text-accent transition">RFO</button>
+        <button class="px-4 py-2 rounded-full bg-white border border-slate-200 text-sm font-medium text-muted hover:border-accent hover:text-accent transition">LTIP</button>
+        <button class="px-4 py-2 rounded-full bg-white border border-slate-200 text-sm font-medium text-muted hover:border-accent hover:text-accent transition">RFIP</button>
+        <button class="px-4 py-2 rounded-full bg-white border border-slate-200 text-sm font-medium text-muted hover:border-accent hover:text-accent transition">Vistoria</button>
+      </div>
+
+      <!-- Desktop table -->
+      <div class="hidden md:block bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-surface text-muted text-xs uppercase tracking-wide">
+            <tr>
+              <th class="text-left font-semibold px-6 py-3">Relatório</th>
+              <th class="text-left font-semibold px-6 py-3">Tipo</th>
+              <th class="text-left font-semibold px-6 py-3">Data</th>
+              <th class="text-left font-semibold px-6 py-3">Status</th>
+              <th class="text-right font-semibold px-6 py-3">Downloads</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr class="row-hover">
+              <td class="px-6 py-4">
+                <p class="font-semibold">Cond. Cortina D'Ampezzo</p>
+                <p class="text-xs text-muted">Inspeção Predial · v02</p>
+              </td>
+              <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-md bg-navy/10 text-navy text-xs font-semibold">LTIP</span></td>
+              <td class="px-6 py-4 text-muted">05/07/2026</td>
+              <td class="px-6 py-4"><span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/10 text-success text-xs font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-success"></span>Final</span></td>
+              <td class="px-6 py-4">
+                <div class="flex items-center justify-end gap-2">
+                  <button class="px-3 py-1.5 rounded-lg bg-danger/10 text-danger text-xs font-semibold hover:bg-danger/20 transition flex items-center gap-1"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>PDF</button>
+                  <button class="px-3 py-1.5 rounded-lg bg-navy/10 text-navy text-xs font-semibold hover:bg-navy/20 transition flex items-center gap-1"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>DOCX</button>
+                </div>
+              </td>
+            </tr>
+            <tr class="row-hover">
+              <td class="px-6 py-4">
+                <p class="font-semibold">Reforma New York</p>
+                <p class="text-xs text-muted">Vistoria Cautelar · v01</p>
+              </td>
+              <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-md bg-accent/10 text-accent text-xs font-semibold">Vistoria</span></td>
+              <td class="px-6 py-4 text-muted">02/07/2026</td>
+              <td class="px-6 py-4"><span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-warning/10 text-warning text-xs font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-warning"></span>Rascunho</span></td>
+              <td class="px-6 py-4">
+                <div class="flex items-center justify-end gap-2">
+                  <button class="px-3 py-1.5 rounded-lg bg-danger/10 text-danger text-xs font-semibold hover:bg-danger/20 transition flex items-center gap-1"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>PDF</button>
+                  <button class="px-3 py-1.5 rounded-lg bg-navy/10 text-navy text-xs font-semibold hover:bg-navy/20 transition flex items-center gap-1"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>DOCX</button>
+                </div>
+              </td>
+            </tr>
+            <tr class="row-hover">
+              <td class="px-6 py-4">
+                <p class="font-semibold">Cortina D'Ampezzo — Fotográfico</p>
+                <p class="text-xs text-muted">Relatório Fotográfico · v01</p>
+              </td>
+              <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-md bg-slate-200 text-ink text-xs font-semibold">RFIP</span></td>
+              <td class="px-6 py-4 text-muted">01/07/2026</td>
+              <td class="px-6 py-4"><span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/10 text-success text-xs font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-success"></span>Final</span></td>
+              <td class="px-6 py-4">
+                <div class="flex items-center justify-end gap-2">
+                  <button class="px-3 py-1.5 rounded-lg bg-danger/10 text-danger text-xs font-semibold hover:bg-danger/20 transition flex items-center gap-1"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>PDF</button>
+                  <button class="px-3 py-1.5 rounded-lg bg-navy/10 text-navy text-xs font-semibold hover:bg-navy/20 transition flex items-center gap-1"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>DOCX</button>
+                </div>
+              </td>
+            </tr>
+            <tr class="row-hover">
+              <td class="px-6 py-4">
+                <p class="font-semibold">Obra Residencial Aroeira</p>
+                <p class="text-xs text-muted">Fiscalização · 12 visitas · v03</p>
+              </td>
+              <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-md bg-success/10 text-success text-xs font-semibold">RFO</span></td>
+              <td class="px-6 py-4 text-muted">30/06/2026</td>
+              <td class="px-6 py-4"><span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/10 text-success text-xs font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-success"></span>Final</span></td>
+              <td class="px-6 py-4">
+                <div class="flex items-center justify-end gap-2">
+                  <button class="px-3 py-1.5 rounded-lg bg-danger/10 text-danger text-xs font-semibold hover:bg-danger/20 transition flex items-center gap-1"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>PDF</button>
+                  <button class="px-3 py-1.5 rounded-lg bg-navy/10 text-navy text-xs font-semibold hover:bg-navy/20 transition flex items-center gap-1"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>DOCX</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile cards -->
+      <div class="md:hidden space-y-3">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <div class="flex items-start justify-between">
+            <div><p class="font-semibold">Cond. Cortina D'Ampezzo</p><p class="text-xs text-muted">LTIP · v02 · 05/07/2026</p></div>
+            <span class="px-2.5 py-1 rounded-full bg-success/10 text-success text-xs font-semibold">Final</span>
+          </div>
+          <div class="flex gap-2 mt-3">
+            <button class="flex-1 py-2 rounded-lg bg-danger/10 text-danger text-xs font-semibold">Baixar PDF</button>
+            <button class="flex-1 py-2 rounded-lg bg-navy/10 text-navy text-xs font-semibold">Baixar DOCX</button>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <div class="flex items-start justify-between">
+            <div><p class="font-semibold">Reforma New York</p><p class="text-xs text-muted">Vistoria · v01 · 02/07/2026</p></div>
+            <span class="px-2.5 py-1 rounded-full bg-warning/10 text-warning text-xs font-semibold">Rascunho</span>
+          </div>
+          <div class="flex gap-2 mt-3">
+            <button class="flex-1 py-2 rounded-lg bg-danger/10 text-danger text-xs font-semibold">Baixar PDF</button>
+            <button class="flex-1 py-2 rounded-lg bg-navy/10 text-navy text-xs font-semibold">Baixar DOCX</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<nav class="lg:hidden fixed bottom-0 inset-x-0 bg-navy text-slate-300 border-t border-white/10 flex justify-around py-2 z-30">
+  <a href="01-dashboard.html" class="flex flex-col items-center gap-0.5 px-3 py-1"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75"/></svg><span class="text-[10px]">Início</span></a>
+  <a href="02-edificacoes.html" class="flex flex-col items-center gap-0.5 px-3 py-1"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h6M9 12.75h6"/></svg><span class="text-[10px]">Obras</span></a>
+  <a href="03-nova-vistoria.html" class="flex flex-col items-center gap-0.5 px-3 py-1"><span class="w-9 h-9 -mt-4 rounded-full bg-accent grid place-items-center text-white shadow-lg"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg></span><span class="text-[10px] mt-0.5">Nova</span></a>
+  <a href="05-relatorios.html" class="flex flex-col items-center gap-0.5 px-3 py-1 text-accent"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg><span class="text-[10px]">Laudos</span></a>
+  <a href="index.html" class="flex flex-col items-center gap-0.5 px-3 py-1"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg><span class="text-[10px]">Menu</span></a>
+</nav>
+
+</body>
+</html>

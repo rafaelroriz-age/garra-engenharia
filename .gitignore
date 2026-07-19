@@ -1,0 +1,25 @@
+# Segredos e configuração local — nunca versionar (ver 00_docs/arquitetura.md, DEC-02/DEC-07)
+.env
+.env.*
+!.env.example
+!*/.env.example
+
+# Docker
+**/docker-compose.override.yml
+
+# Python (04_backend/)
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Node (03_frontend/)
+node_modules/
+.next/
+out/
+
+# OS / editor
+.DS_Store
+Thumbs.db
