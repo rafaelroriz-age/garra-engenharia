@@ -50,7 +50,7 @@ jobs:
       POSTGRES_PORT: 5432
       JWT_SECRET_KEY: ci-only-secret-not-for-production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Configurar Python
         uses: actions/setup-python@v5
@@ -81,7 +81,7 @@ jobs:
       run:
         working-directory: 03_frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Configurar Node.js
         uses: actions/setup-node@v4
@@ -115,7 +115,7 @@ jobs:
           - nome: frontend
             contexto: 03_frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build da imagem ${{ matrix.nome }} (sem push)
         uses: docker/build-push-action@v6
