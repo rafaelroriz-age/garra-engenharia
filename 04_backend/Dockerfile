@@ -1,7 +1,7 @@
 # 04_backend/Dockerfile
 # Imagem de DESENVOLVIMENTO do backend FastAPI (BL-02).
 # Build context: ../04_backend (ver 05_infra/docker-compose.yml e DEC-09).
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 # Bibliotecas de sistema exigidas pelo WeasyPrint para geração de PDF (DEC-01).
 RUN apt-get update && apt-get install -y --no-install-recommends \
