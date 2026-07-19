@@ -1,0 +1,101 @@
+# Deploy em Produção — dispara ao criar uma tag `vX.Y.Z` em `main`.
+# Ver 00_docs/projeto/plano-gestao-configuracao.md (Seção 3.3) e decisoes.md DEC-14.
+#
+# Pré-requisitos (configurar antes do primeiro uso — BL-28):
+#   - GitHub Environment "production" com required reviewer configurado
+#     (Settings > Environments > production > Deployment protection rules).
+#   - Secrets do repositório/ambiente: SSH_HOST_PROD, SSH_USER_STAGING → usar
+#     SSH_USER_PROD, SSH_PRIVATE_KEY, PROD_ENV_FILE.
+name: CD Production
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    name: Build e push das imagens (tag = versão)
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extrair versão da tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Login no GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build + push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: 04_backend
+          push: true
+          tags: ghcr.io/${{ github.repository }}/backend:${{ steps.version.outputs.version }}
+
+      - name: Build + push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: 03_frontend
+          push: true
+          tags: ghcr.io/${{ github.repository }}/frontend:${{ steps.version.outputs.version }}
+
+  deploy:
+    name: Deploy em produção (com aprovação manual)
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    # GitHub Environments com required reviewer pausa o job aqui até aprovação manual.
+    environment:
+      name: production
+    steps:
+      - name: Backup pré-deploy do banco
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST_PROD }}
+          username: ${{ secrets.SSH_USER_PROD }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd ~/garra-engenharia/05_infra
+            ./backup/backup-db.sh "pre-deploy-${{ needs.build-and-push.outputs.version }}"
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST_PROD }}
+          username: ${{ secrets.SSH_USER_PROD }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd ~/garra-engenharia/05_infra
+            export IMAGE_TAG="${{ needs.build-and-push.outputs.version }}"
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml run --rm backend alembic upgrade head
+            docker compose -f docker-compose.prod.yml up -d
+
+      - name: Healthcheck pós-deploy (com rollback automático)
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST_PROD }}
+          username: ${{ secrets.SSH_USER_PROD }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd ~/garra-engenharia/05_infra
+            if ! curl -fsS --retry 6 --retry-delay 10 http://localhost:8000/health/ready; then
+              echo "Healthcheck falhou — revertendo para a imagem anterior."
+              export IMAGE_TAG="previous"
+              docker compose -f docker-compose.prod.yml up -d
+              exit 1
+            fi

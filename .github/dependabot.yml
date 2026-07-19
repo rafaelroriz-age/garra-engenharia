@@ -1,0 +1,30 @@
+# Mantém dependências atualizadas e escaneadas — complementa o scan Trivy do ci.yml.
+# Ver 00_docs/projeto/plano-gestao-configuracao.md (Seção 7) e decisoes.md DEC-14.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /04_backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: npm
+    directory: /03_frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directory: /04_backend
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directory: /03_frontend
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

@@ -1,0 +1,80 @@
+# Deploy contínuo em Staging — dispara a cada push em `main` (após CI verde).
+# Ver 00_docs/projeto/plano-gestao-configuracao.md (Seção 3.2) e decisoes.md DEC-14.
+#
+# Pré-requisitos (configurar antes do primeiro uso — BL-28):
+#   - Secrets do repositório: SSH_HOST_STAGING, SSH_USER_STAGING, SSH_PRIVATE_KEY,
+#     PROD_ENV_FILE (reaproveitado como STAGING_ENV_FILE ou secret próprio).
+#   - Host de staging com Docker + Docker Compose instalados e diretório
+#     `05_infra` clonado (ou apenas os arquivos docker-compose.prod.yml/nginx).
+#   - Imagens publicadas no GitHub Container Registry (ghcr.io/<org>/garra-*).
+name: CD Staging
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    branches: [main]
+    types: [completed]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    name: Build e push das imagens (tag staging-<sha>)
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: staging-${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login no GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build + push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: 04_backend
+          push: true
+          tags: ghcr.io/${{ github.repository }}/backend:staging-${{ github.sha }}
+
+      - name: Build + push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: 03_frontend
+          push: true
+          tags: ghcr.io/${{ github.repository }}/frontend:staging-${{ github.sha }}
+
+  deploy:
+    name: Deploy no host de staging
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST_STAGING }}
+          username: ${{ secrets.SSH_USER_STAGING }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd ~/garra-engenharia/05_infra
+            export IMAGE_TAG="staging-${{ github.sha }}"
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml run --rm backend alembic upgrade head
+            docker compose -f docker-compose.prod.yml up -d
+
+      - name: Healthcheck pós-deploy
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST_STAGING }}
+          username: ${{ secrets.SSH_USER_STAGING }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            curl -fsS --retry 6 --retry-delay 10 http://localhost:8000/health/ready
