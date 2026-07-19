@@ -65,16 +65,16 @@ last_updated: 2026-07-17
 
 | # | Tarefa | Requisitos/Decisões | Status | Agente | Prompt |
 |---|---|---|---|---|---|
-| BL-25 | Inicializar repositório Git local, primeiro commit e criação do repositório remoto no GitHub | DEC-14 | 🟢 Desbloqueada | Engenheiro DevOps | `12-devops.prompt.md` — ver `00_docs/projeto/plano-gestao-configuracao.md` |
-| BL-26 | Implementar `.github/workflows/ci.yml` (lint, testes, build de imagens, scan Trivy) | DEC-14 | 🟢 (depende de BL-25) | Engenheiro DevOps | `12-devops.prompt.md` |
+| BL-25 | Inicializar repositório Git local, primeiro commit e criação do repositório remoto no GitHub | DEC-14 | ✅ Concluída (2026-07-19) — repositório privado `rafaelroriz-age/garra-engenharia`, branch `main` publicada. **Falta ação manual do usuário:** configurar a proteção de branch em Settings > Branches (Seção 1.4 do plano) — não automatizável pelas ferramentas disponíveis | Engenheiro DevOps | `12-devops.prompt.md` — ver `00_docs/projeto/plano-gestao-configuracao.md` |
+| BL-26 | Implementar `.github/workflows/ci.yml` (lint, testes, build de imagens, scan Trivy) | DEC-14 | ✅ Concluída (2026-07-19) — workflow publicado em `.github/workflows/ci.yml`. **Falta ação manual:** marcar `ci.yml` como status check obrigatório na proteção de branch | Engenheiro DevOps | `12-devops.prompt.md` |
 | BL-27 | Implementar `docker-compose.prod.yml` + `nginx/nginx.conf` (HTTPS, reverse proxy) | DEC-14, mesmo escopo de BL-24 | 🟢 | Engenheiro DevOps | `12-devops.prompt.md` |
 | BL-28 | Implementar `cd-staging.yml` e `cd-production.yml` (deploy via SSH + GHCR, aprovação manual em produção) | DEC-14 | 🔴 B-03 (depende de BL-26, BL-27 e decisão de hospedagem) | Engenheiro DevOps | `12-devops.prompt.md` |
 | BL-29 | Implementar `05_infra/backup/backup-db.sh` e `restore-db.sh` + agendamento | DEC-14, RNF-08 | 🟢 (depende de BL-27) | Engenheiro DevOps | `12-devops.prompt.md` |
 
 ## Resumo
 
-- **Tarefas concluídas:** BL-01 (ambiente de desenvolvimento), BL-02 (scaffold backend FastAPI), BL-03 (scaffold frontend Next.js PWA), BL-04 (modelagem de dados: modelos SQLAlchemy + migrations Alembic), BL-05 (seed do gabarito de sistemas prediais/subsistemas/tipos de anomalia/falha/localizações) — evidências em `05_infra/README.md`, `04_backend/README.md`, `03_frontend/README.md`, DEC-13 em [decisoes.md](decisoes.md) e [status.md](status.md#artefatos-entregues).
-- **Tarefas 100% desbloqueadas para início imediato:** BL-06 a BL-11, BL-14, BL-16 (parcial), BL-25 a BL-27, BL-29.
+- **Tarefas concluídas:** BL-01 (ambiente de desenvolvimento), BL-02 (scaffold backend FastAPI), BL-03 (scaffold frontend Next.js PWA), BL-04 (modelagem de dados: modelos SQLAlchemy + migrations Alembic), BL-05 (seed do gabarito de sistemas prediais/subsistemas/tipos de anomalia/falha/localizações), BL-25 (repositório Git remoto criado e publicado), BL-26 (workflow `ci.yml` publicado) — evidências em `05_infra/README.md`, `04_backend/README.md`, `03_frontend/README.md`, DEC-13/DEC-14 em [decisoes.md](decisoes.md) e [status.md](status.md#artefatos-entregues).
+- **Tarefas 100% desbloqueadas para início imediato:** BL-06 a BL-11, BL-14, BL-16 (parcial), BL-27, BL-29.
 - **Tarefas bloqueadas por B-01 (lacunas):** BL-15, BL-18.
 - **Tarefas bloqueadas por B-02 (templates):** BL-12 (parcial), BL-13, BL-17, BL-19.
 - **Tarefas bloqueadas por B-03 (hospedagem):** BL-20, BL-24 (impacto baixo, não impede desenvolvimento), BL-28 (depende de BL-26/BL-27).
