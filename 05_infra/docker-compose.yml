@@ -1,0 +1,175 @@
+# =============================================================================
+# 05_infra/docker-compose.yml
+# Ambiente de DESENVOLVIMENTO LOCAL — Sistema de Automação de Relatórios Prediais
+#
+# Convenção de pastas fixa do repositório (DEC-09, 00_docs/projeto/decisoes.md):
+# toda a infraestrutura vive em 05_infra/. Execute os comandos a partir daqui:
+#
+#   cd 05_infra
+#   cp .env.example .env   # ajuste as credenciais antes do primeiro uso
+#   docker compose up -d
+#   docker compose ps      # confirma healthcheck "healthy" dos dois serviços
+#   docker compose down    # para os serviços (mantém os volumes/dados)
+#   docker compose down -v # para e APAGA os volumes (dados do Postgres/MinIO)
+#
+# Serviços desta etapa (BL-01 — Fundação Técnica):
+#   - postgres:      banco relacional (DEC-07) usado pelo backend FastAPI para
+#                     edificações, contratos, visitas, ocorrências, sistemas prediais etc.
+#   - minio:          armazenamento de objetos compatível com S3 (DEC-02) para as
+#                     fotos de inspeção e os PDF/DOCX gerados.
+#   - createbuckets:  job efêmero (roda uma vez e finaliza) que cria o bucket
+#                     inicial no MinIO via cliente `mc`, para que o backend não
+#                     precise dessa lógica de bootstrap.
+#
+# Serviços adicionados no scaffold do backend (BL-02 — prompt 15):
+#   - backend:        API FastAPI (DEC-05). Build context `../04_backend`
+#                     (Dockerfile de desenvolvimento com `--reload`).
+#
+# Serviço adicionado no scaffold do frontend (BL-03 — prompt 16):
+#   - frontend:       app Next.js 14 PWA (DEC-03/DEC-06). Build context
+#                     `../03_frontend` (Dockerfile de desenvolvimento com `next dev`).
+#
+# Os serviços `redis` e `celery-worker` NÃO estão incluídos aqui ainda —
+# entram na Etapa de processamento assíncrono (DEC-10).
+#
+# Segurança: nenhuma porta é exposta além de localhost (127.0.0.1), então
+# Postgres e MinIO não ficam acessíveis pela rede — apenas pela própria máquina
+# de desenvolvimento. Nenhuma credencial é hardcoded: tudo vem de `.env`
+# (copiado de `.env.example`, nunca versionado — ver .gitignore na raiz).
+# =============================================================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: garra-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-garra}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD em 05_infra/.env}
+      POSTGRES_DB: ${POSTGRES_DB:-garra_engenharia}
+    ports:
+      # Bind apenas em localhost: não expõe o banco para fora da máquina local.
+      # Porta padrão do host é 5433 (não 5432) para não colidir com uma instalação
+      # nativa de PostgreSQL que já possa estar rodando na máquina de desenvolvimento.
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-garra} -d ${POSTGRES_DB:-garra_engenharia}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - garra-net
+
+  minio:
+    image: minio/minio:latest
+    container_name: garra-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?defina MINIO_ROOT_USER em 05_infra/.env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?defina MINIO_ROOT_PASSWORD em 05_infra/.env}
+    ports:
+      # API S3-compatível, usada pelo backend (boto3) — bind apenas em localhost.
+      - "127.0.0.1:${MINIO_API_PORT:-9000}:9000"
+      # Console web de administração — bind apenas em localhost.
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - garra-net
+
+  createbuckets:
+    image: minio/mc:latest
+    container_name: garra-minio-createbuckets
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?defina MINIO_ROOT_USER em 05_infra/.env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?defina MINIO_ROOT_PASSWORD em 05_infra/.env}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-relatorios-prediais}
+    # Cria o bucket inicial (idempotente) e sai. Bucket permanece privado —
+    # o backend deve usar URLs pré-assinadas com expiração (ver DEC-02).
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 \"$$MINIO_ROOT_USER\" \"$$MINIO_ROOT_PASSWORD\" &&
+      mc mb --ignore-existing local/\"$$MINIO_BUCKET_NAME\" &&
+      echo 'Bucket \"'\"$$MINIO_BUCKET_NAME\"'\" pronto.'
+      "
+    networks:
+      - garra-net
+
+  backend:
+    build:
+      context: ../04_backend
+      dockerfile: Dockerfile
+    container_name: garra-backend
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost:3000}
+      # Host/porta internos da rede Docker (não os publicados em localhost acima).
+      POSTGRES_USER: ${POSTGRES_USER:-garra}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD em 05_infra/.env}
+      POSTGRES_DB: ${POSTGRES_DB:-garra_engenharia}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?defina MINIO_ROOT_USER em 05_infra/.env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?defina MINIO_ROOT_PASSWORD em 05_infra/.env}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-relatorios-prediais}
+      MINIO_HOST: minio
+      MINIO_API_PORT: 9000
+      MINIO_USE_SSL: "false"
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?defina JWT_SECRET_KEY em 05_infra/.env}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_ACCESS_TOKEN_EXPIRE_MINUTES: ${JWT_ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+    ports:
+      # Bind apenas em localhost, mesma política de segurança do Postgres/MinIO.
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - garra-net
+
+  frontend:
+    build:
+      context: ../03_frontend
+      dockerfile: Dockerfile
+    container_name: garra-frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    ports:
+      # Bind apenas em localhost, mesma política de segurança dos demais serviços.
+      - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - backend
+    networks:
+      - garra-net
+
+volumes:
+  postgres_data:
+    name: garra_postgres_data
+  minio_data:
+    name: garra_minio_data
+
+networks:
+  garra-net:
+    name: garra-net
+    driver: bridge
