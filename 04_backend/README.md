@@ -2,32 +2,38 @@
 
 Aplicação **FastAPI (Python 3.12)** — API, regras de negócio, geração de relatórios (PDF/DOCX) e persistência.
 
-> Modelo de dados implementado (BL-04): 14 entidades do diagrama ER (`00_docs/arquitetura.md` Seção 3) como modelos SQLAlchemy 2 (async), migration Alembic inicial e schemas Pydantic v2 básicos. Gabarito de sistemas prediais/subsistemas/tipos de anomalia/falha/localizações populado (BL-05) via seed idempotente a partir de `00_docs/convertidos/RFO_INSPECAO.md`, com endpoints de dados mestre em `GET /api/v1/sistemas-prediais` e `GET /api/v1/gabarito/*`. Autenticação e demais endpoints de domínio chegam nas tarefas seguintes do backlog (BL-06, BL-08...).
+> Modelo de dados implementado (BL-04): 14 entidades do diagrama ER (`00_docs/arquitetura.md` Seção 3) como modelos SQLAlchemy 2 (async), migration Alembic inicial e schemas Pydantic v2 básicos. Gabarito de sistemas prediais/subsistemas/tipos de anomalia/falha/localizações populado (BL-05) via seed idempotente a partir de `00_docs/convertidos/RFO_INSPECAO.md`, com endpoints de dados mestre em `GET /api/v1/sistemas-prediais` e `GET /api/v1/gabarito/*`. Autenticação JWT + bcrypt (BL-06) implementada: entidade `Usuario` própria (DEC-15) e endpoints `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `GET /api/v1/auth/me`. Storage service MinIO/S3 (BL-07) implementado: `StorageClient`/`S3StorageClient` (Adapter Pattern) com upload/download/delete/URL pré-assinada. Demais endpoints de domínio chegam nas tarefas seguintes do backlog (BL-08...).
 
 ## Estrutura atual
 
 ```
 04_backend/
 ├── app/
-│   ├── api/v1/                # dados_mestre.py (sistemas-prediais, gabarito/*) — BL-05; demais endpoints de domínio em BL-06+
-│   ├── models/                # 17 modelos SQLAlchemy 2 (async): 14 do ER (BL-04) + TipoAnomalia/TipoFalha/Localizacao (BL-05, DEC-13)
-│   ├── schemas/                # schemas Pydantic v2 request/response (sem regras de negócio) — BL-04/BL-05
+│   ├── api/
+│   │   ├── deps.py              # get_current_user (dependency de proteção de rotas, BL-06)
+│   │   └── v1/                  # dados_mestre.py (BL-05) + auth.py (register/login/me, BL-06); demais domínios em BL-08+
+│   ├── models/                # 18 modelos SQLAlchemy 2 (async): 14 do ER (BL-04) + TipoAnomalia/TipoFalha/Localizacao (BL-05, DEC-13) + Usuario (BL-06, DEC-15)
+│   ├── schemas/                # schemas Pydantic v2 request/response (sem regras de negócio) — BL-04/BL-05/BL-06
 │   ├── scripts/                # rfo_gabarito_parser.py + seed_gabarito.py (BL-05, idempotente)
-│   ├── services/               # regras de negócio (vazio — BL-06+)
+│   ├── services/
+│   │   └── storage/             # StorageClient (interface) + S3StorageClient (boto3/MinIO), BL-07
 │   ├── core/
 │   │   ├── config.py            # Settings (Pydantic Settings) — Postgres, MinIO, JWT
-│   │   └── database.py          # engine/sessão assíncrona SQLAlchemy 2
-│   └── main.py                  # instância FastAPI, CORS, GET /health, router de dados mestre
+│   │   ├── database.py          # engine/sessão assíncrona SQLAlchemy 2
+│   │   └── security.py          # hash/verify de senha (bcrypt) + create/decode de JWT (BL-06)
+│   └── main.py                  # instância FastAPI, CORS, GET /health, routers de dados mestre e auth
 ├── templates/assets/            # logo, CSS compartilhado (vazio — BL-12+)
 ├── alembic.ini                  # config do Alembic (URL sobrescrita em runtime por env.py)
 ├── alembic/
 │   ├── env.py                    # migrations async (asyncio.run + run_sync), target_metadata = app.models.Base.metadata
-│   └── versions/                 # c22d4029c062_initial... (BL-04) + 8e2467ad6a92_gabarito_tipos... (BL-05)
+│   └── versions/                 # c22d4029c062_initial... (BL-04) + 8e2467ad6a92_gabarito_tipos... (BL-05) + ab22bfcbdd0a_usuario... (BL-06)
 ├── tests/
 │   ├── conftest.py               # fixture db_session (engine de teste com NullPool)
 │   ├── test_health.py
 │   ├── test_models.py            # testes de integração das 14 entidades e seus relacionamentos
-│   └── test_gabarito.py          # parser + seed + endpoints de dados mestre (BL-05)
+│   ├── test_gabarito.py          # parser + seed + endpoints de dados mestre (BL-05)
+│   ├── test_auth.py              # registro, login (sucesso/falha) e proteção de rota (BL-06)
+│   └── test_storage.py           # upload/download/delete/URL pré-assinada contra o MinIO real (BL-07)
 ├── requirements.txt
 ├── Dockerfile
 ├── pytest.ini
@@ -92,6 +98,85 @@ Endpoints (somente leitura, dados mestre editados no futuro via CRUD de BL-14+):
 
 Ver DEC-13 em [decisoes.md](../00_docs/projeto/decisoes.md) para a justificativa de `TipoAnomalia`/`TipoFalha`/`Localizacao` serem tabelas novas fora do diagrama ER original (o campo correspondente em `Ocorrencia` permanece texto livre até a BL-14+).
 
+## Autenticação JWT + bcrypt (BL-06)
+
+Entidade `Usuario` própria (`email`, `senha_hash`, `nome`, `ativo`) — não reaproveita `Responsavel` (ver DEC-15). Senha nunca é armazenada em texto plano (`passlib[bcrypt]`) nem retornada pela API. Token JWT (`python-jose`) assinado com `JWT_SECRET_KEY`, expiração configurável via `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` (padrão 60 min).
+
+| Endpoint | Descrição |
+|---|---|
+| `POST /api/v1/auth/register` | Cria um novo usuário (uso interno da equipe, sem cadastro público). `201` ou `409` se o email já existir. |
+| `POST /api/v1/auth/login` | Recebe `email`/`senha`, retorna `access_token` (JWT) + `token_type: bearer`. `401` se credenciais inválidas ou usuário inativo. |
+| `GET /api/v1/auth/me` | Retorna os dados do usuário autenticado. Requer header `Authorization: Bearer <token>`. `401` se token ausente/inválido/expirado. |
+
+Como testar (via `curl` ou `http://localhost:8000/docs`):
+
+```powershell
+# 1. Criar usuário
+curl -X POST http://localhost:8000/api/v1/auth/register `
+  -H "Content-Type: application/json" `
+  -d '{"nome": "Seu Nome", "email": "voce@garra-engenharia.com.br", "senha": "senha-com-8-ou-mais-caracteres"}'
+
+# 2. Login (retorna access_token)
+curl -X POST http://localhost:8000/api/v1/auth/login `
+  -H "Content-Type: application/json" `
+  -d '{"email": "voce@garra-engenharia.com.br", "senha": "senha-com-8-ou-mais-caracteres"}'
+
+# 3. Usar o token em rotas protegidas
+curl http://localhost:8000/api/v1/auth/me -H "Authorization: Bearer <access_token>"
+```
+
+Para proteger um novo endpoint, use a dependency `get_current_user` (`app/api/deps.py`):
+
+```python
+from app.api.deps import get_current_user
+from app.models import Usuario
+
+@router.get("/rota-protegida")
+async def rota(usuario_atual: Usuario = Depends(get_current_user)):
+    ...
+```
+
+> **Nota de compatibilidade**: `bcrypt` está fixado em `<4.1` no `requirements.txt` — versões mais novas removeram o atributo `__about__` usado pelo `passlib` 1.7.4 para detectar o backend, quebrando o hashing com `ValueError` espúrio.
+Storage service MinIO/S3 (BL-07)
+
+Adapter Pattern (`00_docs/arquitetura.md` Seção 9.9): `StorageClient` (interface, `app/services/storage/base.py`) + `S3StorageClient` (implementação `boto3`, `app/services/storage/s3_client.py`), compatível com MinIO (dev) e AWS S3 (produção) sem alterar os serviços consumidores.
+
+| Método | Descrição |
+|---|---|
+| `upload(key, file_bytes, content_type) -> str` | Envia o conteúdo para o bucket. Valida `key` não vazia, conteúdo não vazio e tamanho máximo de 25 MB por arquivo. |
+| `download(key) -> bytes` | Retorna o conteúdo binário. Lança `ObjectNotFoundError` se a chave não existir. |
+| `delete(key) -> None` | Remove o objeto (idempotente — não lança erro se a chave já não existir). |
+| `generate_presigned_url(key, expires_in) -> str` | Gera URL de download temporária (padrão 15 minutos — RNF-07/ADR-02/Seção 10.1 A02). Nunca gera URLs públicas permanentes. |
+
+O bucket (`MINIO_BUCKET_NAME`) é criado automaticamente pelo próprio `S3StorageClient` na primeira instanciação, se ainda não existir (`head_bucket` + `create_bucket`, idempotente) — funciona mesmo sem o job `createbuckets` do `05_infra/docker-compose.yml`.
+
+Variáveis de ambiente necessárias (já previstas em `.env.example`/`Settings`): `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `MINIO_BUCKET_NAME`, `MINIO_HOST`, `MINIO_API_PORT`, `MINIO_USE_SSL`.
+
+Uso em um endpoint (dependency injetável, para permitir substituição por stub/fake nos testes):
+
+```python
+from fastapi import Depends
+from app.services.storage import StorageClient, get_storage_client
+
+@router.post("/fotos")
+async def upload_foto(storage: StorageClient = Depends(get_storage_client)):
+    key = storage.upload("visitas/123/foto1.jpg", conteudo, "image/jpeg")
+    url = storage.generate_presigned_url(key, expires_in=900)
+    ...
+```
+
+Como rodar os testes de integração (contra o MinIO real):
+
+```powershell
+cd 05_infra
+docker compose up -d minio createbuckets
+
+cd ..\04_backend
+.venv\Scripts\Activate.ps1
+pytest tests/test_storage.py -v
+```
+
+## 
 ## Como rodar os testes
 
 ```powershell

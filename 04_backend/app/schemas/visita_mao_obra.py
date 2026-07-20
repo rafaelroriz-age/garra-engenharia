@@ -18,3 +18,10 @@ class VisitaMaoObraRead(VisitaMaoObraBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
+
+
+class VisitaMaoObraCreatePayload(BaseModel):
+    """Payload de `POST /visitas/{id}/mao-obra` — `visita_id` vem do path (BL-10)."""
+
+    funcao: str
+    quantidade: int

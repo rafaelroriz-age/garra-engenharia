@@ -219,3 +219,34 @@ last_updated: 2026-07-17
 | **Justificativa** | Minimiza overhead de processo para o tamanho atual da equipe, mantém `main` sempre deployável (consistente com o modelo incremental por fatia vertical de DEC-08), e usa ferramentas já gratuitas/nativas do GitHub (Actions, Environments, GHCR, Secrets) sem introduzir infraestrutura de CI adicional. |
 | **Consequências** | Exige configuração manual única de proteção de branch e GitHub Environments (não automatizável por código). Gera backlog derivado: BL-25 a BL-29 (`backlog-tarefas.md`). Enquanto a decisão de hospedagem (B-03) não for tomada, staging e produção reusam o mesmo `docker-compose.prod.yml`, variando apenas `.env` e domínio. |
 | **Referência** | `00_docs/projeto/plano-gestao-configuracao.md` |
+
+---
+
+## DEC-15 — Autenticação (BL-06): entidade `Usuario` própria em vez de reaproveitar `Responsavel`
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-07-19 |
+| **Status** | Aprovada |
+| **Contexto** | RNF-05 exige login/senha para uso individual ou pequena equipe. O diagrama ER (BL-04) já tinha uma entidade `Responsavel` (fiscal de contrato, responsável legal de executora, RTE), levantada como possível candidata a reaproveitamento para autenticação (ver `.github/prompts/19-autenticacao-jwt.prompt.md`). |
+| **Alternativas** | (a) Adicionar `email`/`senha_hash`/`ativo` à tabela `responsaveis` existente — rejeitada: `Responsavel` modela uma pessoa física/jurídica de referência do contrato (pode nem ter acesso ao sistema, ex.: responsável legal de uma executora terceira) e mistura dois conceitos de domínio distintos (quem é referenciado em um contrato vs. quem loga no sistema); (b) Tabela `usuarios` própria, sem vínculo obrigatório com `Responsavel`. |
+| **Decisão** | Criar entidade `Usuario` nova (`app/models/usuario.py`, tabela `usuarios`: `id`, `nome`, `email` único, `senha_hash`, `ativo`), fora do diagrama ER original, dedicada exclusivamente a autenticação. Sem FK para `Responsavel` nesta tarefa — associar um `Usuario` a um `Responsavel` (quando a mesma pessoa for as duas coisas) fica para tarefa futura, se necessário. |
+| **Justificativa** | Mantém `Responsavel` fiel ao seu propósito original (dado de referência do contrato, sem credenciais) e evita acoplar o modelo de autenticação a uma entidade de negócio que pode mudar por motivos não relacionados a login. Mesmo racional de separação de conceitos usado em DEC-13 (gabarito fora do ER original). |
+| **Consequências** | Endpoints `/api/v1/auth/register`/`/login`/`/me` operam sobre `usuarios`, não `responsaveis`. Se no futuro for necessário que um `Responsavel` também tenha login, adicionar FK opcional `usuario_id` em `Responsavel` (não o inverso). |
+| **Referência** | `00_docs/arquitetura.md` Seção 1 (linha de Autenticação), `.github/prompts/19-autenticacao-jwt.prompt.md` |
+
+---
+
+## DEC-16 — Endpoint adicional `POST /edificacoes/{id}/documentos` (fora da tabela original da Seção 4)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-07-20 |
+| **Status** | Aprovada |
+| **Contexto** | RF-01 exige suporte a upload de documentos técnicos (projetos, ARTs) da Edificação. `00_docs/arquitetura.md` Seção 4 já modela o campo `documentos_tecnicos` (JSONB) na Edificação, mas não lista um endpoint dedicado de upload — apenas os 4 endpoints de CRUD. BL-07 (storage MinIO) já estava concluída quando esta tarefa (BL-08) foi executada. |
+| **Alternativas** | (a) Exigir que o cliente envie a URL/base64 do documento dentro do próprio `POST`/`PUT /edificacoes` — rejeitada: mistura upload binário com atualização de metadados simples, dificulta paginação/validação de tamanho por arquivo; (b) Endpoint dedicado `POST /edificacoes/{id}/documentos` (multipart), reaproveitando o `StorageClient` (ADR-02/Seção 9.9) e apenas anexando metadados (`nome`, `tipo`, `storage_key`) à lista já existente em `documentos_tecnicos`. |
+| **Decisão** | Adicionar `POST /api/v1/edificacoes/{id}/documentos` (multipart/form-data, campos `arquivo` + `tipo`) que faz upload via `StorageClient` e acrescenta um item a `documentos_tecnicos` (lista de objetos `{nome, tipo, storage_key}`), sem endpoint de download dedicado nesta etapa (a URL pode ser obtida via presigned URL futura, análoga ao fluxo de Fotos da BL-11). |
+| **Justificativa** | Reaproveita a infraestrutura de storage já validada (BL-07) em vez de criar uma pendência nova; mantém o endpoint de CRUD (`POST`/`PUT /edificacoes`) livre de upload binário. |
+| **Consequências** | Endpoint não documentado na Seção 4 original de `00_docs/arquitetura.md` — esta decisão é a referência formal. Download/gestão fina de documentos (remoção individual, URL pré-assinada) ficam para uma tarefa futura se o cliente precisar. |
+| **Referência** | `.github/prompts/21-crud-edificacoes.prompt.md` |
+

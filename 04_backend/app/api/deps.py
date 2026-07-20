@@ -1,0 +1,51 @@
+"""Dependencies de FastAPI compartilhadas entre routers (BL-06).
+
+`get_current_user` protege rotas autenticadas: extrai o token `Bearer` do
+header `Authorization`, valida/decodifica via `app.core.security` e carrega o
+`Usuario` correspondente. Retorna 401 em qualquer falha (token ausente,
+inválido, expirado ou usuário inexistente/inativo).
+"""
+import uuid
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.database import get_db
+from app.core.security import decode_access_token
+from app.models import Usuario
+
+# tokenUrl é apenas informativo para a documentação OpenAPI (login usa JSON, não form).
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
+
+_CREDENTIALS_EXCEPTION = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Credenciais inválidas ou expiradas.",
+    headers={"WWW-Authenticate": "Bearer"},
+)
+
+
+async def get_current_user(
+    token: str | None = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db),
+) -> Usuario:
+    """Resolve o `Usuario` autenticado a partir do token `Bearer`, ou lança 401."""
+    if token is None:
+        raise _CREDENTIALS_EXCEPTION
+
+    subject = decode_access_token(token)
+    if subject is None:
+        raise _CREDENTIALS_EXCEPTION
+
+    try:
+        usuario_id = uuid.UUID(subject)
+    except ValueError:
+        raise _CREDENTIALS_EXCEPTION from None
+
+    result = await db.execute(select(Usuario).where(Usuario.id == usuario_id))
+    usuario = result.scalar_one_or_none()
+    if usuario is None or not usuario.ativo:
+        raise _CREDENTIALS_EXCEPTION
+
+    return usuario

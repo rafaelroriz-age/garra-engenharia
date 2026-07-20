@@ -10,9 +10,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
+from app.api.v1.auth import router as auth_router
+from app.api.v1.contratos import router as contratos_router
 from app.api.v1.dados_mestre import router as dados_mestre_router
+from app.api.v1.edificacoes import router as edificacoes_router
+from app.api.v1.fotos import router as fotos_router
+from app.api.v1.inspecoes import router as inspecoes_router
+from app.api.v1.visitas import router as visitas_router
 from app.core.config import get_settings
 from app.core.database import engine
+from app.core.exception_handlers import register_exception_handlers
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -29,7 +36,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+register_exception_handlers(app)
+
 app.include_router(dados_mestre_router)
+app.include_router(auth_router)
+app.include_router(edificacoes_router)
+app.include_router(contratos_router)
+app.include_router(inspecoes_router)
+app.include_router(visitas_router)
+app.include_router(fotos_router)
 
 
 @app.get("/health", tags=["health"], summary="Healthcheck da API e do PostgreSQL")

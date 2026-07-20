@@ -1,0 +1,113 @@
+"""Service Layer de `Foto` (BL-11, RF-05, RNF-02 parcial, mitigações A08/A10 OWASP).
+
+Todo upload (arquivo ou clipboard base64) passa por `app.services.image_processing`
+antes de chegar ao `StorageClient` — nunca persiste o arquivo original sem
+reprocessamento. Uploads nunca aceitam URL fornecida pelo cliente (A10).
+"""
+import base64
+import binascii
+import uuid
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.errors import DomainError, NotFoundError
+from app.models import Foto, Ocorrencia, Visita
+from app.repositories import foto_repository
+from app.services import image_processing
+from app.services.storage.base import StorageClient
+from app.services.storage.s3_client import MAX_UPLOAD_SIZE_BYTES
+
+_PRESIGNED_URL_EXPIRES_IN_SECONDS = 15 * 60
+
+
+def _validar_tamanho(conteudo: bytes) -> None:
+    if not conteudo:
+        raise DomainError(
+            "O arquivo enviado está vazio.", type_suffix="arquivo-vazio", title="Foto inválida"
+        )
+    if len(conteudo) > MAX_UPLOAD_SIZE_BYTES:
+        raise DomainError(
+            f"Arquivo de {len(conteudo)} bytes excede o limite máximo de {MAX_UPLOAD_SIZE_BYTES} bytes.",
+            type_suffix="arquivo-excede-tamanho-maximo",
+            title="Foto inválida",
+        )
+
+
+async def _processar_e_enviar(conteudo: bytes, storage: StorageClient) -> tuple[str, str]:
+    """Reprocessa (Pillow, A08) e envia ao storage. Retorna `(storage_key, url_presignada)`."""
+    _validar_tamanho(conteudo)
+    conteudo_recodificado, extensao, content_type = image_processing.reprocessar_imagem(conteudo)
+
+    storage_key = f"fotos/{uuid.uuid4()}.{extensao}"
+    storage.upload(storage_key, conteudo_recodificado, content_type=content_type)
+    url = storage.generate_presigned_url(storage_key, expires_in=_PRESIGNED_URL_EXPIRES_IN_SECONDS)
+    return storage_key, url
+
+
+async def upload_arquivo(conteudo: bytes, storage: StorageClient) -> tuple[str, str]:
+    """Upload manual (multipart) — Opção B da Seção 6 de `00_docs/arquitetura.md`."""
+    return await _processar_e_enviar(conteudo, storage)
+
+
+async def upload_clipboard(imagem_base64: str, storage: StorageClient) -> tuple[str, str]:
+    """Upload via clipboard paste (base64) — Opção A da Seção 6 de `00_docs/arquitetura.md`."""
+    try:
+        conteudo = base64.b64decode(imagem_base64, validate=True)
+    except (binascii.Error, ValueError) as exc:
+        raise DomainError(
+            "Conteúdo base64 inválido.", type_suffix="base64-invalido", title="Foto inválida"
+        ) from exc
+    return await _processar_e_enviar(conteudo, storage)
+
+
+async def vincular_a_ocorrencia(
+    db: AsyncSession, ocorrencia_id: uuid.UUID, *, storage_key: str, legenda: str | None, ordem: int | None,
+    origem: str,
+) -> Foto:
+    ocorrencia = await db.get(Ocorrencia, ocorrencia_id)
+    if ocorrencia is None:
+        raise NotFoundError(
+            f"Ocorrência '{ocorrencia_id}' não encontrada.", type_suffix="ocorrencia-nao-encontrada"
+        )
+    return await foto_repository.create(
+        db,
+        storage_key=storage_key,
+        legenda=legenda,
+        ordem=ordem,
+        origem=origem,
+        ocorrencia_id=ocorrencia_id,
+    )
+
+
+async def vincular_a_visita(
+    db: AsyncSession, visita_id: uuid.UUID, *, storage_key: str, legenda: str | None, ordem: int | None,
+    origem: str,
+) -> Foto:
+    visita = await db.get(Visita, visita_id)
+    if visita is None:
+        raise NotFoundError(f"Visita '{visita_id}' não encontrada.", type_suffix="visita-nao-encontrada")
+    return await foto_repository.create(
+        db,
+        storage_key=storage_key,
+        legenda=legenda,
+        ordem=ordem,
+        origem=origem,
+        visita_id=visita_id,
+    )
+
+
+async def atualizar(
+    db: AsyncSession, foto_id: uuid.UUID, *, legenda: str | None, ordem: int | None
+) -> Foto:
+    foto = await foto_repository.get_by_id(db, foto_id)
+    if foto is None:
+        raise NotFoundError(f"Foto '{foto_id}' não encontrada.", type_suffix="foto-nao-encontrada")
+    return await foto_repository.update(db, foto, legenda=legenda, ordem=ordem)
+
+
+async def remover(db: AsyncSession, foto_id: uuid.UUID, storage: StorageClient) -> None:
+    foto = await foto_repository.get_by_id(db, foto_id)
+    if foto is None:
+        raise NotFoundError(f"Foto '{foto_id}' não encontrada.", type_suffix="foto-nao-encontrada")
+    storage.delete(foto.storage_key)
+    await foto_repository.delete(db, foto)

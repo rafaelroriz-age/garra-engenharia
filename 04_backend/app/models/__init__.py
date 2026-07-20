@@ -19,6 +19,7 @@ from app.models.sistema_predial import SistemaPredial
 from app.models.subsistema import Subsistema
 from app.models.tipo_anomalia import TipoAnomalia
 from app.models.tipo_falha import TipoFalha
+from app.models.usuario import Usuario
 from app.models.visita import Visita
 from app.models.visita_mao_obra import VisitaMaoObra
 from app.models.visita_medicao import VisitaMedicao
@@ -39,6 +40,7 @@ __all__ = [
     "Subsistema",
     "TipoAnomalia",
     "TipoFalha",
+    "Usuario",
     "Visita",
     "VisitaMaoObra",
     "VisitaMedicao",

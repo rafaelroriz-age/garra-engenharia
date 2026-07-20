@@ -9,6 +9,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
+from app.schemas.contrato import ContratoRead
+
 
 class EdificacaoBase(BaseModel):
     nome: str
@@ -25,8 +27,18 @@ class EdificacaoCreate(EdificacaoBase):
     pass
 
 
+class EdificacaoUpdate(EdificacaoBase):
+    """Payload de `PUT /edificacoes/{id}` — substitui todos os campos (BL-08)."""
+
+
 class EdificacaoRead(EdificacaoBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     created_at: datetime
+
+
+class EdificacaoComContratos(EdificacaoRead):
+    """Detalhe de Edificação incluindo o histórico de Contratos vinculados (BL-08, RF-01)."""
+
+    contratos: list[ContratoRead] = []
