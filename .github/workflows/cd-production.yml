@@ -1,12 +1,21 @@
-# Deploy em Produção — dispara ao criar uma tag `vX.Y.Z` em `main`.
-# Ver 00_docs/projeto/plano-gestao-configuracao.md (Seção 3.3) e decisoes.md DEC-14.
+# Deploy em Produção via SSH/VPS — fallback manual (DEC-17).
+# Desde a hospedagem no Render (BL-20), o deploy de produção é nativo via git:
+# um push em `main_back`/`main_front` já dispara o auto-deploy do serviço
+# correspondente em `render.yaml` (autoDeployTrigger: commit), SEM o gate de
+# aprovação manual que este workflow implementa. Se o gate de aprovação
+# (DEC-14) for obrigatório, ajuste `autoDeployTrigger` para `off` nos serviços
+# de produção do `render.yaml` e use este workflow (ou um deploy manual via
+# Render Dashboard/API) como o único caminho real de publicação. Continua
+# disparado por tag `vX.Y.Z`, mantendo o esquema de versionamento (Seção 1.3
+# de plano-gestao-configuracao.md), independente do host usado.
+# Ver 00_docs/projeto/plano-gestao-configuracao.md (Seção 3.3) e decisoes.md DEC-14/DEC-17.
 #
 # Pré-requisitos (configurar antes do primeiro uso — BL-28):
 #   - GitHub Environment "production" com required reviewer configurado
 #     (Settings > Environments > production > Deployment protection rules).
 #   - Secrets do repositório/ambiente: SSH_HOST_PROD, SSH_USER_STAGING → usar
 #     SSH_USER_PROD, SSH_PRIVATE_KEY, PROD_ENV_FILE.
-name: CD Production
+name: CD Production (VPS manual — fallback)
 
 on:
   push:

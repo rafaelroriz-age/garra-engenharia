@@ -28,7 +28,7 @@ last_updated: 2026-07-20
 | 6.5 Implementação Backend (Incremento RFO) | 🟡 Em andamento | 40% | BL-08 a BL-11 (Edificações, Contratos, Visitas, Fotos) concluídas no backend — RFC 7807 global, Repository/Service Layer, 27 testes de integração novos |
 | 7. Implementação Frontend | 🟡 Em andamento | 10% | Scaffold (BL-03) concluído; telas de CRUD (BL-08 a BL-11) 🟢 desbloqueadas (backend pronto) |
 | 8. Integração + Testes | ⬜ Não iniciada | 0% | Testes E2E (BL-21) dependem das Etapas 3 e 4 |
-| 9. Deploy + Documentação final | 🟡 Em andamento | 10% | Gestão de Configuração (DEC-14) e CI (BL-25, BL-26) concluídos; deploy real depende de B-03 |
+| 9. Deploy + Documentação final | 🟡 Em andamento | 25% | Gestão de Configuração (DEC-14) e CI (BL-25, BL-26) concluídos; hospedagem definida (Render, HT-03 ✅) e Blueprint IaC pronto (`render.yaml`); falta HT-04 (aplicar o Blueprint no Dashboard) |
 
 ---
 
@@ -64,6 +64,7 @@ last_updated: 2026-07-20
 | BL-09 (backend) — CRUD de Contratos com executoras/NBRs em cascata + Inspeção 1:1 | `04_backend/app/api/v1/contratos.py`, `app/services/contrato_service.py`, `app/repositories/contrato_repository.py` | 2026-07-20 | ✅ Implementado e validado (6 testes em `tests/test_contratos.py`); frontend pendente |
 | BL-10 (backend) — Registro de Visitas (equipe, serviços, medições) + detalhe de Inspeção | `04_backend/app/api/v1/visitas.py`, `app/api/v1/inspecoes.py`, `app/services/visita_service.py` | 2026-07-20 | ✅ Implementado e validado (6 testes em `tests/test_visitas.py`); frontend pendente |
 | BL-11 (backend) — Upload de fotos (clipboard + manual) com reprocessamento Pillow (A08) | `04_backend/app/api/v1/fotos.py`, `app/services/foto_service.py`, `app/services/image_processing.py` | 2026-07-20 | ✅ Implementado e validado (8 testes em `tests/test_fotos.py`); frontend pendente |
+| Deploy Render (Blueprint IaC) — backend, frontend e banco definidos como código | `render.yaml`, `04_backend/Dockerfile.render`, `03_frontend/Dockerfile.render`, `05_infra/.env.render.example` | 2026-07-21 | ✅ Implementado — falta HT-04 (aplicar o Blueprint no Dashboard do Render) |
 
 ---
 
@@ -73,7 +74,8 @@ last_updated: 2026-07-20
 |---|---|---|---|---|
 | B-01 | 10 lacunas `[A ESCLARECER]` sem resposta do cliente | **Alto** — pode mudar arquitetura offline e multi-usuário | Gestor de Projeto | Agendar sessão de validação com Eng. Roniel — ver [HT-01](backlog-tarefas-humanas.md#ht-01--validar-as-10-lacunas-a-esclarecer-com-o-cliente) |
 | B-02 | Templates Word originais não entregues pelo cliente | **Médio** — bloqueia geração de DOCX fiel | Gestor de Projeto | Solicitar ao cliente todos os arquivos `.docx` de modelo — ver [HT-02](backlog-tarefas-humanas.md#ht-02--solicitar-e-receber-os-arquivos-docx-de-template-e-logo) |
-| B-03 | Preferência de hospedagem não definida | **Baixo** — Docker Compose é agnóstico | Gestor de Projeto | Definir em kickoff — ver [HT-03](backlog-tarefas-humanas.md#ht-03--decidir-a-preferência-de-hospedagem) |
+
+> B-03 (preferência de hospedagem) resolvido em 2026-07-21 — hospedagem definida como Render. Falta apenas a ação humana [HT-04](backlog-tarefas-humanas.md#ht-04--aplicar-o-blueprint-do-render-ou-provisionar-servidorvps-alternativo-e-registrar-domínio) (criar conta/aplicar o Blueprint), já não é mais um bloqueio de decisão.
 
 > Detalhamento completo dessas ações (passo a passo, links, alternativas via agente/MCP) em [backlog-tarefas-humanas.md](backlog-tarefas-humanas.md).
 

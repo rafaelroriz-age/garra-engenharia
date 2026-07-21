@@ -8,18 +8,18 @@
     }
   ],
   "servers": {
-    "io.github.github/github-mcp-server": {
+    "github": {
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp/"
     },
-    "microsoft/playwright-mcp": {
+    "playwright": {
       "type": "stdio",
       "command": "npx",
       "args": [
         "@playwright/mcp@latest"
       ]
     },
-    "render/render-mcp-server": {
+    "render": {
       "type": "http",
       "url": "https://mcp.render.com/mcp",
       "headers": {

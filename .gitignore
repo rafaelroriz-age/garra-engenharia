@@ -3,6 +3,8 @@
 .env.*
 !.env.example
 !*/.env.example
+!.env.render.example
+!*/.env.render.example
 
 # Docker
 **/docker-compose.override.yml

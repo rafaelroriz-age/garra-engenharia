@@ -1,0 +1,215 @@
+# =============================================================================
+# render.yaml — Blueprint de deploy no Render (Infrastructure as Code)
+#
+# Monorepo com 4 branches dedicadas por serviço/ambiente (DEC-17):
+#   - main_back      → produção do backend  (garra-backend)
+#   - main_front     → produção do frontend (garra-frontend)
+#   - staging_back   → staging do backend   (garra-backend-staging)
+#   - staging_front  → staging do frontend  (garra-frontend-staging)
+# Cada serviço abaixo tem seu próprio campo `branch:`, então um push em
+# `main_back` só dispara auto-deploy do backend de produção — a mesma
+# alteração de código pode existir em várias branches (o conteúdo do
+# monorepo é o mesmo), mas cada branch serve apenas de "gatilho" isolado
+# para o serviço correspondente. `main`/`staging` (branches antigas)
+# continuam existindo, mas não estão mais conectadas a nenhum serviço.
+#
+# Como usar (uma vez só, feito pelo humano no Dashboard do Render):
+#   1. https://dashboard.render.com/ → New → Blueprint.
+#   2. Conectar o repositório GitHub `rafaelroriz-age/garra-engenharia`.
+#   3. Render detecta este arquivo e mostra o preview dos recursos: 4
+#      serviços web (produção + staging, front + back) e 2 bancos
+#      (garra-db produção, garra-db-staging). Os serviços de staging têm
+#      custo adicional (Seção "Custo" abaixo) — revisar antes de "Apply"
+#      e remover o bloco correspondente se staging não for necessário
+#      ainda.
+#   4. Preencher os campos com `sync: false` quando solicitado (nenhum nesta
+#      versão — todos os segredos usam `generateValue`/`fromDatabase`).
+#   5. Clicar em "Apply" — Render provisiona os recursos e faz o 1º deploy
+#      de cada um, a partir da branch configurada em cada serviço.
+#
+# Após o 1º deploy, confira as URLs reais em cada serviço no Dashboard
+# (Settings → URL). Se o Render tiver atribuído um hostname diferente do
+# previsto abaixo (porque o nome já estava em uso por outra conta), atualize
+# `NEXT_PUBLIC_API_URL` e `BACKEND_CORS_ORIGINS` manualmente nas env vars do
+# serviço afetado e clique em "Manual Deploy".
+#
+# Custo: os 2 serviços "-staging" e o banco `garra-db-staging` são recursos
+# PAGOS adicionais (mesmo em plano `starter`/`basic-256mb`), somando-se aos
+# 3 recursos de produção já existentes. Se o objetivo é só validar o Blueprint
+# ou economizar custo, remova o bloco "Staging" inteiro (serviços + banco)
+# antes de aplicar, e recrie quando o ambiente de staging for de fato usado.
+#
+# Ver detalhes e troubleshooting em 05_infra/README.md § "Deploy em produção
+# (Render)".
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Backend — API FastAPI, produção (DEC-05) — branch main_back
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: garra-backend
+    runtime: docker
+    branch: main_back
+    dockerfilePath: ./04_backend/Dockerfile.render
+    dockerContext: ./04_backend
+    region: oregon
+    plan: starter
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    # Roda as migrations do Alembic antes de cada deploy (schema sempre em
+    # dia com o código, sem passo manual).
+    preDeployCommand: alembic upgrade head
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      # URL pública do frontend — ajuste se o Render atribuir outro hostname
+      # (ver comentário no topo do arquivo).
+      - key: BACKEND_CORS_ORIGINS
+        value: https://garra-frontend.onrender.com
+      # Credenciais do Postgres, lidas diretamente do banco gerenciado abaixo
+      # (nunca hardcoded).
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: garra-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: garra-db
+          property: port
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: garra-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: garra-db
+          property: password
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: garra-db
+          property: database
+      # Segredo do JWT (RNF-05) — gerado automaticamente pelo Render na
+      # criação do Blueprint, nunca aparece neste arquivo.
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "60"
+      # Armazenamento de fotos/documentos (MinIO/S3, DEC-02) FICOU FORA do
+      # escopo deste Blueprint (só backend+frontend+banco foram pedidos).
+      # Sem estas variáveis, a API sobe normalmente, mas os endpoints de
+      # upload/foto (BL-11) falham. Para habilitar, defina manualmente no
+      # Dashboard (Settings → Environment) apontando para um provedor
+      # S3-compatível (ex.: Cloudflare R2, AWS S3, Backblaze B2) ou provisione
+      # o MinIO como um "private service" adicional com disco persistente —
+      # ver 05_infra/README.md.
+      # - key: MINIO_HOST
+      #   sync: false
+      # - key: MINIO_ROOT_USER
+      #   sync: false
+      # - key: MINIO_ROOT_PASSWORD
+      #   sync: false
+      # - key: MINIO_BUCKET_NAME
+      #   value: relatorios-prediais
+      # - key: MINIO_USE_SSL
+      #   value: "true"
+
+  # ---------------------------------------------------------------------------
+  # Frontend — Next.js 14 PWA, produção (DEC-03/DEC-06) — branch main_front
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: garra-frontend
+    runtime: docker
+    branch: main_front
+    dockerfilePath: ./03_frontend/Dockerfile.render
+    dockerContext: ./03_frontend
+    region: oregon
+    plan: starter
+    autoDeployTrigger: commit
+    envVars:
+      # Variável NEXT_PUBLIC_* — precisa existir em BUILD TIME (o Render
+      # injeta automaticamente como Docker build arg, ver Dockerfile.render).
+      # Ajuste se o Render atribuir outro hostname ao backend.
+      - key: NEXT_PUBLIC_API_URL
+        value: https://garra-backend.onrender.com
+
+  # ---------------------------------------------------------------------------
+  # Staging (DEC-17) — recursos adicionais, remover este bloco (2 serviços +
+  # o banco garra-db-staging, na seção "databases" abaixo) se staging ainda
+  # não for necessário, para não incorrer no custo extra.
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: garra-backend-staging
+    runtime: docker
+    branch: staging_back
+    dockerfilePath: ./04_backend/Dockerfile.render
+    dockerContext: ./04_backend
+    region: oregon
+    plan: starter
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    preDeployCommand: alembic upgrade head
+    envVars:
+      - key: ENVIRONMENT
+        value: staging
+      - key: BACKEND_CORS_ORIGINS
+        value: https://garra-frontend-staging.onrender.com
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: garra-db-staging
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: garra-db-staging
+          property: port
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: garra-db-staging
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: garra-db-staging
+          property: password
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: garra-db-staging
+          property: database
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "60"
+
+  - type: web
+    name: garra-frontend-staging
+    runtime: docker
+    branch: staging_front
+    dockerfilePath: ./03_frontend/Dockerfile.render
+    dockerContext: ./03_frontend
+    region: oregon
+    plan: starter
+    autoDeployTrigger: commit
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://garra-backend-staging.onrender.com
+
+# =============================================================================
+# Bancos de dados — PostgreSQL gerenciado (DEC-07)
+# =============================================================================
+databases:
+  - name: garra-db
+    databaseName: garra_engenharia
+    user: garra
+    plan: basic-256mb
+    region: oregon
+
+  # Banco de staging isolado do de produção (nunca compartilhar dados reais
+  # de cliente com o ambiente de teste) — ver nota de custo no topo do arquivo.
+  - name: garra-db-staging
+    databaseName: garra_engenharia_staging
+    user: garra
+    plan: basic-256mb
+    region: oregon

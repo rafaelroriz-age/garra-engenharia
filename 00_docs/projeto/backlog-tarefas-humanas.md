@@ -30,9 +30,9 @@ last_updated: 2026-07-20
 |---|---|---|---|---|---|
 | [HT-01](#ht-01--validar-as-10-lacunas-a-esclarecer-com-o-cliente) | Validar as 10 lacunas `[A ESCLARECER]` com o cliente | Negociação/decisão de negócio com o cliente | BL-15, BL-18, B-01 | 🔴 Pendente | Parcial (preparar pauta e atualizar docs após resposta) |
 | [HT-02](#ht-02--solicitar-e-receber-os-arquivos-docx-de-template-e-logo) | Solicitar e receber os `.docx` de template e logo em alta resolução | Comunicação externa + espera de entrega pelo cliente | BL-12 (fiel), BL-13, BL-17, BL-19, B-02 | 🔴 Pendente | Parcial (redigir a solicitação) |
-| [HT-03](#ht-03--decidir-a-preferência-de-hospedagem) | Decidir a preferência de hospedagem (local vs. nuvem) | Decisão orçamentária | BL-20, BL-24, BL-28, B-03 | 🔴 Pendente | Parcial (pesquisa comparativa de opções) |
-| [HT-04](#ht-04--provisionar-o-servidorvps-de-produção-e-registrar-domínio) | Provisionar servidor/VPS de produção e registrar domínio | Criação de conta, pagamento, registro de domínio | BL-24, BL-28 | 🔴 Pendente | Parcial (IaC/Bicep se Azure; configuração pós-provisionamento) |
-| [HT-05](#ht-05--configurar-proteção-da-branch-main-no-github) | Configurar proteção da branch `main` no GitHub | Configuração administrativa sensível do repositório | BL-25/26 (item pendente) | 🔴 Pendente (ação manual restante) | Sim, via `gh` CLI (mesmo assim disparado pelo humano) |
+| [HT-03](#ht-03--decidir-a-preferência-de-hospedagem) | Decidir a preferência de hospedagem (local vs. nuvem) | Decisão orçamentária | BL-20, BL-24, BL-28, B-03 | ✅ Decidido (Render, 2026-07-21) | Sim (Blueprint `render.yaml` já pronto) |
+| [HT-04](#ht-04--aplicar-o-blueprint-do-render-ou-provisionar-servidorvps-alternativo-e-registrar-domínio) | Aplicar o Blueprint do Render (conta + pagamento) e registrar domínio | Criação de conta, pagamento, conexão OAuth com GitHub | BL-24, BL-28 | 🔴 Pendente | Parcial (Blueprint pronto; falta o "Apply" no Dashboard ou conectar o MCP do Render) |
+| [HT-05](#ht-05--configurar-proteção-das-branches-main_frontmain_backstaging_frontstaging_back-no-github) | Configurar proteção das 4 branches (`main_front`/`main_back`/`staging_front`/`staging_back`) no GitHub | Configuração administrativa sensível do repositório | BL-25/26 (item pendente), DEC-17 | 🔴 Pendente (ação manual restante) | Sim, via `gh` CLI (mesmo assim disparado pelo humano) |
 | [HT-06](#ht-06--cadastrar-secrets-do-github-actions) | Cadastrar Secrets do GitHub Actions (SSH, `.env` de produção) | Segredos/credenciais nunca devem passar por chat/agente | BL-28 | 🔴 Pendente | Não recomendado — apenas humano |
 | [HT-07](#ht-07--aprovar-manualmente-o-deploy-de-produção) | Aprovar manualmente o deploy de produção (GitHub Environment) | Gate de governança intencional (segregação de funções, DEC-14) | Deploys em produção (recorrente) | 🔴 Recorrente | Não — é por design |
 | [HT-08](#ht-08--obter-certificado-digital-icp-brasil-se-necessário) | Obter certificado digital ICP-Brasil (se lacuna #9 confirmar necessidade) | Processo legal com autoridade certificadora, identidade do engenheiro | Módulo de assinatura digital (futuro) | 🔴 Condicional a HT-01 | Não para obtenção; integração técnica sim, depois de obtido |
@@ -84,65 +84,63 @@ last_updated: 2026-07-20
 
 ## HT-03 — Decidir a preferência de hospedagem
 
+**Status (2026-07-21): ✅ Decidido — Render (nuvem).** O usuário optou por hospedar em [Render](https://render.com/) e pediu para subir os 3 serviços (frontend, backend, banco). O agente de DevOps já preparou todo o IaC (`../render.yaml`, `04_backend/Dockerfile.render`, `03_frontend/Dockerfile.render`, `05_infra/.env.render.example`, seção "Deploy em produção (Render)" em `05_infra/README.md`) — falta só a ação humana da HT-04 abaixo (que ficou bem mais simples do que provisionar um VPS).
+
 **Por que só um humano:** é uma decisão orçamentária/estratégica (custo recorrente vs. hospedagem local), de responsabilidade do gestor do projeto.
 
-**Bloqueia:** B-03 (`status.md`), BL-20, BL-24, BL-28 (`backlog-tarefas.md`).
+**Bloqueava:** B-03 (`status.md`), BL-20, BL-24, BL-28 (`backlog-tarefas.md`) — desbloqueados a partir de agora (dependiam só da escolha da plataforma).
 
-**Passo a passo:**
-1. Revisar as opções técnicas descritas em `12-devops.prompt.md` e na Seção 2 de [plano-gestao-configuracao.md](plano-gestao-configuracao.md#2-ambientes).
-2. Comparar custo, manutenção e disponibilidade entre hospedagem local (na empresa) e nuvem (VPS/Cloud).
-3. Registrar a decisão formal em `decisoes.md` (nova entrada `DEC-16` ou similar) e atualizar `backlog-tarefas.md`/`status.md` removendo B-03.
-
-**Alternativa via agente/MCP (parcial):**
-- Um agente de DevOps (modo "devops" ou subagente) pode **pesquisar e montar uma tabela comparativa** de provedores (custo, região, requisitos técnicos do Docker Compose) para embasar a decisão.
-- Se a decisão recair sobre Azure, o agente "modernize-deployment" (skill de deployment) pode gerar automaticamente o IaC (Bicep/Terraform) e o plano de containerização depois que a escolha for confirmada.
-- A escolha final (aprovar o gasto/local) continua humana.
+**Alternativa via agente/MCP (parcial) — já executada:**
+- O agente de DevOps gerou o Blueprint (`render.yaml`) com os 3 recursos definidos como código, prontos para aplicar no Dashboard do Render.
+- Existe um servidor MCP do Render já configurado em `.vscode/mcp.json`, mas **não conectado** nesta sessão (precisa que o usuário inicie o servidor pela paleta de comandos do VS Code e cole a própria API key quando solicitado — nunca pelo chat). Uma vez conectado, o agente pode aplicar o Blueprint e devolver os links reais automaticamente, sem precisar do passo manual no Dashboard.
 
 ---
 
-## HT-04 — Provisionar o servidor/VPS de produção e registrar domínio
+## HT-04 — Aplicar o Blueprint do Render (ou provisionar servidor/VPS alternativo) e registrar domínio
 
-**Por que só um humano:** exige criar conta em um provedor, inserir dados de pagamento e registrar um domínio — ações financeiras/contratuais que um agente não deve (nem consegue) executar.
+**Por que só um humano:** exige uma conta no provedor de nuvem (Render), autorização de pagamento dos planos pagos (`starter`/`basic-256mb` — sem tier perpétuo gratuito) e a conexão OAuth com o GitHub — ações financeiras/contratuais que um agente não deve (nem consegue) executar sem credenciais do usuário.
 
-**Depende de:** HT-03 resolvido.
+**Depende de:** HT-03 resolvido (✅ Render escolhido).
 
 **Bloqueia:** BL-24, BL-28.
 
-**Passo a passo:**
-1. Após HT-03, escolher o provedor específico (ex.: VPS nacional, Azure, ou servidor físico próprio).
-2. Criar a conta, configurar pagamento e provisionar a instância (SO Linux compatível com Docker).
-3. Registrar/apontar o domínio (DNS) para o IP do servidor.
-4. Gerar um usuário de deploy sem privilégio `root`/`sudo` interativo, conforme Seção 7 de [plano-gestao-configuracao.md](plano-gestao-configuracao.md#7-segurança-operacional-do-pipeline-e-do-host).
-5. Repassar host/usuário (não a senha/chave em texto puro pelo chat) para configuração dos Secrets (ver HT-06).
+**Passo a passo (caminho simplificado — Render, ver `05_infra/README.md` § "Deploy em produção (Render)"):**
+1. Criar/acessar conta em [dashboard.render.com](https://dashboard.render.com/) e conectar o repositório GitHub `rafaelroriz-age/garra-engenharia`.
+2. New → Blueprint → selecionar o repositório — o Render lê `render.yaml` automaticamente e mostra o preview dos 3 recursos.
+3. Clicar em **Apply** (confirmar os planos pagos). O Render provisiona `garra-db`, builda e sobe `garra-backend` e `garra-frontend`, já rodando `alembic upgrade head` antes do deploy do backend.
+4. Copiar as URLs reais (`Settings → URL` de cada serviço) e, se diferirem do previsto em `render.yaml`, ajustar `NEXT_PUBLIC_API_URL`/`BACKEND_CORS_ORIGINS` manualmente (ver checklist em `05_infra/.env.render.example`).
+5. (Opcional, domínio próprio) Settings → Custom Domains → apontar o DNS do domínio do cliente para o serviço `garra-frontend`.
 
-**Alternativa via agente/MCP (parcial):**
-- Se o provedor escolhido for **Azure**, o agente "modernize-deployment" ou a skill `microsoft-foundry`/Bicep pode gerar todo o IaC de provisionamento (rede, VM/Container Apps, regras de firewall) para o humano apenas revisar e aplicar (`az deployment` ou pipeline) — reduz o trabalho manual a aprovar/rodar o script.
-- Após o servidor existir, um agente de DevOps pode ajudar a configurar Docker, nginx e firewall via terminal (SSH), desde que as credenciais de acesso sejam fornecidas fora do fluxo de chat (nunca coladas na conversa).
-- Criação de conta, pagamento e registro de domínio continuam exclusivamente humanos.
+**Alternativa via agente/MCP:**
+- Se o usuário iniciar o servidor MCP do Render (já em `.vscode/mcp.json`) e inserir a própria API key quando o VS Code solicitar, o agente pode aplicar o Blueprint e ler os links de volta diretamente, sem precisar repetir os passos 1-4 manualmente no Dashboard.
+- Criação de conta, aprovação de custo e registro de domínio continuam exclusivamente humanos.
+- Caminho alternativo (VPS/Azure) permanece documentado no histórico deste arquivo caso a decisão de hospedagem mude no futuro.
 
 ---
 
-## HT-05 — Configurar proteção da branch `main` no GitHub
+## HT-05 — Configurar proteção das branches `main_front`/`main_back`/`staging_front`/`staging_back` no GitHub
 
 **Por que só um humano:** é uma configuração administrativa do repositório (Settings → Branches) que a ferramenta MCP do GitHub disponível no momento não expõe (sem endpoint de "branch protection" no toolset atual).
 
-**Referência:** Seção 1.4 de [plano-gestao-configuracao.md](plano-gestao-configuracao.md#14-proteção-da-branch-main), pendência registrada em BL-25/BL-26 de `backlog-tarefas.md`.
+**Referência:** Seção 1.4 de [plano-gestao-configuracao.md](plano-gestao-configuracao.md#14-proteção-das-branches-main_frontmain_backstaging_frontstaging_back-dec-17), DEC-17 em [decisoes.md](decisoes.md#dec-17--branching-por-serviço-no-monorepo-main_frontmain_backstaging_frontstaging_back), pendência registrada em BL-25/BL-26 de `backlog-tarefas.md`.
 
 **Passo a passo (via UI do GitHub):**
 1. Acessar `https://github.com/rafaelroriz-age/garra-engenharia/settings/branches`.
-2. Adicionar regra de proteção para `main`.
+2. Adicionar uma regra de proteção para CADA uma das 4 branches: `main_front`, `main_back`, `staging_front`, `staging_back` (repetir os passos 3-4 abaixo por branch).
 3. Marcar: exigir Pull Request antes de merge; exigir o status check `ci.yml`; exigir branch atualizada antes do merge; bloquear force-push e deleção da branch; habilitar apenas squash merge.
 4. Salvar e confirmar em `status.md`/memória de repositório que o item foi concluído.
 
 **Alternativa via agente/MCP:**
-- Não há tool MCP disponível hoje para isso, mas o **próprio humano** pode rodar via terminal usando a GitHub CLI (`gh`) já autenticada na máquina, por exemplo:
+- Não há tool MCP disponível hoje para isso, mas o **próprio humano** pode rodar via terminal usando a GitHub CLI (`gh`) já autenticada na máquina, por exemplo (repetir para cada uma das 4 branches, trocando `main_back` pelo nome correspondente):
   ```powershell
-  gh api -X PUT repos/rafaelroriz-age/garra-engenharia/branches/main/protection `
-    -f required_status_checks[strict]=true `
-    -f required_status_checks[contexts][]=ci.yml `
-    -f enforce_admins=true `
-    -f required_pull_request_reviews[required_approving_review_count]=0 `
-    -f restrictions=null
+  foreach ($branch in @("main_front", "main_back", "staging_front", "staging_back")) {
+    gh api -X PUT "repos/rafaelroriz-age/garra-engenharia/branches/$branch/protection" `
+      -f required_status_checks[strict]=true `
+      -f required_status_checks[contexts][]=ci.yml `
+      -f enforce_admins=true `
+      -f required_pull_request_reviews[required_approving_review_count]=0 `
+      -f restrictions=null
+  }
   ```
 - Um agente pode **gerar o comando exato** (como acima) para o humano copiar/colar e executar no próprio terminal autenticado — mas a execução deve ser feita pelo humano, pois envolve permissões administrativas do repositório.
 

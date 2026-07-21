@@ -1,5 +1,12 @@
-# Deploy contínuo em Staging — dispara a cada push em `main` (após CI verde).
-# Ver 00_docs/projeto/plano-gestao-configuracao.md (Seção 3.2) e decisoes.md DEC-14.
+# Deploy contínuo em Staging via SSH/VPS — DESATIVADO por padrão (DEC-17).
+# Desde que a hospedagem foi decidida como Render (BL-20/DEC-16-área infra),
+# o deploy de staging passou a ser nativo via git: um push em `staging_back`
+# ou `staging_front` já dispara o auto-deploy do serviço correspondente em
+# `render.yaml` (autoDeployTrigger: commit), sem precisar deste workflow.
+# Mantido apenas como fallback manual (workflow_dispatch) para um cenário
+# futuro de VPS próprio — ver 00_docs/projeto/plano-gestao-configuracao.md
+# (Seção 3.2) e decisoes.md DEC-14/DEC-17. BL-28 reavalia se este arquivo
+# ainda é necessário.
 #
 # Pré-requisitos (configurar antes do primeiro uso — BL-28):
 #   - Secrets do repositório: SSH_HOST_STAGING, SSH_USER_STAGING, SSH_PRIVATE_KEY,
@@ -7,13 +14,10 @@
 #   - Host de staging com Docker + Docker Compose instalados e diretório
 #     `05_infra` clonado (ou apenas os arquivos docker-compose.prod.yml/nginx).
 #   - Imagens publicadas no GitHub Container Registry (ghcr.io/<org>/garra-*).
-name: CD Staging
+name: CD Staging (VPS manual — fallback)
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    branches: [main]
-    types: [completed]
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -22,7 +26,6 @@ permissions:
 jobs:
   build-and-push:
     name: Build e push das imagens (tag staging-<sha>)
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     outputs:
       image_tag: staging-${{ github.sha }}

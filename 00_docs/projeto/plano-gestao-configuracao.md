@@ -22,16 +22,23 @@ last_updated: 2026-07-19
 
 Não versionar: `.env`, `.env.*` (exceto `.env.example`), `node_modules/`, `.next/`, `.venv/`, `__pycache__/`, volumes Docker — já cobertos pelo `.gitignore` existente na raiz.
 
-### 1.1 Branching — Trunk-Based simplificado
+### 1.1 Branching — Trunk-Based simplificado, com branches dedicadas por serviço/ambiente (DEC-17)
 
-- `main`: sempre deployável. Protegida (ver 1.4). Todo merge exige PR + CI verde.
-- Branches de trabalho de vida curta (idealmente < 3 dias), a partir de `main`:
+- 4 branches de longa duração, cada uma servindo de gatilho de deploy de UM serviço no Render (o conteúdo do monorepo é o mesmo em todas — sem histórico filtrado, sem quebrar DEC-09):
+  - `main_back` — produção do backend (`garra-backend` em `render.yaml`)
+  - `main_front` — produção do frontend (`garra-frontend`)
+  - `staging_back` — staging do backend (`garra-backend-staging`)
+  - `staging_front` — staging do frontend (`garra-frontend-staging`)
+- Todas as 4 protegidas (ver 1.4): merge exige PR + CI verde na branch correspondente.
+- `main`/`staging` (nomes anteriores à DEC-17) continuam existindo no repositório, mas não estão mais conectadas a nenhum serviço do Render — usadas apenas como branch de integração intermediária, se o fluxo de trabalho do time preferir revisar ali antes de promover para as 4 branches de serviço.
+- Branches de trabalho de vida curta (idealmente < 3 dias), a partir da branch de serviço/ambiente alvo:
   - `feat/<slug>` — nova funcionalidade (ex.: `feat/bl-06-auth-jwt`)
   - `fix/<slug>` — correção de bug
   - `chore/<slug>` — infra, dependências, configuração
   - `docs/<slug>` — apenas documentação (`00_docs/`)
+- Uma mudança que afeta front e back ao mesmo tempo pode exigir 2 PRs (um por branch-alvo) ou merge nas duas branches — decisão tomada por PR, não automatizada.
 - Sem `develop`/`release/*` — o backlog (`backlog-tarefas.md`) já cumpre o papel de plano de releases; branches longas de release adicionariam overhead desproporcional ao porte da equipe (mesmo racional de DEC-08).
-- Rebase (não merge commit) da branch de feature sobre `main` antes de abrir PR, para manter histórico linear; merge do PR para `main` via **squash merge** (1 commit por PR).
+- Rebase (não merge commit) da branch de feature sobre a branch-alvo antes de abrir PR, para manter histórico linear; merge do PR via **squash merge** (1 commit por PR).
 
 ### 1.2 Convenção de Commits — Conventional Commits
 
@@ -53,17 +60,17 @@ Motivo: permite gerar changelog automaticamente (futuro) e comunica intenção d
   - `MAJOR`: mudança incompatível de schema de banco sem migração automática, ou de contrato de API pública.
   - `MINOR`: nova funcionalidade (novo tipo de relatório, novo endpoint).
   - `PATCH`: correção de bug, ajuste de template, dependência.
-- Tag criada apenas em `main`, após deploy de produção bem-sucedido (ver Seção 4). Tag dispara o workflow `cd-production.yml` (Seção 3.3).
+- Tag criada apenas em `main_back`/`main_front` (produção), após deploy bem-sucedido (ver Seção 4). Tag dispara o workflow `cd-production.yml` (Seção 3.3, hoje fallback manual — ver nota da DEC-17).
 - `v0.x.y` enquanto o sistema não atingir os critérios de aceitação da v1.0 (`escopo.md`); `v1.0.0` = primeiro RFO completo gerado em produção fiel ao template do cliente.
 
-### 1.4 Proteção da branch `main`
+### 1.4 Proteção das branches `main_front`/`main_back`/`staging_front`/`staging_back` (DEC-17)
 
-Configurar em GitHub → Settings → Branches (ação manual do gestor do repositório, não automatizável por este plano):
+Configurar em GitHub → Settings → Branches, uma regra por branch (ação manual do gestor do repositório, não automatizável por este plano — ver HT-05 em `backlog-tarefas-humanas.md`):
 
 - Exigir Pull Request antes de merge (sem push direto, nem do próprio dono do repositório).
 - Exigir que o workflow `ci.yml` passe (status check obrigatório) antes de permitir merge.
-- Exigir branch atualizada com `main` antes do merge.
-- Bloquear force-push e deleção da branch `main`.
+- Exigir branch atualizada com a branch-alvo antes do merge.
+- Bloquear force-push e deleção das 4 branches.
 - Squash merge como único método de merge habilitado (mantém histórico linear, 1 commit = 1 PR = 1 unidade de trabalho rastreável ao backlog).
 
 ### 1.5 Template de Pull Request
@@ -77,10 +84,10 @@ Criado em `.github/pull_request_template.md` (ver Seção 5) para garantir que t
 | Ambiente | Onde roda | Como é implantado | Dados |
 |---|---|---|---|
 | **Local (dev)** | Máquina do engenheiro/agente | `cd 05_infra && docker compose up -d` (`docker-compose.yml`) | Postgres/MinIO com dados de teste, sem backup |
-| **Staging** | Mesma VPS/host da produção (ou host separado, conforme decisão de hospedagem — B-03) | Deploy automático a cada merge em `main` (`cd-staging.yml`) | Dados sintéticos/anonimizados; pode ser resetado a qualquer momento |
-| **Produção** | Host definido após resolução de B-03 (`decisoes.md`, `backlog-tarefas.md` BL-20) | Deploy manual (aprovação) disparado por tag `vX.Y.Z` (`cd-production.yml`) | Dados reais de clientes — sujeitos às políticas de backup (Seção 6) |
+| **Staging** | Render (`garra-backend-staging`/`garra-frontend-staging`, `render.yaml`) | Deploy automático nativo do Render a cada push em `staging_back`/`staging_front` (DEC-17) | Banco `garra-db-staging`, isolado do de produção; pode ser resetado a qualquer momento |
+| **Produção** | Render (`garra-backend`/`garra-frontend`, `render.yaml`) | Deploy automático nativo do Render a cada push em `main_back`/`main_front` (`autoDeployTrigger: commit`) — SEM gate de aprovação manual por padrão; ver nota da DEC-17 se o gate for exigido | Banco `garra-db` — dados reais de clientes, sujeitos às políticas de backup (Seção 6) |
 
-Enquanto B-03 não é resolvido, staging e produção usam o mesmo `docker-compose.prod.yml` (Seção 4), variando apenas o arquivo `.env` (nunca commitado) e o domínio configurado no `nginx`.
+B-03 (hospedagem) foi resolvido em 2026-07-21 — Render escolhido (BL-20). `docker-compose.prod.yml`/`nginx.conf` (pensados para um VPS próprio) ficaram sem uso real; `cd-staging.yml`/`cd-production.yml` viraram fallback manual (`workflow_dispatch`) para esse cenário alternativo.
 
 ---
 
@@ -88,7 +95,7 @@ Enquanto B-03 não é resolvido, staging e produção usam o mesmo `docker-compo
 
 Arquivos em `.github/workflows/`. Todos os workflows devem falhar rápido (lint/type-check antes de testes, testes antes de build de imagem).
 
-### 3.1 `ci.yml` — Integração Contínua (todo PR e push em `main`)
+### 3.1 `ci.yml` — Integração Contínua (todo PR e push em `main_front`/`main_back`/`staging_front`/`staging_back`, e ainda `main`/`staging` durante a transição)
 
 1. **Lint + type-check**
    - Backend: `ruff check .` + `mypy app` (ou equivalente já configurado em `04_backend`).
@@ -99,14 +106,15 @@ Arquivos em `.github/workflows/`. Todos os workflows devem falhar rápido (lint/
 3. **Build de imagens Docker** (cache de layers via `actions/cache` ou GitHub Actions cache do Buildx) para `04_backend/Dockerfile` e `03_frontend/Dockerfile`, sem push (apenas valida que o build funciona).
 4. **Scan de vulnerabilidades**: Trivy (`aquasecurity/trivy-action`) nas imagens buildadas e `pip-audit`/`npm audit` nas dependências — falhas de severidade `HIGH`/`CRITICAL` bloqueiam o merge (BL-23 estende esta etapa com revisão manual OWASP).
 
-### 3.2 `cd-staging.yml` — Deploy Contínuo em Staging
+### 3.2 `cd-staging.yml` — Deploy em Staging (fallback manual, DEC-17)
 
-- Gatilho: push em `main` (após merge do PR), somente se `ci.yml` já passou.
-- Passos: build + push das imagens para o registry (GitHub Container Registry — `ghcr.io`, sem custo adicional e já integrado ao repositório) com tag `staging-<sha curto>`; conexão via SSH (chave em secret) ao host de staging; `docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d`; roda migrations Alembic (`alembic upgrade head`) antes de subir o `backend`; healthcheck pós-deploy (`GET /health/ready`) com rollback automático se falhar (Seção 4.2).
+- **Caminho real de deploy hoje**: nativo do Render — push em `staging_back`/`staging_front` já dispara `autoDeployTrigger: commit` nos serviços `garra-backend-staging`/`garra-frontend-staging` (`render.yaml`), sem passar por este workflow.
+- Este workflow foi convertido para `workflow_dispatch` (só roda se disparado manualmente) e serve de fallback para um cenário de VPS próprio: build + push das imagens para o GitHub Container Registry (`ghcr.io`) com tag `staging-<sha curto>`; conexão via SSH (chave em secret) ao host de staging; `docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d`; roda migrations Alembic (`alembic upgrade head`) antes de subir o `backend`; healthcheck pós-deploy (`GET /health/ready`) com rollback automático se falhar (Seção 4.2).
 
-### 3.3 `cd-production.yml` — Deploy em Produção
+### 3.3 `cd-production.yml` — Deploy em Produção (fallback manual, DEC-17)
 
-- Gatilho: criação de tag `v*.*.*` na branch `main`.
+- **Caminho real de deploy hoje**: nativo do Render — push em `main_back`/`main_front` já dispara `autoDeployTrigger: commit` nos serviços `garra-backend`/`garra-frontend`, **sem** o gate de aprovação manual abaixo. Se o gate (DEC-14) for obrigatório, ajustar `autoDeployTrigger` para `off` nesses serviços em `render.yaml` e usar este workflow (ou deploy manual via Dashboard/API do Render) como único caminho de publicação.
+- Gatilho: criação de tag `v*.*.*` (mantém o esquema de versionamento independente do host).
 - Exige **aprovação manual** via GitHub Environments (`production` environment com required reviewer = o próprio engenheiro/gestor).
 - Mesmos passos do staging, porém: imagens com tag `<versão>` (não `latest`, para permitir rollback determinístico — Seção 4.2), backup pré-deploy do banco disparado antes da migration (Seção 6), e notificação (issue ou comentário automático) resumindo a versão implantada.
 

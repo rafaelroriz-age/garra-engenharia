@@ -1,0 +1,47 @@
+# =============================================================================
+# 03_frontend/Dockerfile.render
+# Imagem de PRODUÇÃO do frontend Next.js, usada exclusivamente pelo deploy no
+# Render (ver ../render.yaml). Não substitui `03_frontend/Dockerfile` (imagem
+# de DESENVOLVIMENTO com `next dev`, usada por `05_infra/docker-compose.yml`).
+#
+# Build multi-stage com `output: "standalone"` (next.config.mjs) — gera um
+# bundle mínimo (`server.js` + só as dependências realmente usadas), evitando
+# copiar `node_modules` inteiro para a imagem final.
+#
+# `NEXT_PUBLIC_API_URL` precisa estar disponível em BUILD TIME (variáveis
+# `NEXT_PUBLIC_*` são embutidas no bundle JS pelo `next build`, não podem ser
+# trocadas em runtime). O Render traduz automaticamente as env vars do serviço
+# em Docker build args — por isso o `ARG`/`ENV` abaixo, casando com a env var
+# definida em render.yaml.
+# =============================================================================
+
+# ---- Etapa de build ---------------------------------------------------------
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+# ---- Etapa final (runtime) --------------------------------------------------
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+RUN addgroup --system nodejs && adduser --system --ingroup nodejs nextjs
+
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+# server.js (gerado pelo output "standalone") lê $PORT automaticamente.
+CMD ["sh", "-c", "PORT=${PORT:-3000} node server.js"]
