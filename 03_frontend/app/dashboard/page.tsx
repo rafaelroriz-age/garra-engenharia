@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, Building2, CheckCircle2, ClipboardList, XCircle } from "lucide-react";
 
@@ -19,8 +19,43 @@ import { Skeleton } from "@/components/ui/skeleton";
  * Dashboard de saúde por edificação/sistema predial (RF-07, BL-16).
  * Consome `GET /edificacoes/{id}/dashboard` (agregados cacheados ~60s no
  * backend, arquitetura.md Seção 10.4) — nenhuma agregação é feita aqui.
+ *
+ * `useSearchParams()` exige um limite de Suspense (Next.js App Router) para
+ * não forçar toda a rota a renderização client-only durante o build estático.
  */
 export default function DashboardPage() {
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div>
+      <PageHeader
+        title="Dashboard"
+        description="Indicadores de saúde por edificação e sistema predial (RF-07)."
+      />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i} aria-hidden="true">
+            <CardHeader className="space-y-2 pb-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-7 w-16" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-3 w-32" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const edificacaoId = searchParams.get("edificacaoId") ?? "";

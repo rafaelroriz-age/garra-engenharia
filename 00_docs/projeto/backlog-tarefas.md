@@ -12,7 +12,7 @@ last_updated: 2026-07-19
 >
 > Tarefas que só um humano pode executar (decisões de negócio, comunicação com o cliente, credenciais, atos jurídicos) estão em [backlog-tarefas-humanas.md](backlog-tarefas-humanas.md), não neste arquivo.
 
-**Legenda de status:** ✅ Concluída (executada e validada) | 🟢 Desbloqueada (pronta para iniciar) | 🔴 Bloqueada (B-01 lacunas / B-02 templates / B-03 hospedagem)
+**Legenda de status:** ✅ Concluída (executada e validada) | 🟢 Desbloqueada (pronta para iniciar) | 🟢 (parcial) Uma camada pronta, outra pendente | 🔴 Bloqueada (B-01 lacunas / B-02 templates / B-03 hospedagem)
 
 ## Etapa 0 — Fundação Técnica
 
@@ -41,9 +41,9 @@ last_updated: 2026-07-19
 
 | # | Tarefa | Requisitos/Decisões | Status | Agente | Prompt Sugerido | Observação |
 |---|---|---|---|---|---|---|
-| BL-14 | CRUD de Ocorrências (sistema, subsistema, localização, classificação) | RF-04, RN-03, RN-05, RN-10 | 🟢 | Engenheiro Backend + Engenheiro Frontend | [25-crud-ocorrencias.prompt.md](../../.github/prompts/25-crud-ocorrencias.prompt.md) | Não depende de lacunas para o CRUD básico |
+| BL-14 | CRUD de Ocorrências (sistema, subsistema, localização, classificação) | RF-04, RN-03, RN-05, RN-10 | 🟢 (parcial) | Engenheiro Backend + Engenheiro Frontend | [25-crud-ocorrencias.prompt.md](../../.github/prompts/25-crud-ocorrencias.prompt.md) | **Frontend implementado e testado (2026-07-21)** — listagem com filtros, formulário de classificação completa, upload de fotos e painel RN-10 em `03_frontend/app/inspecoes/[id]/ocorrencias/`; aguardando os endpoints do Engenheiro Backend (`/inspecoes/{id}/ocorrencias`, `/ocorrencias/{id}`). Contrato de enums (Situação/Classificação/Grau de Risco) assumido pelo frontend, a confirmar quando o backend for implementado |
 | BL-15 | Regra de prioridade automática por Grau de Risco CMM (RN-04) | RN-04 | 🔴 B-01 | Engenheiro Backend | `06-backend.prompt.md` (aguardando destravar) | Depende de confirmação se o engenheiro pode sobrescrever manualmente (lacuna #10 relacionada) |
-| BL-16 | Dashboard de saúde por edificação/sistema predial | RF-07 | 🟢 (depende de BL-14) | Engenheiro Backend + Engenheiro Frontend | [26-dashboard-saude-edificacao.prompt.md](../../.github/prompts/26-dashboard-saude-edificacao.prompt.md) | Não bloqueado tecnicamente, mas depende de ocorrências existirem |
+| BL-16 | Dashboard de saúde por edificação/sistema predial | RF-07 | 🟢 (parcial) | Engenheiro Backend + Engenheiro Frontend | [26-dashboard-saude-edificacao.prompt.md](../../.github/prompts/26-dashboard-saude-edificacao.prompt.md) | **Frontend implementado e testado (2026-07-21)** — `03_frontend/app/dashboard/page.tsx` consumindo `GET /edificacoes/{id}/dashboard`; aguardando a agregação CQRS + cache Redis do Engenheiro Backend |
 | BL-17 | Prototipagem de templates HTML/CSS do LTIP + relatório fotográfico por sistema | RF-06, RN-11, RNF-03 | 🔴 B-02 | Prototipagem e Documentação para Cliente | `05-prototipagem.prompt.md` (aguardando destravar) | Mesma restrição de BL-12 |
 
 ## Etapa 1/2 — Ações de Gestão (não são tarefas de engenharia)
@@ -76,7 +76,8 @@ last_updated: 2026-07-19
 ## Resumo
 
 - **Tarefas concluídas:** BL-01 (ambiente de desenvolvimento), BL-02 (scaffold backend FastAPI), BL-03 (scaffold frontend Next.js PWA), BL-04 (modelagem de dados: modelos SQLAlchemy + migrations Alembic), BL-05 (seed do gabarito de sistemas prediais/subsistemas/tipos de anomalia/falha/localizações), BL-06 (autenticação JWT + bcrypt), BL-07 (storage service MinIO/S3 via boto3), BL-25 (repositório Git remoto criado e publicado), BL-26 (workflow `ci.yml` publicado) — evidências em `05_infra/README.md`, `04_backend/README.md`, `03_frontend/README.md`, DEC-13/DEC-14/DEC-15 em [decisoes.md](decisoes.md) e [status.md](status.md#artefatos-entregues).
-- **Tarefas 100% desbloqueadas para início imediato:** BL-08 a BL-11, BL-14, BL-16 (parcial), BL-27, BL-29.
+- **Tarefas parcialmente concluídas (frontend pronto, backend pendente):** BL-14 e BL-16 — telas implementadas e testadas (build + lint + smoke test em 2026-07-21: `03_frontend/app/inspecoes/[id]/ocorrencias/`, `03_frontend/app/dashboard/page.tsx`), aguardando os endpoints correspondentes do Engenheiro Backend para integração ponta a ponta.
+- **Tarefas 100% desbloqueadas para início imediato:** BL-08 a BL-11, BL-27, BL-29.
 - **Tarefas bloqueadas por B-01 (lacunas):** BL-15, BL-18.
 - **Tarefas bloqueadas por B-02 (templates):** BL-12 (parcial), BL-13, BL-17, BL-19.
 - **Tarefas bloqueadas por B-03 (hospedagem):** BL-20, BL-24 (impacto baixo, não impede desenvolvimento), BL-28 (depende de BL-26/BL-27).
