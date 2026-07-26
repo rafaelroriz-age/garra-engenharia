@@ -123,7 +123,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build da imagem ${{ matrix.nome }} (sem push)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.contexto }}
           push: false

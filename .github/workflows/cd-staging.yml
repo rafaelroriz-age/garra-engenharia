@@ -40,14 +40,14 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build + push backend
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: 04_backend
           push: true
           tags: ghcr.io/${{ github.repository }}/backend:staging-${{ github.sha }}
 
       - name: Build + push frontend
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: 03_frontend
           push: true
