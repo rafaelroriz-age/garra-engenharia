@@ -67,7 +67,7 @@ last_updated: 2026-07-29
 
 | # | Tarefa | Responsável | Agente | Prompt/Ação | Status |
 |---|---|---|---|---|---|
-| BL-18 | Agendar e conduzir sessão de validação das 10 lacunas `[A ESCLARECER]` | Gestor de Projeto | Gestor de Projeto / Arquiteto de Soluções (este modo) | Ação de gestão direta — sem prompt técnico; usar `estudo-do-contexto.md` §9 como pauta | 🔴 B-01 (ação necessária) |
+| BL-18 | Agendar e conduzir sessão de validação das 10 lacunas `[A ESCLARECER]` | Gestor de Projeto | Gestor de Projeto / Arquiteto de Soluções (este modo) | Ação de gestão direta — sem prompt técnico; usar `estudo-do-contexto.md` §9 como pauta, priorizando as lacunas remanescentes porque #6/#11/#12 já foram resolvidas e #13 foi parcialmente esclarecida pelo prompt do cliente, sem substituir a validação do provedor de IA e da política de dados | 🔴 B-01 (ação necessária) |
 | BL-19 | Solicitar e receber arquivos `.docx` de template (RFO, LTIP, Vistoria Cautelar, RFIP) e logo em alta resolução | Gestor de Projeto | Gestor de Projeto / Arquiteto de Soluções (este modo) | Ação de gestão direta — comunicação com cliente | 🔴 B-02 (ação necessária) |
 | BL-20 | Definir preferência de hospedagem (local vs. nuvem) | Gestor de Projeto | Gestor de Projeto / Arquiteto de Soluções (este modo), com apoio técnico do Engenheiro DevOps | Ação de gestão direta; consultar `12-devops.prompt.md` para opções técnicas | ✅ Concluída (2026-07-21) — hospedagem definida: Render (nuvem) |
 
@@ -97,7 +97,7 @@ last_updated: 2026-07-29
 - **Impacto do prompt do cliente (2026-07-28):** a nova demanda de legendas assistidas por IA não exige reabrir BL-01 a BL-09, mas exige revisão de integração em BL-04 (campos/entidades), BL-07 (armazenamento/metadata), BL-11 (upload + geração) e BL-31 (fluxo de anotação) para suportar BL-34/BL-35.
 - **Tarefas 100% desbloqueadas para início imediato:** BL-27, BL-29, BL-30 (RBAC) e BL-31 (editor de anotação de fotos).
 - **Teste manual de UI (2026-07-22)**: corrigido bug de configuração `NEXT_PUBLIC_API_URL` sem sufixo `/api/v1` (afetava dev local e o Blueprint do Render) que fazia todas as chamadas do frontend voltarem 404 — ver `05_infra/.env`, `docker-compose.yml`, `render.yaml`. Tela de login (antes um placeholder) implementada e validada de ponta a ponta.
-- **Tarefas bloqueadas por B-01 (lacunas):** BL-15, BL-18.
+- **Tarefas bloqueadas por B-01 (lacunas):** BL-15, BL-18. O prompt do cliente já esclareceu parcialmente #13, mas as decisões de negócio/arquitetura restantes continuam exigindo validação formal com o stakeholder.
 - **Tarefas bloqueadas por B-02 (templates):** BL-12 (parcial), BL-13, BL-17, BL-19.
 - **B-03 (hospedagem) resolvido em 2026-07-21** — Render escolhido, BL-20 concluída. BL-24 passou a 🟢 (parcial: IaC pronto, falta ação humana HT-04). BL-28 concluída (ver linha da tabela acima).
 - **Reorganização de branches em 2026-07-21 (DEC-17)**: monorepo passou a ter 4 branches dedicadas por serviço/ambiente no Render — `main_front`, `main_back`, `staging_front`, `staging_back` (`main`/`staging` continuam existindo, sem serviço conectado). `render.yaml`, `ci.yml`, `cd-staging.yml`/`cd-production.yml` e `05_infra/README.md` atualizados de acordo; HT-05 (`backlog-tarefas-humanas.md`) precisa ser repetida para as 4 branches novas.

@@ -3,13 +3,13 @@ title: Status do Projeto — Sistema de Automação de Relatórios Prediais
 type: gestao
 status: ativo
 owner: Garra Engenharia
-last_updated: 2026-07-28
+last_updated: 2026-07-29
 ---
 
 # Status do Projeto
 
-**Última atualização:** 2026-07-28  
-**Fase atual:** Incremento LTIP + Legendas Assistidas por IA — backend de BL-08 a BL-11 concluído; frontend de BL-08/BL-09 confirmado funcional; BL-10/BL-11 re-testes pendentes; BL-14/BL-16 aguardando integração; BL-34 a BL-39 adicionadas como próxima frente de evolução com base no prompt do cliente  
+**Última atualização:** 2026-07-29  
+**Fase atual:** Incremento LTIP + Legendas Assistidas por IA — o prompt do cliente esclareceu parcialmente a lacuna #13 (prompt-sistema universal, regras de não invenção, rastreabilidade e aprovação humana); as lacunas #6/#11/#12 já foram tratadas via DEC-18; as lacunas #1/#2/#3/#4/#5/#7/#8/#9/#10 continuam abertas e exigem validação formal  
 **Progresso geral:** ████████████░ 67%
 
 ---
@@ -22,7 +22,7 @@ last_updated: 2026-07-28
 | 2. Estudo do Contexto | ✅ Concluída | 100% | `00_docs/estudo-do-contexto.md` |
 | 3. Arquitetura de Software | ✅ Concluída | 100% | `00_docs/arquitetura.md` |
 | 3.5 Planejamento de Ciclo de Vida e Backlog | ✅ Concluída | 100% | `00_docs/projeto/ciclo-de-vida.md`, `cronograma.md`, `backlog-tarefas.md` |
-| 4. Validação com cliente (lacunas) | ⏳ Pendente | 0% | Sessão de validação agendada (Etapa 1) |
+| 4. Validação com cliente (lacunas) | 🟡 Parcialmente concluída | 30% | Validação parcial concluída com base no prompt do cliente; ainda faltam respostas formais para as lacunas remanescentes (Etapa 1) |
 | 5. Prototipagem de templates PDF/DOCX | ⬜ Não iniciada | 0% | Bloqueada por B-02 (parcial — ver BL-12) |
 | 6. Implementação Backend (Fundação Técnica) | ✅ Concluída | 100% | BL-01, BL-02, BL-04, BL-05, BL-06, BL-07 concluídas — ver [04_backend/README.md](../../04_backend/README.md) |
 | 6.5 Implementação Backend (Incremento RFO) | 🟡 Em andamento | 40% | BL-08 a BL-11 (Edificações, Contratos, Visitas, Fotos) concluídas no backend — RFC 7807 global, Repository/Service Layer, 27 testes de integração novos |
@@ -74,7 +74,7 @@ last_updated: 2026-07-28
 
 | # | Bloqueio | Impacto | Responsável | Ação necessária |
 |---|---|---|---|---|
-| B-01 | 10 lacunas `[A ESCLARECER]` sem resposta do cliente | **Alto** — pode mudar arquitetura offline e multi-usuário | Gestor de Projeto | Agendar sessão de validação com Eng. Roniel — ver [HT-01](backlog-tarefas-humanas.md#ht-01--validar-as-10-lacunas-a-esclarecer-com-o-cliente) |
+| B-01 | 10 lacunas `[A ESCLARECER]` ainda não resolvidas formalmente; #6/#11/#12 já foram tratadas via DEC-18, #13 foi esclarecida parcialmente pelo prompt do cliente e as demais (#1, #2, #3, #4, #5, #7, #8, #9, #10) continuam pendentes | **Alto** — ainda há decisões remanescentes que podem alterar arquitetura offline, multi-usuário e assinatura digital | Gestor de Projeto | Finalizar a validação formal das lacunas remanescentes com Eng. Roniel — ver [HT-01](backlog-tarefas-humanas.md#ht-01--validar-as-10-lacunas-a-esclarecer-com-o-cliente) |
 | B-02 | Templates Word originais não entregues pelo cliente | **Médio** — bloqueia geração de DOCX fiel | Gestor de Projeto | Solicitar ao cliente todos os arquivos `.docx` de modelo — ver [HT-02](backlog-tarefas-humanas.md#ht-02--solicitar-e-receber-os-arquivos-docx-de-template-e-logo) |
 | B-04 | Provedor de IA/LLM para geração assistida de legendas técnicas (RF-15, DEC-21) ainda não escolhido (lacuna #13) | **Médio** — bloqueia BL-34 a BL-39; envolve custo por chamada e política de retenção/privacidade dos dados enviados a terceiros (fotos/descrições de imóveis) | Gestor de Projeto | Definir provedor (OpenAI, Azure OpenAI, Anthropic, outro) e política de dados antes de iniciar BL-34/BL-36 a BL-39 |
 
@@ -88,7 +88,7 @@ last_updated: 2026-07-28
 
 ## Próximos Passos (em ordem)
 
-1. **[IMEDIATO]** Agendar reunião de validação com Eng. Roniel para resolver lacunas `[A ESCLARECER]` de `estudo-do-contexto.md` (especialmente: offline, multi-usuário, assinatura digital) — resolve B-01 (Etapa 1)
+1. **[IMEDIATO]** Concluir a validação formal das lacunas remanescentes em `estudo-do-contexto.md` (#1, #2, #3, #4, #5, #7, #8, #9, #10), tendo em vista que #6/#11/#12 já foram resolvidas via DEC-18 e #13 foi esclarecida parcialmente pelo prompt do cliente — reduz o impacto de B-01 (Etapa 1)
 2. **[IMEDIATO]** Solicitar todos os arquivos `.docx` de template (RFO, LTIP, Vistoria Cautelar, RFIP) e logo em alta resolução — resolve B-02 (Etapa 2)
 3. Re-testar em UI o frontend de Visitas (BL-10) e Upload de fotos (BL-11) — Edificações e Contratos (BL-08/BL-09) já confirmados funcionais em 2026-07-22; implementar os endpoints de backend pendentes de Ocorrências (BL-14) e agregação do Dashboard (BL-16) para desbloquear os frontends já prontos dessas telas
 4. Definir o provedor de IA e a política de dados para desbloquear BL-34 e a extensão BL-36 a BL-39 do fluxo de legendas assistidas por IA
@@ -108,7 +108,7 @@ last_updated: 2026-07-28
 | Regras de negócio documentadas | 13 (RN-01 a RN-13) |
 | Requisitos funcionais | 12 (RF-01 a RF-12) |
 | Requisitos não funcionais | 8 (RNF-01 a RNF-08) |
-| Lacunas [A ESCLARECER] | 10 (seção 9 do estudo-do-contexto.md) |
+| Lacunas [A ESCLARECER] | 10 (seção 9 do estudo-do-contexto.md); 3 já tratadas/definidas (#6/#11/#12), 1 parcialmente esclarecida (#13) e 9 ainda exigem confirmação formal |
 | Decisões arquiteturais registradas | 16 (DEC-01 a DEC-16) |
 | Riscos identificados | 9 (R-01 a R-09) |
 | Entidades no modelo ER | 14 |

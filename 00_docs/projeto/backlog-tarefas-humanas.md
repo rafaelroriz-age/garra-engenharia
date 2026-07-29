@@ -50,13 +50,15 @@ last_updated: 2026-07-24
 
 **Bloqueia:** B-01 (`status.md`), BL-15, BL-18 (`backlog-tarefas.md`).
 
+**Estado atual (2026-07-29):** a lacuna #13 foi esclarecida parcialmente pelo prompt do cliente em [00_docs/cliente/prompt-lado-cliente.md](../cliente/prompt-lado-cliente.md); as lacunas #6, #11 e #12 já foram tratadas/definidas via DEC-18 em [00_docs/projeto/decisoes.md](decisoes.md). As lacunas remanescentes (#1, #2, #3, #4, #5, #7, #8, #9, #10) ainda precisam de confirmação formal, inclusive a decisão de provedor de IA e política de retenção/privacidade para o fluxo de legendas assistidas por IA.
+
 **Passo a passo:**
 1. Revisar a lista completa das 10 lacunas em [estudo-do-contexto.md §9](../estudo-do-contexto.md#9-lacunas-a-esclarecer).
 2. Agendar reunião com o Eng. Roniel (ou responsável técnico do cliente) — canal a critério do gestor (e-mail, WhatsApp, chamada).
 3. Conduzir a reunião cobrindo os 10 itens, com atenção prioritária a: offline (#3), multiusuário (#2), assinatura digital (#9) — citados como prioritários em [status.md](status.md#próximos-passos-em-ordem).
 4. Documentar as respostas (ata ou anotações) e guardar em `00_docs/` (ex.: novo arquivo `ata-validacao-lacunas.md`).
-5. Atualizar `estudo-do-contexto.md` removendo as tags `[A ESCLARECER]` e ajustando RN-04, RN-13, RNF-02, RNF-08 conforme as respostas.
-6. Remover o bloqueio B-01 de [status.md](status.md#bloqueios-ativos) e desbloquear BL-15/BL-18 em `backlog-tarefas.md`.
+5. Atualizar `estudo-do-contexto.md` marcando as lacunas já esclarecidas (#6, #11, #12) e a lacuna #13 como parcialmente resolvida, mantendo as demais como pendentes e ajustando RN-04, RN-13, RNF-02, RNF-08 conforme as respostas.
+6. Atualizar o status de B-01 para "parcialmente resolvido" em [status.md](status.md#bloqueios-ativos) e ajustar BL-15/BL-18 em `backlog-tarefas.md` para refletir o que ficou esclarecido e o que ainda precisa confirmação.
 
 **Alternativa via agente/MCP (parcial):**
 - Um agente (ex.: modo "estudo-contexto" ou "Gestor de Projeto") pode **preparar a pauta/roteiro da reunião** e um rascunho de e-mail/mensagem convite, a partir de `estudo-do-contexto.md §9`.
