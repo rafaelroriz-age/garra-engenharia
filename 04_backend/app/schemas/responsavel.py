@@ -11,6 +11,7 @@ class ResponsavelBase(BaseModel):
     crea: str | None = None
     email: str | None = None
     telefone: str | None = None
+    usuario_id: uuid.UUID | None = None
 
 
 class ResponsavelCreate(ResponsavelBase):

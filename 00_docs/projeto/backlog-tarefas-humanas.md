@@ -9,7 +9,8 @@ related:
   - 00_docs/projeto/status.md
   - 00_docs/projeto/backlog-tarefas.md
   - 00_docs/projeto/plano-gestao-configuracao.md
-last_updated: 2026-07-20
+  - 00_docs/projeto/backlog-kanban.md
+last_updated: 2026-07-24
 ---
 
 # Backlog de Tarefas Humanas
@@ -39,6 +40,7 @@ last_updated: 2026-07-20
 | [HT-09](#ht-09--validar-visualmente-a-fidelidade-dos-relatórios-gerados) | Validar visualmente a fidelidade dos relatórios PDF/DOCX gerados vs. template original | Julgamento de qualidade/aprovação antes de ir a produção | BL-12, BL-13, BL-17 (sign-off) | 🔴 Pendente | Parcial (comparação visual assistida) |
 | [HT-10](#ht-10--coleta-de-dados-e-fotos-em-campo-durante-a-vistoriainspeção) | Coleta de dados e fotos em campo durante a vistoria/inspeção | Atividade física de engenharia, fora do escopo de software | Alimenta BL-10/BL-11 (dados de entrada) | 🔴 Recorrente | Não |
 | [HT-11](#ht-11--negociar-e-assinar-o-contrato-de-prestação-de-serviços) | Negociar e assinar o contrato de prestação de serviços/aditivos | Assinatura com validade jurídica | Formalização comercial | 🔴 Pendente | Parcial (minuta/revisão do contrato) |
+| [HT-12](#ht-12--autenticar-o-servidor-mcp-do-notion) | Autenticar o servidor MCP do Notion (OAuth) e selecionar o workspace/página de destino | Login/OAuth e escolha de workspace são atos do próprio usuário; credencial não deve passar por chat/agente | Criação do board `backlog-kanban.md` real dentro do Notion (DEC-20) | 🔴 Pendente | Sim (após autenticado, o agente cria/atualiza o board automaticamente) |
 
 ---
 
@@ -115,6 +117,23 @@ last_updated: 2026-07-20
 - Se o usuário iniciar o servidor MCP do Render (já em `.vscode/mcp.json`) e inserir a própria API key quando o VS Code solicitar, o agente pode aplicar o Blueprint e ler os links de volta diretamente, sem precisar repetir os passos 1-4 manualmente no Dashboard.
 - Criação de conta, aprovação de custo e registro de domínio continuam exclusivamente humanos.
 - Caminho alternativo (VPS/Azure) permanece documentado no histórico deste arquivo caso a decisão de hospedagem mude no futuro.
+
+---
+
+## HT-12 — Autenticar o servidor MCP do Notion
+
+**Por que só um humano:** o login OAuth no Notion (escolha da conta/workspace de destino e concessão de escopo de acesso) é um ato de autenticação pessoal que não pode passar por chat/agente — mesmo princípio já aplicado ao Render (HT-04) e descrito nas restrições deste modo (nenhuma chave/token de provedor é solicitada, digitada ou lida via chat).
+
+**Bloqueia:** criação/atualização real do board `00_docs/projeto/backlog-kanban.md` dentro do Notion (DEC-20, ADR-11 em `arquitetura.md`).
+
+**Passo a passo:**
+1. Abrir a paleta de comandos do VS Code (`Ctrl+Shift+P`) → `MCP: List Servers` → selecionar `notion` → `Start Server`.
+2. Concluir o login OAuth no navegador que abrir automaticamente, escolhendo o workspace/página do Notion onde o board de backlog deve ser criado.
+3. Confirmar no chat que a autenticação foi concluída — a partir daí o agente cria o banco de dados "Backlog — Garra Engenharia" com as colunas Backlog/To do/In progress/Done e os cartões descritos em `00_docs/projeto/backlog-kanban.md`.
+
+**Alternativa via agente/MCP:**
+- Depois de autenticado, todo o trabalho de criação/atualização do board é feito pelo agente — não é necessário criar manualmente bases de dados ou cartões no Notion.
+- Sem a autenticação, o agente só consegue preparar o conteúdo localmente (já feito em `00_docs/projeto/backlog-kanban.md`), sem conseguir publicá-lo no Notion.
 
 ---
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Clipboard, GripVertical, ImageUp, Loader2, Trash2 } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api-client";
@@ -8,6 +8,7 @@ import type { Foto, FotoUploadResult } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ApiErrorAlert } from "@/components/api-error-alert";
+import { PhotoAnnotationEditor } from "@/components/photo-annotation-editor";
 
 const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15MB — alinhado ao limite validado no backend (BL-11)
 const ACCEPTED_MIME_TYPES = ["image/png", "image/jpeg", "image/webp"];
@@ -19,19 +20,6 @@ interface FotoUploadProps {
   ocorrenciaId?: string | null;
   fotos: Foto[];
   onChange: (fotos: Foto[]) => void;
-}
-
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result as string;
-      // remove o prefixo "data:image/png;base64,"
-      resolve(result.split(",")[1] ?? "");
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
 }
 
 function validateFile(file: File): string | null {
@@ -63,7 +51,17 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<ApiError | Error | null>(null);
   const [clipboardUnsupported, setClipboardUnsupported] = useState(false);
+  const [annotationState, setAnnotationState] = useState<{ isOpen: boolean; source: Blob | File | null; origin: "upload" | "clipboard" | null }>({
+    isOpen: false,
+    source: null,
+    origin: null,
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fotosRef = useRef(fotos);
+
+  useEffect(() => {
+    fotosRef.current = fotos;
+  }, [fotos]);
 
   const targetId = ocorrenciaId ?? visitaId;
   const linkEndpoint = ocorrenciaId ? `/ocorrencias/${ocorrenciaId}/fotos` : `/visitas/${visitaId}/fotos`;
@@ -76,10 +74,34 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
         legenda: "",
         origem,
       });
-      onChange([...fotos, foto]);
+      const nextFotos = [...fotosRef.current, foto];
+      fotosRef.current = nextFotos;
+      onChange(nextFotos);
     },
-    [fotos, onChange, linkEndpoint]
+    [onChange, linkEndpoint]
   );
+
+  const uploadAnnotatedFile = useCallback(
+    async (file: File, origin: "upload" | "clipboard") => {
+      setError(null);
+      setIsUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append("arquivo", file);
+        const upload = await api.post<FotoUploadResult>("/fotos/upload", formData, { raw: true });
+        await linkFoto(upload, origin === "clipboard" ? "lightshot" : "upload");
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error("Falha ao enviar arquivo."));
+      } finally {
+        setIsUploading(false);
+      }
+    },
+    [linkFoto]
+  );
+
+  const openAnnotationEditor = useCallback((source: Blob | File, origin: "upload" | "clipboard") => {
+    setAnnotationState({ isOpen: true, source, origin });
+  }, []);
 
   const uploadFiles = useCallback(
     async (files: FileList | File[]) => {
@@ -91,24 +113,19 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
           setError(new Error(validationError));
           continue;
         }
-        setIsUploading(true);
-        try {
-          const formData = new FormData();
-          formData.append("arquivo", file);
-          const upload = await api.post<FotoUploadResult>("/fotos/upload", formData, { raw: true });
-          await linkFoto(upload, "upload");
-        } catch (err) {
-          setError(err instanceof Error ? err : new Error("Falha ao enviar arquivo."));
-        } finally {
-          setIsUploading(false);
-        }
+        openAnnotationEditor(file, "upload");
+        return;
       }
     },
-    [linkFoto]
+    [openAnnotationEditor]
   );
 
   const handleClipboardPaste = useCallback(async () => {
     setError(null);
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      setClipboardUnsupported(true);
+      return;
+    }
     if (!navigator.clipboard || !("read" in navigator.clipboard)) {
       setClipboardUnsupported(true);
       return;
@@ -129,11 +146,7 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
         setError(new Error("Imagem colada maior que o limite de 15MB."));
         return;
       }
-      const imagemBase64 = await blobToBase64(blob);
-      const upload = await api.post<FotoUploadResult>("/fotos/upload-clipboard", {
-        imagem_base64: imagemBase64,
-      });
-      await linkFoto(upload, "lightshot");
+      openAnnotationEditor(blob, "clipboard");
     } catch (err) {
       if (err instanceof DOMException && (err.name === "NotAllowedError" || err.name === "SecurityError")) {
         setClipboardUnsupported(true);
@@ -143,7 +156,7 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
     } finally {
       setIsUploading(false);
     }
-  }, [linkFoto]);
+  }, [openAnnotationEditor]);
 
   const handleDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
@@ -160,32 +173,37 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
     async (foto: Foto, legenda: string) => {
       try {
         const updated = await api.put<Foto>(`/fotos/${foto.id}`, { legenda });
-        onChange(fotos.map((item) => (item.id === foto.id ? updated : item)));
+        const nextFotos = fotosRef.current.map((item) => (item.id === foto.id ? updated : item));
+        fotosRef.current = nextFotos;
+        onChange(nextFotos);
       } catch (err) {
         setError(err instanceof Error ? err : new Error("Falha ao atualizar legenda."));
       }
     },
-    [fotos, onChange]
+    [onChange]
   );
 
   const removeFoto = useCallback(
     async (foto: Foto) => {
       try {
         await api.delete(`/fotos/${foto.id}`);
-        onChange(fotos.filter((item) => item.id !== foto.id));
+        const nextFotos = fotosRef.current.filter((item) => item.id !== foto.id);
+        fotosRef.current = nextFotos;
+        onChange(nextFotos);
       } catch (err) {
         setError(err instanceof Error ? err : new Error("Falha ao remover foto."));
       }
     },
-    [fotos, onChange]
+    [onChange]
   );
 
   const moveFoto = useCallback(
     async (index: number, direction: -1 | 1) => {
       const targetIndex = index + direction;
-      if (targetIndex < 0 || targetIndex >= fotos.length) return;
-      const reordered = [...fotos];
+      if (targetIndex < 0 || targetIndex >= fotosRef.current.length) return;
+      const reordered = [...fotosRef.current];
       [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
+      fotosRef.current = reordered;
       onChange(reordered);
       try {
         await Promise.all(
@@ -195,7 +213,7 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
         setError(err instanceof Error ? err : new Error("Falha ao reordenar fotos."));
       }
     },
-    [fotos, onChange]
+    [onChange]
   );
 
   if (!targetId) {
@@ -275,6 +293,18 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
       </div>
 
       <ApiErrorAlert error={error} />
+
+      <PhotoAnnotationEditor
+        isOpen={annotationState.isOpen}
+        imageSource={annotationState.source}
+        onSave={(file) => {
+          setAnnotationState({ isOpen: false, source: null, origin: null });
+          void uploadAnnotatedFile(file, annotationState.origin ?? "upload");
+        }}
+        onCancel={() => {
+          setAnnotationState({ isOpen: false, source: null, origin: null });
+        }}
+      />
 
       {fotos.length > 0 ? (
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">

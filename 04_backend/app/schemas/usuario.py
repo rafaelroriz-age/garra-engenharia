@@ -18,3 +18,4 @@ class UsuarioRead(UsuarioBase):
 
     id: uuid.UUID
     ativo: bool
+    role: str

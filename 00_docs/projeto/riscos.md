@@ -3,7 +3,7 @@ title: Registro de Riscos — Sistema de Automação de Relatórios Prediais
 type: gestao
 status: ativo
 owner: Garra Engenharia
-last_updated: 2026-07-08
+last_updated: 2026-07-27
 ---
 
 # Registro de Riscos
@@ -142,6 +142,20 @@ last_updated: 2026-07-08
 
 ---
 
+### R-10 — Envio de dados a provedor externo de IA para geração de legendas técnicas (RF-15)
+
+| Campo | Valor |
+|---|---|
+| **Probabilidade** | M |
+| **Impacto** | M |
+| **Prioridade** | Média |
+| **Descrição** | A geração assistida de legendas (RF-15, DEC-21) envia fotos/descrições de imóveis de clientes a um provedor de IA (LLM) externo. Isso levanta questões de privacidade/LGPD (retenção e uso dos dados pelo provedor), custo recorrente por chamada e risco de a legenda sugerida conter erro factual ("alucinação") caso seja aceita sem revisão criteriosa. |
+| **Mitigação** | RN-16/RN-17 exigem que toda legenda gerada por IA seja sempre uma minuta revisável, nunca incluída automaticamente no relatório; escolher provedor com política de retenção/privacidade adequada e, se possível, sem uso dos dados para treinamento (lacuna #13); prompt-sistema já instrui a IA a não inventar dados e a sinalizar incerteza (`necessita_revisao_profissional`). |
+| **Gatilho de escalada** | Provedor de LLM não oferecer garantias contratuais de privacidade, ou custo por chamada inviabilizar o uso em volume (150+ fotos por laudo). |
+| **Responsável** | Gestor de Projeto + Engenheiro Backend |
+
+---
+
 ## Resumo de Prioridades
 
 | Risco | Prioridade | Status |
@@ -155,3 +169,4 @@ last_updated: 2026-07-08
 | R-05 — Template DOCX ausente | Média | Ação necessária (kickoff) |
 | R-08 — Escopo crescente | Média | Mitigado (congelamento v1.0) |
 | R-09 — Hospedagem indefinida | Baixa | Mitigado (Docker Compose agnóstico) |
+| R-10 — Dados enviados a IA externa (RF-15) | Média | Ação necessária (escolher provedor — lacuna #13, B-04) |

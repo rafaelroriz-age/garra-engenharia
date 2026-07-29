@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { VisitaInput } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,14 @@ export function VisitaForm({ initialValue, submitLabel, onSubmit, onCancel }: Vi
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<ApiError | Error | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    setData(initialValue?.data ?? "");
+    setServicosExecutados(initialValue?.servicos_executados ?? "");
+    setObservacoes(initialValue?.observacoes ?? "");
+    setFieldErrors({});
+    setError(null);
+  }, [initialValue?.data, initialValue?.servicos_executados, initialValue?.observacoes]);
 
   function validate(): boolean {
     const errors: Record<string, string> = {};

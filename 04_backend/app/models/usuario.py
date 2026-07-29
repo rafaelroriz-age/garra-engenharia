@@ -9,7 +9,7 @@ import uuid
 
 from sqlalchemy import Boolean, String
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
 
@@ -24,3 +24,6 @@ class Usuario(Base):
     email: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
     senha_hash: Mapped[str] = mapped_column(String, nullable=False)
     ativo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    role: Mapped[str] = mapped_column(String, nullable=False, default="auditor", server_default="auditor")
+
+    responsavel: Mapped["Responsavel | None"] = relationship(back_populates="usuario", uselist=False)

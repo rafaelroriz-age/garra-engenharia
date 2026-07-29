@@ -3,7 +3,7 @@ title: Registro de Decisões — Sistema de Automação de Relatórios Prediais
 type: gestao
 status: ativo
 owner: Garra Engenharia
-last_updated: 2026-07-17
+last_updated: 2026-07-27
 ---
 
 # Registro de Decisões (Decision Log)
@@ -264,4 +264,64 @@ last_updated: 2026-07-17
 | **Justificativa** | Isola o gatilho de deploy por serviço sem duplicar/filtrar o código-fonte (mantém DEC-09: um único monorepo, uma única árvore de arquivos). Usar branches dedicadas é mais simples de auditar do que Build Filters (fica visível em `git log`/PRs qual branch disparou qual deploy) e não exige nenhuma configuração adicional no Render além do campo `branch:` já suportado nativamente pelo Blueprint. |
 | **Consequências** | Fluxo de trabalho passa a exigir decidir, ao abrir um PR, qual(is) branch(es)-alvo mergear (ex.: uma mudança de frontend vai para `main_front`; se também mexer no backend, precisa de PR separado ou merge nas duas). `main`/`staging` ficam "órfãs" de deploy — usadas só se o processo de PR/proteção de branch continuar centralizado nelas antes de promover para as branches de serviço (a definir na prática de trabalho do time). HT-05 (proteção de branch, `backlog-tarefas-humanas.md`) precisa ser repetido para as 4 novas branches, não só `main`. Serviços de staging em `render.yaml` são recursos pagos adicionais — avaliar custo antes de aplicar o Blueprint (ver comentário no topo do arquivo). |
 | **Referência** | `render.yaml`, `.github/workflows/ci.yml`, `.github/workflows/cd-staging.yml`, `.github/workflows/cd-production.yml`, `00_docs/projeto/plano-gestao-configuracao.md` Seção 1.1 |
+
+---
+
+## DEC-18 — RBAC: perfis `auditor`/`cliente` e Portal do Cliente escopado via `Responsavel.usuario_id`
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-07-24 |
+| **Status** | Aprovada |
+| **Contexto** | O usuário do projeto esclareceu diretamente que, além do papel do "auditor" (Engenheiro Roniel/equipe), existe o papel de "cliente", cuja função no sistema é acompanhar a auditoria feita pelo auditor através de dashboards, seus documentos, entre outras coisas. Isso resolve formalmente a lacuna #6 de `00_docs/estudo-do-contexto.md` (antes `[A ESCLARECER]`) e reverte a posição de `escopo.md`, que listava "Portal de acesso para clientes" como fora de escopo. |
+| **Alternativas** | (a) Multi-tenancy completo (organizações/contas separadas) — rejeitada por ser overengineering para o porte atual (uso individual/pequena equipe de auditoria, clientes apenas consultando); (b) Link público sem login (token de convite/URL secreta) — rejeitada por não permitir controle de acesso auditável (RN-14) nem histórico de quem acessou, incompatível com RNF-05; (c) Reaproveitar `Responsavel.tipo="cliente"` sem um campo `role` em `Usuario` — rejeitada por reintroduzir a mistura de conceitos que a DEC-15 deliberadamente separou. |
+| **Decisão** | Adicionar `role` (enum `auditor` \| `cliente`, default `auditor`) em `Usuario`. Adicionar FK opcional e única `usuario_id` em `Responsavel` (permite login para um Responsavel do tipo contratante). Adicionar FK opcional `contratante_id` em `Contrato` referenciando `Responsavel` (hoje `Contrato` só modela `fiscal_id`; o contratante não era rastreável por FK). Dependency `require_role()` no FastAPI protege rotas por perfil. Novo router `/portal/*` (somente leitura) sempre resolve o escopo do cliente a partir de `Responsavel.usuario_id = current_user.id` — nunca aceita `edificacao_id`/`contrato_id` arbitrário vindo do cliente da requisição (RN-14). Onboarding do usuário Cliente é manual, feito pelo engenheiro fiscal (lacuna #11 de `estudo-do-contexto.md`, posição interina). |
+| **Justificativa** | Mantém a separação de conceitos de DEC-15 (Usuario ≠ Responsavel), reaproveita a infraestrutura de auth já existente (BL-06) em vez de criar um sistema de contas paralelo, e centraliza a validação de escopo de acesso do cliente em um único conjunto de rotas (`/portal/*`) em vez de reabrir os endpoints internos do auditor a um segundo perfil de permissão. |
+| **Consequências** | Nova migration Alembic (`role` em `usuarios`, `usuario_id` em `responsaveis`, `contratante_id` em `contratos`). Gera o backlog BL-30 (RBAC + vínculo) a BL-33 (`backlog-tarefas.md`). Endpoints existentes (`/edificacoes/{id}/dashboard`, `/relatorios/{id}/download/*`) continuam exclusivos do perfil `auditor`. |
+| **Referência** | `00_docs/arquitetura.md` ADR-09, Seção 3 (Diagrama ER), Seção 4 (Portal do Cliente), Seção 10.1 (A01) |
+
+---
+
+## DEC-19 — Editor de Anotação de Fotos: canvas client-side (Fabric.js), sem novo endpoint de backend
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-07-24 |
+| **Status** | Aprovada |
+| **Contexto** | O usuário esclareceu que a função real do Lightshot no fluxo do auditor é desenhar setas, formas e marcações técnicas sobre a foto — não apenas capturar a tela — e pediu explicitamente que o próprio sistema ofereça a opção de editar/marcar a imagem, para simplificar a confecção dos relatórios sem depender exclusivamente de uma ferramenta externa sem API pública. |
+| **Alternativas** | (a) Continuar dependendo 100% do Lightshot externo (RF-05 como estava) — não atende ao pedido explícito de oferecer edição dentro do sistema; (b) Editor server-side (Pillow desenhando a partir de coordenadas enviadas pelo frontend) — rejeitada por exigir novo endpoint, round-trip de coordenadas normalizadas e pior UX (sem preview interativo) que um canvas nativo do browser; (c) Canvas client-side (Fabric.js/Konva.js), achatando a imagem antes do upload. |
+| **Decisão** | Fabric.js integrado ao componente de upload de fotos já existente (BL-11), com ferramentas de seta, retângulo/elipse, texto e traço livre. A imagem achatada (`canvas.toBlob()`) é o arquivo efetivamente enviado aos endpoints `POST /fotos/upload` / `/fotos/upload-clipboard` já implementados — sem mudança de schema nem endpoint novo no backend. Compatibilidade retroativa: uma imagem já marcada externamente no Lightshot pode ser colada/enviada e ainda editada/complementada no editor do sistema antes de salvar (RN-15). |
+| **Justificativa** | Resolve o pedido do usuário com o menor custo de implementação possível (zero mudança de backend), reaproveitando 100% da infraestrutura de upload/storage/reprocessamento Pillow (mitigação A08) já validada na BL-11. |
+| **Consequências** | Nova dependência de frontend (`fabric` via npm). Por decisão consciente (RN-15), a versão sem marcação não é retida separadamente — limitação documentada, aceitável para o v1.0; pode evoluir para reter `storage_key_original` opcional em `Foto` se necessário no futuro. |
+| **Referência** | `00_docs/arquitetura.md` ADR-10, Seção 1 (Stack) |
+
+---
+
+## DEC-20 — Backlog de Gestão em quadro Kanban via MCP Notion (ferramenta interna do time, não parte do sistema entregável)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-07-24 |
+| **Status** | Aprovada |
+| **Contexto** | O usuário pediu para integrar o servidor MCP do Notion a este workspace e montar um quadro de backlog (colunas Backlog/To do/In progress/Done, no estilo de visualização em quadro do Notion) a partir das tarefas já rastreadas em `backlog-tarefas.md`. É uma ferramenta de **gestão do projeto de desenvolvimento** (equivalente ao já feito com o board do GitHub/Trello), não uma feature do produto entregue ao cliente Garra Engenharia — não envolve dados de clientes finais, edificações, ocorrências ou fotos de vistoria. |
+| **Alternativas** | (a) GitHub Projects (já há repositório no GitHub, DEC-14) — evitaria uma ferramenta nova, mas o usuário pediu explicitamente o estilo de quadro do Notion; (b) Trello/Linear via MCP — mesma limitação, não é o que foi pedido; (c) Notion MCP oficial remoto (`https://mcp.notion.com/mcp`), autenticado via OAuth 2.1 pelo próprio VS Code (mesmo padrão já usado para o MCP do GitHub em `.vscode/mcp.json`), sem chave de API digitada no chat. |
+| **Decisão** | Adicionar o servidor `notion` em `.vscode/mcp.json` como servidor remoto HTTP (`https://mcp.notion.com/mcp`), autenticado via OAuth do VS Code (fluxo "Sign in", sem token colado no chat/agente). Nenhuma credencial do Notion é solicitada, digitada ou lida pelo agente. O conteúdo enviado ao Notion se limita a metadados de tarefas de backlog já públicos no próprio repositório (`backlog-tarefas.md`): ID, título, requisito/decisão relacionada e status — nenhum dado pessoal, de cliente ou de vistoria é enviado. |
+| **Justificativa** | Reaproveita o mesmo padrão de integração MCP remoto já validado para GitHub (sem segredo manual) em vez de introduzir um provedor de PAT manual como foi feito para o Render (necessário porque o Render não oferece OAuth nativo no MCP). Dados enviados são de baixo risco (gestão de projeto de software, não dados de clientes/vistorias). |
+| **Consequências** | Requer ação humana única: iniciar o servidor pela paleta de comandos do VS Code e autenticar via OAuth no navegador (ver HT-12 em `backlog-tarefas-humanas.md`) — só então o agente consegue de fato criar/atualizar o banco de dados no Notion. Reversível: remover a entrada `notion` de `.vscode/mcp.json` desativa a integração sem afetar o restante do sistema (feature isolada, fora do `04_backend`/`03_frontend` entregáveis). O board (`00_docs/projeto/backlog-kanban.md`) precisa ser mantido em paralelo ao `backlog-tarefas.md` até que haja automação de sincronização (fora de escopo desta decisão). |
+| **Referência** | `00_docs/arquitetura.md` ADR-11, `.vscode/mcp.json`, `00_docs/projeto/backlog-kanban.md`
+
+---
+
+## DEC-21 — Geração assistida de legendas técnicas por IA: prompt versionado + Adapter de LLM, sempre com aprovação humana
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-07-27 |
+| **Status** | Aprovada |
+| **Contexto** | O cliente (Eng. Roniel) elaborou e validou um "Prompt-Sistema Universal para Transcrição e Redação de Legendas Fotográficas Técnicas", aplicável a qualquer tipo de relatório fotográfico da Garra Engenharia (RFO, LTIP, Vistoria Cautelar, Vistoria Residencial, RFIP), com regras rígidas de não invenção de dados, níveis de certeza técnica e formato de saída JSON estruturado — e pediu explicitamente que o prompt seja tratado como componente versionado, separado do código, com aprovação humana obrigatória antes de qualquer legenda compor um relatório emitido. Isso formaliza um novo requisito (RF-15) e novas regras de negócio (RN-16, RN-17) em `estudo-do-contexto.md`. |
+| **Alternativas** | (a) Deixar a transcrição/redação de legendas 100% manual (fora do sistema, via chat externo com uma IA genérica) — rejeitada: perde rastreabilidade de qual prompt/versão gerou qual legenda e não integra ao fluxo de upload de fotos já existente (BL-11); (b) Persistir o prompt embutido no código da aplicação — rejeitada: impede atualização sem deploy e quebra a rastreabilidade por versão explicitamente pedida pelo cliente; (c) Enviar a legenda da IA diretamente para o campo `Foto.legenda` sem revisão — rejeitada: viola a exigência do cliente e o princípio de responsabilidade técnica do profissional habilitado (RN-07); (d) Prompt versionado em tabela própria (`prompts_ia`) + Adapter de LLM (`LegendaIAClient`) + minuta sempre revisável antes da aprovação. |
+| **Decisão** | Adotar a alternativa (d): tabela `prompts_ia` (`id`, `nome`, `versao`, `conteudo`, `ativo`, `created_at`) armazena o prompt-sistema fornecido pelo cliente como artefato versionado. Novo serviço `app/services/ia_legenda/` (Adapter, mesmo padrão de `StorageClient`) abstrai o provedor de LLM. Novo endpoint `POST /fotos/{id}/legenda-ia/gerar` gera uma sugestão (nunca persistida como definitiva); `PUT /fotos/{id}` grava a legenda aprovada/editada junto com `aprovado_por_id`, `aprovado_em` e `prompt_ia_id`. Novos campos em `Foto`: `legenda_bruta`, `legenda_ia_sugerida`, `nivel_certeza_ia`, `status_validacao_ia`, `alertas_ia`, `pendencias_ia`. |
+| **Justificativa** | Mantém a responsabilidade técnica do profissional habilitado (a IA produz apenas minuta), atende à exigência explícita de versionamento do cliente, e reaproveita o padrão Adapter já validado no projeto (ADR-02) para não travar a implementação a um único provedor de LLM. |
+| **Consequências** | Nova migration Alembic (tabela `prompts_ia` + colunas em `fotos`). Gera o backlog BL-34 (backend) e BL-35 (frontend) em `backlog-tarefas.md`. A escolha do provedor de LLM (custo, política de retenção/privacidade dos dados enviados a terceiros) fica pendente como lacuna #13 de `estudo-do-contexto.md` — bloqueia o início de BL-34. |
+| **Referência** | `00_docs/arquitetura.md` ADR-12, Seção 1 (Stack), Seção 3 (Diagrama ER), Seção 4 (API — Fotos) | |
 

@@ -154,7 +154,7 @@ services:
     container_name: garra-frontend
     restart: unless-stopped
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
     ports:
       # Bind apenas em localhost, mesma política de segurança dos demais serviços.
       - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"

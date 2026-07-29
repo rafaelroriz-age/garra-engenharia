@@ -7,8 +7,8 @@ related:
   - 00_docs/estudo-do-contexto.md
   - 00_docs/convertidos/RFO_INSPECAO.md
   - 00_docs/projeto/decisoes.md
-tags: [arquitetura, stack, modelo-de-dados, api, pdf, lightshot, padroes-de-projeto, system-design, seguranca]
-last_updated: 2026-07-17
+tags: [arquitetura, stack, modelo-de-dados, api, pdf, lightshot, padroes-de-projeto, system-design, seguranca, rbac, portal-cliente, mcp, notion, ia-legendas]
+last_updated: 2026-07-27
 ---
 
 <!-- ai-summary
@@ -36,6 +36,9 @@ Status: draft — sujeito a validação das lacunas [A ESCLARECER] listadas em e
 | **Geração de PDF** | WeasyPrint + Jinja2 (HTML→PDF) | Permite construir templates HTML/CSS fiéis ao layout atual; suporte a imagens, tabelas complexas e paginação personalizada. Melhor controle de layout que ReportLab para documentos de alta fidelidade visual. |
 | **Geração de DOCX** | docxtpl (python-docx + Jinja2) | Usa um arquivo .docx como template com tags `{{ variavel }}`; preserva a formatação exata do documento original. |
 | **Autenticação** | FastAPI + JWT (python-jose) + bcrypt | Simples e seguro para uso individual/pequena equipe; sem dependência de serviço externo. |
+| **Autorização (RBAC)** | Papéis `auditor` / `cliente` em `Usuario.role` + dependency `require_role()` no FastAPI | Dois perfis de acesso: auditor (engenheiro/equipe, acesso total de escrita) e cliente (contratante/síndico, somente leitura e escopado às próprias Edificações/Contratos via Portal do Cliente — ver DEC-18, RF-13). |
+| **Anotação de Imagens** | Fabric.js (canvas client-side) no frontend | Permite ao auditor desenhar setas, formas, texto e traço livre diretamente sobre a foto no browser antes de salvar — reproduz dentro do sistema a função de marcação hoje feita externamente no Lightshot (ver DEC-19, RF-14). Não exige nenhum endpoint novo de backend: a imagem já achatada (canvas → blob) é enviada aos endpoints de upload existentes (BL-11). |
+| **Geração de Legendas por IA** | LLM externo via Adapter `LegendaIAClient` — provedor a definir | Transforma anotação de campo/transcrição de áudio fornecida pelo auditor em legenda técnica estruturada, usando um prompt-sistema versionado (tabela `prompts_ia`) fornecido pelo cliente. Sempre gera uma minuta editável — nunca substitui a legenda automaticamente — sujeita a aprovação do profissional habilitado (ver ADR-12, RF-15, RN-16, RN-17). |
 | **Fila / Cache** | Redis 7 | Broker de tarefas assíncronas (Celery) e cache de curto prazo para gabarito de sistemas prediais e agregados do dashboard (ver ADR-06 e Seção 10.4). |
 | **Processamento assíncrono** | Celery (worker dedicado) | Geração de PDF/DOCX de até 200 páginas roda fora do ciclo de requisição HTTP, cumprindo RNF-06 sem bloquear a API (ver ADR-06). |
 | **Integração Lightshot** | Upload via clipboard paste (browser API) + upload manual | Ver seção 6. |
@@ -115,12 +118,23 @@ erDiagram
         string crea
         string email
         string telefone
+        uuid usuario_id FK
+    }
+
+    USUARIO {
+        uuid id PK
+        string nome
+        string email
+        string senha_hash
+        string role
+        boolean ativo
     }
 
     CONTRATO {
         uuid id PK
         uuid edificacao_id FK
         uuid fiscal_id FK
+        uuid contratante_id FK
         string numero
         string tipo_servico
         text objeto
@@ -221,8 +235,26 @@ erDiagram
         string storage_key
         string url_publica
         text legenda
+        text legenda_bruta
+        text legenda_ia_sugerida
+        string nivel_certeza_ia
+        string status_validacao_ia
+        jsonb alertas_ia
+        jsonb pendencias_ia
+        uuid prompt_ia_id FK
+        uuid aprovado_por_id FK
+        timestamp aprovado_em
         string origem
         int ordem
+        timestamp created_at
+    }
+
+    PROMPT_IA {
+        uuid id PK
+        string nome
+        string versao
+        text conteudo
+        boolean ativo
         timestamp created_at
     }
 
@@ -239,6 +271,8 @@ erDiagram
 
     EDIFICACAO ||--o{ CONTRATO : "tem"
     RESPONSAVEL ||--o{ CONTRATO : "fiscal"
+    RESPONSAVEL ||--o{ CONTRATO : "contratante"
+    RESPONSAVEL ||--o| USUARIO : "login (cliente, opcional)"
     CONTRATO ||--o{ CONTRATO_EXECUTOR : "executores"
     CONTRATO ||--o{ CONTRATO_NBR : "NBRs"
     CONTRATO ||--|| INSPECAO : "origina"
@@ -251,6 +285,8 @@ erDiagram
     SUBSISTEMA ||--o{ OCORRENCIA : "subsistema"
     OCORRENCIA ||--o{ FOTO : "fotos"
     VISITA ||--o{ FOTO : "fotos do dia"
+    PROMPT_IA ||--o{ FOTO : "gerou sugestão (opcional)"
+    USUARIO ||--o{ FOTO : "aprovou legenda (opcional)"
     INSPECAO ||--o{ RELATORIO : "relatorios"
 ```
 
@@ -306,7 +342,8 @@ Base URL: `/api/v1`
 | `POST` | `/fotos/upload-clipboard` | Recebe imagem em base64 do clipboard paste — retorna `storage_key` e URL |
 | `POST` | `/ocorrencias/{id}/fotos` | Vincula foto a ocorrência com legenda |
 | `POST` | `/visitas/{id}/fotos` | Vincula foto a visita de fiscalização |
-| `PUT` | `/fotos/{id}` | Atualiza legenda ou ordem |
+| `POST` | `/fotos/{id}/legenda-ia/gerar` | Envia descrição bruta/transcrição + dados da ocorrência ao provedor de IA (prompt-sistema versionado); retorna legenda sugerida estruturada, sem persistir como definitiva (ADR-12, RF-15) |
+| `PUT` | `/fotos/{id}` | Atualiza legenda (manual ou aprovação da sugestão de IA, gravando `aprovado_por_id`/`aprovado_em`/`prompt_ia_id`) ou ordem |
 | `DELETE` | `/fotos/{id}` | Remove vínculo e objeto do storage |
 
 ### Relatórios
@@ -328,6 +365,19 @@ Base URL: `/api/v1`
 | `GET` | `/gabarito/tipos-falha` | Lista tipos de falha |
 | `GET` | `/gabarito/localizacoes` | Lista localizações padrão |
 | `GET` | `/gabarito/funcoes-mao-obra` | Lista funções de mão de obra |
+
+### Portal do Cliente (somente leitura, RBAC — DEC-18)
+
+Todos os endpoints abaixo exigem `role=cliente` (via `require_role("cliente")`) e são implicitamente escopados ao `Responsavel` vinculado ao `Usuario` autenticado (`Responsavel.usuario_id = current_user.id`) — nunca aceitam um `edificacao_id`/`contrato_id` arbitrário fora desse escopo (RN-14).
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` | `/portal/edificacoes` | Lista as Edificações em que o cliente autenticado é contratante |
+| `GET` | `/portal/edificacoes/{id}/dashboard` | Reaproveita a agregação de `/edificacoes/{id}/dashboard` (RF-07), validando antes que a edificação pertence ao escopo do cliente |
+| `GET` | `/portal/edificacoes/{id}/acompanhamento` | Linha do tempo de visitas/ocorrências da inspeção em andamento (status, datas, contagem por grau de risco) — acompanhamento da auditoria em tempo real |
+| `GET` | `/portal/relatorios` | Lista os relatórios/laudos já emitidos (RF-11) das Edificações/Contratos do cliente |
+| `GET` | `/portal/relatorios/{id}/download/pdf` | Download do PDF, validando escopo antes de delegar ao storage |
+| `GET` | `/portal/relatorios/{id}/download/docx` | Download do DOCX, mesma validação de escopo |
 
 ---
 
@@ -425,20 +475,22 @@ garra-engenharia/
 │   │   │       ├── visitas/       # RFO: visitas diárias
 │   │   │       ├── ocorrencias/   # LTIP: ocorrências por sistema
 │   │   │       └── relatorio/     # geração e download
+│   │   ├── portal/                # Portal do Cliente (role=cliente): dashboard, acompanhamento, documentos
 │   │   └── dashboard/             # indicadores por edificação
 │   ├── components/                # componentes reutilizáveis
 │   └── public/                    # manifest.json, ícones PWA
 │
 ├── 04_backend/                     # FastAPI — a implementar
 │   ├── app/
-│   │   ├── api/v1/                # routers (edificacoes, contratos, fotos, etc.) — camada fina, sem regra de negócio
+│   │   ├── api/v1/                # routers (edificacoes, contratos, fotos, portal, etc.) — camada fina, sem regra de negócio
 │   │   ├── models/                # SQLAlchemy models (ORM)
 │   │   ├── schemas/               # Pydantic schemas (DTOs de request/response, ver Seção 9.4)
 │   │   ├── repositories/          # Repository Pattern: acesso a dados por agregado (Seção 9.2)
 │   │   ├── services/              # Service Layer: regras de negócio (RN-01 a RN-13), transações
 │   │   │   ├── report_generator/  # Facade + Strategy + Template Method (Seção 9.6-9.8)
 │   │   │   │   └── strategies/    # rfo_strategy.py, ltip_strategy.py, vistoria_cautelar_strategy.py, ...
-│   │   │   └── storage/           # Adapter para MinIO/S3 (Seção 9.9)
+│   │   │   ├── storage/           # Adapter para MinIO/S3 (Seção 9.9)
+│   │   │   └── ia_legenda/        # Adapter para provedor de LLM (LegendaIAClient, ADR-12)
 │   │   ├── workers/               # tasks Celery (geração de relatório, ver ADR-06)
 │   │   ├── core/                  # config, auth, deps, exception handlers (Seção 10.7)
 │   │   └── main.py
@@ -449,6 +501,7 @@ garra-engenharia/
 │   │   ├── rfip_template.html.j2
 │   │   ├── rfo_template.docx
 │   │   └── assets/                # logo, CSS compartilhado
+│   ├── prompts/                    # prompt-sistema versionado (ex.: legenda_tecnica_v1.md), espelhado na tabela prompts_ia (ADR-12)
 │   └── alembic/                   # migrations
 │
 ├── 05_infra/                       # infraestrutura — a implementar (ver ADR-05)
@@ -589,6 +642,76 @@ garra-engenharia/
 
 ---
 
+### ADR-09 — RBAC: perfis `auditor`/`cliente` e Portal do Cliente escopado via `Responsavel.usuario_id`
+
+**Contexto:** a lacuna #6 de `00_docs/estudo-do-contexto.md` foi resolvida — o cliente (contratante/síndico) precisa acompanhar a auditoria feita pelo engenheiro fiscal através de dashboards e acesso aos próprios documentos (RF-13), sem poder ver dados de outros clientes (RN-14).
+
+**Alternativas consideradas:**
+- **Multi-tenancy completo (organizações/contas separadas)**: resolve o isolamento, mas é overengineering para o porte atual (uso individual/pequena equipe de auditoria com clientes finais apenas consultando).
+- **Link público sem login (token de convite/URL secreta)**: mais simples de implementar, mas não permite RN-14 de forma auditável (qualquer um com o link acessa) nem histórico de quem acessou — incompatível com RNF-05 (dados de clientes protegidos).
+- **Reaproveitar `Responsavel.tipo="cliente"` sem um campo `role` em `Usuario`**: rejeitada porque mistura novamente os dois conceitos que a DEC-15 deliberadamente separou (`Responsavel` = dado de referência do contrato; `Usuario` = quem loga no sistema).
+
+**Decisão:** adicionar `role` (enum `auditor` | `cliente`) em `Usuario` (consequência já prevista em DEC-15). Adicionar FK opcional e única `usuario_id` em `Responsavel` (permite que um Responsavel do tipo contratante também tenha login) e FK opcional `contratante_id` em `Contrato` apontando para `Responsavel` (hoje o contrato só modela `fiscal_id`; o contratante não era rastreável por FK). Uma dependency `require_role("cliente")`/`require_role("auditor")` no FastAPI protege as rotas; os endpoints `/portal/*` (Seção 4) sempre resolvem o escopo a partir de `Responsavel.usuario_id = current_user.id`, nunca de um ID recebido do cliente.
+
+**Consequências:** nova migration Alembic (adiciona `role` em `usuarios`, `usuario_id` em `responsaveis`, `contratante_id` em `contratos`). Onboarding do usuário Cliente é manual pelo engenheiro fiscal nesta fase (lacuna #11, posição interina). Endpoints existentes (`/edificacoes/{id}/dashboard`, `/relatorios/{id}/download/*`) continuam exclusivos do perfil `auditor`; o Portal do Cliente usa rotas próprias (`/portal/*`) em vez de reabrir os endpoints internos ao perfil cliente, para manter a validação de escopo centralizada em um único lugar.
+
+**Referência** | `00_docs/projeto/decisoes.md` DEC-18
+
+---
+
+### ADR-10 — Editor de Anotação de Fotos: canvas client-side (Fabric.js), sem novo endpoint de backend
+
+**Contexto:** o usuário esclareceu que a função do Lightshot no fluxo do auditor é desenhar setas, formas e marcações técnicas sobre a foto (não apenas capturar a tela) — e pediu que o próprio sistema ofereça essa opção de editar a imagem, para simplificar a confecção dos relatórios sem depender exclusivamente de uma ferramenta externa sem API pública (RF-14).
+
+**Alternativas consideradas:**
+- **Continuar dependendo 100% do Lightshot externo**: mantém RF-05 como estava (o auditor marca a imagem fora do sistema, depois cola/faz upload) — não atende ao pedido explícito de oferecer a edição dentro do sistema.
+- **Editor server-side (Pillow desenhando sobre a imagem a partir de coordenadas enviadas pelo frontend)**: exigiria um novo endpoint, round-trip de coordenadas normalizadas e pior UX de edição interativa (sem preview instantâneo) comparado a um canvas nativo do browser.
+- **Canvas client-side (Fabric.js ou Konva.js)**: o auditor desenha diretamente na imagem já carregada no browser; ao salvar, o canvas é achatado (`toBlob()`) em uma única imagem raster.
+
+**Decisão:** Fabric.js integrado ao componente de upload de fotos já existente (BL-11), com ferramentas de seta, retângulo/elipse, texto e traço livre. A imagem achatada resultante é o arquivo efetivamente enviado aos endpoints `POST /fotos/upload` / `/fotos/upload-clipboard` já implementados — nenhuma mudança de schema ou endpoint novo no backend. Compatibilidade retroativa mantida: uma imagem já marcada externamente no Lightshot pode ser colada/enviada e ainda editada/complementada no editor do sistema antes de salvar.
+
+**Consequências:** dependência nova no frontend (`fabric` via npm). Por decisão consciente (RN-15), a versão sem marcação não é retida separadamente — se o auditor quiser preservar o original, deve fazer upload de uma cópia antes de anotar. Se essa limitação se mostrar um problema em uso real, uma evolução futura pode salvar `storage_key_original` opcional em `Foto` sem quebrar compatibilidade.
+
+**Referência** | `00_docs/projeto/decisoes.md` DEC-19
+
+---
+
+### ADR-11 — Backlog de Gestão em quadro Kanban via MCP Notion (ferramenta interna do time)
+
+**Contexto:** o usuário pediu para integrar o MCP do Notion ao workspace e montar um quadro de backlog no estilo de visualização em quadro do Notion (colunas Backlog/To do/In progress/Done), espelhando as tarefas de `00_docs/projeto/backlog-tarefas.md`. É uma ferramenta de gestão do próprio projeto de desenvolvimento, não uma feature do sistema entregue ao cliente.
+
+**Alternativas consideradas:**
+- **GitHub Projects** (já há repositório GitHub, DEC-14): evitaria nova ferramenta, mas não é o estilo de quadro pedido pelo usuário.
+- **Trello/Linear via MCP**: mesma limitação de não ser o que foi solicitado.
+- **Notion MCP oficial remoto**, autenticado via OAuth do próprio VS Code — mesmo padrão já usado para o MCP do GitHub, sem token manual.
+
+**Decisão:** servidor `notion` adicionado em `.vscode/mcp.json` como HTTP remoto (`https://mcp.notion.com/mcp`), autenticação via OAuth do VS Code. Nenhuma chave/token é solicitado ou lido via chat. Somente metadados de tarefas de backlog (ID, título, requisito/decisão, status) são enviados — nenhum dado de cliente, edificação, ocorrência ou foto de vistoria.
+
+**Consequências:** exige ação humana única (autenticar via OAuth no navegador, ver HT-12 em `backlog-tarefas-humanas.md`) antes que o agente possa criar/atualizar conteúdo real no Notion. Reversível — remover a entrada do `mcp.json` desativa a integração sem afetar `04_backend`/`03_frontend`.
+
+**Referência** | `00_docs/projeto/decisoes.md` DEC-20
+
+---
+
+### ADR-12 — Geração Assistida de Legendas Técnicas de Fotos via LLM, com Aprovação Humana Obrigatória
+
+**Contexto:** o cliente forneceu um prompt-sistema universal, aplicável a qualquer tipo de relatório fotográfico emitido pela Garra Engenharia (RFO, LTIP, Vistoria Cautelar, Vistoria Residencial, RFIP), destinado a transformar anotações de campo, transcrições de áudio ou descrições brutas em legendas técnicas robustas — com regras estritas de não invenção de dados, níveis de certeza (constatação direta, indício técnico, hipótese técnica, causa comprovada) e retorno em JSON estruturado. O próprio prompt exige que a saída seja tratada como minuta sujeita a validação do responsável técnico, nunca como texto final (RF-15, RN-16, RN-17).
+
+**Alternativas consideradas:**
+- **Substituir automaticamente a legenda existente pela sugestão da IA, sem revisão** — rejeitada: viola a exigência explícita do cliente e o princípio de responsabilidade técnica do profissional habilitado, já que o laudo tem validade pericial (RN-07).
+- **Embutir o prompt diretamente no código da aplicação (hardcoded)** — rejeitada: impede atualizar o texto do prompt sem novo deploy e quebra a rastreabilidade de qual versão do prompt gerou qual legenda — o próprio cliente recomendou versionamento explícito.
+- **Acoplar a integração a um único provedor de LLM sem camada de abstração** — rejeitada pelo mesmo racional do Adapter de storage (ADR-02): evita lock-in e permite trocar/comparar provedores por custo, disponibilidade ou política de tratamento de dados.
+
+**Decisão:** o prompt-sistema é armazenado como artefato versionado na tabela `prompts_ia` (`id`, `nome`, `versao`, `conteudo`, `ativo`, `created_at`), nunca embutido no código; a versão ativa é referenciada por `Foto.prompt_ia_id`. Um novo serviço `app/services/ia_legenda/` segue o padrão Adapter (mesma convenção de `StorageClient`, Seção 9.9): uma interface `LegendaIAClient` com implementação concreta para o provedor de LLM escolhido — provedor específico **[A ESCLARECER]**, ver lacuna #13 de `estudo-do-contexto.md`. O endpoint `POST /fotos/{id}/legenda-ia/gerar` monta o JSON de entrada (dados da ocorrência/visita + descrição bruta/transcrição do auditor) e envia ao provedor junto ao prompt-sistema ativo; a resposta estruturada é devolvida ao frontend em campo editável, **sem** persistir como legenda definitiva. Somente quando o auditor confirma/edita a sugestão, `PUT /fotos/{id}` grava a legenda aprovada em `Foto.legenda`, junto com `aprovado_por_id`, `aprovado_em` e `prompt_ia_id` (RN-16, RN-17). O comportamento do editor de anotação de imagens (ADR-10/DEC-19) não é alterado por este ADR.
+
+**Justificativa:** preserva a responsabilidade técnica do profissional habilitado (a IA produz apenas uma minuta, nunca o documento final — exigência explícita do cliente), mantém o prompt atualizável e auditável por versão sem exigir deploy, e reaproveita o mesmo padrão Adapter já validado no projeto para trocar de provedor de LLM sem reescrever a camada de serviço.
+
+**Consequências:** nova migration Alembic (tabela `prompts_ia`; colunas novas em `fotos`: `legenda_bruta`, `legenda_ia_sugerida`, `nivel_certeza_ia`, `status_validacao_ia`, `alertas_ia`, `pendencias_ia`, `prompt_ia_id`, `aprovado_por_id`, `aprovado_em`). É necessário decidir o provedor de LLM (custo por chamada, política de retenção/privacidade dos dados enviados a terceiros — fotos e descrições de imóveis de clientes) antes da implementação (lacuna #13, OWASP A02). Nenhuma mudança nos endpoints de upload existentes (BL-11) nem no editor de anotação (BL-31/DEC-19).
+
+**Referência** | `00_docs/projeto/decisoes.md` DEC-21
+
+---
+
 ## 9. Padrões de Projeto (Design Patterns)
 
 O backend segue uma **arquitetura em camadas** (layered architecture) que isola regra de negócio, acesso a dados e infraestrutura. A tabela resume os padrões adotados; os mais relevantes para o domínio (geração de relatórios) são detalhados em seguida.
@@ -666,10 +789,10 @@ classDiagram
 
 | Categoria OWASP | Risco no contexto do sistema | Mitigação arquitetural |
 |---|---|---|
-| **A01 — Broken Access Control** | Usuário acessar/editar contratos ou relatórios de outro engenheiro (cenário multi-usuário, lacuna #2) | Toda query de leitura/escrita filtrada por proprietário no repository layer; checagem de posse antes de update/delete; IDs em UUID (não sequenciais/adivinháveis). |
-| **A02 — Cryptographic Failures** | Exposição de CPF/CNPJ, endereços e fotos de imóveis (dados sensíveis) | HTTPS obrigatório em todos os ambientes (também exigido pela Clipboard API); senhas com bcrypt; segredos via variáveis de ambiente fora do repositório (`.env`, nunca commitado); URLs de download do MinIO pré-assinadas com expiração curta. |
+| **A01 — Broken Access Control** | Usuário acessar/editar contratos ou relatórios de outro engenheiro (cenário multi-usuário, lacuna #2); cliente do Portal (RF-13) acessar dados de Edificação/Contrato de outro cliente | Toda query de leitura/escrita filtrada por proprietário no repository layer; checagem de posse antes de update/delete; IDs em UUID (não sequenciais/adivinháveis). Endpoints `/portal/*` aplicam RBAC (`role=cliente`) e escopo obrigatório por `Responsavel.usuario_id` (DEC-18, RN-14) — nunca confiam em `edificacao_id`/`contrato_id` vindo da query string sem validar o vínculo. |
+| **A02 — Cryptographic Failures** | Exposição de CPF/CNPJ, endereços e fotos de imóveis (dados sensíveis); envio de fotos/descrições de imóveis a um provedor de IA externo para geração de legendas (RF-15) | HTTPS obrigatório em todos os ambientes (também exigido pela Clipboard API); senhas com bcrypt; segredos via variáveis de ambiente fora do repositório (`.env`, nunca commitado); URLs de download do MinIO pré-assinadas com expiração curta. O provedor de LLM (ADR-12) deve ser escolhido considerando política de retenção/treinamento sobre os dados enviados — decisão pendente (lacuna #13). |
 | **A03 — Injection** | Filtros dinâmicos em listagens (`/contratos`, `/edificacoes`) e dashboard | SQLAlchemy ORM com bind parameters em 100% das queries; nenhuma concatenação de SQL; validação de entrada via Pydantic antes de qualquer acesso ao banco. |
-| **A04 — Insecure Design** | Emissão de relatório inconsistente ou duplicado | RN-08 (bloqueia emissão sem campos obrigatórios); idempotency key no job de geração (ADR-06); versionamento explícito e imutável de relatórios emitidos (RF-11). |
+| **A04 — Insecure Design** | Emissão de relatório inconsistente ou duplicado; legenda gerada por IA (alucinação/erro factual) sendo incluída no relatório sem revisão | RN-08 (bloqueia emissão sem campos obrigatórios); idempotency key no job de geração (ADR-06); versionamento explícito e imutável de relatórios emitidos (RF-11); RN-16 impede que a sugestão de IA componha o relatório sem aprovação explícita do profissional habilitado (ADR-12). |
 | **A05 — Security Misconfiguration** | CORS aberto, documentação interativa exposta em produção | CORS restrito ao(s) domínio(s) do frontend; `/docs` e `/redoc` desabilitados fora de `ENV=development`; configuração via variáveis de ambiente com defaults seguros (fail-closed). |
 | **A06 — Vulnerable and Outdated Components** | Dependências Python/Node desatualizadas (WeasyPrint, docxtpl, Pillow, Next.js) | Lockfiles versionados (`requirements.txt`/`poetry.lock`, `package-lock.json`); revisão periódica de dependências (backlog BL-23). |
 | **A07 — Identification and Authentication Failures** | Força bruta em login; token sem expiração | JWT de curta duração + refresh token; rate limiting no endpoint de login; bcrypt com custo adequado; bloqueio temporário após N tentativas falhas. |

@@ -25,6 +25,9 @@ class Contrato(Base):
     fiscal_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("responsaveis.id"), nullable=False
     )
+    contratante_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("responsaveis.id"), nullable=True
+    )
     numero: Mapped[str] = mapped_column(String, nullable=False)
     tipo_servico: Mapped[str] = mapped_column(String, nullable=False)
     objeto: Mapped[str] = mapped_column(Text, nullable=True)
@@ -36,7 +39,14 @@ class Contrato(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     edificacao: Mapped["Edificacao"] = relationship(back_populates="contratos")
-    fiscal: Mapped["Responsavel"] = relationship(back_populates="contratos_como_fiscal")
+    fiscal: Mapped["Responsavel"] = relationship(
+        back_populates="contratos_como_fiscal",
+        foreign_keys="[Contrato.fiscal_id]",
+    )
+    contratante: Mapped["Responsavel | None"] = relationship(
+        back_populates="contratos_como_contratante",
+        foreign_keys="[Contrato.contratante_id]",
+    )
     executores: Mapped[list["ContratoExecutor"]] = relationship(back_populates="contrato")
     nbrs: Mapped[list["ContratoNbr"]] = relationship(back_populates="contrato")
     inspecao: Mapped["Inspecao | None"] = relationship(back_populates="contrato", uselist=False)
