@@ -16,7 +16,7 @@
 # =============================================================================
 
 # ---- Etapa de build ---------------------------------------------------------
-FROM node:20-alpine AS builder
+FROM node:25-alpine AS builder
 WORKDIR /app
 
 ARG NEXT_PUBLIC_API_URL
@@ -29,7 +29,7 @@ COPY . .
 RUN npm run build
 
 # ---- Etapa final (runtime) --------------------------------------------------
-FROM node:20-alpine AS runner
+FROM node:25-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
