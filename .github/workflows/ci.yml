@@ -1,20 +1,22 @@
-# Integração Contínua — roda em todo Pull Request e em push para as branches
-# protegidas do monorepo (DEC-17: main_front, main_back, staging_front,
-# staging_back — cada uma é o gatilho de deploy de um serviço no Render).
-# `main`/`staging` (branches anteriores à DEC-17) seguem monitoradas durante
-# a transição. Ver 00_docs/projeto/plano-gestao-configuracao.md (Seção 3.1)
-# e decisoes.md DEC-14/DEC-17.
+# Integração Contínua — roda em todo Pull Request e em push para o trunk
+# (`main`) e para as branches de deploy de produção (`main_back`/`main_front`,
+# DEC-17). Staging (staging_back/staging_front/staging) foi removida em
+# 2026-08-05 (DEC-20) por nunca ter sido de fato provisionada no Render.
+# Ver 00_docs/projeto/plano-gestao-configuracao.md (Seção 3.1) e decisoes.md
+# DEC-14/DEC-17/DEC-20.
 #
-# Este workflow é o "status check" obrigatório para merge nessas branches
+# Este workflow é o "status check" obrigatório para merge em `main`
 # (branch protection, configurado manualmente em Settings > Branches do
-# repositório GitHub — ver HT-05 em backlog-tarefas-humanas.md).
+# repositório GitHub — ver HT-05 em backlog-tarefas-humanas.md). Push em
+# main_back/main_front só acontece via .github/workflows/sync-deploy-branches.yml,
+# nunca commit direto — mas o CI roda igual nelas por segurança.
 name: CI
 
 on:
   pull_request:
-    branches: [main_front, main_back, staging_front, staging_back, main, staging]
+    branches: [main]
   push:
-    branches: [main_front, main_back, staging_front, staging_back, main, staging]
+    branches: [main_front, main_back, main]
 
 # Cancela execuções antigas do mesmo PR/branch quando um novo push chega.
 concurrency:
