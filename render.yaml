@@ -2,7 +2,7 @@
 # render.yaml — Blueprint de deploy no Render (Infrastructure as Code)
 #
 # Monorepo, 2 branches dedicadas de deploy (DEC-17, simplificado em
-# 2026-08-05 — DEC-20): staging_back/staging_front/staging foram removidas
+# 2026-08-05 — DEC-22): staging_back/staging_front/staging foram removidas
 # por nunca terem sido de fato provisionadas no Render (faltava credencial,
 # ver HT-04) e por gerarem confusão sem uso real. Ambiente único de produção:
 #   - main_back   → produção do backend  (garra-backend)

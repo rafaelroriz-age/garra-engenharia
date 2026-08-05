@@ -1,9 +1,9 @@
 # Integração Contínua — roda em todo Pull Request e em push para o trunk
 # (`main`) e para as branches de deploy de produção (`main_back`/`main_front`,
 # DEC-17). Staging (staging_back/staging_front/staging) foi removida em
-# 2026-08-05 (DEC-20) por nunca ter sido de fato provisionada no Render.
+# 2026-08-05 (DEC-22) por nunca ter sido de fato provisionada no Render.
 # Ver 00_docs/projeto/plano-gestao-configuracao.md (Seção 3.1) e decisoes.md
-# DEC-14/DEC-17/DEC-20.
+# DEC-14/DEC-17/DEC-22.
 #
 # Este workflow é o "status check" obrigatório para merge em `main`
 # (branch protection, configurado manualmente em Settings > Branches do
