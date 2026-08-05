@@ -1,5 +1,5 @@
 # Propaga automaticamente todo push em `main` para `main_back` e `main_front`
-# (DEC-20, 2026-08-05). Resolve a causa raiz da desorganização anterior:
+# (DEC-22, 2026-08-05). Resolve a causa raiz da desorganização anterior:
 # commits/PRs eram integrados só em `main`, mas o deploy no Render
 # (render.yaml, DEC-17) é disparado por `main_back`/`main_front` — que
 # ficavam manualmente defasadas, às vezes por semanas, exigindo sincronismo
