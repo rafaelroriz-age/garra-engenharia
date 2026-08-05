@@ -1,27 +1,25 @@
 # =============================================================================
 # render.yaml — Blueprint de deploy no Render (Infrastructure as Code)
 #
-# Monorepo com 4 branches dedicadas por serviço/ambiente (DEC-17):
-#   - main_back      → produção do backend  (garra-backend)
-#   - main_front     → produção do frontend (garra-frontend)
-#   - staging_back   → staging do backend   (garra-backend-staging)
-#   - staging_front  → staging do frontend  (garra-frontend-staging)
-# Cada serviço abaixo tem seu próprio campo `branch:`, então um push em
-# `main_back` só dispara auto-deploy do backend de produção — a mesma
-# alteração de código pode existir em várias branches (o conteúdo do
-# monorepo é o mesmo), mas cada branch serve apenas de "gatilho" isolado
-# para o serviço correspondente. `main`/`staging` (branches antigas)
-# continuam existindo, mas não estão mais conectadas a nenhum serviço.
+# Monorepo, 2 branches dedicadas de deploy (DEC-17, simplificado em
+# 2026-08-05 — DEC-20): staging_back/staging_front/staging foram removidas
+# por nunca terem sido de fato provisionadas no Render (faltava credencial,
+# ver HT-04) e por gerarem confusão sem uso real. Ambiente único de produção:
+#   - main_back   → produção do backend  (garra-backend)
+#   - main_front  → produção do frontend (garra-frontend)
+#
+# `main` continua sendo o TRUNK único onde todo commit/PR é integrado
+# (inclusive Dependabot). Um workflow dedicado (.github/workflows/
+# sync-deploy-branches.yml) mescla `main` automaticamente em `main_back` e
+# `main_front` a cada push — não commitar direto nessas duas branches nem
+# redirecionar PRs para elas manualmente (foi a causa da desorganização
+# anterior: deploy ficava semanas defasado de `main`).
 #
 # Como usar (uma vez só, feito pelo humano no Dashboard do Render):
 #   1. https://dashboard.render.com/ → New → Blueprint.
 #   2. Conectar o repositório GitHub `rafaelroriz-age/garra-engenharia`.
-#   3. Render detecta este arquivo e mostra o preview dos recursos: 4
-#      serviços web (produção + staging, front + back) e 2 bancos
-#      (garra-db produção, garra-db-staging). Os serviços de staging têm
-#      custo adicional (Seção "Custo" abaixo) — revisar antes de "Apply"
-#      e remover o bloco correspondente se staging não for necessário
-#      ainda.
+#   3. Render detecta este arquivo e mostra o preview dos recursos: 2
+#      serviços web (garra-backend/garra-frontend) e 1 banco (garra-db).
 #   4. Preencher os campos com `sync: false` quando solicitado (nenhum nesta
 #      versão — todos os segredos usam `generateValue`/`fromDatabase`).
 #   5. Clicar em "Apply" — Render provisiona os recursos e faz o 1º deploy
@@ -32,12 +30,6 @@
 # previsto abaixo (porque o nome já estava em uso por outra conta), atualize
 # `NEXT_PUBLIC_API_URL` e `BACKEND_CORS_ORIGINS` manualmente nas env vars do
 # serviço afetado e clique em "Manual Deploy".
-#
-# Custo: os 2 serviços "-staging" e o banco `garra-db-staging` são recursos
-# PAGOS adicionais (mesmo em plano `starter`/`basic-256mb`), somando-se aos
-# 3 recursos de produção já existentes. Se o objetivo é só validar o Blueprint
-# ou economizar custo, remova o bloco "Staging" inteiro (serviços + banco)
-# antes de aplicar, e recrie quando o ambiente de staging for de fato usado.
 #
 # Ver detalhes e troubleshooting em 05_infra/README.md § "Deploy em produção
 # (Render)".
@@ -135,81 +127,12 @@ services:
       - key: NEXT_PUBLIC_API_URL
         value: https://garra-backend.onrender.com/api/v1
 
-  # ---------------------------------------------------------------------------
-  # Staging (DEC-17) — recursos adicionais, remover este bloco (2 serviços +
-  # o banco garra-db-staging, na seção "databases" abaixo) se staging ainda
-  # não for necessário, para não incorrer no custo extra.
-  # ---------------------------------------------------------------------------
-  - type: web
-    name: garra-backend-staging
-    runtime: docker
-    branch: staging_back
-    dockerfilePath: ./04_backend/Dockerfile.render
-    dockerContext: ./04_backend
-    region: oregon
-    plan: starter
-    healthCheckPath: /health
-    autoDeployTrigger: commit
-    preDeployCommand: alembic upgrade head
-    envVars:
-      - key: ENVIRONMENT
-        value: staging
-      - key: BACKEND_CORS_ORIGINS
-        value: https://garra-frontend-staging.onrender.com
-      - key: POSTGRES_HOST
-        fromDatabase:
-          name: garra-db-staging
-          property: host
-      - key: POSTGRES_PORT
-        fromDatabase:
-          name: garra-db-staging
-          property: port
-      - key: POSTGRES_USER
-        fromDatabase:
-          name: garra-db-staging
-          property: user
-      - key: POSTGRES_PASSWORD
-        fromDatabase:
-          name: garra-db-staging
-          property: password
-      - key: POSTGRES_DB
-        fromDatabase:
-          name: garra-db-staging
-          property: database
-      - key: JWT_SECRET_KEY
-        generateValue: true
-      - key: JWT_ALGORITHM
-        value: HS256
-      - key: JWT_ACCESS_TOKEN_EXPIRE_MINUTES
-        value: "60"
-
-  - type: web
-    name: garra-frontend-staging
-    runtime: docker
-    branch: staging_front
-    dockerfilePath: ./03_frontend/Dockerfile.render
-    dockerContext: ./03_frontend
-    region: oregon
-    plan: starter
-    autoDeployTrigger: commit
-    envVars:
-      - key: NEXT_PUBLIC_API_URL
-        value: https://garra-backend-staging.onrender.com/api/v1
-
 # =============================================================================
 # Bancos de dados — PostgreSQL gerenciado (DEC-07)
 # =============================================================================
 databases:
   - name: garra-db
     databaseName: garra_engenharia
-    user: garra
-    plan: basic-256mb
-    region: oregon
-
-  # Banco de staging isolado do de produção (nunca compartilhar dados reais
-  # de cliente com o ambiente de teste) — ver nota de custo no topo do arquivo.
-  - name: garra-db-staging
-    databaseName: garra_engenharia_staging
     user: garra
     plan: basic-256mb
     region: oregon

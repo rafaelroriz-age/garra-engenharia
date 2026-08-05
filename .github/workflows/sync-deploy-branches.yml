@@ -1,0 +1,63 @@
+# Propaga automaticamente todo push em `main` para `main_back` e `main_front`
+# (DEC-20, 2026-08-05). Resolve a causa raiz da desorganização anterior:
+# commits/PRs eram integrados só em `main`, mas o deploy no Render
+# (render.yaml, DEC-17) é disparado por `main_back`/`main_front` — que
+# ficavam manualmente defasadas, às vezes por semanas, exigindo sincronismo
+# manual (ou pior, redirecionamento ad-hoc de PRs de dependência direto para
+# uma das duas, gerando divergência de conteúdo entre elas).
+#
+# Regra de ouro a partir de agora: TODO commit/PR (inclusive Dependabot) é
+# integrado em `main`. Nunca commitar direto em `main_back`/`main_front` nem
+# redirecionar o `base` de um PR para elas — este workflow cuida de propagar.
+#
+# Faz merge (não force-push) de `main` em cada branch de deploy, então um
+# hotfix aplicado diretamente em `main_back`/`main_front` (cenário
+# excepcional) não é descartado — só passa a existir também em `main` no
+# próximo merge manual de volta.
+name: Sync deploy branches (main -> main_back/main_front)
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: Merge main em ${{ matrix.branch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: [main_back, main_front]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ matrix.branch }}
+
+      - name: Configura autor do merge
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge main
+        run: |
+          git merge --no-edit origin/main -m "chore(infra): sincroniza ${{ matrix.branch }} com main [skip ci]"
+
+      - name: Push
+        run: git push origin ${{ matrix.branch }}
+
+      - name: Falha -> abrir issue de conflito
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Conflito ao sincronizar main -> ${{ matrix.branch }}`,
+              body: `O merge automático de \`main\` em \`${{ matrix.branch }}\` falhou (provável conflito). Resolva manualmente: \n\n\`\`\`\ngit checkout ${{ matrix.branch }}\ngit merge main\n# resolver conflitos\ngit push origin ${{ matrix.branch }}\n\`\`\`\n\nCommit: ${{ github.sha }}`,
+              labels: ["ci-failure", "deploy"]
+            });
