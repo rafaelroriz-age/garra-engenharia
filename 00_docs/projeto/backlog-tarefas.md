@@ -3,7 +3,7 @@ title: Backlog de Tarefas — Sistema de Automação de Relatórios Prediais
 type: gestao
 status: ativo
 owner: Garra Engenharia
-last_updated: 2026-07-29
+last_updated: 2026-08-03
 ---
 
 # Backlog de Tarefas
@@ -25,6 +25,14 @@ last_updated: 2026-07-29
 | BL-05 | Seed do gabarito de sistemas prediais, subsistemas, tipos de anomalia/falha e localizações a partir de `RFO_INSPECAO.md` | RF-10 | ✅ Concluída (2026-07-17) — ver [04_backend/README.md](../../04_backend/README.md) e DEC-13 em [decisoes.md](decisoes.md) | Engenheiro Backend | [18-seed-gabarito-sistemas-prediais.prompt.md](../../.github/prompts/18-seed-gabarito-sistemas-prediais.prompt.md) |
 | BL-06 | Autenticação JWT + bcrypt: cadastro/login, proteção de rotas | RNF-05, DEC-05 | ✅ Concluída (2026-07-19) — ver [04_backend/README.md](../../04_backend/README.md) e DEC-15 em [decisoes.md](decisoes.md) | Engenheiro Backend | [19-autenticacao-jwt.prompt.md](../../.github/prompts/19-autenticacao-jwt.prompt.md) |
 | BL-07 | Storage service: cliente MinIO/S3 (boto3) com upload/download/URL pré-assinada para fotos | RNF-07, DEC-02 | ✅ Concluída (2026-07-20) — já atende o armazenamento de fotos; deve ser confirmada como compatível com o fluxo de legendas/artefatos gerados por IA | Engenheiro Backend | [20-storage-service-minio.prompt.md](../../.github/prompts/20-storage-service-minio.prompt.md) |
+
+## Documentos Administrativos (Contratos)
+
+> Escopo distinto de B-02/HT-02 (templates de RELATÓRIO técnico RFO/LTIP/RFIP, ainda bloqueados aguardando o cliente). Esta tarefa trata do template do CONTRATO de prestação de serviços entre Garra Engenharia e o cliente, documento administrativo à parte.
+
+| # | Tarefa | Requisitos/Decisões | Status | Agente | Prompt |
+|---|---|---|---|---|---|
+| BL-40 | Gerar template DOCX reutilizável (placeholders Jinja2) do Contrato de Prestação de Serviços a partir de `01_output-context/Contrato_Revisado_Garra_Software.md` | Uso administrativo/contratual, sem RF/RNF associado | ✅ Concluída (2026-08-03) | Engenheiro Backend | [40-template-docx-contrato-prestacao-servicos.prompt.md](../../.github/prompts/40-template-docx-contrato-prestacao-servicos.prompt.md) |
 
 ## Etapa 3 — Incremento RFO
 
@@ -78,7 +86,7 @@ last_updated: 2026-07-29
 | BL-21 | Testes E2E dos fluxos RFO e LTIP | RNF-06 | 🟢 (depende das etapas 3 e 4) | Engenheiro de Software | [29-testes-e2e-rfo-ltip.prompt.md](../../.github/prompts/29-testes-e2e-rfo-ltip.prompt.md) |
 | BL-22 | Benchmark de geração de PDF/DOCX (200 páginas, 150+ fotos) | RNF-06, R-03 | 🟢 (depende de BL-12/BL-13) | Engenheiro de Software (com apoio do Engenheiro DevOps para infraestrutura de teste) | [30-benchmark-geracao-relatorios.prompt.md](../../.github/prompts/30-benchmark-geracao-relatorios.prompt.md) |
 | BL-23 | Revisão de segurança OWASP Top 10 (auth, upload de arquivos, injeção) | RNF-05 | 🟢 (depende das etapas anteriores) | Engenheiro de Software (ou Engenheiro Backend) | [31-revisao-seguranca-owasp.prompt.md](../../.github/prompts/31-revisao-seguranca-owasp.prompt.md) |
-| BL-24 | Deploy de produção (Docker Compose ou nuvem) | DEC decisão de hospedagem | 🟢 (parcial) — IaC pronto (`render.yaml`, `04_backend/Dockerfile.render`, `03_frontend/Dockerfile.render`, ver `05_infra/README.md` § "Deploy em produção (Render)"); falta HT-04 (aplicar o Blueprint, ação humana — conta/pagamento) | Engenheiro DevOps | `12-devops.prompt.md` |
+| BL-24 | Deploy de produção (Docker Compose ou nuvem) | DEC decisão de hospedagem | 🟢 (parcial) — provisionamento executado via MCP em 2026-08-03 (recursos criados: `garra-db`, `garra-backend`, `garra-frontend`); pendente: preencher segredos do backend, confirmar alocação no project `garraengenharia` e validar healthcheck final | Engenheiro DevOps | `12-devops.prompt.md` |
 
 ### Gestão de Configuração (Git / CI-CD) — derivado de DEC-14
 
@@ -92,14 +100,14 @@ last_updated: 2026-07-29
 
 ## Resumo
 
-- **Tarefas concluídas:** BL-01 (ambiente de desenvolvimento), BL-02 (scaffold backend FastAPI), BL-03 (scaffold frontend Next.js PWA), BL-04 (modelagem de dados: modelos SQLAlchemy + migrations Alembic), BL-05 (seed do gabarito de sistemas prediais/subsistemas/tipos de anomalia/falha/localizações), BL-06 (autenticação JWT + bcrypt, backend e frontend — tela de login implementada em 2026-07-22), BL-07 (storage service MinIO/S3 via boto3), BL-08 e BL-09 (backend + frontend confirmados funcionais em teste manual de UI, 2026-07-22), BL-20 (hospedagem definida: Render), BL-25 (repositório Git remoto criado e publicado), BL-26 (workflow `ci.yml` publicado) — evidências em `05_infra/README.md`, `04_backend/README.md`, `03_frontend/README.md`, DEC-13/DEC-14/DEC-15 em [decisoes.md](decisoes.md) e [status.md](status.md#artefatos-entregues).
+- **Tarefas concluídas:** BL-01 (ambiente de desenvolvimento), BL-02 (scaffold backend FastAPI), BL-03 (scaffold frontend Next.js PWA), BL-04 (modelagem de dados: modelos SQLAlchemy + migrations Alembic), BL-05 (seed do gabarito de sistemas prediais/subsistemas/tipos de anomalia/falha/localizações), BL-06 (autenticação JWT + bcrypt, backend e frontend — tela de login implementada em 2026-07-22), BL-07 (storage service MinIO/S3 via boto3), BL-08 e BL-09 (backend + frontend confirmados funcionais em teste manual de UI, 2026-07-22), BL-20 (hospedagem definida: Render), BL-25 (repositório Git remoto criado e publicado), BL-26 (workflow `ci.yml` publicado), BL-40 (template DOCX do contrato de prestação de serviços gerado a partir do documento revisado do cliente) — evidências em `05_infra/README.md`, `04_backend/README.md`, `03_frontend/README.md`, DEC-13/DEC-14/DEC-15 em [decisoes.md](decisoes.md) e [status.md](status.md#artefatos-entregues).
 - **Tarefas com implementação parcial no repositório:** BL-10, BL-11, BL-14 e BL-16 — há código backend/frontend, rotas/telas implementadas e cobertura de testes automatizados para partes dos fluxos, mas a validação end-to-end, a revisão de regras de negócio e os ajustes finais ainda não estão documentados como concluídos.
 - **Impacto do prompt do cliente (2026-07-28):** a nova demanda de legendas assistidas por IA não exige reabrir BL-01 a BL-09, mas exige revisão de integração em BL-04 (campos/entidades), BL-07 (armazenamento/metadata), BL-11 (upload + geração) e BL-31 (fluxo de anotação) para suportar BL-34/BL-35.
 - **Tarefas 100% desbloqueadas para início imediato:** BL-27, BL-29, BL-30 (RBAC) e BL-31 (editor de anotação de fotos).
 - **Teste manual de UI (2026-07-22)**: corrigido bug de configuração `NEXT_PUBLIC_API_URL` sem sufixo `/api/v1` (afetava dev local e o Blueprint do Render) que fazia todas as chamadas do frontend voltarem 404 — ver `05_infra/.env`, `docker-compose.yml`, `render.yaml`. Tela de login (antes um placeholder) implementada e validada de ponta a ponta.
 - **Tarefas bloqueadas por B-01 (lacunas):** BL-15, BL-18. O prompt do cliente já esclareceu parcialmente #13, mas as decisões de negócio/arquitetura restantes continuam exigindo validação formal com o stakeholder.
 - **Tarefas bloqueadas por B-02 (templates):** BL-12 (parcial), BL-13, BL-17, BL-19.
-- **B-03 (hospedagem) resolvido em 2026-07-21** — Render escolhido, BL-20 concluída. BL-24 passou a 🟢 (parcial: IaC pronto, falta ação humana HT-04). BL-28 concluída (ver linha da tabela acima).
+- **B-03 (hospedagem) resolvido em 2026-07-21** — Render escolhido, BL-20 concluída. Em 2026-08-03, BL-24 avançou para provisionamento real via MCP (banco + frontend + backend criados), restando apenas configuração de segredos/validação final e organização no project `garraengenharia`. BL-28 concluída (ver linha da tabela acima).
 - **Reorganização de branches em 2026-07-21 (DEC-17)**: monorepo passou a ter 4 branches dedicadas por serviço/ambiente no Render — `main_front`, `main_back`, `staging_front`, `staging_back` (`main`/`staging` continuam existindo, sem serviço conectado). `render.yaml`, `ci.yml`, `cd-staging.yml`/`cd-production.yml` e `05_infra/README.md` atualizados de acordo; HT-05 (`backlog-tarefas-humanas.md`) precisa ser repetida para as 4 branches novas.
 - **Prompts criados em 2026-07-17** (`.github/prompts/14-*` a `19-*`): cobrem BL-01 a BL-06, a base da Etapa 0, todas 100% desbloqueadas.
 - **Plano de Gestão de Configuração** (2026-07-19): `00_docs/projeto/plano-gestao-configuracao.md` (DEC-14) define estratégia de Git (trunk-based, Conventional Commits, SemVer), pipelines CI/CD via GitHub Actions e estratégia de deploy/rollback/backup — gera BL-25 a BL-29.

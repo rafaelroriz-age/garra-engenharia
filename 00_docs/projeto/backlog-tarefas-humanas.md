@@ -10,7 +10,7 @@ related:
   - 00_docs/projeto/backlog-tarefas.md
   - 00_docs/projeto/plano-gestao-configuracao.md
   - 00_docs/projeto/backlog-kanban.md
-last_updated: 2026-07-24
+last_updated: 2026-08-03
 ---
 
 # Backlog de Tarefas Humanas
@@ -32,7 +32,7 @@ last_updated: 2026-07-24
 | [HT-01](#ht-01--validar-as-10-lacunas-a-esclarecer-com-o-cliente) | Validar as 10 lacunas `[A ESCLARECER]` com o cliente | Negociação/decisão de negócio com o cliente | BL-15, BL-18, B-01 | 🔴 Pendente | Parcial (preparar pauta e atualizar docs após resposta) |
 | [HT-02](#ht-02--solicitar-e-receber-os-arquivos-docx-de-template-e-logo) | Solicitar e receber os `.docx` de template e logo em alta resolução | Comunicação externa + espera de entrega pelo cliente | BL-12 (fiel), BL-13, BL-17, BL-19, B-02 | 🔴 Pendente | Parcial (redigir a solicitação) |
 | [HT-03](#ht-03--decidir-a-preferência-de-hospedagem) | Decidir a preferência de hospedagem (local vs. nuvem) | Decisão orçamentária | BL-20, BL-24, BL-28, B-03 | ✅ Decidido (Render, 2026-07-21) | Sim (Blueprint `render.yaml` já pronto) |
-| [HT-04](#ht-04--aplicar-o-blueprint-do-render-ou-provisionar-servidorvps-alternativo-e-registrar-domínio) | Aplicar o Blueprint do Render (conta + pagamento) e registrar domínio | Criação de conta, pagamento, conexão OAuth com GitHub | BL-24, BL-28 | 🔴 Pendente | Parcial (Blueprint pronto; falta o "Apply" no Dashboard ou conectar o MCP do Render) |
+| [HT-04](#ht-04--aplicar-o-blueprint-do-render-ou-provisionar-servidorvps-alternativo-e-registrar-domínio) | Aplicar o Blueprint do Render (conta + pagamento) e registrar domínio | Criação de conta, pagamento, conexão OAuth com GitHub | BL-24, BL-28 | 🟡 Em andamento (MCP executado em 2026-08-03) | Sim (provisionamento via MCP já feito; faltam ajustes finais) |
 | [HT-05](#ht-05--configurar-proteção-das-branches-main_frontmain_backstaging_frontstaging_back-no-github) | Configurar proteção das 4 branches (`main_front`/`main_back`/`staging_front`/`staging_back`) no GitHub | Configuração administrativa sensível do repositório | BL-25/26 (item pendente), DEC-17 | 🔴 Pendente (ação manual restante) | Sim, via `gh` CLI (mesmo assim disparado pelo humano) |
 | [HT-06](#ht-06--cadastrar-secrets-do-github-actions) | Cadastrar Secrets do GitHub Actions (SSH, `.env` de produção) | Segredos/credenciais nunca devem passar por chat/agente | BL-28 | 🔴 Pendente | Não recomendado — apenas humano |
 | [HT-07](#ht-07--aprovar-manualmente-o-deploy-de-produção) | Aprovar manualmente o deploy de produção (GitHub Environment) | Gate de governança intencional (segregação de funções, DEC-14) | Deploys em produção (recorrente) | 🔴 Recorrente | Não — é por design |
@@ -73,8 +73,16 @@ last_updated: 2026-07-24
 
 **Bloqueia:** B-02 (`status.md`), BL-12 (fidelidade completa), BL-13, BL-17, BL-19 (`backlog-tarefas.md`).
 
+**Templates `.docx` exigidos (lista explícita, ver também [status.md § Bloqueios Ativos](status.md#bloqueios-ativos)):**
+1. RFO — Relatório de Fiscalização de Obra (referência convertida: `Relatorio_de_Fiscalizacao_1.md`/`Relatorio_de_Fiscalizacao.md`).
+2. LTIP — Laudo Técnico de Inspeção Predial (referência convertida: `Laudo_Tecnico_de_Inspecao_Predial_2026_-_Cond_Cortina_DAmpezzo.md`).
+3. Laudo Técnico de Vistoria Cautelar de Recebimento (referência convertida: `Laudo_Tecnico_de_Vistoria_Cautelar_de_Recebimento_-_Reforma_New_York_-_V01.md`).
+4. Vistoria de Imóvel Residencial (referência convertida: `Laudo_Tecnico_de_Vistoria_de_Imovel_Residencial_-_Ap_1404.md`).
+5. RFIP — Relatório Fotográfico de Inspeção Predial (referência convertida: `Relatorio_Fotografico_de_Inspecao_Predial_-_CORTINA_DAMPAREZZO_-_Versao_Final.md`).
+6. Logo da Garra Engenharia em alta resolução (vetor `.svg`/`.ai` ou `.png` transparente), exigido por RN-07 no cabeçalho de todos os itens acima.
+
 **Passo a passo:**
-1. Listar os arquivos necessários: template `.docx` de RFO, LTIP, Vistoria Cautelar de Recebimento, Vistoria Residencial, RFIP, e logo em alta resolução (vetor/PNG transparente).
+1. Confirmar a lista acima com o cliente antes de enviar (os `.md` já convertidos em `00_docs/convertidos/` são só referência aproximada, não substituem o `.docx`/`.xlsm` original fiel).
 2. Enviar solicitação formal ao cliente (e-mail ou canal já usado no contrato).
 3. Receber os arquivos e salvá-los localmente — **atenção:** por convenção do repositório, arquivos binários originais do cliente (`.docx`, `.pdf`, `.pbix`, `.xlsm`) não são versionados no Git (ver `.gitignore` e nota em memória de repositório); mantê-los em `01_output-context/` local (OneDrive) e não commitar.
 4. Avisar o time técnico (ou pedir para um agente) para iniciar a conversão/uso como template real (desbloqueia BL-12/BL-13/BL-17/BL-19).
@@ -108,6 +116,8 @@ last_updated: 2026-07-24
 
 **Bloqueia:** BL-24, BL-28.
 
+**Estado atual (2026-08-03):** provisionamento de produção executado via MCP do Render: banco `garra-db` e serviços `garra-backend`/`garra-frontend` criados com deploy inicial disparado. Para manter segurança, os segredos do backend foram deixados vazios para preenchimento manual no painel. Ainda resta confirmar a organização no project/grupo `garraengenharia` no Dashboard e preencher variáveis sensíveis antes da validação final.
+
 **Passo a passo (caminho simplificado — Render, ver `05_infra/README.md` § "Deploy em produção (Render)"):**
 1. Criar/acessar conta em [dashboard.render.com](https://dashboard.render.com/) e conectar o repositório GitHub `rafaelroriz-age/garra-engenharia`.
 2. New → Blueprint → selecionar o repositório — o Render lê `render.yaml` automaticamente e mostra o preview dos 3 recursos.
@@ -119,6 +129,12 @@ last_updated: 2026-07-24
 - Se o usuário iniciar o servidor MCP do Render (já em `.vscode/mcp.json`) e inserir a própria API key quando o VS Code solicitar, o agente pode aplicar o Blueprint e ler os links de volta diretamente, sem precisar repetir os passos 1-4 manualmente no Dashboard.
 - Criação de conta, aprovação de custo e registro de domínio continuam exclusivamente humanos.
 - Caminho alternativo (VPS/Azure) permanece documentado no histórico deste arquivo caso a decisão de hospedagem mude no futuro.
+
+**Checklist final pendente (pós-MCP):**
+1. Abrir o serviço `garra-backend` no Render e preencher os segredos em branco: `POSTGRES_HOST`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `JWT_SECRET_KEY`, `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `MINIO_HOST`.
+2. Confirmar `NEXT_PUBLIC_API_URL` no `garra-frontend` e `BACKEND_CORS_ORIGINS` no `garra-backend` com as URLs reais dos serviços.
+3. Garantir que os recursos estejam no project/grupo `garraengenharia` dentro do workspace da conta.
+4. Rodar novo deploy manual e validar `GET /health` do backend.
 
 ---
 
