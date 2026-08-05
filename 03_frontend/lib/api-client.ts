@@ -58,6 +58,23 @@ function getAuthToken(): string | null {
   return window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
 }
 
+/** Persiste o token de acesso (BL-06) após um login bem-sucedido. */
+export function setAuthToken(token: string): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+}
+
+/** Remove o token de acesso (logout). */
+export function clearAuthToken(): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+}
+
+/** Indica se há um token de acesso armazenado (não valida expiração/assinatura). */
+export function isAuthenticated(): boolean {
+  return getAuthToken() !== null;
+}
+
 interface ApiFetchOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
   /** Quando `true`, envia `body` como `FormData`/`Blob` em vez de serializar em JSON. */

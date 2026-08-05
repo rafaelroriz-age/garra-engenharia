@@ -13,8 +13,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.errors import DomainError, NotFoundError
 from app.core.security import decode_access_token
-from app.models import Usuario
+from app.models import Responsavel, Usuario
 
 # tokenUrl é apenas informativo para a documentação OpenAPI (login usa JSON, não form).
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
@@ -49,3 +50,34 @@ async def get_current_user(
         raise _CREDENTIALS_EXCEPTION
 
     return usuario
+
+
+def require_role(*roles: str):
+    """Garante que o usuário autenticado possua um dos papéis exigidos."""
+
+    async def dependency(current_user: Usuario = Depends(get_current_user)) -> Usuario:
+        if current_user.role not in roles:
+            raise DomainError(
+                detail="Você não possui permissão para acessar este recurso.",
+                type_suffix="acesso-negado",
+                title="Acesso negado",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+        return current_user
+
+    return dependency
+
+
+async def get_current_cliente_responsavel(
+    current_user: Usuario = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Responsavel:
+    """Resolve o `Responsavel` vinculado ao usuário autenticado para o Portal do Cliente."""
+    result = await db.execute(select(Responsavel).where(Responsavel.usuario_id == current_user.id))
+    responsavel = result.scalar_one_or_none()
+    if responsavel is None:
+        raise NotFoundError(
+            detail="Nenhum responsável vinculado ao usuário autenticado foi encontrado.",
+            type_suffix="recurso-nao-encontrado",
+        )
+    return responsavel

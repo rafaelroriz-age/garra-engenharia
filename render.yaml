@@ -133,7 +133,7 @@ services:
       # injeta automaticamente como Docker build arg, ver Dockerfile.render).
       # Ajuste se o Render atribuir outro hostname ao backend.
       - key: NEXT_PUBLIC_API_URL
-        value: https://garra-backend.onrender.com
+        value: https://garra-backend.onrender.com/api/v1
 
   # ---------------------------------------------------------------------------
   # Staging (DEC-17) — recursos adicionais, remover este bloco (2 serviços +
@@ -194,7 +194,7 @@ services:
     autoDeployTrigger: commit
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        value: https://garra-backend-staging.onrender.com
+        value: https://garra-backend-staging.onrender.com/api/v1
 
 # =============================================================================
 # Bancos de dados — PostgreSQL gerenciado (DEC-07)

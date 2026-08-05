@@ -5,7 +5,7 @@ Ver `00_docs/arquitetura.md` Seção 3 (Diagrama ER).
 """
 import uuid
 
-from sqlalchemy import String
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -24,8 +24,19 @@ class Responsavel(Base):
     crea: Mapped[str] = mapped_column(String, nullable=True)
     email: Mapped[str] = mapped_column(String, nullable=True)
     telefone: Mapped[str] = mapped_column(String, nullable=True)
+    usuario_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True, unique=True
+    )
 
-    contratos_como_fiscal: Mapped[list["Contrato"]] = relationship(back_populates="fiscal")
+    usuario: Mapped["Usuario | None"] = relationship(back_populates="responsavel")
+    contratos_como_fiscal: Mapped[list["Contrato"]] = relationship(
+        back_populates="fiscal",
+        foreign_keys="Contrato.fiscal_id",
+    )
+    contratos_como_contratante: Mapped[list["Contrato"]] = relationship(
+        back_populates="contratante",
+        foreign_keys="Contrato.contratante_id",
+    )
     execucoes_como_responsavel_legal: Mapped[list["ContratoExecutor"]] = relationship(
         back_populates="responsavel_legal",
         foreign_keys="ContratoExecutor.responsavel_legal_id",

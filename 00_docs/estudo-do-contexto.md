@@ -8,8 +8,8 @@ related:
   - 00_docs/convertidos/RFO_INSPECAO.md
   - 00_docs/convertidos/Relatorio_de_Fiscalizacao_1.md
   - 00_docs/convertidos/Laudo_Tecnico_de_Inspecao_Predial_2026_-_Cond_Cortina_DAmpezzo.md
-tags: [contexto, domínio, requisitos, regras-de-negócio]
-last_updated: 2026-07-08
+tags: [contexto, domínio, requisitos, regras-de-negócio, rbac, portal-cliente, ia-legendas]
+last_updated: 2026-07-27
 ---
 
 <!-- ai-summary
@@ -84,7 +84,7 @@ Documento subsidiário ao LTIP ou entregue de forma independente. Composto exclu
 | **Engenheiro Fiscal** | Profissional responsável pela fiscalização. É o autor dos relatórios. | Roniel Ribeiro Costa; possui CREA e emite ART de Fiscalização. |
 | **Responsável Técnico pela Execução (RTE)** | Engenheiro da empresa executora que assina a ART de Execução. | Diferente do fiscal; pode ser de outra empresa. |
 | **Responsável Legal da Empresa Executora** | Representante jurídico da construtora/reformadora. | Pode haver duas empresas executoras no mesmo contrato. |
-| **Contratante / Cliente** | Pessoa física ou jurídica que contratou o serviço. Pode ser o dono do imóvel, síndico ou administradora. | Tem CPF ou CNPJ; assina o contrato. |
+| **Contratante / Cliente** | Pessoa física ou jurídica que contratou o serviço. Pode ser o dono do imóvel, síndico ou administradora. Acompanha a auditoria/fiscalização feita pelo Engenheiro Fiscal através de um Portal do Cliente próprio (dashboard + documentos) — ver RF-13. | Tem CPF ou CNPJ; assina o contrato. Perfil de acesso distinto do Engenheiro Fiscal (RBAC, ver RN-14). |
 | **Síndico / Administradora** | Representante do condomínio em inspeções prediais. | Deve estar presente ou autorizar o acesso às áreas. |
 | **Morador / Proprietário de Unidade** | Permite acesso à unidade durante vistoria residencial. | [A ESCLARECER] se há assinatura de termo de autorização. |
 | **Responsável Legal do Contratante** | Quando o contratante é PJ, o representante legal assina. | Ex.: Carlos Leite de Camargo Filho (Res. Bucareste). |
@@ -104,7 +104,7 @@ Documento subsidiário ao LTIP ou entregue de forma independente. Composto exclu
 | **Sistema Predial** | Conjunto de componentes da edificação agrupados por função: Aberturas e Fechamentos, Acessibilidade, Circulações, Cobertura e Telhamento, Elementos Estruturais Aparentes, Impermeabilização, Instalações de Gás, Instalações de Telecomunicação, Revestimentos, Esquadrias, Prevenção e Combate a Incêndios, SPDA, Sistemas Elétricos, Hidrossanitários, Vedações Verticais. |
 | **Subsistema** | Componente específico dentro de um Sistema Predial (ex.: Calhas e Rufos, Pilares, Mantas, Extintores). Listagem completa no gabarito `RFO_INSPECAO.md`. |
 | **Ocorrência** | Item inspecionado com desvio registrado. Vinculada a um Sistema, Subsistema e Localização. Classificada por Situação, Classificação, Tipo de Anomalia/Falha, Grau de Risco e Prioridade. |
-| **Foto** | Imagem digital capturada com Lightshot ou câmera, vinculada a uma Ocorrência ou a uma Visita de Fiscalização. Possui legenda técnica. |
+| **Foto** | Imagem digital capturada com Lightshot, câmera ou editor interno (RF-14), vinculada a uma Ocorrência ou a uma Visita de Fiscalização. Possui legenda técnica, que pode ser sugerida por IA a partir de anotação de campo/transcrição de áudio (RF-15) e é sempre revisada e aprovada por um profissional habilitado antes de compor o relatório. |
 | **Relatório** | Documento final gerado pelo sistema: PDF e/ou DOCX. Representa a saída formal do serviço prestado. |
 | **ART** | Anotação de Responsabilidade Técnica emitida no CREA. Existe ART de Fiscalização (do engenheiro fiscal) e ART de Execução (do RTE). Ambas têm número registrado no contrato. |
 | **Medição** | Quantitativo de serviços executados em uma visita de fiscalização. Pode ser em m², unidades ou outro critério. |
@@ -144,6 +144,10 @@ Documento subsidiário ao LTIP ou entregue de forma independente. Composto exclu
 | **RN-11** | O Relatório Fotográfico de Inspeção Predial organiza fotos estritamente por Sistema Predial e, dentro de cada sistema, por Subsistema. |
 | **RN-12** | Documentos técnicos da edificação analisados durante a inspeção (projetos, ARTs anteriores) devem ser listados como "analisados" ou "ausentes" no laudo. |
 | **RN-13** | [A ESCLARECER] Periodicidade obrigatória de re-inspeção por grau de risco: Crítico (90 dias?), Médio (6 meses?), Mínimo (anual?). |
+| **RN-14** | Um usuário do tipo Cliente (RBAC — ver RF-13) só pode visualizar dados (dashboard, acompanhamento de visitas/ocorrências e relatórios) das Edificações/Contratos em que esteja vinculado como contratante. Nenhum dado de outro cliente ou de contratos de terceiros é acessível pelo Portal do Cliente. |
+| **RN-15** | A imagem resultante do editor de anotação (RF-14) — com setas, formas, texto ou traço livre aplicados — substitui a imagem enviada como a Foto definitiva vinculada à Ocorrência/Visita; o sistema não é obrigado a reter a versão sem marcação. |
+| **RN-16** | A legenda técnica sugerida por IA (RF-15) é sempre uma minuta sujeita à revisão e aprovação do profissional responsável antes de compor um relatório emitido; o sistema não deve permitir que uma legenda gerada por IA seja incluída no relatório sem essa aprovação explícita. |
+| **RN-17** | Toda legenda gerada por IA deve preservar a rastreabilidade da origem: texto bruto/transcrição original, sugestão da IA, versão do prompt-sistema utilizada, usuário que aprovou/editou e data/hora da aprovação. |
 
 ---
 
@@ -155,7 +159,7 @@ Documento subsidiário ao LTIP ou entregue de forma independente. Composto exclu
 | **RF-02** | Criação e edição de Contratos de serviço vinculados a uma Edificação, com: número do contrato, tipo de serviço, objeto, data de início, prazo, contratante (PF/PJ), empresas executoras, engenheiro fiscal, RTE, ART de Fiscalização, ART de Execução, NBRs aplicáveis, observações gerais. |
 | **RF-03** | Registro de Visitas (para RFO): data, serviços executados, equipe presente por função e quantidade, medições parciais (m², unidades), observações e fotos do dia. |
 | **RF-04** | Registro de Ocorrências (para LTIP e Vistorias): vinculação a Sistema Predial, Subsistema, Localização, Situação (Conforme/Não Conforme), Classificação, Tipo de Anomalia, Tipo de Falha, Grau de Risco CMM, Prioridade (0-5), descrição textual e fotos vinculadas. |
-| **RF-05** | Upload e vinculação de imagens capturadas com Lightshot (via clipboard paste no browser ou upload manual) a Ocorrências e Visitas. Suporte a anotações/textos sobre as imagens. |
+| **RF-05** | Upload e vinculação de imagens a Ocorrências e Visitas, via clipboard paste no browser (compatível com imagens já marcadas externamente no Lightshot) ou upload manual. A função do Lightshot no fluxo do auditor é desenhar setas, marcações e anotações sobre a foto — não apenas capturar a tela; ver RF-14 para a mesma capacidade de marcação dentro do próprio sistema. |
 | **RF-06** | Geração automática de Relatório em PDF e/ou DOCX a partir de template fiel ao modelo atual, com: cabeçalho com logo e dados do engenheiro, seções estruturadas, tabelas de ocorrências, fotos com legendas e sumário automático. |
 | **RF-07** | Dashboard de saúde da edificação por sistema predial: contagem e proporção de itens Conforme/Não Conforme, distribuição por Grau de Risco (Mínimo/Médio/Crítico), média de gravidade por subsistema (similar ao Power BI do COND.md). |
 | **RF-08** | Histórico de inspeções por edificação: linha do tempo de Contratos e Inspeções com acesso aos relatórios gerados e evolução dos indicadores. |
@@ -163,6 +167,9 @@ Documento subsidiário ao LTIP ou entregue de forma independente. Composto exclu
 | **RF-10** | Gabarito de sistemas prediais pré-carregado (conforme `RFO_INSPECAO.md`): lista de Sistemas, Subsistemas, Tipos de Anomalia/Falha e Localizações como dados mestre editáveis. |
 | **RF-11** | Controle de versão dos relatórios emitidos: cada emissão gera uma nova versão (V01, V02...) e mantém o histórico. |
 | **RF-12** | Gestão de múltiplas empresas executoras por contrato, cada uma com CNPJ, Responsável Legal, RTE e ART de Execução. |
+| **RF-13** | Portal do Cliente (contratante/síndico): área somente leitura, restrita às Edificações/Contratos em que o usuário conste como contratante (RN-14), com dashboard de acompanhamento da auditoria/fiscalização em andamento (status das visitas/ocorrências) e acesso aos documentos (relatórios/laudos) já emitidos para download. |
+| **RF-14** | Editor de anotação de imagens integrado ao fluxo de upload de fotos: setas, formas (retângulo/elipse), texto e traço livre sobre a foto, equivalente à marcação feita externamente no Lightshot — permite ao auditor marcar tecnicamente a anomalia diretamente no sistema, simplificando a confecção do relatório sem depender de uma ferramenta externa. |
+| **RF-15** | Geração assistida por IA de legendas técnicas de fotos: a partir de anotação de campo, transcrição de áudio ou descrição bruta fornecida pelo auditor, o sistema envia os dados a um provedor de IA (LLM) usando um prompt-sistema técnico versionado — aplicável a qualquer tipo de relatório fotográfico (RFO, LTIP, Vistoria Cautelar, Vistoria Residencial, RFIP) — e retorna uma legenda sugerida, estruturada e classificada por nível de certeza. A sugestão é sempre apresentada em campo editável — nunca substitui automaticamente a legenda existente — e só passa a compor o relatório após revisão e aprovação do profissional habilitado (RN-16, RN-17). |
 
 ---
 
@@ -226,6 +233,8 @@ Cadastra Edificação (obra em fase final) -> Cadastra Contrato (Vistoria Cautel
 
 ## 9. Lacunas [A ESCLARECER]
 
+> Atualização 2026-07-29: o prompt do cliente em [00_docs/cliente/prompt-lado-cliente.md](../cliente/prompt-lado-cliente.md) esclarece parcialmente a lacuna #13 (prompt-sistema universal para legendas técnicas, regras de não invenção, rastreabilidade e aprovação humana obrigatória). As lacunas #6, #11 e #12 já foram tratadas/definidas via DEC-18 em [00_docs/projeto/decisoes.md](./projeto/decisoes.md). O conteúdo do prompt já permite tratar o fluxo de legendas assistidas por IA como parcialmente definido, mas não substitui a decisão do provedor de IA nem a política de retenção/privacidade dos dados enviados a terceiros. As demais continuam abertas e precisam de validação formal.
+
 | # | Dúvida | Impacto |
 |---|---|---|
 | 1 | Existe periodicidade de re-inspeção mandatória por grau de risco (Crítico < 90 dias, Médio < 180 dias, Mínimo < 1 ano)? | Define se o sistema precisa de alertas/calendário. |
@@ -233,8 +242,11 @@ Cadastra Edificação (obra em fase final) -> Cadastra Contrato (Vistoria Cautel
 | 3 | O sistema precisa funcionar totalmente offline em campo (sem internet)? | Define necessidade de PWA com Service Worker + IndexedDB. |
 | 4 | As fotos do Lightshot são salvas automaticamente em pasta monitorada ou somente na área de transferência? | Define estratégia de integração com Lightshot. |
 | 5 | O DOCX gerado serve como rascunho editável antes da entrega, ou o PDF final deve ser definitivo sem edição manual? | Define se WeasyPrint (PDF direto) é suficiente ou se docxtpl (DOCX intermediário) é obrigatório. |
-| 6 | O cliente (síndico/proprietário) precisa ter acesso ao sistema para consultar relatórios, ou o engenheiro sempre entrega o PDF por e-mail? | Define se há necessidade de portal público/cliente. |
+| 6 | ~~O cliente (síndico/proprietário) precisa ter acesso ao sistema para consultar relatórios, ou o engenheiro sempre entrega o PDF por e-mail?~~ **RESOLVIDA (2026-07-24):** sim, o cliente terá acesso a um Portal do Cliente próprio (dashboard de acompanhamento da auditoria + documentos), com login separado do Engenheiro Fiscal. | Gerou RF-13, RN-14 e a decisão de arquitetura DEC-18 (RBAC) em `00_docs/projeto/decisoes.md`. |
 | 7 | Existe integração necessária com o CREA para consulta ou validação de ARTs? | Define complexidade da integração com sistemas externos. |
 | 8 | As medições do RFO têm formato fixo (m²) ou variam por contrato (unidades, horas, etc.)? | Define flexibilidade do modelo de medições. |
 | 9 | O engenheiro usa assinatura digital (ICP-Brasil) nos PDFs emitidos, ou a assinatura é apenas o CREA impresso? | Define se é necessário módulo de assinatura digital. |
 | 10 | O campo "Prioridade 0" significa "sem prioridade definida" ou "não aplicável"? | Define tratamento no banco e na geração do relatório. |
+| 11 | Definido interinamente (2026-07-24): o acesso do cliente ao Portal (RF-13) é feito por criação manual de credencial pelo engenheiro fiscal, sem auto-cadastro público. | Define o fluxo de onboarding do usuário Cliente (BL-30). |
+| 12 | Definido interinamente (2026-07-24): o Portal do Cliente é escopado por vínculo contratante/Responsável; não há necessidade de definir um cadastro separado por edificação/contrato. | Define o vínculo Usuario↔Responsavel e o escopo do Portal do Cliente (BL-30). |
+| 13 | Parcialmente resolvida (2026-07-29): o cliente forneceu um prompt-sistema universal para transcrição/redação de legendas técnicas, com regras de não invenção, rastreabilidade e aprovação humana obrigatória. Faltam apenas a decisão do provedor de IA e a política de retenção/privacidade dos dados enviados a terceiros. | Define a implementação do Adapter `LegendaIAClient` (ADR-12 em `arquitetura.md`) e o tratamento de dados sensíveis enviados a terceiros (OWASP A02). |

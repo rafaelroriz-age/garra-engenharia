@@ -12,6 +12,7 @@ from app.schemas.inspecao import InspecaoRead
 class ContratoBase(BaseModel):
     edificacao_id: uuid.UUID
     fiscal_id: uuid.UUID
+    contratante_id: uuid.UUID | None = None
     numero: str
     tipo_servico: str
     objeto: str | None = None

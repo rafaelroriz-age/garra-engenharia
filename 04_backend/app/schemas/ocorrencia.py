@@ -24,7 +24,7 @@ class OcorrenciaBase(BaseModel):
     gut_gravidade: float | None = None
     gut_urgencia: float | None = None
     gut_tendencia: float | None = None
-    seq_numero: int
+    seq_numero: int | None = None
 
 
 class OcorrenciaCreate(OcorrenciaBase):

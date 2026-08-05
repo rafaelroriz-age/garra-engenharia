@@ -3,14 +3,14 @@ title: Status do Projeto — Sistema de Automação de Relatórios Prediais
 type: gestao
 status: ativo
 owner: Garra Engenharia
-last_updated: 2026-07-20
+last_updated: 2026-07-29
 ---
 
 # Status do Projeto
 
-**Última atualização:** 2026-07-20  
-**Fase atual:** Incremento RFO (Etapa 3) — backend de BL-08 a BL-11 concluído (Edificações, Contratos, Visitas, Fotos); frontend das mesmas tarefas pendente  
-**Progresso geral:** ███████████░ 62%
+**Última atualização:** 2026-07-29  
+**Fase atual:** Incremento LTIP + Legendas Assistidas por IA — o prompt do cliente esclareceu parcialmente a lacuna #13 (prompt-sistema universal, regras de não invenção, rastreabilidade e aprovação humana); as lacunas #6/#11/#12 já foram tratadas via DEC-18; as lacunas #1/#2/#3/#4/#5/#7/#8/#9/#10 continuam abertas e exigem validação formal  
+**Progresso geral:** ████████████░ 67%
 
 ---
 
@@ -22,12 +22,12 @@ last_updated: 2026-07-20
 | 2. Estudo do Contexto | ✅ Concluída | 100% | `00_docs/estudo-do-contexto.md` |
 | 3. Arquitetura de Software | ✅ Concluída | 100% | `00_docs/arquitetura.md` |
 | 3.5 Planejamento de Ciclo de Vida e Backlog | ✅ Concluída | 100% | `00_docs/projeto/ciclo-de-vida.md`, `cronograma.md`, `backlog-tarefas.md` |
-| 4. Validação com cliente (lacunas) | ⏳ Pendente | 0% | Sessão de validação agendada (Etapa 1) |
+| 4. Validação com cliente (lacunas) | 🟡 Parcialmente concluída | 30% | Validação parcial concluída com base no prompt do cliente; ainda faltam respostas formais para as lacunas remanescentes (Etapa 1) |
 | 5. Prototipagem de templates PDF/DOCX | ⬜ Não iniciada | 0% | Bloqueada por B-02 (parcial — ver BL-12) |
 | 6. Implementação Backend (Fundação Técnica) | ✅ Concluída | 100% | BL-01, BL-02, BL-04, BL-05, BL-06, BL-07 concluídas — ver [04_backend/README.md](../../04_backend/README.md) |
 | 6.5 Implementação Backend (Incremento RFO) | 🟡 Em andamento | 40% | BL-08 a BL-11 (Edificações, Contratos, Visitas, Fotos) concluídas no backend — RFC 7807 global, Repository/Service Layer, 27 testes de integração novos |
-| 7. Implementação Frontend | 🟡 Em andamento | 10% | Scaffold (BL-03) concluído; telas de CRUD (BL-08 a BL-11) 🟢 desbloqueadas (backend pronto) |
-| 8. Integração + Testes | ⬜ Não iniciada | 0% | Testes E2E (BL-21) dependem das Etapas 3 e 4 |
+| 7. Implementação Frontend | 🟡 Em andamento | 48% | Scaffold (BL-03) concluído; login funcional (2026-07-22); telas de Edificações e Contratos (BL-08/BL-09) confirmadas funcionais em teste manual de UI; Visitas/Fotos (BL-10/BL-11) implementadas mas não re-testadas; Dashboard (BL-16) e Ocorrências (BL-14) implementados no frontend mas bloqueados por endpoints de backend ainda inexistentes; fluxo de legendas assistidas por IA entra como próxima frente (BL-35, BL-39) |
+| 8. Integração + Testes | 🟡 Em andamento | 10% | Testes E2E (BL-21) dependem das Etapas 3 e 4; integração do fluxo de fotos/legendas (BL-36 a BL-39) entra como prioridade de validação |
 | 9. Deploy + Documentação final | 🟡 Em andamento | 25% | Gestão de Configuração (DEC-14) e CI (BL-25, BL-26) concluídos; hospedagem definida (Render, HT-03 ✅) e Blueprint IaC pronto (`render.yaml`); falta HT-04 (aplicar o Blueprint no Dashboard) |
 
 ---
@@ -60,11 +60,13 @@ last_updated: 2026-07-20
 | Plano de Gestão de Configuração (DEC-14) | `00_docs/projeto/plano-gestao-configuracao.md` | 2026-07-19 | ✅ Aprovado |
 | Backlog de Tarefas Humanas | `00_docs/projeto/backlog-tarefas-humanas.md` | 2026-07-20 | ✅ Ativo |
 | Tratamento de erros RFC 7807 (global) | `04_backend/app/core/errors.py`, `app/core/exception_handlers.py`, DEC-11 | 2026-07-20 | ✅ Implementado (`DomainError`/`NotFoundError`/`ConflictError` + `RequestValidationError`) |
-| BL-08 (backend) — CRUD de Edificações + upload de documentos técnicos | `04_backend/app/api/v1/edificacoes.py`, `app/services/edificacao_service.py`, `app/repositories/edificacao_repository.py`, DEC-16 | 2026-07-20 | ✅ Implementado e validado (7 testes em `tests/test_edificacoes.py`); frontend pendente |
-| BL-09 (backend) — CRUD de Contratos com executoras/NBRs em cascata + Inspeção 1:1 | `04_backend/app/api/v1/contratos.py`, `app/services/contrato_service.py`, `app/repositories/contrato_repository.py` | 2026-07-20 | ✅ Implementado e validado (6 testes em `tests/test_contratos.py`); frontend pendente |
-| BL-10 (backend) — Registro de Visitas (equipe, serviços, medições) + detalhe de Inspeção | `04_backend/app/api/v1/visitas.py`, `app/api/v1/inspecoes.py`, `app/services/visita_service.py` | 2026-07-20 | ✅ Implementado e validado (6 testes em `tests/test_visitas.py`); frontend pendente |
-| BL-11 (backend) — Upload de fotos (clipboard + manual) com reprocessamento Pillow (A08) | `04_backend/app/api/v1/fotos.py`, `app/services/foto_service.py`, `app/services/image_processing.py` | 2026-07-20 | ✅ Implementado e validado (8 testes em `tests/test_fotos.py`); frontend pendente |
+| BL-08 — CRUD de Edificações + upload de documentos técnicos | `04_backend/app/api/v1/edificacoes.py`, `03_frontend/app/edificacoes/` | 2026-07-20 | ✅ Implementado e validado — backend (7 testes) e frontend (listagem, busca, criação) confirmados funcionais em teste manual de UI (2026-07-22) |
+| BL-09 — CRUD de Contratos com executoras/NBRs em cascata + Inspeção 1:1 | `04_backend/app/api/v1/contratos.py`, `03_frontend/app/contratos/` | 2026-07-20 | ✅ Implementado e validado — backend (6 testes) e frontend (listagem com filtros) confirmados funcionais em teste manual de UI (2026-07-22) |
+| BL-10 — Registro de Visitas (equipe, serviços, medições) + detalhe de Inspeção | `04_backend/app/api/v1/visitas.py`, `app/api/v1/inspecoes.py`, `03_frontend/app/inspecoes/[id]/visitas/` | 2026-07-20 | ✅ Backend implementado e validado (6 testes); frontend existe e carrega, não re-testado a fundo em 2026-07-22 |
+| BL-11 — Upload de fotos (clipboard + manual) com reprocessamento Pillow (A08) | `04_backend/app/api/v1/fotos.py`, `app/services/image_processing.py` | 2026-07-20 | ✅ Backend implementado e validado (8 testes); frontend de upload ainda não confirmado em teste manual de UI |
 | Deploy Render (Blueprint IaC) — backend, frontend e banco definidos como código | `render.yaml`, `04_backend/Dockerfile.render`, `03_frontend/Dockerfile.render`, `05_infra/.env.render.example` | 2026-07-21 | ✅ Implementado — falta HT-04 (aplicar o Blueprint no Dashboard do Render) |
+| Login funcional (BL-06 frontend) | `03_frontend/app/(auth)/login/page.tsx`, `components/layout/app-shell.tsx` (guarda de rota + logout) | 2026-07-22 | ✅ Implementado e validado — antes era só um placeholder; fluxo login → dashboard → logout testado via browser automatizado |
+| Fix: `NEXT_PUBLIC_API_URL` sem `/api/v1` (todas as chamadas do frontend voltavam 404) | `05_infra/.env`, `.env.example`, `docker-compose.yml`, `render.yaml`, `.env.render.example` | 2026-07-22 | ✅ Corrigido — bug afetava tanto dev local quanto o Blueprint de produção/staging do Render |
 
 ---
 
@@ -72,10 +74,13 @@ last_updated: 2026-07-20
 
 | # | Bloqueio | Impacto | Responsável | Ação necessária |
 |---|---|---|---|---|
-| B-01 | 10 lacunas `[A ESCLARECER]` sem resposta do cliente | **Alto** — pode mudar arquitetura offline e multi-usuário | Gestor de Projeto | Agendar sessão de validação com Eng. Roniel — ver [HT-01](backlog-tarefas-humanas.md#ht-01--validar-as-10-lacunas-a-esclarecer-com-o-cliente) |
+| B-01 | 10 lacunas `[A ESCLARECER]` ainda não resolvidas formalmente; #6/#11/#12 já foram tratadas via DEC-18, #13 foi esclarecida parcialmente pelo prompt do cliente e as demais (#1, #2, #3, #4, #5, #7, #8, #9, #10) continuam pendentes | **Alto** — ainda há decisões remanescentes que podem alterar arquitetura offline, multi-usuário e assinatura digital | Gestor de Projeto | Finalizar a validação formal das lacunas remanescentes com Eng. Roniel — ver [HT-01](backlog-tarefas-humanas.md#ht-01--validar-as-10-lacunas-a-esclarecer-com-o-cliente) |
 | B-02 | Templates Word originais não entregues pelo cliente | **Médio** — bloqueia geração de DOCX fiel | Gestor de Projeto | Solicitar ao cliente todos os arquivos `.docx` de modelo — ver [HT-02](backlog-tarefas-humanas.md#ht-02--solicitar-e-receber-os-arquivos-docx-de-template-e-logo) |
+| B-04 | Provedor de IA/LLM para geração assistida de legendas técnicas (RF-15, DEC-21) ainda não escolhido (lacuna #13) | **Médio** — bloqueia BL-34 a BL-39; envolve custo por chamada e política de retenção/privacidade dos dados enviados a terceiros (fotos/descrições de imóveis) | Gestor de Projeto | Definir provedor (OpenAI, Azure OpenAI, Anthropic, outro) e política de dados antes de iniciar BL-34/BL-36 a BL-39 |
 
 > B-03 (preferência de hospedagem) resolvido em 2026-07-21 — hospedagem definida como Render. Falta apenas a ação humana [HT-04](backlog-tarefas-humanas.md#ht-04--aplicar-o-blueprint-do-render-ou-provisionar-servidorvps-alternativo-e-registrar-domínio) (criar conta/aplicar o Blueprint), já não é mais um bloqueio de decisão.
+>
+> **Impacto adicional do prompt do cliente (2026-07-28):** o fluxo de legendas assistidas por IA não reabre a base técnica já concluída, mas exige revisão de integração em BL-04, BL-07, BL-11 e BL-31 para acomodar o novo fluxo de geração/ aprovação junto ao upload e à anotação de fotos.
 
 > Detalhamento completo dessas ações (passo a passo, links, alternativas via agente/MCP) em [backlog-tarefas-humanas.md](backlog-tarefas-humanas.md).
 
@@ -83,12 +88,13 @@ last_updated: 2026-07-20
 
 ## Próximos Passos (em ordem)
 
-1. **[IMEDIATO]** Agendar reunião de validação com Eng. Roniel para resolver lacunas `[A ESCLARECER]` de `estudo-do-contexto.md` (especialmente: offline, multi-usuário, assinatura digital) — resolve B-01 (Etapa 1)
+1. **[IMEDIATO]** Concluir a validação formal das lacunas remanescentes em `estudo-do-contexto.md` (#1, #2, #3, #4, #5, #7, #8, #9, #10), tendo em vista que #6/#11/#12 já foram resolvidas via DEC-18 e #13 foi esclarecida parcialmente pelo prompt do cliente — reduz o impacto de B-01 (Etapa 1)
 2. **[IMEDIATO]** Solicitar todos os arquivos `.docx` de template (RFO, LTIP, Vistoria Cautelar, RFIP) e logo em alta resolução — resolve B-02 (Etapa 2)
-3. Implementar o frontend do Incremento RFO (Etapa 3 de `ciclo-de-vida.md`): telas de BL-08 (Edificações) → BL-09 (Contratos) → BL-10 (Visitas) → BL-11 (Upload de fotos) — backend das 4 já concluído
-4. Validar `00_docs/arquitetura.md` com o cliente (stack, modelo de dados)
-5. Configurar manualmente a proteção de branch `main` no GitHub (HT — ação humana, ver `backlog-tarefas-humanas.md`)
-6. Acompanhar `00_docs/projeto/cronograma.md` e `00_docs/projeto/backlog-tarefas.md` para priorização contínua do backlog
+3. Re-testar em UI o frontend de Visitas (BL-10) e Upload de fotos (BL-11) — Edificações e Contratos (BL-08/BL-09) já confirmados funcionais em 2026-07-22; implementar os endpoints de backend pendentes de Ocorrências (BL-14) e agregação do Dashboard (BL-16) para desbloquear os frontends já prontos dessas telas
+4. Definir o provedor de IA e a política de dados para desbloquear BL-34 e a extensão BL-36 a BL-39 do fluxo de legendas assistidas por IA
+5. Validar `00_docs/arquitetura.md` com o cliente (stack, modelo de dados)
+6. Configurar manualmente a proteção de branch `main` no GitHub (HT — ação humana, ver `backlog-tarefas-humanas.md`)
+7. Acompanhar `00_docs/projeto/cronograma.md` e `00_docs/projeto/backlog-tarefas.md` para priorização contínua do backlog
 
 > **Regra de atualização:** ao concluir qualquer tarefa do backlog, atualizar imediatamente o status em `backlog-tarefas.md`, `backlog-tarefas-humanas.md` (se aplicável) e neste arquivo, desbloqueando (🔴→🟢) toda tarefa dependente que tinha a tarefa concluída como pré-requisito.
 
@@ -102,12 +108,12 @@ last_updated: 2026-07-20
 | Regras de negócio documentadas | 13 (RN-01 a RN-13) |
 | Requisitos funcionais | 12 (RF-01 a RF-12) |
 | Requisitos não funcionais | 8 (RNF-01 a RNF-08) |
-| Lacunas [A ESCLARECER] | 10 (seção 9 do estudo-do-contexto.md) |
+| Lacunas [A ESCLARECER] | 10 (seção 9 do estudo-do-contexto.md); 3 já tratadas/definidas (#6/#11/#12), 1 parcialmente esclarecida (#13) e 9 ainda exigem confirmação formal |
 | Decisões arquiteturais registradas | 16 (DEC-01 a DEC-16) |
 | Riscos identificados | 9 (R-01 a R-09) |
 | Entidades no modelo ER | 14 |
 | Endpoints de API definidos | 30+ |
-| Tarefas no backlog | 29 (BL-01 a BL-29) |
-| Tarefas concluídas | 9 (BL-01 a BL-07, BL-25, BL-26) — backend de BL-08 a BL-11 também concluído (frontend pendente) |
-| Tarefas desbloqueadas para início imediato | 8 (BL-08 a BL-11, BL-14, BL-16, BL-27, BL-29) |
-| Prompts de tarefas criados | 18 (`14-*` a `31-*`) |
+| Tarefas no backlog | 39 (BL-01 a BL-39) |
+| Tarefas concluídas | 12+ (fundação técnica + BL-08/BL-09/BL-20/BL-25/BL-26, com BL-10/BL-11 já parcialmente integrados) |
+| Tarefas desbloqueadas para início imediato | 10 (BL-08 a BL-11, BL-14, BL-16, BL-27, BL-29, BL-30, BL-31) |
+| Prompts de tarefas criados | 22 (`14-*` a `39-*`) |

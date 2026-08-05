@@ -1,18 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Users2, Ruler, Camera } from "lucide-react";
+import { Pencil, Plus, Users2, Ruler, Camera } from "lucide-react";
 
 import type { Visita, VisitaMaoObra, VisitaMedicao } from "@/lib/types";
 import { api } from "@/lib/api-client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ApiErrorAlert } from "@/components/api-error-alert";
 import { FotoUpload } from "@/components/foto-upload";
+import { VisitaForm } from "./visita-form";
 
 interface VisitaCardProps {
   visita: Visita;
@@ -34,6 +42,9 @@ export function VisitaCard({ visita, onUpdate }: VisitaCardProps) {
   const [unidadeMedicao, setUnidadeMedicao] = useState("");
   const [medicaoError, setMedicaoError] = useState<Error | null>(null);
   const [isAddingMedicao, setIsAddingMedicao] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isUpdatingVisit, setIsUpdatingVisit] = useState(false);
+  const [editError, setEditError] = useState<Error | null>(null);
 
   const maoObra = visita.mao_obra ?? [];
   const medicoes = visita.medicoes ?? [];
@@ -87,9 +98,23 @@ export function VisitaCard({ visita, onUpdate }: VisitaCardProps) {
     }
   }
 
+  async function handleUpdateVisit(input: { data: string; servicos_executados: string; observacoes?: string | null }) {
+    setEditError(null);
+    setIsUpdatingVisit(true);
+    try {
+      const updated = await api.put<Visita>(`/visitas/${visita.id}`, input);
+      onUpdate(updated);
+      setIsEditing(false);
+    } catch (err) {
+      setEditError(err instanceof Error ? err : new Error("Falha ao atualizar visita."));
+    } finally {
+      setIsUpdatingVisit(false);
+    }
+  }
+
   return (
     <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <CardTitle className="text-base">
             Visita #{visita.seq_numero} · {new Date(`${visita.data}T00:00:00`).toLocaleDateString("pt-BR")}
@@ -101,8 +126,32 @@ export function VisitaCard({ visita, onUpdate }: VisitaCardProps) {
             <p className="mt-1 text-xs text-muted-foreground">Obs.: {visita.observacoes}</p>
           ) : null}
         </div>
+        <Button type="button" variant="outline" size="sm" className="gap-1.5 self-start" onClick={() => setIsEditing(true)}>
+          <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+          Editar visita
+        </Button>
       </CardHeader>
       <CardContent className="space-y-6">
+        <Dialog open={isEditing} onOpenChange={setIsEditing}>
+          <DialogContent className="sm:max-w-xl">
+            <DialogHeader>
+              <DialogTitle>Editar visita</DialogTitle>
+              <DialogDescription>Atualize os dados da visita sem alterar o sequenciamento automático.</DialogDescription>
+            </DialogHeader>
+            <VisitaForm
+              key={visita.id}
+              initialValue={{
+                data: visita.data,
+                servicos_executados: visita.servicos_executados ?? "",
+                observacoes: visita.observacoes ?? "",
+              }}
+              submitLabel={isUpdatingVisit ? "Salvando..." : "Salvar alterações"}
+              onSubmit={handleUpdateVisit}
+              onCancel={() => setIsEditing(false)}
+            />
+            <ApiErrorAlert error={editError} />
+          </DialogContent>
+        </Dialog>
         {/* Equipe (mão de obra) */}
         <section aria-labelledby={`equipe-heading-${visita.id}`}>
           <h3 id={`equipe-heading-${visita.id}`} className="mb-2 flex items-center gap-1.5 text-sm font-semibold">

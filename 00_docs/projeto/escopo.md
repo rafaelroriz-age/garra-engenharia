@@ -3,7 +3,7 @@ title: Escopo do Projeto — Sistema de Automação de Relatórios Prediais
 type: gestao
 status: aprovado
 owner: Garra Engenharia
-last_updated: 2026-07-08
+last_updated: 2026-07-24
 ---
 
 # Escopo do Projeto
@@ -31,9 +31,11 @@ last_updated: 2026-07-08
 - **Vistoria de Imóvel Residencial**: diagnóstico por cômodo/sistema
 - **Relatório Fotográfico de Inspeção Predial (RFIP)**: fotos organizadas por sistema
 - **Upload de imagens via Lightshot** (clipboard paste + upload manual)
+- **Editor de anotação de fotos** integrado ao upload: setas, formas, texto e traço livre sobre a imagem — mesma função de marcação do Lightshot, disponibilizada dentro do próprio sistema (RF-14)
 - **Geração automática de PDF** fiel ao template do cliente (WeasyPrint + HTML/CSS)
 - **Geração de DOCX editável** via docxtpl com template Word do cliente
 - **Dashboard de saúde** por edificação e sistema predial
+- **Portal do Cliente**: área somente leitura para o contratante/síndico acompanhar a auditoria em andamento (dashboard) e acessar seus documentos/relatórios emitidos (RF-13), com controle de acesso por perfil (RBAC: auditor vs. cliente)
 - **Histórico de inspeções** por edificação com versionamento de relatórios
 - **Gabarito de sistemas prediais** pré-carregado conforme `RFO_INSPECAO.md`
 - **Interface PWA** funcional em smartphone para uso em campo
@@ -53,13 +55,13 @@ last_updated: 2026-07-08
 | Item | Motivo |
 |---|---|
 | App nativo iOS/Android | PWA cobre os requisitos; custo 3x maior sem benefício proporcional |
-| Portal de acesso para clientes (síndicos/proprietários) | [A ESCLARECER] — não confirmado pelo cliente |
 | Integração API com CREA | [A ESCLARECER] — nenhuma referência nos documentos |
 | Módulo de assinatura digital ICP-Brasil | [A ESCLARECER] — não confirmado uso |
 | App desktop de pasta monitorada para Lightshot | Versão futura (pós v1.0) |
 | Módulo financeiro / emissão de NF | Fora do domínio técnico |
 | Integração com Power BI | Dados exportáveis via API; BI é responsabilidade do cliente |
 | Suporte offline completo (Service Worker + IndexedDB) | [A ESCLARECER] — necessidade ainda não confirmada |
+| Auto-cadastro público de usuários Cliente no Portal | [A ESCLARECER] lacuna #11 — posição interina: criação manual da credencial pelo engenheiro fiscal (ver `00_docs/estudo-do-contexto.md`) |
 
 ---
 
@@ -93,3 +95,5 @@ last_updated: 2026-07-08
 - [ ] Gabarito de 15 sistemas prediais pré-carregado conforme `RFO_INSPECAO.md`
 - [ ] Autenticação funcionando com JWT
 - [ ] Histórico de versões de relatórios por contrato
+- [ ] Editor de anotação de fotos (setas, formas, texto, traço livre) funcionando no upload de fotos (RF-14)
+- [ ] Portal do Cliente exibindo dashboard de acompanhamento e lista de documentos/relatórios escopados ao contratante logado, sem acesso a dados de outros clientes (RF-13, RN-14)

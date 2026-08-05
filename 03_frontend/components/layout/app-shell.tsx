@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Menu } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { LogOut, Menu } from "lucide-react";
 
 import { navItems } from "./nav-items";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { clearAuthToken, isAuthenticated } from "@/lib/api-client";
 
 /** Rotas públicas que não usam o shell autenticado (sidebar/topbar). */
 const PUBLIC_ROUTES = ["/", "/login"];
@@ -60,9 +61,24 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  if (PUBLIC_ROUTES.includes(pathname)) {
+  const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
+
+  // Guarda de rota (RNF-05, BL-06): sem token salvo, redireciona ao login.
+  useEffect(() => {
+    if (!isPublicRoute && !isAuthenticated()) {
+      router.replace("/login");
+    }
+  }, [isPublicRoute, pathname, router]);
+
+  function handleLogout() {
+    clearAuthToken();
+    router.push("/login");
+  }
+
+  if (isPublicRoute) {
     return <>{children}</>;
   }
 
@@ -79,6 +95,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col gap-6 bg-primary px-4 py-6 lg:flex">
         <BrandMark />
         <NavLinks pathname={pathname} />
+        <Button
+          variant="ghost"
+          onClick={handleLogout}
+          className="mt-auto justify-start gap-3 text-white/80 hover:bg-white/10 hover:text-white"
+        >
+          <LogOut className="h-4 w-4" aria-hidden="true" />
+          Sair
+        </Button>
       </aside>
 
       {/* Topbar mobile */}
@@ -102,6 +126,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="mt-6">
               <NavLinks pathname={pathname} onNavigate={() => setMobileNavOpen(false)} />
             </div>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setMobileNavOpen(false);
+                handleLogout();
+              }}
+              className="mt-6 w-full justify-start gap-3"
+            >
+              <LogOut className="h-4 w-4" aria-hidden="true" />
+              Sair
+            </Button>
           </SheetContent>
         </Sheet>
       </header>
