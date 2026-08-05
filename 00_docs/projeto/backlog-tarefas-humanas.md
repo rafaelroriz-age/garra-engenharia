@@ -32,8 +32,8 @@ last_updated: 2026-08-03
 | [HT-01](#ht-01--validar-as-10-lacunas-a-esclarecer-com-o-cliente) | Validar as 10 lacunas `[A ESCLARECER]` com o cliente | Negociação/decisão de negócio com o cliente | BL-15, BL-18, B-01 | 🔴 Pendente | Parcial (preparar pauta e atualizar docs após resposta) |
 | [HT-02](#ht-02--solicitar-e-receber-os-arquivos-docx-de-template-e-logo) | Solicitar e receber os `.docx` de template e logo em alta resolução | Comunicação externa + espera de entrega pelo cliente | BL-12 (fiel), BL-13, BL-17, BL-19, B-02 | 🔴 Pendente | Parcial (redigir a solicitação) |
 | [HT-03](#ht-03--decidir-a-preferência-de-hospedagem) | Decidir a preferência de hospedagem (local vs. nuvem) | Decisão orçamentária | BL-20, BL-24, BL-28, B-03 | ✅ Decidido (Render, 2026-07-21) | Sim (Blueprint `render.yaml` já pronto) |
-| [HT-04](#ht-04--aplicar-o-blueprint-do-render-ou-provisionar-servidorvps-alternativo-e-registrar-domínio) | Aplicar o Blueprint do Render (conta + pagamento) e registrar domínio | Criação de conta, pagamento, conexão OAuth com GitHub | BL-24, BL-28 | 🟡 Em andamento (MCP executado em 2026-08-03) | Sim (provisionamento via MCP já feito; faltam ajustes finais) |
-| [HT-05](#ht-05--configurar-proteção-das-branches-main_frontmain_backstaging_frontstaging_back-no-github) | Configurar proteção das 4 branches (`main_front`/`main_back`/`staging_front`/`staging_back`) no GitHub | Configuração administrativa sensível do repositório | BL-25/26 (item pendente), DEC-17 | 🔴 Pendente (ação manual restante) | Sim, via `gh` CLI (mesmo assim disparado pelo humano) |
+| [HT-04](#ht-04--aplicar-o-blueprint-do-render-ou-provisionar-servidorvps-alternativo-e-registrar-domínio) | Aplicar o Blueprint do Render (conta + pagamento) e registrar domínio | Criação de conta, pagamento, conexão OAuth com GitHub | BL-24, BL-28 | 🟡 Em andamento — deploy automático confirmado funcionando (DEC-22), mas `/health` real reporta banco indisponível e faltam Pre-Deploy Command/Health Check Path no serviço | Sim (provisionamento via MCP já feito; faltam ajustes finais no Dashboard) |
+| [HT-05](#ht-05--configurar-proteção-das-branches-mainmain_frontmain_back-no-github) | Configurar proteção das 3 branches (`main`/`main_front`/`main_back`) no GitHub | Configuração administrativa sensível do repositório | BL-25/26 (item pendente), DEC-17/DEC-22 | 🔴 Pendente (ação manual restante) | Sim, via `gh` CLI (mesmo assim disparado pelo humano) |
 | [HT-06](#ht-06--cadastrar-secrets-do-github-actions) | Cadastrar Secrets do GitHub Actions (SSH, `.env` de produção) | Segredos/credenciais nunca devem passar por chat/agente | BL-28 | 🔴 Pendente | Não recomendado — apenas humano |
 | [HT-07](#ht-07--aprovar-manualmente-o-deploy-de-produção) | Aprovar manualmente o deploy de produção (GitHub Environment) | Gate de governança intencional (segregação de funções, DEC-14) | Deploys em produção (recorrente) | 🔴 Recorrente | Não — é por design |
 | [HT-08](#ht-08--obter-certificado-digital-icp-brasil-se-necessário) | Obter certificado digital ICP-Brasil (se lacuna #9 confirmar necessidade) | Processo legal com autoridade certificadora, identidade do engenheiro | Módulo de assinatura digital (futuro) | 🔴 Condicional a HT-01 | Não para obtenção; integração técnica sim, depois de obtido |
@@ -116,7 +116,7 @@ last_updated: 2026-08-03
 
 **Bloqueia:** BL-24, BL-28.
 
-**Estado atual (2026-08-03):** provisionamento de produção executado via MCP do Render: banco `garra-db` e serviços `garra-backend`/`garra-frontend` criados com deploy inicial disparado. Para manter segurança, os segredos do backend foram deixados vazios para preenchimento manual no painel. Ainda resta confirmar a organização no project/grupo `garraengenharia` no Dashboard e preencher variáveis sensíveis antes da validação final.
+**Estado atual (2026-08-05, confirmado via MCP do Render + `GET /health`):** `garra-backend`/`garra-frontend` estão **live** e em dia com o código atual de `main_back`/`main_front` (auto-deploy funcionando, DEC-22) — mas `GET https://garra-backend.onrender.com/health` responde `{"status":"degraded","database":"unavailable"}`. Além disso, os dois serviços foram criados via MCP como **runtime nativo (`env: python`/`env: node`, buildCommand/startCommand diretos)**, e NÃO como `runtime: docker` a partir de `Dockerfile.render` conforme `render.yaml` — ou seja, o Blueprint real nunca foi de fato "aplicado" (o texto abaixo descreve o caminho ideal via Apply do Blueprint; o que existe hoje é resultado de `create_web_service`, que não suporta Docker). Consequência prática: **não há `preDeployCommand`/Pre-Deploy Command configurado** (migrations do Alembic nunca rodam sozinhas a cada deploy) nem `healthCheckPath` (`/health`) configurado no serviço. A ferramenta MCP disponível não expõe edição desses campos nem leitura da senha do Postgres — os 2 itens abaixo exigem o Dashboard.
 
 **Passo a passo (caminho simplificado — Render, ver `05_infra/README.md` § "Deploy em produção (Render)"):**
 1. Criar/acessar conta em [dashboard.render.com](https://dashboard.render.com/) e conectar o repositório GitHub `rafaelroriz-age/garra-engenharia`.
@@ -130,11 +130,14 @@ last_updated: 2026-08-03
 - Criação de conta, aprovação de custo e registro de domínio continuam exclusivamente humanos.
 - Caminho alternativo (VPS/Azure) permanece documentado no histórico deste arquivo caso a decisão de hospedagem mude no futuro.
 
-**Checklist final pendente (pós-MCP):**
-1. Abrir o serviço `garra-backend` no Render e preencher os segredos em branco: `POSTGRES_HOST`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `JWT_SECRET_KEY`, `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `MINIO_HOST`.
-2. Confirmar `NEXT_PUBLIC_API_URL` no `garra-frontend` e `BACKEND_CORS_ORIGINS` no `garra-backend` com as URLs reais dos serviços.
-3. Garantir que os recursos estejam no project/grupo `garraengenharia` dentro do workspace da conta.
-4. Rodar novo deploy manual e validar `GET /health` do backend.
+**Checklist final pendente (atualizado em 2026-08-05, confirmado ao vivo):**
+1. **[CRÍTICO, confirmado quebrado]** Abrir `garra-backend` no Render → Environment e preencher `POSTGRES_HOST`/`POSTGRES_PORT`/`POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_DB` (usar o botão "Add from Database" apontando para `garra-db` faz o link automático, mais seguro que copiar a senha manualmente) + `JWT_SECRET_KEY` (gerar valor aleatório) + `BACKEND_CORS_ORIGINS`. Sem isso `GET /health` nunca vai deixar de reportar `"database":"unavailable"`.
+2. **[NOVO, descoberto em 2026-08-05]** Settings do `garra-backend` → adicionar **Pre-Deploy Command**: `cd 04_backend && alembic upgrade head` (não existe hoje). Sem isso, a migration `5f9f3cb4d87f` (RBAC/Portal do Cliente, BL-30) e qualquer migration futura não são aplicadas automaticamente — precisa rodar manualmente uma vez via Shell do Render (Dashboard → garra-backend → Shell → `cd 04_backend && alembic upgrade head`) até este campo ser configurado.
+3. **[NOVO]** Settings do `garra-backend` → definir **Health Check Path**: `/health`.
+4. Confirmar `NEXT_PUBLIC_API_URL` no `garra-frontend` e `BACKEND_CORS_ORIGINS` no `garra-backend` com as URLs reais dos serviços (já parecem corretas: `garra-backend.onrender.com`/`garra-frontend.onrender.com`, mas conferir as env vars de fato configuradas no serviço, não só o `render.yaml`).
+5. Garantir que os recursos estejam no project/grupo `garraengenharia` dentro do workspace da conta.
+6. Após 1-3, rodar novo deploy manual e validar `GET /health` retornando `"database":"ok"`.
+7. (Opcional, mais robusto) Recriar os 2 serviços via **Blueprint real** (`New → Blueprint`, passos 1-3 acima) para que passem a usar `Dockerfile.render`/`preDeployCommand`/`healthCheckPath` nativamente do `render.yaml`, em vez de manter a configuração manual criada via MCP.
 
 ---
 
@@ -155,22 +158,22 @@ last_updated: 2026-08-03
 
 ---
 
-## HT-05 — Configurar proteção das branches `main_front`/`main_back`/`staging_front`/`staging_back` no GitHub
+## HT-05 — Configurar proteção das branches `main`/`main_front`/`main_back` no GitHub
 
 **Por que só um humano:** é uma configuração administrativa do repositório (Settings → Branches) que a ferramenta MCP do GitHub disponível no momento não expõe (sem endpoint de "branch protection" no toolset atual).
 
-**Referência:** Seção 1.4 de [plano-gestao-configuracao.md](plano-gestao-configuracao.md#14-proteção-das-branches-main_frontmain_backstaging_frontstaging_back-dec-17), DEC-17 em [decisoes.md](decisoes.md#dec-17--branching-por-serviço-no-monorepo-main_frontmain_backstaging_frontstaging_back), pendência registrada em BL-25/BL-26 de `backlog-tarefas.md`.
+**Referência:** Seção 1.4 de [plano-gestao-configuracao.md](plano-gestao-configuracao.md#14-proteção-das-branches-main_frontmain_backstaging_frontstaging_back-dec-17), DEC-17 em [decisoes.md](decisoes.md#dec-17--branching-por-serviço-no-monorepo-main_frontmain_backstaging_frontstaging_back) e DEC-22 (remoção de staging + sync automático) em [decisoes.md](decisoes.md#dec-22--consolidação-de-branches-de-deploy-remoção-de-staging-e-sincronização-automática-main--main_backmain_front), pendência registrada em BL-25/BL-26 de `backlog-tarefas.md`.
 
 **Passo a passo (via UI do GitHub):**
 1. Acessar `https://github.com/rafaelroriz-age/garra-engenharia/settings/branches`.
-2. Adicionar uma regra de proteção para CADA uma das 4 branches: `main_front`, `main_back`, `staging_front`, `staging_back` (repetir os passos 3-4 abaixo por branch).
-3. Marcar: exigir Pull Request antes de merge; exigir o status check `ci.yml`; exigir branch atualizada antes do merge; bloquear force-push e deleção da branch; habilitar apenas squash merge.
+2. Adicionar uma regra de proteção para CADA uma das 3 branches: `main`, `main_front`, `main_back` (repetir os passos 3-4 abaixo por branch). `staging`/`staging_front`/`staging_back` foram removidas (DEC-22), não precisam mais de proteção.
+3. Marcar: exigir Pull Request antes de merge; exigir o status check `ci.yml`; exigir branch atualizada antes do merge; bloquear force-push e deleção da branch; habilitar apenas squash merge. Em `main_front`/`main_back`, permitir também o bypass do bot `github-actions[bot]` (ou marcar como exceção de "Allow specified actors to bypass required pull requests") para o workflow `sync-deploy-branches.yml` conseguir dar push do merge automático.
 4. Salvar e confirmar em `status.md`/memória de repositório que o item foi concluído.
 
 **Alternativa via agente/MCP:**
-- Não há tool MCP disponível hoje para isso, mas o **próprio humano** pode rodar via terminal usando a GitHub CLI (`gh`) já autenticada na máquina, por exemplo (repetir para cada uma das 4 branches, trocando `main_back` pelo nome correspondente):
+- Não há tool MCP disponível hoje para isso, mas o **próprio humano** pode rodar via terminal usando a GitHub CLI (`gh`) já autenticada na máquina, por exemplo (repetir para cada uma das 3 branches, trocando `main_back` pelo nome correspondente):
   ```powershell
-  foreach ($branch in @("main_front", "main_back", "staging_front", "staging_back")) {
+  foreach ($branch in @("main", "main_front", "main_back")) {
     gh api -X PUT "repos/rafaelroriz-age/garra-engenharia/branches/$branch/protection" `
       -f required_status_checks[strict]=true `
       -f required_status_checks[contexts][]=ci.yml `

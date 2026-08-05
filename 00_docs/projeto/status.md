@@ -3,12 +3,12 @@ title: Status do Projeto — Sistema de Automação de Relatórios Prediais
 type: gestao
 status: ativo
 owner: Garra Engenharia
-last_updated: 2026-08-03
+last_updated: 2026-08-05
 ---
 
 # Status do Projeto
 
-**Última atualização:** 2026-08-03  
+**Última atualização:** 2026-08-05  
 **Fase atual:** Incremento LTIP + Legendas Assistidas por IA — o prompt do cliente esclareceu parcialmente a lacuna #13 (prompt-sistema universal, regras de não invenção, rastreabilidade e aprovação humana); as lacunas #6/#11/#12 já foram tratadas via DEC-18; as lacunas #1/#2/#3/#4/#5/#7/#8/#9/#10 continuam abertas e exigem validação formal  
 **Progresso geral:** █████████████░ 71%
 
@@ -28,7 +28,7 @@ last_updated: 2026-08-03
 | 6.5 Implementação Backend (Incremento RFO) | 🟡 Em andamento | 40% | BL-08 a BL-11 (Edificações, Contratos, Visitas, Fotos) concluídas no backend — RFC 7807 global, Repository/Service Layer, 27 testes de integração novos |
 | 7. Implementação Frontend | 🟡 Em andamento | 48% | Scaffold (BL-03) concluído; login funcional (2026-07-22); telas de Edificações e Contratos (BL-08/BL-09) confirmadas funcionais em teste manual de UI; Visitas/Fotos (BL-10/BL-11) implementadas mas não re-testadas; Dashboard (BL-16) e Ocorrências (BL-14) implementados no frontend mas bloqueados por endpoints de backend ainda inexistentes; fluxo de legendas assistidas por IA entra como próxima frente (BL-35, BL-39) |
 | 8. Integração + Testes | 🟡 Em andamento | 10% | Testes E2E (BL-21) dependem das Etapas 3 e 4; integração do fluxo de fotos/legendas (BL-36 a BL-39) entra como prioridade de validação |
-| 9. Deploy + Documentação final | 🟡 Em andamento | 55% | Gestão de Configuração (DEC-14) e CI (BL-25, BL-26) concluídos; provisionamento Render executado via MCP em 2026-08-03 (`garra-db`, `garra-backend`, `garra-frontend`); faltam preenchimento de segredos, validação final de healthcheck e confirmação da organização no project `garraengenharia` |
+| 9. Deploy + Documentação final | 🟡 Em andamento | 60% | Gestão de Configuração (DEC-14) e CI (BL-25, BL-26) concluídos; branches de deploy reorganizadas em 2026-08-05 (DEC-22: staging removida, sync automático `main`→`main_back`/`main_front` via GitHub Actions, 12 PRs do Dependabot triadas) e `garra-backend`/`garra-frontend` confirmados **live** e em dia com o código atual; falta HT-04 (segredos do banco, Pre-Deploy Command de migration, healthcheck) |
 
 ---
 
@@ -66,6 +66,8 @@ last_updated: 2026-08-03
 | BL-11 — Upload de fotos (clipboard + manual) com reprocessamento Pillow (A08) | `04_backend/app/api/v1/fotos.py`, `app/services/image_processing.py` | 2026-07-20 | ✅ Backend implementado e validado (8 testes); frontend de upload ainda não confirmado em teste manual de UI |
 | Deploy Render (Blueprint IaC) — backend, frontend e banco definidos como código | `render.yaml`, `04_backend/Dockerfile.render`, `03_frontend/Dockerfile.render`, `05_infra/.env.render.example` | 2026-07-21 | ✅ Implementado — falta HT-04 (aplicar o Blueprint no Dashboard do Render) |
 | Deploy Render via MCP — recursos de produção criados no workspace Render | `garra-db`, `garra-backend`, `garra-frontend` | 2026-08-03 | ✅ Provisionado (parcial) — pendente preencher segredos do backend, validar `/health` e confirmar alocação no project `garraengenharia` |
+| DEC-22 — Consolidação de branches de deploy: staging removida, sync automático `main`→`main_back`/`main_front` | `render.yaml`, `.github/workflows/sync-deploy-branches.yml`, `.github/workflows/ci.yml` | 2026-08-05 | ✅ Implementado e validado — `main_back`/`main_front` sincronizadas com `main` (RBAC/BL-30, dashboard, ocorrências, editor de anotação, template DOCX do contrato), deploy automático confirmado **live** em produção via MCP do Render; 8 PRs do Dependabot mescladas, 5 majors não testados fechados |
+| ⚠️ Achado crítico (2026-08-05): produção com banco desconectado | `garra-backend` (Render) | 2026-08-05 | 🔴 `GET /health` responde `"database":"unavailable"` — segredos do Postgres nunca preenchidos no serviço (HT-04, checklist item 1) e serviço criado como runtime nativo (não Docker), sem Pre-Deploy Command de migration nem Health Check Path configurados — ver checklist detalhado em HT-04 |
 | Login funcional (BL-06 frontend) | `03_frontend/app/(auth)/login/page.tsx`, `components/layout/app-shell.tsx` (guarda de rota + logout) | 2026-07-22 | ✅ Implementado e validado — antes era só um placeholder; fluxo login → dashboard → logout testado via browser automatizado |
 | Fix: `NEXT_PUBLIC_API_URL` sem `/api/v1` (todas as chamadas do frontend voltavam 404) | `05_infra/.env`, `.env.example`, `docker-compose.yml`, `render.yaml`, `.env.render.example` | 2026-07-22 | ✅ Corrigido — bug afetava tanto dev local quanto o Blueprint de produção/staging do Render |
 | BL-40 — Template DOCX do Contrato de Prestação de Serviços (placeholders Jinja2) | `04_backend/app/scripts/build_contract_template_docx.py`, `04_backend/templates/contracts/contrato_revisado_template.docx`, `contrato_revisado_template.placeholders.md` | 2026-08-03 | ✅ Implementado — gerado a partir de `01_output-context/Contrato_Revisado_Garra_Software.md`; escopo administrativo/contratual, não resolve B-02/HT-02 (templates de relatório técnico) |
