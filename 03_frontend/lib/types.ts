@@ -312,3 +312,73 @@ export interface DashboardEdificacao {
   grau_risco_por_sistema: DashboardGrauRiscoPorSistema[];
   gravidade_por_subsistema: DashboardGravidadePorSubsistema[];
 }
+
+// ---------------------------------------------------------------------------
+// Portal do Cliente (RF-13, RN-14, BL-32/BL-33) — somente leitura
+// ---------------------------------------------------------------------------
+
+export interface PortalVisitaResumo {
+  id: UUID;
+  seq_numero: number;
+  data: string;
+  servicos_executados?: string | null;
+  total_fotos: number;
+}
+
+export interface PortalOcorrenciaResumo {
+  id: UUID;
+  seq_numero: number;
+  sistema_nome?: string | null;
+  subsistema_nome?: string | null;
+  localizacao?: string | null;
+  situacao: string;
+  grau_risco?: string | null;
+  prioridade?: number | null;
+  descricao?: string | null;
+}
+
+export interface PortalContratoAcompanhamento {
+  contrato_id: UUID;
+  numero: string;
+  tipo_servico: string;
+  status: string;
+  data_inicio?: string | null;
+  inspecao_id?: UUID | null;
+  inspecao_status?: string | null;
+  total_visitas: number;
+  total_ocorrencias: number;
+  ocorrencias_por_grau_risco: { minimo: number; medio: number; critico: number };
+  visitas: PortalVisitaResumo[];
+  ocorrencias: PortalOcorrenciaResumo[];
+}
+
+/** Resposta de `GET /portal/edificacoes/{id}/acompanhamento`. */
+export interface PortalAcompanhamento {
+  edificacao_id: UUID;
+  edificacao_nome?: string | null;
+  contratos: PortalContratoAcompanhamento[];
+}
+
+/** Item de `GET /portal/relatorios` (RF-11/RF-13). */
+export interface PortalRelatorio {
+  id: UUID;
+  versao: string;
+  tipo: string;
+  status: string;
+  emitido_em?: string | null;
+  tem_pdf: boolean;
+  tem_docx: boolean;
+  inspecao_id: UUID;
+  contrato_id: UUID;
+  contrato_numero: string;
+  edificacao_id: UUID;
+  edificacao_nome?: string | null;
+}
+
+/** Resposta de `GET /portal/relatorios/{id}/download/{formato}` — URL pré-assinada. */
+export interface PortalDownload {
+  relatorio_id: UUID;
+  formato: string;
+  url: string;
+  expira_em_segundos: number;
+}

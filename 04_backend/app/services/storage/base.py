@@ -12,12 +12,17 @@ class StorageClient(ABC):
     """Interface de armazenamento de objetos (arquivos binários)."""
 
     @abstractmethod
-    def upload(self, key: str, file_bytes: bytes, content_type: str) -> str:
+    def upload(
+        self, key: str, file_bytes: bytes, content_type: str, *, max_size_bytes: int | None = None
+    ) -> str:
         """Envia `file_bytes` para o armazenamento sob a chave `key`.
 
         Retorna a própria `key` (útil para encadear com o restante do fluxo).
         Lança `ValueError` se `key` for vazia, `file_bytes` for vazio, ou o
-        tamanho exceder o limite máximo permitido.
+        tamanho exceder `max_size_bytes` (default: o limite defensivo de foto
+        de `MAX_UPLOAD_SIZE_BYTES`). Artefatos maiores por natureza — como o
+        PDF/DOCX final de um relatório, BL-12/BL-13/BL-22 — devem passar um
+        `max_size_bytes` maior explicitamente; nunca desabilitar o limite.
         """
 
     @abstractmethod

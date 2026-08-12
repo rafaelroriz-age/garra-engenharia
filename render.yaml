@@ -131,8 +131,10 @@ services:
 # Bancos de dados — PostgreSQL gerenciado (DEC-07)
 # =============================================================================
 databases:
+  # Valores alinhados ao banco realmente provisionado no Render em 2026-08-03
+  # (criado via MCP, não pelo Apply deste Blueprint).
   - name: garra-db
-    databaseName: garra_engenharia
-    user: garra
+    databaseName: garra_db
+    user: garra_db_user
     plan: basic-256mb
     region: oregon

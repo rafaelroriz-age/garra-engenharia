@@ -69,14 +69,17 @@ class S3StorageClient(StorageClient):
         if not key or not key.strip():
             raise ValueError("A chave (key) do objeto não pode ser vazia.")
 
-    def upload(self, key: str, file_bytes: bytes, content_type: str) -> str:
+    def upload(
+        self, key: str, file_bytes: bytes, content_type: str, *, max_size_bytes: int | None = None
+    ) -> str:
         self._validate_key(key)
         if not file_bytes:
             raise ValueError("O conteúdo do arquivo não pode ser vazio.")
-        if len(file_bytes) > MAX_UPLOAD_SIZE_BYTES:
+        limite = max_size_bytes if max_size_bytes is not None else MAX_UPLOAD_SIZE_BYTES
+        if len(file_bytes) > limite:
             raise ValueError(
                 f"Arquivo de {len(file_bytes)} bytes excede o limite máximo de "
-                f"{MAX_UPLOAD_SIZE_BYTES} bytes por objeto."
+                f"{limite} bytes por objeto."
             )
 
         self._client.put_object(Bucket=self._bucket, Key=key, Body=file_bytes, ContentType=content_type)

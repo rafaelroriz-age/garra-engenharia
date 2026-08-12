@@ -112,6 +112,34 @@ export default function ContratoDetailPage() {
         </Card>
       ) : (
         <>
+          {contrato.inspecao ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Inspeção</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-4 text-sm">
+                <Link
+                  href={`/inspecoes/${contrato.inspecao.id}/visitas`}
+                  className="font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Visitas (RF-03)
+                </Link>
+                <Link
+                  href={`/inspecoes/${contrato.inspecao.id}/ocorrencias`}
+                  className="font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Ocorrências (RF-04)
+                </Link>
+                <Link
+                  href={`/inspecoes/${contrato.inspecao.id}/relatorio`}
+                  className="font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Relatório (RF-06)
+                </Link>
+              </CardContent>
+            </Card>
+          ) : null}
+
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Dados do contrato</CardTitle>

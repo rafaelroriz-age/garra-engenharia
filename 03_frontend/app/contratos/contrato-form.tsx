@@ -131,7 +131,16 @@ export function ContratoForm({ initialValue, submitLabel, onSubmit, onCancel }: 
         art_fiscalizacao: artFiscalizacao.trim(),
         observacoes_gerais: observacoes.trim() || null,
         status,
-        executores: executores.filter((executor) => executor.razao_social.trim() || executor.cnpj.trim()),
+        executores: executores
+          .filter((executor) => executor.razao_social.trim() || executor.cnpj.trim())
+          .map((executor) => ({
+            ...executor,
+            // `rte_id` é opcional (RN-06) — o backend valida como UUID-ou-null e
+            // rejeita string vazia (`""`), que é o valor default do formulário
+            // quando o campo não é preenchido.
+            rte_id: executor.rte_id?.trim() ? executor.rte_id.trim() : null,
+            endereco: executor.endereco?.trim() || null,
+          })),
         nbrs: nbrs.filter((nbr) => nbr.codigo_nbr.trim()),
       });
     } catch (err) {

@@ -7,14 +7,14 @@ related:
   - 00_docs/projeto/backlog-tarefas.md
   - 00_docs/projeto/decisoes.md
   - .vscode/mcp.json
-last_updated: 2026-07-27
+last_updated: 2026-08-07
 ---
 
 # Backlog Kanban — espelho para o Notion (DEC-20 / ADR-11)
 
-> Conteúdo pronto para ser criado como um banco de dados no Notion (visualização em quadro, no estilo de `Backlog / To do / In progress / Done`), assim que o servidor MCP `notion` for autenticado (ver [HT-12](backlog-tarefas-humanas.md#ht-12--autenticar-o-servidor-mcp-do-notion)). Até lá, este arquivo é a fonte de verdade local do board.
+> **Board real criado em 2026-08-07** (HT-12 concluída): banco de dados "Backlog — Garra Engenharia" no Notion — https://app.notion.com/p/c5c276e8a13041499be0017833efb379 — com a view **Quadro** agrupada por `Status` e 52 cartões (BL-01 a BL-40 + HT-01 a HT-12, estas com `Etapa = "Tarefa humana (HT)"`). Este arquivo continua sendo o espelho local; a sincronização entre os dois é manual (DEC-20).
 >
-> Cada cartão = 1 tarefa de [backlog-tarefas.md](backlog-tarefas.md), com **ID**, **Requisitos/Decisões** e **Agente** como propriedades do banco de dados no Notion (colunas da view Tabela). A coluna aqui embaixo é a propriedade **Status** (agrupamento da view Quadro). Não duplica o conteúdo detalhado — sempre que `backlog-tarefas.md` mudar de status, atualizar este arquivo e (com o MCP conectado) o board real no Notion.
+> Cada cartão = 1 tarefa de [backlog-tarefas.md](backlog-tarefas.md), com **ID**, **Requisitos/Decisões** e **Agente** como propriedades do banco de dados no Notion (colunas da view Tabela). A coluna aqui embaixo é a propriedade **Status** (agrupamento da view Quadro). Não duplica o conteúdo detalhado — sempre que `backlog-tarefas.md` mudar de status, atualizar este arquivo e o board real no Notion.
 >
 > **Critério de mapeamento de status → coluna:** ✅ Concluída → **Done**; 🟢 desbloqueada sem trabalho iniciado → **To do**; 🟢 (parcial)/parcialmente em execução → **In progress**; 🔴 bloqueada (B-01/B-02/depende de outra tarefa) → **Backlog**.
 
@@ -30,7 +30,7 @@ last_updated: 2026-07-27
 
 ---
 
-## 🔵 Backlog (10)
+## 🔵 Backlog (12)
 
 | ID | Tarefa | Requisitos/Decisões | Agente |
 |---|---|---|---|
@@ -38,24 +38,24 @@ last_updated: 2026-07-27
 | BL-13 | Geração de DOCX do RFO via docxtpl | RF-06, DEC-04 | Engenheiro Backend |
 | BL-15 | Regra de prioridade automática por Grau de Risco CMM | RN-04 | Engenheiro Backend |
 | BL-17 | Prototipagem de templates HTML/CSS do LTIP + relatório fotográfico | RF-06, RN-11, RNF-03 | Prototipagem e Documentação para Cliente |
-| BL-18 | Agendar e conduzir sessão de validação das 10 lacunas `[A ESCLARECER]` | — | Gestor de Projeto |
+| BL-18 | Agendar e conduzir sessão de validação das lacunas `[A ESCLARECER]` | — | Gestor de Projeto |
 | BL-19 | Solicitar e receber arquivos `.docx` de template e logo em alta resolução | — | Gestor de Projeto |
-| BL-32 | Portal do Cliente — dashboard e acompanhamento da auditoria | RF-13, RN-14 | Engenheiro Backend + Frontend |
-| BL-33 | Portal do Cliente — documentos/relatórios do cliente | RF-13, RN-14 | Engenheiro Backend + Frontend |
 | BL-34 | Legendas assistidas por IA (backend): `prompts_ia`, campos em `Foto`, Adapter `LegendaIAClient` | RF-15, RN-16, RN-17, DEC-21 | Engenheiro Backend |
 | BL-35 | Legendas assistidas por IA (frontend): geração, revisão e aprovação da legenda sugerida | RF-15, RN-16, RN-17 | Engenheiro Frontend |
+| BL-36 | Extensão da modelagem de dados para legendas assistidas por IA | RF-15, RN-16, RN-17, DEC-21 | Engenheiro Backend |
+| BL-37 | Storage/metadata do fluxo de legendas assistidas por IA | RF-15, RN-16, RN-17 | Engenheiro Backend |
+| BL-38 | Integração do upload/edição de fotos com a geração de legendas por IA | RF-15, RN-16, RN-17, BL-11 | Engenheiro Backend + Frontend |
+| BL-39 | Integração do editor de anotação com o fluxo de aprovação de legendas por IA | RF-15, RN-16, RN-17, BL-31 | Engenheiro Frontend |
 
-## 🟡 To do (7)
+## 🟡 To do (5)
 
 | ID | Tarefa | Requisitos/Decisões | Agente |
 |---|---|---|---|
-| BL-21 | Testes E2E dos fluxos RFO e LTIP | RNF-06 | Engenheiro de Software |
-| BL-22 | Benchmark de geração de PDF/DOCX (200 páginas, 150+ fotos) | RNF-06, R-03 | Engenheiro de Software |
 | BL-23 | Revisão de segurança OWASP Top 10 | RNF-05 | Engenheiro de Software |
 | BL-27 | `docker-compose.prod.yml` + `nginx/nginx.conf` | DEC-14 | Engenheiro DevOps |
 | BL-29 | `backup-db.sh` / `restore-db.sh` + agendamento | DEC-14, RNF-08 | Engenheiro DevOps |
-| BL-30 | RBAC: campo `role`, vínculo `Responsavel.usuario_id`/`Contrato.contratante_id` | RF-13, RN-14, DEC-18 | Engenheiro Backend |
-| BL-31 | Editor de anotação de fotos (setas, formas, texto, traço livre) | RF-14, RN-15, DEC-19 | Engenheiro Frontend |
+| BL-32 | Portal do Cliente — dashboard e acompanhamento da auditoria | RF-13, RN-14 | Engenheiro Backend + Frontend |
+| BL-33 | Portal do Cliente — documentos/relatórios (download real aguarda B-02) | RF-13, RN-14 | Engenheiro Backend + Frontend |
 
 ## 🟠 In progress (5)
 
@@ -65,9 +65,9 @@ last_updated: 2026-07-27
 | BL-11 | Upload de fotos (clipboard paste + upload manual) | RF-05, RNF-02 | Engenheiro Backend + Frontend |
 | BL-14 | CRUD de Ocorrências (sistema, subsistema, localização, classificação) | RF-04, RN-03, RN-05, RN-10 | Engenheiro Backend + Frontend |
 | BL-16 | Dashboard de saúde por edificação/sistema predial | RF-07 | Engenheiro Backend + Frontend |
-| BL-24 | Deploy de produção (Render) | Decisão de hospedagem | Engenheiro DevOps |
+| BL-24 | Deploy de produção (Render) — faltam `POSTGRES_PASSWORD`/`JWT_SECRET_KEY` | HT-04, DEC-22 | Engenheiro DevOps |
 
-## 🟢 Done (13)
+## 🟢 Done (18)
 
 | ID | Tarefa | Requisitos/Decisões | Agente |
 |---|---|---|---|
@@ -84,11 +84,15 @@ last_updated: 2026-07-27
 | BL-25 | Repositório Git remoto no GitHub | DEC-14 | Engenheiro DevOps |
 | BL-26 | `ci.yml` (lint, testes, build, scan Trivy) | DEC-14 | Engenheiro DevOps |
 | BL-28 | `cd-staging.yml`/`cd-production.yml` (reavaliados) | DEC-14, DEC-17 | Engenheiro DevOps |
+| BL-21 | Testes E2E dos fluxos RFO e LTIP (Playwright) | RNF-06, DEC-23 | Engenheiro de Software |
+| BL-22 | Benchmark de geração de PDF/DOCX (191 páginas, 570 fotos) | RNF-06, R-03 | Engenheiro de Software |
+| BL-30 | RBAC: `role`, `Responsavel.usuario_id`, `Contrato.contratante_id` | RF-13, RN-14, DEC-18 | Engenheiro Backend |
+| BL-31 | Editor de anotação de fotos (Fabric.js) | RF-14, RN-15, DEC-19 | Engenheiro Frontend |
+| BL-40 | Template DOCX do Contrato de Prestação de Serviços | Administrativo | Engenheiro Backend |
 
 ---
 
-## Como publicar este board no Notion
+## Sincronização com o Notion
 
-1. Concluir [HT-12](backlog-tarefas-humanas.md#ht-12--autenticar-o-servidor-mcp-do-notion) (autenticar o servidor MCP `notion` via OAuth no VS Code).
-2. Pedir ao agente para "criar o banco de dados no Notion a partir de `backlog-kanban.md`" — o agente usa as ferramentas do MCP Notion para: criar a página/banco de dados, configurar a propriedade `Status` (select) com as 4 opções acima, criar um cartão por linha das tabelas deste arquivo, e ativar a visualização em quadro (agrupada por `Status`) como view padrão.
+O board já existe (link no topo deste arquivo). A sincronização permanece **manual**: quando `backlog-tarefas.md` mudar, atualize este arquivo e peça ao agente para refletir a mudança no Notion (o MCP `notion` já está autenticado). Automação de sync contínuo continua fora do escopo da DEC-20.
 3. Depois de criado, manter a sincronização é manual (reexecutar o passo 2 quando este arquivo mudar) — automação de sync contínuo está fora do escopo da DEC-20.

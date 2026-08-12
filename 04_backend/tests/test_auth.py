@@ -18,7 +18,7 @@ from sqlalchemy.pool import NullPool
 
 from app.core.config import get_settings
 from app.core.database import get_db
-from app.core.security import hash_password
+from app.core.security import create_access_token, hash_password
 from app.main import app
 from app.models import Usuario
 
@@ -73,11 +73,17 @@ async def usuario_existente():
         await session.commit()
 
 
-def test_register_cria_usuario_sem_expor_hash_da_senha():
+def _token_de(usuario_id) -> dict[str, str]:
+    """Header Authorization de um auditor — `/register` exige auditor autenticado (BL-23)."""
+    return {"Authorization": f"Bearer {create_access_token(subject=str(usuario_id))}"}
+
+
+def test_register_cria_usuario_sem_expor_hash_da_senha(usuario_existente):
     email = f"novo-{uuid.uuid4()}@garra-engenharia.com.br"
     response = client.post(
         "/api/v1/auth/register",
         json={"nome": "Novo Usuário", "email": email, "senha": "outra-senha-forte"},
+        headers=_token_de(usuario_existente),
     )
 
     assert response.status_code == 201
@@ -90,10 +96,24 @@ def test_register_cria_usuario_sem_expor_hash_da_senha():
     _delete_usuario_por_email(email)
 
 
+def test_register_sem_autenticacao_retorna_403(usuario_existente):
+    response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "nome": "Invasor",
+            "email": f"invasor-{uuid.uuid4()}@garra-engenharia.com.br",
+            "senha": "senha-forte-123",
+        },
+    )
+
+    assert response.status_code == 403
+
+
 def test_register_com_email_duplicado_retorna_409(usuario_existente):
     response = client.post(
         "/api/v1/auth/register",
         json={"nome": "Duplicado", "email": EMAIL_EXISTENTE, "senha": "outra-senha-forte"},
+        headers=_token_de(usuario_existente),
     )
 
     assert response.status_code == 409

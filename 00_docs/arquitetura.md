@@ -315,6 +315,14 @@ Base URL: `/api/v1`
 | `GET` | `/contratos/{id}` | Detalhe completo do contrato |
 | `PUT` | `/contratos/{id}` | Atualiza contrato |
 
+### Responsáveis (fiscal, responsável legal, RTE, contratante — DEC-23)
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` | `/responsaveis` | Lista responsáveis, filtro opcional por `tipo` (sem paginação) |
+| `POST` | `/responsaveis` | Cria um Responsável, referenciado por `fiscal_id`/`responsavel_legal_id`/`rte_id`/`contratante_id` de Contrato |
+| `GET` | `/responsaveis/{id}` | Detalhe de um Responsável |
+
 ### Inspeções e Visitas
 
 | Método | Endpoint | Descrição |
@@ -793,11 +801,11 @@ classDiagram
 | **A02 — Cryptographic Failures** | Exposição de CPF/CNPJ, endereços e fotos de imóveis (dados sensíveis); envio de fotos/descrições de imóveis a um provedor de IA externo para geração de legendas (RF-15) | HTTPS obrigatório em todos os ambientes (também exigido pela Clipboard API); senhas com bcrypt; segredos via variáveis de ambiente fora do repositório (`.env`, nunca commitado); URLs de download do MinIO pré-assinadas com expiração curta. O provedor de LLM (ADR-12) deve ser escolhido considerando política de retenção/treinamento sobre os dados enviados — decisão pendente (lacuna #13). |
 | **A03 — Injection** | Filtros dinâmicos em listagens (`/contratos`, `/edificacoes`) e dashboard | SQLAlchemy ORM com bind parameters em 100% das queries; nenhuma concatenação de SQL; validação de entrada via Pydantic antes de qualquer acesso ao banco. |
 | **A04 — Insecure Design** | Emissão de relatório inconsistente ou duplicado; legenda gerada por IA (alucinação/erro factual) sendo incluída no relatório sem revisão | RN-08 (bloqueia emissão sem campos obrigatórios); idempotency key no job de geração (ADR-06); versionamento explícito e imutável de relatórios emitidos (RF-11); RN-16 impede que a sugestão de IA componha o relatório sem aprovação explícita do profissional habilitado (ADR-12). |
-| **A05 — Security Misconfiguration** | CORS aberto, documentação interativa exposta em produção | CORS restrito ao(s) domínio(s) do frontend; `/docs` e `/redoc` desabilitados fora de `ENV=development`; configuração via variáveis de ambiente com defaults seguros (fail-closed). |
+| **A05 — Security Misconfiguration** | CORS aberto, documentação interativa exposta em produção, segredo default em produção | **Implementado (BL-23/DEC-24)**: `/docs`, `/redoc` e `/openapi.json` só são montados em desenvolvimento; `Settings` recusa iniciar fora de desenvolvimento com `JWT_SECRET_KEY` vazia/`changeme`/menor que 32 caracteres ou `BACKEND_CORS_ORIGINS` contendo `*` (fail-closed); `SecurityHeadersMiddleware` aplica `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, CSP restritiva e HSTS fora de dev. Em VPS próprio, o Nginx (`05_infra/nginx/nginx.conf`) reforça os mesmos cabeçalhos na borda. |
 | **A06 — Vulnerable and Outdated Components** | Dependências Python/Node desatualizadas (WeasyPrint, docxtpl, Pillow, Next.js) | Lockfiles versionados (`requirements.txt`/`poetry.lock`, `package-lock.json`); revisão periódica de dependências (backlog BL-23). |
-| **A07 — Identification and Authentication Failures** | Força bruta em login; token sem expiração | JWT de curta duração + refresh token; rate limiting no endpoint de login; bcrypt com custo adequado; bloqueio temporário após N tentativas falhas. |
+| **A07 — Identification and Authentication Failures** | Força bruta em login; token sem expiração; cadastro público de conta privilegiada | **Implementado (BL-23/DEC-24)**: `app/core/rate_limit.py` bloqueia após 5 tentativas malsucedidas por (IP, e-mail) em janela de 15 min (resposta `429` + `Retry-After`), zeradas por login bem-sucedido; `POST /auth/register` exige auditor autenticado, exceto no bootstrap do primeiro usuário (`app/scripts/seed_admin.py`); bcrypt com custo padrão; JWT de 60 min. Refresh token e revogação ficam para pós-v1.0 (risco residual aceito). |
 | **A08 — Software and Data Integrity Failures** | Upload de foto manipulada ou arquivo malicioso disfarçado de imagem (clipboard ou arquivo) | Validação de mime-type real (magic bytes) e tamanho máximo; reprocessamento via Pillow (recodifica a imagem, removendo metadados/EXIF e payloads embutidos) antes de persistir no storage. |
-| **A09 — Security Logging and Monitoring Failures** | Falta de rastreabilidade sobre quem criou/alterou Ocorrência ou Relatório | Logging estruturado com `request_id`/`user_id`/`job_id` (ADR-08); campos de auditoria (`created_at`, `updated_at`, autor) nas entidades sensíveis. |
+| **A09 — Security Logging and Monitoring Failures** | Falta de rastreabilidade sobre quem criou/alterou Ocorrência ou Relatório | **Parcialmente implementado (BL-23)**: `RequestIdMiddleware` gera/propaga `X-Request-ID` em toda requisição e resposta, permitindo correlacionar log ↔ requisição ↔ erro (ADR-08). Campos de auditoria (`created_at`, `updated_at`, autor) nas entidades sensíveis. Logging estruturado em JSON e `job_id` do worker seguem pendentes (dependem de ADR-06/BL-12). |
 | **A10 — Server-Side Request Forgery** | Endpoint de upload aceitar URL fornecida pelo cliente | Uploads sempre via `multipart/form-data` ou base64 processados localmente; nenhum endpoint busca conteúdo de URL externa fornecida pelo usuário. |
 
 ### 10.2 Processamento Assíncrono e Idempotência

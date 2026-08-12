@@ -5,6 +5,16 @@ ser persistida no storage: o mime-type real é validado pelos magic bytes
 (`PIL.Image.open`, não pela extensão/`Content-Type` declarado pelo cliente) e
 a imagem é recodificada do zero, o que descarta metadados/EXIF e qualquer
 payload embutido no arquivo original.
+
+Redimensiona fotos maiores que `MAX_LADO_ARMAZENADO_PX` (achado do benchmark
+de BL-22, RNF-06/R-03: fotos de câmera de celular em resolução total, sem
+nenhum redimensionamento, fazem a geração de relatório de pior caso
+ultrapassar os 60s exigidos quando embutidas em PDF/DOCX — ver
+`00_docs/projeto/relatorio-benchmark-geracao-pdf-docx.md`). O limite escolhido
+(2000px no lado maior) ainda preserva qualidade suficiente para zoom/edição
+no editor de anotação (BL-31); a compressão adicional específica para
+embutir em relatório (mais agressiva) fica em
+`app.services.report_generator.rfo_pipeline.otimizar_imagem`.
 """
 import io
 
@@ -18,6 +28,8 @@ _FORMATOS_PERMITIDOS: dict[str, tuple[str, str]] = {
     "PNG": ("png", "image/png"),
     "WEBP": ("webp", "image/webp"),
 }
+
+MAX_LADO_ARMAZENADO_PX = 2000
 
 _ERROS_DE_IMAGEM_INVALIDA: tuple[type[Exception], ...] = (
     UnidentifiedImageError,
@@ -58,8 +70,16 @@ def reprocessar_imagem(conteudo: bytes) -> tuple[bytes, str, str]:
 
         extensao, content_type = _FORMATOS_PERMITIDOS[formato]
 
-        buffer = io.BytesIO()
         imagem_para_salvar = imagem.convert("RGB") if formato == "JPEG" else imagem
+        if max(imagem_para_salvar.size) > MAX_LADO_ARMAZENADO_PX:
+            escala = MAX_LADO_ARMAZENADO_PX / max(imagem_para_salvar.size)
+            novo_tamanho = (
+                max(1, round(imagem_para_salvar.width * escala)),
+                max(1, round(imagem_para_salvar.height * escala)),
+            )
+            imagem_para_salvar = imagem_para_salvar.resize(novo_tamanho, Image.LANCZOS)
+
+        buffer = io.BytesIO()
         imagem_para_salvar.save(buffer, format=formato)
         return buffer.getvalue(), extensao, content_type
     except _ERROS_DE_IMAGEM_INVALIDA as exc:

@@ -10,6 +10,10 @@
 # repositório GitHub — ver HT-05 em backlog-tarefas-humanas.md). Push em
 # main_back/main_front só acontece via .github/workflows/sync-deploy-branches.yml,
 # nunca commit direto — mas o CI roda igual nelas por segurança.
+#
+# Job `e2e` (BL-21): sobe a stack de dev via 05_infra/docker-compose.yml e roda
+# os testes Playwright dos Fluxos RFO/LTIP (03_frontend/e2e/*.spec.ts) contra
+# ela — ver "Testes E2E (Playwright, BL-21)" em 03_frontend/README.md.
 name: CI
 
 on:
@@ -142,3 +146,71 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: "1"
           ignore-unfixed: true
+
+  e2e:
+    name: Testes E2E (Playwright — Fluxos RFO e LTIP, BL-21)
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: 03_frontend/package-lock.json
+
+      - name: Instalar dependências do frontend
+        working-directory: 03_frontend
+        run: npm ci
+
+      - name: Instalar navegadores do Playwright (Chromium)
+        working-directory: 03_frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Subir a stack local (05_infra/docker-compose.yml)
+        working-directory: 05_infra
+        run: |
+          cp .env.example .env
+          docker compose up -d --build
+
+      - name: Aguardar backend/frontend saudáveis
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8000/health > /dev/null && curl -sf http://localhost:3000 > /dev/null; then
+              echo "Stack pronta."; exit 0
+            fi
+            echo "Aguardando stack subir... ($i/30)"; sleep 5
+          done
+          echo "Timeout aguardando backend/frontend ficarem saudáveis."
+          cd 05_infra && docker compose logs --tail=100
+          exit 1
+
+      - name: Aplicar migrations e seed do gabarito (BL-04, BL-05)
+        working-directory: 05_infra
+        run: |
+          docker compose exec -T backend alembic upgrade head
+          docker compose exec -T backend python -m app.scripts.seed_gabarito
+          # Auditor de bootstrap: /auth/register exige auditor autenticado desde BL-23.
+          docker compose exec -T backend python -m app.scripts.seed_admin
+
+      - name: Rodar testes E2E (Fluxos RFO e LTIP)
+        working-directory: 03_frontend
+        env:
+          E2E_BASE_URL: http://localhost:3000
+          E2E_API_BASE_URL: http://localhost:8000/api/v1
+        run: npx playwright test
+
+      - name: Publicar relatório do Playwright (em caso de falha)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: 03_frontend/playwright-report/
+          retention-days: 7
+
+      - name: Derrubar a stack local
+        if: always()
+        working-directory: 05_infra
+        run: docker compose down -v

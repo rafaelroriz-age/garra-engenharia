@@ -52,6 +52,21 @@ async def get_current_user(
     return usuario
 
 
+async def get_optional_user(
+    token: str | None = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db),
+) -> Usuario | None:
+    """Como `get_current_user`, mas devolve `None` em vez de 401 quando não autenticado.
+
+    Usado por rotas que mudam de comportamento conforme haja ou não sessão
+    (ex.: bootstrap do primeiro usuário em `POST /auth/register`, BL-23).
+    """
+    try:
+        return await get_current_user(token=token, db=db)
+    except HTTPException:
+        return None
+
+
 def require_role(*roles: str):
     """Garante que o usuário autenticado possua um dos papéis exigidos."""
 

@@ -105,6 +105,7 @@ Arquivos em `.github/workflows/`. Todos os workflows devem falhar rápido (lint/
    - Frontend: testes de componente (quando existirem — ainda não há suíte de testes de frontend no backlog atual; adicionar ao backlog quando a primeira tela com lógica não trivial for implementada).
 3. **Build de imagens Docker** (cache de layers via `actions/cache` ou GitHub Actions cache do Buildx) para `04_backend/Dockerfile` e `03_frontend/Dockerfile`, sem push (apenas valida que o build funciona).
 4. **Scan de vulnerabilidades**: Trivy (`aquasecurity/trivy-action`) nas imagens buildadas e `pip-audit`/`npm audit` nas dependências — falhas de severidade `HIGH`/`CRITICAL` bloqueiam o merge (BL-23 estende esta etapa com revisão manual OWASP).
+5. **Testes E2E (BL-21)**: job `e2e` sobe a stack completa via `05_infra/docker-compose.yml` (Postgres, MinIO, backend, frontend), aplica migrations/seed do gabarito e roda os testes Playwright dos Fluxos RFO/LTIP (`03_frontend/e2e/*.spec.ts`) — ver "Testes E2E (Playwright, BL-21)" em `03_frontend/README.md`.
 
 ### 3.2 `cd-staging.yml` — Deploy em Staging (fallback manual, DEC-17)
 
