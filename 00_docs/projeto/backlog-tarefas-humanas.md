@@ -10,7 +10,9 @@ related:
   - 00_docs/projeto/backlog-tarefas.md
   - 00_docs/projeto/plano-gestao-configuracao.md
   - 00_docs/projeto/backlog-kanban.md
-last_updated: 2026-08-03
+  - 00_docs/projeto/pauta-validacao-lacunas.md
+  - 00_docs/cliente/solicitacao-templates-docx.md
+last_updated: 2026-08-07
 ---
 
 # Backlog de Tarefas Humanas
@@ -29,18 +31,18 @@ last_updated: 2026-08-03
 
 | ID | Tarefa | Motivo (só humano) | Bloqueia | Status | Tem alternativa agente/MCP? |
 |---|---|---|---|---|---|
-| [HT-01](#ht-01--validar-as-10-lacunas-a-esclarecer-com-o-cliente) | Validar as 10 lacunas `[A ESCLARECER]` com o cliente | Negociação/decisão de negócio com o cliente | BL-15, BL-18, B-01 | 🔴 Pendente | Parcial (preparar pauta e atualizar docs após resposta) |
-| [HT-02](#ht-02--solicitar-e-receber-os-arquivos-docx-de-template-e-logo) | Solicitar e receber os `.docx` de template e logo em alta resolução | Comunicação externa + espera de entrega pelo cliente | BL-12 (fiel), BL-13, BL-17, BL-19, B-02 | 🔴 Pendente | Parcial (redigir a solicitação) |
+| [HT-01](#ht-01--validar-as-10-lacunas-a-esclarecer-com-o-cliente) | Validar as 10 lacunas `[A ESCLARECER]` com o cliente | Negociação/decisão de negócio com o cliente | BL-15, BL-18, B-01 | 🔴 Pendente — **pauta pronta** em [pauta-validacao-lacunas.md](pauta-validacao-lacunas.md) | Parcial (pauta já redigida; agente atualiza os docs após a resposta) |
+| [HT-02](#ht-02--solicitar-e-receber-os-arquivos-docx-de-template-e-logo) | Solicitar e receber os `.docx` de template e logo em alta resolução | Comunicação externa + espera de entrega pelo cliente | BL-12 (fiel), BL-13, BL-17, BL-19, B-02 | 🔴 Pendente — **minuta pronta** em [solicitacao-templates-docx.md](../cliente/solicitacao-templates-docx.md) | Parcial (mensagem já redigida; falta o envio humano) |
 | [HT-03](#ht-03--decidir-a-preferência-de-hospedagem) | Decidir a preferência de hospedagem (local vs. nuvem) | Decisão orçamentária | BL-20, BL-24, BL-28, B-03 | ✅ Decidido (Render, 2026-07-21) | Sim (Blueprint `render.yaml` já pronto) |
-| [HT-04](#ht-04--aplicar-o-blueprint-do-render-ou-provisionar-servidorvps-alternativo-e-registrar-domínio) | Aplicar o Blueprint do Render (conta + pagamento) e registrar domínio | Criação de conta, pagamento, conexão OAuth com GitHub | BL-24, BL-28 | 🟡 Em andamento — deploy automático confirmado funcionando (DEC-22), mas `/health` real reporta banco indisponível e faltam Pre-Deploy Command/Health Check Path no serviço | Sim (provisionamento via MCP já feito; faltam ajustes finais no Dashboard) |
-| [HT-05](#ht-05--configurar-proteção-das-branches-mainmain_frontmain_back-no-github) | Configurar proteção das 3 branches (`main`/`main_front`/`main_back`) no GitHub | Configuração administrativa sensível do repositório | BL-25/26 (item pendente), DEC-17/DEC-22 | 🔴 Pendente (ação manual restante) | Sim, via `gh` CLI (mesmo assim disparado pelo humano) |
+| [HT-04](#ht-04--aplicar-o-blueprint-do-render-ou-provisionar-servidorvps-alternativo-e-registrar-domínio) | Aplicar o Blueprint do Render (conta + pagamento) e registrar domínio | Criação de conta, pagamento, conexão OAuth com GitHub | BL-24, BL-28 | 🟡 Em andamento — env vars não-secretas aplicadas via MCP em 2026-08-07; restam **apenas 2 segredos** (`POSTGRES_PASSWORD`, `JWT_SECRET_KEY`) + Pre-Deploy Command + Health Check Path | Sim, parcialmente (MCP não expõe senha do banco nem edição de Settings do serviço) |
+| [HT-05](#ht-05--configurar-proteção-das-branches-mainmain_frontmain_back-no-github) | Configurar proteção das 3 branches (`main`/`main_front`/`main_back`) no GitHub | Configuração administrativa sensível do repositório | BL-25/26 (item pendente), DEC-17/DEC-22 | 🔴 Pendente — `gh` CLI **não autenticado** na máquina (verificado em 2026-08-07); MCP do GitHub não expõe branch protection | Sim, via `gh` CLI após `gh auth login` (comando pronto abaixo) |
 | [HT-06](#ht-06--cadastrar-secrets-do-github-actions) | Cadastrar Secrets do GitHub Actions (SSH, `.env` de produção) | Segredos/credenciais nunca devem passar por chat/agente | BL-28 | 🔴 Pendente | Não recomendado — apenas humano |
 | [HT-07](#ht-07--aprovar-manualmente-o-deploy-de-produção) | Aprovar manualmente o deploy de produção (GitHub Environment) | Gate de governança intencional (segregação de funções, DEC-14) | Deploys em produção (recorrente) | 🔴 Recorrente | Não — é por design |
 | [HT-08](#ht-08--obter-certificado-digital-icp-brasil-se-necessário) | Obter certificado digital ICP-Brasil (se lacuna #9 confirmar necessidade) | Processo legal com autoridade certificadora, identidade do engenheiro | Módulo de assinatura digital (futuro) | 🔴 Condicional a HT-01 | Não para obtenção; integração técnica sim, depois de obtido |
 | [HT-09](#ht-09--validar-visualmente-a-fidelidade-dos-relatórios-gerados) | Validar visualmente a fidelidade dos relatórios PDF/DOCX gerados vs. template original | Julgamento de qualidade/aprovação antes de ir a produção | BL-12, BL-13, BL-17 (sign-off) | 🔴 Pendente | Parcial (comparação visual assistida) |
 | [HT-10](#ht-10--coleta-de-dados-e-fotos-em-campo-durante-a-vistoriainspeção) | Coleta de dados e fotos em campo durante a vistoria/inspeção | Atividade física de engenharia, fora do escopo de software | Alimenta BL-10/BL-11 (dados de entrada) | 🔴 Recorrente | Não |
 | [HT-11](#ht-11--negociar-e-assinar-o-contrato-de-prestação-de-serviços) | Negociar e assinar o contrato de prestação de serviços/aditivos | Assinatura com validade jurídica | Formalização comercial | 🔴 Pendente | Parcial (minuta/revisão do contrato) |
-| [HT-12](#ht-12--autenticar-o-servidor-mcp-do-notion) | Autenticar o servidor MCP do Notion (OAuth) e selecionar o workspace/página de destino | Login/OAuth e escolha de workspace são atos do próprio usuário; credencial não deve passar por chat/agente | Criação do board `backlog-kanban.md` real dentro do Notion (DEC-20) | 🔴 Pendente | Sim (após autenticado, o agente cria/atualiza o board automaticamente) |
+| [HT-12](#ht-12--autenticar-o-servidor-mcp-do-notion) | Autenticar o servidor MCP do Notion (OAuth) e selecionar o workspace/página de destino | Login/OAuth e escolha de workspace são atos do próprio usuário; credencial não deve passar por chat/agente | Criação do board `backlog-kanban.md` real dentro do Notion (DEC-20) | ✅ Concluída (2026-08-07) — board criado, ver [HT-12](#ht-12--autenticar-o-servidor-mcp-do-notion) | Sim (board criado integralmente pelo agente após a autenticação) |
 
 ---
 
@@ -60,9 +62,9 @@ last_updated: 2026-08-03
 5. Atualizar `estudo-do-contexto.md` marcando as lacunas já esclarecidas (#6, #11, #12) e a lacuna #13 como parcialmente resolvida, mantendo as demais como pendentes e ajustando RN-04, RN-13, RNF-02, RNF-08 conforme as respostas.
 6. Atualizar o status de B-01 para "parcialmente resolvido" em [status.md](status.md#bloqueios-ativos) e ajustar BL-15/BL-18 em `backlog-tarefas.md` para refletir o que ficou esclarecido e o que ainda precisa confirmação.
 
-**Alternativa via agente/MCP (parcial):**
-- Um agente (ex.: modo "estudo-contexto" ou "Gestor de Projeto") pode **preparar a pauta/roteiro da reunião** e um rascunho de e-mail/mensagem convite, a partir de `estudo-do-contexto.md §9`.
-- Depois que o humano obtiver as respostas do cliente (por texto/e-mail), o agente pode **aplicar as edições nos documentos** (`estudo-do-contexto.md`, `status.md`, `backlog-tarefas.md`) automaticamente — basta colar as respostas no chat e pedir a atualização.
+**Alternativa via agente/MCP (parcial) — já executada:**
+- A **pauta completa da reunião** já está redigida em [pauta-validacao-lacunas.md](pauta-validacao-lacunas.md), com as 9 lacunas remanescentes organizadas em 4 blocos por impacto arquitetural, cada uma com a pergunta a fazer, o motivo técnico e as opções de resposta a apresentar ao cliente.
+- Depois que o humano obtiver as respostas do cliente (por texto/e-mail), o agente pode **aplicar as edições nos documentos** (`estudo-do-contexto.md`, `status.md`, `backlog-tarefas.md`, `ata-validacao-lacunas.md`) automaticamente — basta colar as respostas no chat e pedir a atualização.
 - A decisão/negociação em si permanece 100% humana.
 
 ---
@@ -88,8 +90,8 @@ last_updated: 2026-08-03
 4. Avisar o time técnico (ou pedir para um agente) para iniciar a conversão/uso como template real (desbloqueia BL-12/BL-13/BL-17/BL-19).
 5. Remover o bloqueio B-02 de [status.md](status.md#bloqueios-ativos).
 
-**Alternativa via agente/MCP (parcial):**
-- Um agente pode **redigir o texto da solicitação** (e-mail/mensagem) listando exatamente os arquivos e formatos esperados.
+**Alternativa via agente/MCP (parcial) — já executada:**
+- O texto completo da solicitação (assunto + corpo da mensagem + tabela com os 6 arquivos exigidos + instruções para evitar retrabalho) já está pronto em [solicitacao-templates-docx.md](../cliente/solicitacao-templates-docx.md) — basta copiar e enviar.
 - Depois de recebidos, o agente "conversor-documentos-md" pode gerar a versão `.md` de referência (como já feito para os documentos em `00_docs/convertidos/`), mas o **envio, recebimento e organização dos arquivos originais é sempre humano**.
 
 ---
@@ -116,7 +118,9 @@ last_updated: 2026-08-03
 
 **Bloqueia:** BL-24, BL-28.
 
-**Estado atual (2026-08-05, confirmado via MCP do Render + `GET /health`):** `garra-backend`/`garra-frontend` estão **live** e em dia com o código atual de `main_back`/`main_front` (auto-deploy funcionando, DEC-22) — mas `GET https://garra-backend.onrender.com/health` responde `{"status":"degraded","database":"unavailable"}`. Além disso, os dois serviços foram criados via MCP como **runtime nativo (`env: python`/`env: node`, buildCommand/startCommand diretos)**, e NÃO como `runtime: docker` a partir de `Dockerfile.render` conforme `render.yaml` — ou seja, o Blueprint real nunca foi de fato "aplicado" (o texto abaixo descreve o caminho ideal via Apply do Blueprint; o que existe hoje é resultado de `create_web_service`, que não suporta Docker). Consequência prática: **não há `preDeployCommand`/Pre-Deploy Command configurado** (migrations do Alembic nunca rodam sozinhas a cada deploy) nem `healthCheckPath` (`/health`) configurado no serviço. A ferramenta MCP disponível não expõe edição desses campos nem leitura da senha do Postgres — os 2 itens abaixo exigem o Dashboard.
+**Estado atual (2026-08-07, após execução via MCP do Render):** `garra-backend`/`garra-frontend` estão **live** e em dia com o código de `main_back`/`main_front` (auto-deploy funcionando, DEC-22). Nesta data o agente aplicou via MCP todas as variáveis de ambiente **não secretas** que faltavam no `garra-backend` (`ENVIRONMENT=production`, `BACKEND_CORS_ORIGINS=https://garra-frontend.onrender.com`, `POSTGRES_HOST=dpg-d9obbtfqj5pc738dqf2g-a`, `POSTGRES_PORT=5432`, `POSTGRES_USER=garra_db_user`, `POSTGRES_DB=garra_db`, `JWT_ALGORITHM=HS256`, `JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60`) e confirmou `NEXT_PUBLIC_API_URL=https://garra-backend.onrender.com/api/v1` no `garra-frontend`. O deploy resultante subiu com status `live`, mas `GET https://garra-backend.onrender.com/health` continua respondendo `{"status":"degraded","database":"unavailable"}` — causa restante é exclusivamente a ausência de `POSTGRES_PASSWORD` (o `Settings` do backend usa string vazia como default, ver [04_backend/app/core/config.py](../../04_backend/app/core/config.py)).
+
+**Por que o agente não consegue fechar sozinho:** (1) o MCP do Render **não expõe a senha do Postgres** em nenhuma ferramenta (`get_postgres` retorna só metadados; `query_render_postgres` roda em transação read-only, então também não permite criar um usuário novo); (2) `JWT_SECRET_KEY` é segredo e não deve transitar pelo chat/modelo; (3) o MCP não tem ferramenta de `update_service`, então **Pre-Deploy Command** e **Health Check Path** só podem ser definidos no Dashboard. Vale lembrar que os 2 serviços foram criados via MCP como **runtime nativo** (`env: python`/`env: node`), não como `runtime: docker` a partir de `Dockerfile.render` — ou seja, o Blueprint nunca foi de fato aplicado, e por isso `preDeployCommand`/`healthCheckPath` do `render.yaml` não valem para eles.
 
 **Passo a passo (caminho simplificado — Render, ver `05_infra/README.md` § "Deploy em produção (Render)"):**
 1. Criar/acessar conta em [dashboard.render.com](https://dashboard.render.com/) e conectar o repositório GitHub `rafaelroriz-age/garra-engenharia`.
@@ -130,31 +134,36 @@ last_updated: 2026-08-03
 - Criação de conta, aprovação de custo e registro de domínio continuam exclusivamente humanos.
 - Caminho alternativo (VPS/Azure) permanece documentado no histórico deste arquivo caso a decisão de hospedagem mude no futuro.
 
-**Checklist final pendente (atualizado em 2026-08-05, confirmado ao vivo):**
-1. **[CRÍTICO, confirmado quebrado]** Abrir `garra-backend` no Render → Environment e preencher `POSTGRES_HOST`/`POSTGRES_PORT`/`POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_DB` (usar o botão "Add from Database" apontando para `garra-db` faz o link automático, mais seguro que copiar a senha manualmente) + `JWT_SECRET_KEY` (gerar valor aleatório) + `BACKEND_CORS_ORIGINS`. Sem isso `GET /health` nunca vai deixar de reportar `"database":"unavailable"`.
-2. **[NOVO, descoberto em 2026-08-05]** Settings do `garra-backend` → adicionar **Pre-Deploy Command**: `cd 04_backend && alembic upgrade head` (não existe hoje). Sem isso, a migration `5f9f3cb4d87f` (RBAC/Portal do Cliente, BL-30) e qualquer migration futura não são aplicadas automaticamente — precisa rodar manualmente uma vez via Shell do Render (Dashboard → garra-backend → Shell → `cd 04_backend && alembic upgrade head`) até este campo ser configurado.
-3. **[NOVO]** Settings do `garra-backend` → definir **Health Check Path**: `/health`.
-4. Confirmar `NEXT_PUBLIC_API_URL` no `garra-frontend` e `BACKEND_CORS_ORIGINS` no `garra-backend` com as URLs reais dos serviços (já parecem corretas: `garra-backend.onrender.com`/`garra-frontend.onrender.com`, mas conferir as env vars de fato configuradas no serviço, não só o `render.yaml`).
+**Checklist final pendente (atualizado em 2026-08-07 — só restam itens que exigem o Dashboard):**
+
+1. **[CRÍTICO — único bloqueio do `/health`]** `garra-backend` → Environment → adicionar **`POSTGRES_PASSWORD`**. Prefira o botão **"Add from Database"** apontando para `garra-db` (cria o vínculo sem expor a senha); se ele adicionar as demais `POSTGRES_*` em duplicidade, remova as que o agente já gravou (`POSTGRES_HOST`/`PORT`/`USER`/`DB`) e mantenha as vinculadas ao banco.
+2. **[CRÍTICO — segurança]** Adicionar **`JWT_SECRET_KEY`** com um valor aleatório forte. Desde **DEC-24/BL-23 (2026-08-07)**, com `ENVIRONMENT=production` o backend **falha no boot** se essa variável estiver vazia, for `"changeme"` ou tiver menos de 32 caracteres — e também se `BACKEND_CORS_ORIGINS` contiver `*`. É fail-closed proposital (OWASP A05): melhor não subir do que subir com tokens forjáveis. Gere localmente e cole direto no Dashboard (nunca no chat):
+   ```powershell
+   python -c "import secrets; print(secrets.token_urlsafe(64))"
+   ```
+2.1. **[NOVO — DEC-24]** Depois do primeiro deploy saudável, criar o auditor de bootstrap pelo Shell do Render (`cd 04_backend && python -m app.scripts.seed_admin`, com `ADMIN_EMAIL`/`ADMIN_SENHA` definidos): `POST /auth/register` deixou de ser público e só um auditor autenticado pode cadastrar novos usuários (inclusive os do Portal do Cliente).
+3. Settings do `garra-backend` → **Pre-Deploy Command**: `cd 04_backend && alembic upgrade head`. Sem isso, a migration `5f9f3cb4d87f` (RBAC/Portal do Cliente, BL-30) e as futuras não são aplicadas — rode uma vez manualmente pelo Shell do Render até configurar o campo.
+4. Settings do `garra-backend` → **Health Check Path**: `/health`.
 5. Garantir que os recursos estejam no project/grupo `garraengenharia` dentro do workspace da conta.
-6. Após 1-3, rodar novo deploy manual e validar `GET /health` retornando `"database":"ok"`.
+6. Após 1-4, rodar novo deploy manual e validar `GET /health` retornando `"database":"ok"`.
 7. (Opcional, mais robusto) Recriar os 2 serviços via **Blueprint real** (`New → Blueprint`, passos 1-3 acima) para que passem a usar `Dockerfile.render`/`preDeployCommand`/`healthCheckPath` nativamente do `render.yaml`, em vez de manter a configuração manual criada via MCP.
+
+> ✅ Já resolvido via MCP em 2026-08-07 (não precisa refazer): `ENVIRONMENT`, `BACKEND_CORS_ORIGINS`, `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_DB`, `JWT_ALGORITHM`, `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` no backend e `NEXT_PUBLIC_API_URL` no frontend.
 
 ---
 
 ## HT-12 — Autenticar o servidor MCP do Notion
 
-**Por que só um humano:** o login OAuth no Notion (escolha da conta/workspace de destino e concessão de escopo de acesso) é um ato de autenticação pessoal que não pode passar por chat/agente — mesmo princípio já aplicado ao Render (HT-04) e descrito nas restrições deste modo (nenhuma chave/token de provedor é solicitada, digitada ou lida via chat).
+**Status: ✅ Concluída (2026-08-07).** O servidor MCP `notion` foi autenticado (workspace de `Rafael Pereira`) e o agente criou o board real:
 
-**Bloqueia:** criação/atualização real do board `00_docs/projeto/backlog-kanban.md` dentro do Notion (DEC-20, ADR-11 em `arquitetura.md`).
+- **Banco de dados:** "Backlog — Garra Engenharia" — https://app.notion.com/p/c5c276e8a13041499be0017833efb379
+- **View "Quadro"** agrupada por `Status` (colunas `Backlog` / `To do` / `In progress` / `Done`), conforme DEC-20/ADR-11.
+- **Propriedades:** `Tarefa` (título), `Código`, `Status`, `Requisitos`, `Agente` (multi-select), `Etapa`, `Bloqueio`.
+- **52 cartões:** as 40 tarefas de engenharia (BL-01 a BL-40) **mais** as 12 tarefas humanas (HT-01 a HT-12), estas últimas identificadas pela `Etapa = "Tarefa humana (HT)"`.
 
-**Passo a passo:**
-1. Abrir a paleta de comandos do VS Code (`Ctrl+Shift+P`) → `MCP: List Servers` → selecionar `notion` → `Start Server`.
-2. Concluir o login OAuth no navegador que abrir automaticamente, escolhendo o workspace/página do Notion onde o board de backlog deve ser criado.
-3. Confirmar no chat que a autenticação foi concluída — a partir daí o agente cria o banco de dados "Backlog — Garra Engenharia" com as colunas Backlog/To do/In progress/Done e os cartões descritos em `00_docs/projeto/backlog-kanban.md`.
+**Manutenção:** o board e [backlog-tarefas.md](backlog-tarefas.md)/[backlog-kanban.md](backlog-kanban.md) precisam ser atualizados em paralelo — não há sincronização automática (limitação já registrada em DEC-20). Com o MCP autenticado, basta pedir ao agente para refletir no Notion qualquer mudança de status feita nos arquivos.
 
-**Alternativa via agente/MCP:**
-- Depois de autenticado, todo o trabalho de criação/atualização do board é feito pelo agente — não é necessário criar manualmente bases de dados ou cartões no Notion.
-- Sem a autenticação, o agente só consegue preparar o conteúdo localmente (já feito em `00_docs/projeto/backlog-kanban.md`), sem conseguir publicá-lo no Notion.
+**Por que era uma tarefa humana:** o login OAuth no Notion (escolha da conta/workspace e concessão de escopo) é um ato de autenticação pessoal que não pode passar por chat/agente — mesmo princípio aplicado ao Render (HT-04). Uma vez autenticado, todo o resto foi executado pelo agente.
 
 ---
 
@@ -171,7 +180,7 @@ last_updated: 2026-08-03
 4. Salvar e confirmar em `status.md`/memória de repositório que o item foi concluído.
 
 **Alternativa via agente/MCP:**
-- Não há tool MCP disponível hoje para isso, mas o **próprio humano** pode rodar via terminal usando a GitHub CLI (`gh`) já autenticada na máquina, por exemplo (repetir para cada uma das 3 branches, trocando `main_back` pelo nome correspondente):
+- Não há tool MCP disponível hoje para isso (o toolset atual do GitHub MCP não expõe branch protection), e em 2026-08-07 o agente verificou que a **GitHub CLI não está autenticada** nesta máquina (`gh auth status` retorna "You are not logged into any GitHub hosts"). Portanto o humano precisa primeiro rodar `gh auth login` (fluxo de browser/token — nunca colar o token no chat) e depois executar:
   ```powershell
   foreach ($branch in @("main", "main_front", "main_back")) {
     gh api -X PUT "repos/rafaelroriz-age/garra-engenharia/branches/$branch/protection" `
@@ -182,7 +191,7 @@ last_updated: 2026-08-03
       -f restrictions=null
   }
   ```
-- Um agente pode **gerar o comando exato** (como acima) para o humano copiar/colar e executar no próprio terminal autenticado — mas a execução deve ser feita pelo humano, pois envolve permissões administrativas do repositório.
+- Depois de `gh auth login` estar feito, o agente **consegue rodar o comando acima** por conta própria — basta avisar no chat que a autenticação foi concluída.
 
 ---
 

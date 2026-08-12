@@ -48,32 +48,76 @@ Não há migração de schema nesta etapa (BL-01 é somente infraestrutura), por
 
 ```
 05_infra/
-├── docker-compose.yml      # ✅ PostgreSQL + MinIO (dev) — implementado nesta etapa
-├── docker-compose.prod.yml # Ambiente de produção
+├── docker-compose.yml      # ✅ PostgreSQL + MinIO + backend + frontend (dev)
+├── docker-compose.prod.yml # ✅ Stack de produção em VPS próprio (BL-27)
 ├── .env.example             # ✅ Todas as variáveis sem valores reais — implementado
 ├── .env.render.example       # ✅ Checklist de variáveis do deploy no Render
 ├── nginx/
-│   └── nginx.conf           # Reverse proxy + HTTPS
+│   └── nginx.conf           # ✅ Reverse proxy + HTTPS (BL-27)
 ├── backup/
-│   ├── backup-db.sh
-│   └── restore-db.sh
+│   ├── backup-db.sh         # ✅ Dump do Postgres + espelho do MinIO (BL-29)
+│   └── restore-db.sh        # ✅ Restore com confirmação e dump prévio (BL-29)
 └── README.md                # Pré-requisitos, como rodar localmente, deploy e rollback
+```
+
+## Deploy em VPS próprio (alternativa ao Render — BL-27)
+
+A hospedagem oficial é o Render (seção abaixo). `docker-compose.prod.yml` + `nginx/nginx.conf` cobrem o cenário alternativo de VPS próprio previsto em DEC-14/DEC-17 e consumido pelos workflows de fallback `cd-staging.yml`/`cd-production.yml`.
+
+Diferenças em relação ao compose de desenvolvimento:
+
+- Usa **imagens prontas do GHCR** com tag imutável (`IMAGE_TAG`), nunca `build:` nem `latest` — permite rollback determinístico.
+- **Nenhuma porta de Postgres/MinIO/backend/frontend é publicada** no host: só o Nginx expõe 80/443.
+- Nginx faz TLS termination (Let's Encrypt via `certbot`, renovação automática), rate limiting em `/api/v1/auth/login` (OWASP A07) e cabeçalhos de segurança (HSTS, `X-Frame-Options`, `nosniff`).
+
+```bash
+cd 05_infra
+cp .env.example .env                 # preencher com os segredos reais
+export IMAGE_TAG=v1.0.0              # ou staging-<sha>
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml run --rm backend alembic upgrade head
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Antes do primeiro `up`, substitua `SEU.DOMINIO` em `nginx/nginx.conf` e emita o certificado inicial:
+
+```bash
+docker compose -f docker-compose.prod.yml run --rm --entrypoint \
+  "certbot certonly --webroot -w /var/www/certbot -d SEU.DOMINIO --email SEU@EMAIL --agree-tos --no-eff-email" certbot
+```
+
+**Rollback:** trocar `IMAGE_TAG` pela versão anterior e repetir `pull` + `up -d` (não depende do pipeline estar disponível).
+
+## Backup e restauração (BL-29, RNF-08)
+
+```bash
+cd 05_infra
+./backup/backup-db.sh                                   # produção (docker-compose.prod.yml)
+COMPOSE_FILE=docker-compose.yml ./backup/backup-db.sh   # ambiente de desenvolvimento
+./backup/restore-db.sh backup/dumps/garra-db-<carimbo>.dump
+```
+
+- `backup-db.sh` gera dump lógico (`pg_dump --format=custom`) em `backup/dumps/` e espelha o bucket MinIO em `backup/objetos/`. A retenção (`RETENCAO_DIAS`, default 30) só é aplicada **depois** de um dump válido, para nunca apagar o último backup bom por causa de uma execução que falhou.
+- `restore-db.sh` é destrutivo: exige digitar `RESTAURAR`, salva um dump `pre-restore-*` do estado atual e para `backend`/`frontend` durante a operação.
+- `backup/dumps/` e `backup/objetos/` contêm dados reais de clientes e **nunca** são versionados (`backup/.gitignore`). Copie-os para fora do host — o destino externo definitivo continua `[A ESCLARECER]` (RNF-08).
+
+Agendamento sugerido no host (diário às 02:00):
+
+```cron
+0 2 * * * cd /home/deploy/garra-engenharia/05_infra && ./backup/backup-db.sh >> backup/backup.log 2>&1
 ```
 
 ## Deploy em produção (Render)
 
-Resolve o bloqueio B-03/HT-03 (hospedagem) com Render como provedor de nuvem. Toda a infraestrutura é definida como código em [`../render.yaml`](../render.yaml) (Render Blueprint) — os recursos abaixo são criados e conectados automaticamente, sem segredo hardcoded no repositório. Desde a DEC-17 (2026-07-21), cada serviço observa uma branch dedicada do monorepo (`main_front`/`main_back`/`staging_front`/`staging_back`) como gatilho de auto-deploy, em vez de todos dependerem de `main`:
+Resolve o bloqueio B-03/HT-03 (hospedagem) com Render como provedor de nuvem. Toda a infraestrutura é definida como código em [`../render.yaml`](../render.yaml) (Render Blueprint) — os recursos abaixo são criados e conectados automaticamente, sem segredo hardcoded no repositório. Desde a DEC-17 (2026-07-21), cada serviço observa uma branch dedicada do monorepo como gatilho de auto-deploy; desde a DEC-22 (2026-08-05), as branches de staging foram removidas e `main` é sincronizada automaticamente para `main_back`/`main_front` pelo workflow `sync-deploy-branches.yml`:
 
 | Serviço | Tipo Render | Origem | Branch |
 |---|---|---|---|
 | `garra-backend` | Web Service (Docker) | `04_backend/Dockerfile.render` | `main_back` |
 | `garra-frontend` | Web Service (Docker) | `03_frontend/Dockerfile.render` | `main_front` |
-| `garra-backend-staging` | Web Service (Docker) | `04_backend/Dockerfile.render` | `staging_back` |
-| `garra-frontend-staging` | Web Service (Docker) | `03_frontend/Dockerfile.render` | `staging_front` |
 | `garra-db` | PostgreSQL gerenciado (produção) | plano `basic-256mb` | — |
-| `garra-db-staging` | PostgreSQL gerenciado (staging) | plano `basic-256mb` | — |
 
-Os 2 serviços `-staging` e o banco `garra-db-staging` são recursos pagos adicionais — remova o bloco "Staging" de `render.yaml` antes de aplicar o Blueprint se ainda não quiser esse custo (ver comentário no topo do arquivo).
+Não há ambiente de staging no Render (removido na DEC-22 — nunca chegou a ser provisionado). Para recriá-lo, adicione novamente o bloco correspondente em `render.yaml` e as branches a partir de `main`.
 
 As imagens `Dockerfile.render` (uma por serviço) são versões de **produção** dos Dockerfiles de desenvolvimento — sem `--reload`/`next dev`, escutando na porta `$PORT` do Render, com build multi-stage no frontend (`output: "standalone"`). Os Dockerfiles de dev usados pelo `docker-compose.yml` local **não foram alterados**.
 

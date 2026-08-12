@@ -46,7 +46,8 @@ type FabricCanvasLike = {
 type FabricModuleLike = {
   Canvas: new (canvasElement: HTMLCanvasElement, options: { selection: boolean; preserveObjectStacking: boolean }) => FabricCanvasLike;
   Image: {
-    fromURL: (url: string, callback: (image: FabricImageLike) => void, options?: { crossOrigin?: string }) => void;
+    /** Fabric.js v6: `fromURL` retorna uma Promise (não aceita callback como no v5). */
+    fromURL: (url: string, options?: { crossOrigin?: string; signal?: AbortSignal }) => Promise<FabricImageLike>;
   };
   Textbox: new (text: string, options: Record<string, unknown>) => FabricObjectLike;
   Rect: new (options: Record<string, unknown>) => FabricObjectLike;
@@ -140,19 +141,10 @@ export function PhotoAnnotationEditor({ isOpen, imageSource, onSave, onCancel }:
 
         const imageUrl = typeof imageSource === "string" ? imageSource : URL.createObjectURL(imageSource);
 
-        const image = await new Promise<FabricImageLike>((resolve, reject) => {
-          fabricLib.Image.fromURL(
-            imageUrl,
-            (img) => {
-              if (!img) {
-                reject(new Error("Não foi possível carregar a imagem."));
-                return;
-              }
-              resolve(img);
-            },
-            { crossOrigin: "anonymous" }
-          );
-        });
+        const image = await fabricLib.Image.fromURL(imageUrl, { crossOrigin: "anonymous" });
+        if (!image) {
+          throw new Error("Não foi possível carregar a imagem.");
+        }
 
         if (disposed) {
           return;
@@ -429,7 +421,13 @@ export function PhotoAnnotationEditor({ isOpen, imageSource, onSave, onCancel }:
             </div>
           </div>
 
-          <div className="overflow-auto rounded-lg border border-border bg-background/80 p-2">
+          <div className="relative overflow-auto rounded-lg border border-border bg-background/80 p-2">
+            {/* O <canvas> precisa continuar montado mesmo durante o carregamento — o
+                efeito que anexa o Fabric.Canvas depende de `canvasRef.current` já
+                existir (ver useEffect abaixo). Escondê-lo via `hidden` (sem remover
+                do DOM) evita o deadlock de "Preparando editor..." para sempre que
+                existia quando o `<canvas>` só era renderizado após `isLoading` virar
+                falso — mas nada define `isLoading = false` sem o canvas já existir. */}
             {isLoading ? (
               <div className="flex min-h-[280px] items-center justify-center rounded-md border border-dashed border-muted-foreground/30 bg-muted/20 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
@@ -437,9 +435,15 @@ export function PhotoAnnotationEditor({ isOpen, imageSource, onSave, onCancel }:
                   Preparando editor...
                 </div>
               </div>
-            ) : (
+            ) : null}
+            {/* A classe de visibilidade fica no wrapper, não no <canvas> em si: o
+                Fabric.js clona o className original do elemento para a camada de
+                interação ("upper-canvas") apenas na inicialização — se a classe
+                mudasse depois no próprio <canvas>, a upper-canvas ficaria com
+                `hidden` "grudado" para sempre, quebrando os eventos de desenho. */}
+            <div className={isLoading ? "hidden" : undefined}>
               <canvas ref={canvasRef} className="mx-auto max-w-full" />
-            )}
+            </div>
             {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
           </div>
 

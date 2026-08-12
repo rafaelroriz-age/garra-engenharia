@@ -50,8 +50,10 @@ last_updated: 2026-07-27
 | **Impacto** | M |
 | **Prioridade** | Média |
 | **Descrição** | WeasyPrint pode ser lento para documentos grandes. O RNF-06 exige geração em menos de 60 segundos. |
-| **Mitigação** | Processamento assíncrono via Celery ou FastAPI BackgroundTasks. Compressão de imagens (Pillow) antes de inserir no PDF. Benchmark antes do release. |
-| **Gatilho de escalada** | Tempo de geração > 60s em testes de carga com laudo de 200 páginas. |
+| **Mitigação** | Processamento assíncrono via Celery ou FastAPI BackgroundTasks (ADR-06, ainda não implementado — BL-12/BL-13 bloqueadas por B-02). Compressão de imagens (Pillow) antes de inserir no PDF/DOCX. |
+| **Benchmark realizado (BL-22, 2026-08-05)** | Medição real com pipeline mínimo de fidelidade aproximada (ver [relatorio-benchmark-geracao-pdf-docx.md](relatorio-benchmark-geracao-pdf-docx.md)), 191 páginas / 570 fotos (pior caso ≥ RNF-06). Job único gerando PDF+DOCX (dual-pass, ADR-06 Seção 5): **sem otimização de imagem, 112,8s** (viola RNF-06, arquivos de 280 MB/138 MB); **otimizando a imagem a cada geração, 83,2s** (ainda viola RNF-06); **com as fotos já redimensionadas no upload (fix aplicado em BL-11, `MAX_LADO_ARMAZENADO_PX=2000`) + compressão adicional no embed do relatório, 44,2s** — dentro do limite, ~26% de margem. Risco rebaixado de "ação necessária" para **mitigado sob a condição de que BL-12/BL-13 reaproveitem o padrão de fotos já otimizadas no upload**, não a de recomprimir tudo a cada geração. |
+| **Risco residual** | (1) Medição feita com pipeline aproximado, síncrono, sem Celery/Redis — a versão final (BL-12/BL-13, ADR-06) precisa ser re-medida quando implementada; (2) variação observada entre execuções locais (`tempo_registro_final_storage_e_db_s` variou de 1,7s a 9,2s) por contenção de I/O no ambiente de desenvolvimento — recomenda-se nova medição em ambiente de produção/staging dedicado antes do sign-off final de RNF-06. |
+| **Gatilho de escalada** | Tempo de geração > 60s em teste de carga da implementação final (BL-12/BL-13) com laudo de 200 páginas. |
 | **Responsável** | Engenheiro Backend |
 
 ---
@@ -164,7 +166,7 @@ last_updated: 2026-07-27
 | R-07 — Offline descoberto tarde | Alta | **Ação imediata** |
 | R-01 — Fidelidade visual PDF | Alta | Mitigado (protótipo antecipado) |
 | R-02 — Clipboard API | Média | Mitigado (fallback upload manual) |
-| R-03 — Performance PDF | Média | Mitigado (processamento async) |
+| R-03 — Performance PDF | Média | Mitigado sob condição — benchmark real em 2026-08-05, ver [relatorio-benchmark-geracao-pdf-docx.md](relatorio-benchmark-geracao-pdf-docx.md) |
 | R-04 — Complexidade modelo | Média | Mitigado (modelo ER definido) |
 | R-05 — Template DOCX ausente | Média | Ação necessária (kickoff) |
 | R-08 — Escopo crescente | Média | Mitigado (congelamento v1.0) |

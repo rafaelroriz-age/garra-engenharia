@@ -9,6 +9,12 @@
 # testing
 /coverage
 
+# Playwright E2E (BL-21)
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
 # next.js
 /.next/
 /out/

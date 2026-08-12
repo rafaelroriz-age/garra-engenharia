@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+{#
+  Template HTML/CSS do RFO — fidelidade APROXIMADA, criado só para viabilizar
+  o benchmark de geração de PDF (BL-22, RNF-06, R-03) via WeasyPrint.
+
+  NÃO é o template fiel ao modelo original do cliente (BL-12 continua
+  bloqueada por B-02, aguardando o .docx/.xlsm original — ver
+  00_docs/projeto/backlog-tarefas.md). Usar `Relatorio_de_Fiscalizacao.md`
+  (00_docs/convertidos/) como referência de estrutura, não de layout fiel.
+#}
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Relatório de Fiscalização de Obra — {{ contrato.numero }}</title>
+<style>
+  @page {
+    size: A4;
+    margin: 2.2cm 1.6cm 2cm 1.6cm;
+    @top-center {
+      content: "Relatório de Fiscalização de Obra — Garra Engenharia";
+      font-size: 8pt;
+      color: #555;
+    }
+    @bottom-center {
+      content: "Página " counter(page) " de " counter(pages);
+      font-size: 8pt;
+      color: #555;
+    }
+  }
+  body {
+    font-family: "DejaVu Sans", Arial, sans-serif;
+    font-size: 10pt;
+    color: #1a1a1a;
+  }
+  h1 { font-size: 16pt; margin-bottom: 0.2cm; }
+  h2 { font-size: 13pt; margin-top: 0.9cm; border-bottom: 1px solid #999; padding-bottom: 0.1cm; }
+  h3 {
+    font-size: 11pt;
+    margin-top: 0.6cm;
+    page-break-before: always;
+  }
+  .capa h3:first-of-type { page-break-before: avoid; }
+  table.info { width: 100%; border-collapse: collapse; margin-bottom: 0.3cm; }
+  table.info td { border: 1px solid #ccc; padding: 3px 6px; vertical-align: top; }
+  table.info td.label { font-weight: bold; width: 28%; background: #f2f2f2; }
+  table.dados { width: 100%; border-collapse: collapse; margin: 0.2cm 0 0.4cm 0; }
+  table.dados th, table.dados td { border: 1px solid #ccc; padding: 3px 6px; font-size: 9pt; }
+  table.dados th { background: #eee; text-align: left; }
+  p.observacoes { text-align: justify; line-height: 1.35; }
+  .fotos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 0.3cm; }
+  .foto-item { width: 31%; }
+  .foto-item img { width: 100%; display: block; border: 1px solid #ccc; }
+  .foto-item figcaption { font-size: 8pt; color: #333; margin-top: 2px; }
+</style>
+</head>
+<body>
+  <section class="capa">
+    <h1>Relatório de Fiscalização de Obra (RFO)</h1>
+    <h3>Informações Gerais</h3>
+    <table class="info">
+      <tr><td class="label">Contrato nº</td><td>{{ contrato.numero }}</td></tr>
+      <tr><td class="label">Tipo de serviço</td><td>{{ contrato.tipo_servico }}</td></tr>
+      <tr><td class="label">Objeto</td><td>{{ contrato.objeto }}</td></tr>
+      <tr><td class="label">ART de Fiscalização</td><td>{{ contrato.art_fiscalizacao }}</td></tr>
+      <tr><td class="label">Edificação</td><td>{{ edificacao.nome }} — {{ edificacao.endereco }}</td></tr>
+      <tr><td class="label">Engenheiro Fiscal</td><td>{{ fiscal.nome }} (CREA {{ fiscal.crea }})</td></tr>
+      <tr><td class="label">Gerado em</td><td>{{ gerado_em }}</td></tr>
+    </table>
+  </section>
+
+  {% for visita in visitas %}
+  <h3>Visita {{ visita.seq_numero }} — {{ visita.data }}</h3>
+
+  <table class="dados">
+    <thead><tr><th>Função</th><th>Quantidade</th></tr></thead>
+    <tbody>
+      {% for mo in visita.mao_obra %}
+      <tr><td>{{ mo.funcao }}</td><td>{{ mo.quantidade }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <table class="dados">
+    <thead><tr><th>Medição</th><th>Quantidade</th><th>Unidade</th></tr></thead>
+    <tbody>
+      {% for m in visita.medicoes %}
+      <tr><td>{{ m.descricao }}</td><td>{{ m.quantidade }}</td><td>{{ m.unidade }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p class="observacoes"><strong>Serviços executados:</strong> {{ visita.servicos_executados }}</p>
+  <p class="observacoes"><strong>Observações:</strong> {{ visita.observacoes }}</p>
+
+  <div class="fotos">
+    {% for foto in visita.fotos %}
+    <figure class="foto-item">
+      <img src="{{ foto.data_uri }}" alt="Foto da visita {{ visita.seq_numero }}">
+      <figcaption>{{ foto.legenda }}</figcaption>
+    </figure>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</body>
+</html>

@@ -1,0 +1,4 @@
+# Artefatos de backup nunca são versionados (contêm dados reais de clientes).
+dumps/
+objetos/
+backup.log

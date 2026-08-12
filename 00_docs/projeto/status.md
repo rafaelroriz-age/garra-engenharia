@@ -3,14 +3,14 @@ title: Status do Projeto — Sistema de Automação de Relatórios Prediais
 type: gestao
 status: ativo
 owner: Garra Engenharia
-last_updated: 2026-08-05
+last_updated: 2026-08-11
 ---
 
 # Status do Projeto
 
-**Última atualização:** 2026-08-05  
-**Fase atual:** Incremento LTIP + Legendas Assistidas por IA — o prompt do cliente esclareceu parcialmente a lacuna #13 (prompt-sistema universal, regras de não invenção, rastreabilidade e aprovação humana); as lacunas #6/#11/#12 já foram tratadas via DEC-18; as lacunas #1/#2/#3/#4/#5/#7/#8/#9/#10 continuam abertas e exigem validação formal  
-**Progresso geral:** █████████████░ 71%
+**Última atualização:** 2026-08-11  
+**Fase atual:** MVP funcional do sistema em evolução, com backend e frontend já operando para os fluxos principais de cadastro, inspeção, ocorrências, dashboard e portal do cliente. O principal gargalo restante continua sendo a entrega dos templates originais do cliente e a decisão de provedor de IA para legendas assistidas.  
+**Progresso geral:** ████████████████░ 85%
 
 ---
 
@@ -18,17 +18,16 @@ last_updated: 2026-08-05
 
 | Fase | Status | % | Entregável |
 |---|---|---|---|
-| 1. Conversão de documentos | ✅ Concluída | 100% | `00_docs/convertidos/*.md` |
-| 2. Estudo do Contexto | ✅ Concluída | 100% | `00_docs/estudo-do-contexto.md` |
-| 3. Arquitetura de Software | ✅ Concluída | 100% | `00_docs/arquitetura.md` |
-| 3.5 Planejamento de Ciclo de Vida e Backlog | ✅ Concluída | 100% | `00_docs/projeto/ciclo-de-vida.md`, `cronograma.md`, `backlog-tarefas.md` |
-| 4. Validação com cliente (lacunas) | 🟡 Parcialmente concluída | 30% | Validação parcial concluída com base no prompt do cliente; ainda faltam respostas formais para as lacunas remanescentes (Etapa 1) |
-| 5. Prototipagem de templates PDF/DOCX | ⬜ Não iniciada | 0% | Bloqueada por B-02 (parcial — ver BL-12) |
-| 6. Implementação Backend (Fundação Técnica) | ✅ Concluída | 100% | BL-01, BL-02, BL-04, BL-05, BL-06, BL-07 concluídas — ver [04_backend/README.md](../../04_backend/README.md) |
-| 6.5 Implementação Backend (Incremento RFO) | 🟡 Em andamento | 40% | BL-08 a BL-11 (Edificações, Contratos, Visitas, Fotos) concluídas no backend — RFC 7807 global, Repository/Service Layer, 27 testes de integração novos |
-| 7. Implementação Frontend | 🟡 Em andamento | 48% | Scaffold (BL-03) concluído; login funcional (2026-07-22); telas de Edificações e Contratos (BL-08/BL-09) confirmadas funcionais em teste manual de UI; Visitas/Fotos (BL-10/BL-11) implementadas mas não re-testadas; Dashboard (BL-16) e Ocorrências (BL-14) implementados no frontend mas bloqueados por endpoints de backend ainda inexistentes; fluxo de legendas assistidas por IA entra como próxima frente (BL-35, BL-39) |
-| 8. Integração + Testes | 🟡 Em andamento | 10% | Testes E2E (BL-21) dependem das Etapas 3 e 4; integração do fluxo de fotos/legendas (BL-36 a BL-39) entra como prioridade de validação |
-| 9. Deploy + Documentação final | 🟡 Em andamento | 60% | Gestão de Configuração (DEC-14) e CI (BL-25, BL-26) concluídos; branches de deploy reorganizadas em 2026-08-05 (DEC-22: staging removida, sync automático `main`→`main_back`/`main_front` via GitHub Actions, 12 PRs do Dependabot triadas) e `garra-backend`/`garra-frontend` confirmados **live** e em dia com o código atual; falta HT-04 (segredos do banco, Pre-Deploy Command de migration, healthcheck) |
+| 1. Conversão de documentos | ✅ Concluída | 100% | Documentos originais convertidos e disponibilizados em [00_docs/convertidos/](../convertidos/) |
+| 2. Estudo do Contexto | ✅ Concluída | 100% | [00_docs/estudo-do-contexto.md](../estudo-do-contexto.md) validado com o domínio e os requisitos principais |
+| 3. Arquitetura de Software | ✅ Concluída | 100% | [00_docs/arquitetura.md](../arquitetura.md) com stack, modelo de dados e decisões principais |
+| 3.5 Planejamento de Ciclo de Vida e Backlog | ✅ Concluída | 100% | [ciclo-de-vida.md](ciclo-de-vida.md), [cronograma.md](cronograma.md) e [backlog-tarefas.md](backlog-tarefas.md) atualizados |
+| 4. Validação com cliente (lacunas) | 🟡 Parcialmente concluída | 40% | A validação parcial avançou, mas ainda faltam respostas formais para as lacunas de negócio e arquitetura que impactam offline, multiusuário e assinatura digital |
+| 5. Prototipagem de templates PDF/DOCX | 🟡 Em andamento | 35% | Há pipeline básico de geração no backend, mas a fidelidade final ainda depende dos templates originais do cliente |
+| 6. Implementação Backend (fundação + domínio) | ✅ Em grande parte concluída | 90% | APIs para edificações, contratos, inspeções, visitas, ocorrências, fotos, dashboard, portal e autenticação já existem e estão integradas ao repositório |
+| 7. Implementação Frontend | ✅ Em grande parte concluída | 85% | Login, dashboard, CRUDs de edificações/contratos, visitas, ocorrências, upload/anotação de fotos e portal do cliente já estão presentes na interface |
+| 8. Integração + Testes | 🟡 Em andamento | 75% | Testes de integração e E2E foram adicionados; a integração completa do fluxo de geração de relatório/legendas assistidas permanece pendente |
+| 9. Deploy + Documentação final | 🟡 Em andamento | 80% | Deploy no Render e infraestrutura básica já foram provisionados; ajustes finais de segredos, validação de produção e documentação operacional ainda precisam terminar |
 
 ---
 
@@ -67,10 +66,20 @@ last_updated: 2026-08-05
 | Deploy Render (Blueprint IaC) — backend, frontend e banco definidos como código | `render.yaml`, `04_backend/Dockerfile.render`, `03_frontend/Dockerfile.render`, `05_infra/.env.render.example` | 2026-07-21 | ✅ Implementado — falta HT-04 (aplicar o Blueprint no Dashboard do Render) |
 | Deploy Render via MCP — recursos de produção criados no workspace Render | `garra-db`, `garra-backend`, `garra-frontend` | 2026-08-03 | ✅ Provisionado (parcial) — pendente preencher segredos do backend, validar `/health` e confirmar alocação no project `garraengenharia` |
 | DEC-22 — Consolidação de branches de deploy: staging removida, sync automático `main`→`main_back`/`main_front` | `render.yaml`, `.github/workflows/sync-deploy-branches.yml`, `.github/workflows/ci.yml` | 2026-08-05 | ✅ Implementado e validado — `main_back`/`main_front` sincronizadas com `main` (RBAC/BL-30, dashboard, ocorrências, editor de anotação, template DOCX do contrato), deploy automático confirmado **live** em produção via MCP do Render; 8 PRs do Dependabot mescladas, 5 majors não testados fechados |
-| ⚠️ Achado crítico (2026-08-05): produção com banco desconectado | `garra-backend` (Render) | 2026-08-05 | 🔴 `GET /health` responde `"database":"unavailable"` — segredos do Postgres nunca preenchidos no serviço (HT-04, checklist item 1) e serviço criado como runtime nativo (não Docker), sem Pre-Deploy Command de migration nem Health Check Path configurados — ver checklist detalhado em HT-04 |
+| ⚠️ Achado crítico (2026-08-05): produção com banco desconectado | `garra-backend` (Render) | 2026-08-07 | 🟡 Parcialmente resolvido — em 2026-08-07 o agente aplicou via MCP todas as env vars não secretas (`ENVIRONMENT`, `BACKEND_CORS_ORIGINS`, `POSTGRES_HOST/PORT/USER/DB`, `JWT_ALGORITHM`, `JWT_ACCESS_TOKEN_EXPIRE_MINUTES`) e confirmou `NEXT_PUBLIC_API_URL` no frontend; deploy subiu `live`, mas `/health` segue `"database":"unavailable"` porque `POSTGRES_PASSWORD` e `JWT_SECRET_KEY` são segredos que o MCP não expõe/não deve manusear. Restam 4 itens de Dashboard — ver checklist em HT-04 |
+| HT-12 — Board Kanban real criado no Notion (DEC-20/ADR-11) | Notion: "Backlog — Garra Engenharia" | 2026-08-07 | ✅ Concluída — banco de dados + view "Quadro" agrupada por Status, com 52 cartões (BL-01 a BL-40 e HT-01 a HT-12) |
+| Assets oficiais de marca organizados para o frontend | `03_frontend/public/brand/logos/` | 2026-08-11 | ✅ Organizado — 4 variantes JPEG da marca foram movidas da raiz do repositório para uma pasta canônica de branding com nomes semânticos; a aplicação na interface ficou formalizada na BL-41 |
+| Pauta da sessão de validação das lacunas (entregável de agente para HT-01) | [pauta-validacao-lacunas.md](pauta-validacao-lacunas.md) | 2026-08-07 | ✅ Pronta para uso — 9 lacunas remanescentes em 4 blocos, com opções de resposta e encaminhamento pós-reunião |
+| Solicitação formal dos templates `.docx` e logo (entregável de agente para HT-02) | [solicitacao-templates-docx.md](../cliente/solicitacao-templates-docx.md) | 2026-08-07 | ✅ Pronta para envio — a logo já foi recebida em JPEG e organizada em 2026-08-11; faltam a ação humana de envio e o recebimento dos templates `.docx` originais (e, idealmente, versão vetorial/transparente da marca) |
 | Login funcional (BL-06 frontend) | `03_frontend/app/(auth)/login/page.tsx`, `components/layout/app-shell.tsx` (guarda de rota + logout) | 2026-07-22 | ✅ Implementado e validado — antes era só um placeholder; fluxo login → dashboard → logout testado via browser automatizado |
 | Fix: `NEXT_PUBLIC_API_URL` sem `/api/v1` (todas as chamadas do frontend voltavam 404) | `05_infra/.env`, `.env.example`, `docker-compose.yml`, `render.yaml`, `.env.render.example` | 2026-07-22 | ✅ Corrigido — bug afetava tanto dev local quanto o Blueprint de produção/staging do Render |
 | BL-40 — Template DOCX do Contrato de Prestação de Serviços (placeholders Jinja2) | `04_backend/app/scripts/build_contract_template_docx.py`, `04_backend/templates/contracts/contrato_revisado_template.docx`, `contrato_revisado_template.placeholders.md` | 2026-08-03 | ✅ Implementado — gerado a partir de `01_output-context/Contrato_Revisado_Garra_Software.md`; escopo administrativo/contratual, não resolve B-02/HT-02 (templates de relatório técnico) |
+| BL-31 — Editor de anotação de fotos (Fabric.js): seta, retângulo/elipse, texto, traço livre, desfazer, seletor de cor | `03_frontend/components/photo-annotation-editor.tsx`, `03_frontend/components/foto-upload.tsx` | 2026-07-29 (confirmado em 2026-08-05) | ✅ Implementado — achatamento via `canvas.toDataURL()`, integrado ao fluxo de upload (clipboard paste e arquivo manual) sem nenhuma mudança de backend; estava presente no repositório desde o commit `29ea188` mas não constava como concluído em `backlog-tarefas.md` |
+| BL-30 — RBAC: `Usuario.role`, `Responsavel.usuario_id`, `Contrato.contratante_id` + router `/portal/edificacoes` | `04_backend/app/api/deps.py` (`require_role`, `get_current_cliente_responsavel`), `app/api/v1/portal.py`, migration `5f9f3cb4d87f` | 2026-07-29 (confirmado e revalidado em 2026-08-05) | ✅ Implementado e validado — migration aplicada no Postgres de dev (`alembic current` = head); 4 testes de integração em `tests/test_rbac_portal.py` passando (acesso padrão auditor, bloqueio 403 `require_role`, escopo do contratante em `/portal/edificacoes`, 404 para cliente sem `Responsavel` vinculado); estava presente no repositório desde o commit `29ea188` mas não constava como concluído em `backlog-tarefas.md` |
+| BL-32/BL-33 — Portal do Cliente completo: dashboard, acompanhamento (visitas/ocorrências por contrato), documentos e download por URL pré-assinada | `04_backend/app/services/portal_service.py`, `app/schemas/portal.py`, `app/api/v1/portal.py`, `03_frontend/app/portal/page.tsx`, `app/portal/documentos/page.tsx` | 2026-08-07 | ✅ Implementado e validado — escopo obrigatório por `Responsavel.usuario_id` (404 para recurso de outro contratante, nunca 403, para não revelar existência); 7 testes de integração em `tests/test_portal_cliente.py` passando |
+| BL-27 — Stack de produção em VPS próprio (alternativa ao Render) | `05_infra/docker-compose.prod.yml`, `05_infra/nginx/nginx.conf` | 2026-08-07 | ✅ Implementado — imagens GHCR com `IMAGE_TAG` imutável (rollback determinístico), nenhuma porta de banco/objeto publicada, TLS via certbot com renovação automática, rate limit de borda em `/api/v1/auth/login`, HSTS/CSP |
+| BL-29 — Backup e restauração (RNF-08) | `05_infra/backup/backup-db.sh`, `restore-db.sh`, `05_infra/README.md` | 2026-08-07 | ✅ Implementado — `pg_dump --format=custom` + espelho do bucket MinIO, retenção aplicada só após dump válido; restore exige confirmação explícita e salva dump `pre-restore`. Destino externo do backup segue `[A ESCLARECER]` (RNF-08) |
+| BL-23 — Revisão de segurança OWASP Top 10 (DEC-24) | `00_docs/projeto/revisao-seguranca-owasp.md`, `04_backend/app/core/rate_limit.py`, `app/core/middleware.py`, `app/scripts/seed_admin.py`, `tests/test_seguranca.py` | 2026-08-07 | ✅ Concluída — 6 achados corrigidos: registro público de auditor (A01, **falha crítica real**), força bruta no login (A07), `/docs` em produção e `JWT_SECRET_KEY` default (A05), cabeçalhos de segurança (A05) e `X-Request-ID` (A09); 8 testes automatizados |
 
 ---
 
@@ -89,7 +98,7 @@ last_updated: 2026-08-05
 3. **Laudo de Vistoria Cautelar de Recebimento** (§2.3) — referência convertida `Laudo_Tecnico_de_Vistoria_Cautelar_de_Recebimento_-_Reforma_New_York_-_V01.md`; falta o `.docx` original.
 4. **Vistoria de Imóvel Residencial** (§2.4) — referência convertida `Laudo_Tecnico_de_Vistoria_de_Imovel_Residencial_-_Ap_1404.md`; falta o `.docx` original.
 5. **RFIP — Relatório Fotográfico de Inspeção Predial** (§2.5) — referência convertida `Relatorio_Fotografico_de_Inspecao_Predial_-_CORTINA_DAMPAREZZO_-_Versao_Final.md`; falta o `.docx` original.
-6. **Logo da Garra Engenharia em alta resolução** (vetor `.svg`/`.ai` ou `.png` transparente) — exigido por RN-07 para o cabeçalho de todos os relatórios/laudos acima; ainda não recebido.
+6. **Logo da Garra Engenharia em alta resolução** (vetor `.svg`/`.ai` ou `.png` transparente) — exigido por RN-07 para o cabeçalho de todos os relatórios/laudos acima; em 2026-08-11 foram recebidas 4 variantes JPEG e organizadas em `03_frontend/public/brand/logos/`, mas a versão vetorial/transparente segue recomendada para PWA, favicon e relatórios com fidelidade máxima.
 
 > Nenhum desses 5 modelos tem o `.docx`/`.xlsm` original no repositório — apenas as versões `.md` convertidas em [00_docs/convertidos/](../convertidos/), que servem só de referência aproximada de conteúdo/estrutura, não de layout fiel (fontes, margens, estilos, cabeçalho com logo). BL-40 (template do **contrato administrativo**, não um relatório técnico) não conta para esta lista e não resolve B-02.
 
@@ -103,15 +112,16 @@ last_updated: 2026-08-05
 
 ## Próximos Passos (em ordem)
 
-1. **[IMEDIATO]** Concluir a validação formal das lacunas remanescentes em `estudo-do-contexto.md` (#1, #2, #3, #4, #5, #7, #8, #9, #10), tendo em vista que #6/#11/#12 já foram resolvidas via DEC-18 e #13 foi esclarecida parcialmente pelo prompt do cliente — reduz o impacto de B-01 (Etapa 1)
-2. **[IMEDIATO]** Solicitar ao cliente os 5 arquivos `.docx`/`.xlsm` originais de template — RFO, LTIP, Vistoria Cautelar de Recebimento, Vistoria de Imóvel Residencial e RFIP — e o logo em alta resolução (ver lista detalhada em [Bloqueios Ativos](#bloqueios-ativos)) — resolve B-02 (Etapa 2)
-3. Finalizar HT-04 no Render: preencher segredos do backend (`POSTGRES_*`, `JWT_SECRET_KEY`, `MINIO_*`), rodar deploy manual e validar `GET /health`
-4. Confirmar no Dashboard Render que os recursos estão no project/grupo `garraengenharia` (ou mover para ele, se necessário)
-5. Re-testar em UI o frontend de Visitas (BL-10) e Upload de fotos (BL-11) — Edificações e Contratos (BL-08/BL-09) já confirmados funcionais em 2026-07-22; implementar os endpoints de backend pendentes de Ocorrências (BL-14) e agregação do Dashboard (BL-16) para desbloquear os frontends já prontos dessas telas
-6. Definir o provedor de IA e a política de dados para desbloquear BL-34 e a extensão BL-36 a BL-39 do fluxo de legendas assistidas por IA
-7. Validar `00_docs/arquitetura.md` com o cliente (stack, modelo de dados)
-8. Configurar manualmente a proteção de branch `main` no GitHub (HT — ação humana, ver `backlog-tarefas-humanas.md`)
-9. Acompanhar `00_docs/projeto/cronograma.md` e `00_docs/projeto/backlog-tarefas.md` para priorização contínua do backlog
+1. **[IMEDIATO — 2 cliques no Dashboard do Render]** Adicionar `POSTGRES_PASSWORD` (via "Add from Database" apontando para `garra-db`) e `JWT_SECRET_KEY` no serviço `garra-backend`; em seguida definir Pre-Deploy Command (`cd 04_backend && alembic upgrade head`) e Health Check Path (`/health`). ⚠️ **A partir de DEC-24, com `ENVIRONMENT=production` o backend NÃO SOBE sem uma `JWT_SECRET_KEY` de pelo menos 32 caracteres** (fail-closed proposital, OWASP A05) — checklist completo em [HT-04](backlog-tarefas-humanas.md#ht-04--aplicar-o-blueprint-do-render-ou-provisionar-servidorvps-alternativo-e-registrar-domínio)
+2. **[IMEDIATO]** Enviar ao cliente a solicitação dos 5 arquivos `.docx`/`.xlsm` originais de template e do logo — texto pronto em [solicitacao-templates-docx.md](../cliente/solicitacao-templates-docx.md) — resolve B-02 e destrava BL-12/BL-13/BL-17/BL-19/HT-09
+3. **[IMEDIATO]** Agendar a sessão de validação das lacunas remanescentes (#1, #2, #3, #4, #5, #7, #8, #9, #10) — pauta pronta em [pauta-validacao-lacunas.md](pauta-validacao-lacunas.md) — reduz B-01 e destrava BL-15
+4. Rodar `gh auth login` e aplicar a proteção das branches `main`/`main_back`/`main_front` (HT-05) — comando pronto em [backlog-tarefas-humanas.md](backlog-tarefas-humanas.md#ht-05--configurar-proteção-das-branches-mainmain_frontmain_back-no-github)
+5. Rodar `python -m app.scripts.seed_admin` no ambiente de produção (Shell do Render) para criar o auditor de bootstrap — obrigatório desde DEC-24, pois `POST /auth/register` deixou de ser público
+6. Confirmar no Dashboard Render que os recursos estão no project/grupo `garraengenharia` (ou mover para ele, se necessário)
+7. Executar BL-41 com o agente `Especialista UI/UX`: refatorar o frontend para aplicar as logos oficiais em landing, login, shell autenticado, metadata e PWA, substituindo o placeholder `public/icon.svg` e a nomenclatura legada da marca
+8. Re-testar em UI o frontend de Visitas (BL-10) e Upload de fotos (BL-11); validar as regras de negócio de Ocorrências (BL-14) e do agregado do Dashboard (BL-16), cujos endpoints já existem
+9. Definir o provedor de IA e a política de dados para desbloquear BL-34 e a extensão BL-36 a BL-39 (item do Bloco 4 da pauta) — única frente de engenharia relevante ainda parada
+10. Validar `00_docs/arquitetura.md` com o cliente (stack, modelo de dados)
 
 > **Regra de atualização:** ao concluir qualquer tarefa do backlog, atualizar imediatamente o status em `backlog-tarefas.md`, `backlog-tarefas-humanas.md` (se aplicável) e neste arquivo, desbloqueando (🔴→🟢) toda tarefa dependente que tinha a tarefa concluída como pré-requisito.
 
@@ -131,6 +141,6 @@ last_updated: 2026-08-05
 | Entidades no modelo ER | 14 |
 | Endpoints de API definidos | 30+ |
 | Tarefas no backlog | 39 (BL-01 a BL-39) |
-| Tarefas concluídas | 12+ (fundação técnica + BL-08/BL-09/BL-20/BL-25/BL-26, com BL-10/BL-11 já parcialmente integrados) |
-| Tarefas desbloqueadas para início imediato | 10 (BL-08 a BL-11, BL-14, BL-16, BL-27, BL-29, BL-30, BL-31) |
+| Tarefas concluídas | 14+ (fundação técnica + BL-08/BL-09/BL-20/BL-25/BL-26/BL-30/BL-31/BL-40, com BL-10/BL-11/BL-14/BL-16 já parcialmente integrados) |
+| Tarefas desbloqueadas para início imediato | 10 (BL-08 a BL-11, BL-14, BL-16, BL-27, BL-29, BL-32, BL-33) |
 | Prompts de tarefas criados | 22 (`14-*` a `39-*`) |

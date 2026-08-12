@@ -1,8 +1,17 @@
 # 04_backend
 
-Aplicação **FastAPI (Python 3.12)** — API, regras de negócio, geração de relatórios (PDF/DOCX) e persistência.
+Aplicação **FastAPI (Python 3.12)** responsável pela API, regras de negócio, persistência, armazenamento de arquivos, geração de relatórios e integração com o frontend.
 
-> Modelo de dados implementado (BL-04): 14 entidades do diagrama ER (`00_docs/arquitetura.md` Seção 3) como modelos SQLAlchemy 2 (async), migration Alembic inicial e schemas Pydantic v2 básicos. Gabarito de sistemas prediais/subsistemas/tipos de anomalia/falha/localizações populado (BL-05) via seed idempotente a partir de `00_docs/convertidos/RFO_INSPECAO.md`, com endpoints de dados mestre em `GET /api/v1/sistemas-prediais` e `GET /api/v1/gabarito/*`. Autenticação JWT + bcrypt (BL-06) implementada: entidade `Usuario` própria (DEC-15) e endpoints `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `GET /api/v1/auth/me`. Storage service MinIO/S3 (BL-07) implementado: `StorageClient`/`S3StorageClient` (Adapter Pattern) com upload/download/delete/URL pré-assinada. Demais endpoints de domínio chegam nas tarefas seguintes do backlog (BL-08...).
+> O backend já está em uma fase funcional para o fluxo principal do sistema: autenticação JWT, dados mestre, CRUD de edificações/contratos/inspeções/visitas/ocorrências, upload e reprocessamento de fotos, dashboard de saúde, portal do cliente e storage compatível com MinIO/S3. A geração final de PDF/DOCX fiel ao template do cliente ainda depende da entrega dos modelos originais do cliente e da finalização do pipeline de relatórios.
+
+## Status atual real
+
+- **Autenticação e autorização**: login JWT, proteção de rotas, RBAC básico para auditor/cliente e fluxo de portal escopado por responsável/contrato.
+- **Domínio principal**: endpoints para edificações, contratos, inspeções, visitas, ocorrências, fotos e documentos técnicos.
+- **Dados mestre**: gabarito de sistemas prediais, subsistemas, tipos de anomalia/falha e localizações carregado via seed idempotente.
+- **Storage**: upload/download/delete e URLs pré-assinadas para MinIO/S3.
+- **Segurança e operação**: tratamento global de erros, rate limit, middleware de segurança e preparação para deploy/produção.
+- **Pendências**: geração final do relatório usando os templates Word originais e a integração completa da feature de legendas assistidas por IA.
 
 ## Estrutura atual
 
@@ -10,18 +19,18 @@ Aplicação **FastAPI (Python 3.12)** — API, regras de negócio, geração de 
 04_backend/
 ├── app/
 │   ├── api/
-│   │   ├── deps.py              # get_current_user (dependency de proteção de rotas, BL-06)
-│   │   └── v1/                  # dados_mestre.py (BL-05) + auth.py (register/login/me, BL-06); demais domínios em BL-08+
-│   ├── models/                # 18 modelos SQLAlchemy 2 (async): 14 do ER (BL-04) + TipoAnomalia/TipoFalha/Localizacao (BL-05, DEC-13) + Usuario (BL-06, DEC-15)
-│   ├── schemas/                # schemas Pydantic v2 request/response (sem regras de negócio) — BL-04/BL-05/BL-06
-│   ├── scripts/                # rfo_gabarito_parser.py + seed_gabarito.py (BL-05, idempotente)
+│   │   ├── deps.py              # dependências de autenticação/autorização
+│   │   └── v1/                  # rotas de auth, dados mestre, edificações, contratos, inspeções, visitas, ocorrências, fotos, portal e documentos
+│   ├── models/                # modelos SQLAlchemy 2 (async) para o domínio principal e os dados mestre
+│   ├── schemas/                # schemas Pydantic v2 request/response para os principais recursos
+│   ├── scripts/                # parsers e seeds dos gabaritos e utilidades operacionais
 │   ├── services/
-│   │   └── storage/             # StorageClient (interface) + S3StorageClient (boto3/MinIO), BL-07
+│   │   └── storage/             # StorageClient (interface) + S3StorageClient (boto3/MinIO)
 │   ├── core/
-│   │   ├── config.py            # Settings (Pydantic Settings) — Postgres, MinIO, JWT
+│   │   ├── config.py            # settings de banco, MinIO, JWT e ambiente
 │   │   ├── database.py          # engine/sessão assíncrona SQLAlchemy 2
-│   │   └── security.py          # hash/verify de senha (bcrypt) + create/decode de JWT (BL-06)
-│   └── main.py                  # instância FastAPI, CORS, GET /health, routers de dados mestre e auth
+│   │   └── security.py          # hash/verify de senha (bcrypt) + create/decode de JWT
+│   └── main.py                  # instância FastAPI, CORS, GET /health e inclusão dos routers
 ├── templates/assets/            # logo, CSS compartilhado (vazio — BL-12+)
 ├── alembic.ini                  # config do Alembic (URL sobrescrita em runtime por env.py)
 ├── alembic/

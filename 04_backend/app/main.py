@@ -19,17 +19,31 @@ from app.api.v1.dashboard import router as dashboard_router
 from app.api.v1.inspecoes import router as inspecoes_router
 from app.api.v1.ocorrencias import router as ocorrencias_router
 from app.api.v1.portal import router as portal_router
+from app.api.v1.responsaveis import router as responsaveis_router
 from app.api.v1.visitas import router as visitas_router
 from app.core.config import get_settings
 from app.core.database import engine
 from app.core.exception_handlers import register_exception_handlers
+from app.core.middleware import RequestIdMiddleware, SecurityHeadersMiddleware
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
-app = FastAPI(title=settings.app_name, version="0.1.0")
+# Documentação interativa só em desenvolvimento (OWASP A05, arquitetura.md Seção 10.1).
+_docs_habilitados = settings.is_development
+
+app = FastAPI(
+    title=settings.app_name,
+    version="0.1.0",
+    docs_url="/docs" if _docs_habilitados else None,
+    redoc_url="/redoc" if _docs_habilitados else None,
+    openapi_url="/openapi.json" if _docs_habilitados else None,
+)
+
+app.add_middleware(SecurityHeadersMiddleware, hsts=not settings.is_development)
+app.add_middleware(RequestIdMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -45,6 +59,7 @@ app.include_router(dados_mestre_router)
 app.include_router(auth_router)
 app.include_router(edificacoes_router)
 app.include_router(contratos_router)
+app.include_router(responsaveis_router)
 app.include_router(inspecoes_router)
 app.include_router(visitas_router)
 app.include_router(fotos_router)

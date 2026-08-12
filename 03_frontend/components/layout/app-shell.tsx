@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LogOut, Menu } from "lucide-react";
 
-import { navItems } from "./nav-items";
+import { navItems, portalNavItems } from "./nav-items";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -34,10 +34,16 @@ function BrandMark() {
 }
 
 function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+  const items = pathname.startsWith("/portal") ? portalNavItems : navItems;
   return (
     <nav aria-label="Navegação principal" className="flex flex-col gap-1">
-      {navItems.map((item) => {
-        const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+      {items.map((item) => {
+        // Itens-raiz (ex.: `/portal`) só ficam ativos em match exato — senão ficariam
+        // ativos junto com todos os seus filhos (`/portal/documentos`).
+        const isRoot = items.some((outro) => outro !== item && outro.href.startsWith(`${item.href}/`));
+        const isActive = isRoot
+          ? pathname === item.href
+          : pathname === item.href || pathname.startsWith(`${item.href}/`);
         const Icon = item.icon;
         return (
           <Link

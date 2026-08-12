@@ -1,0 +1,2 @@
+# Certificados TLS emitidos pelo Let's Encrypt nunca são versionados.
+certs/

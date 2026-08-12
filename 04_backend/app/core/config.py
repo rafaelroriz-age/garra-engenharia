@@ -7,6 +7,7 @@ injetadas diretamente pelo serviço `backend` e este arquivo `.env` não é nece
 """
 from functools import lru_cache
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -58,6 +59,23 @@ class Settings(BaseSettings):
     def cors_origins_list(self) -> list[str]:
         """Lista de origens permitidas para CORS a partir da string separada por vírgulas."""
         return [origin.strip() for origin in self.backend_cors_origins.split(",") if origin.strip()]
+
+    @property
+    def is_development(self) -> bool:
+        return self.environment.lower() in {"development", "dev", "local", "test"}
+
+    @model_validator(mode="after")
+    def _validar_segredos_de_producao(self) -> "Settings":
+        """Fail-closed (OWASP A05, BL-23): impede subir produção com segredo default."""
+        if not self.is_development:
+            if self.jwt_secret_key in {"", "changeme"} or len(self.jwt_secret_key) < 32:
+                raise ValueError(
+                    "JWT_SECRET_KEY ausente, default ou curta demais para ENVIRONMENT="
+                    f"'{self.environment}'. Defina um valor aleatório de pelo menos 32 caracteres."
+                )
+            if "*" in self.cors_origins_list:
+                raise ValueError("BACKEND_CORS_ORIGINS não pode ser '*' fora de desenvolvimento.")
+        return self
 
 
 @lru_cache
