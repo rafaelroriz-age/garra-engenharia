@@ -22,6 +22,8 @@ Aplicação **Next.js 14 (App Router) PWA** que funciona como interface web/mobi
 │   └── page.tsx                  # página inicial navegável (hub de rotas)
 ├── components/
 │   ├── ui/                       # shadcn/ui (button, card, badge, sheet, avatar, skeleton...)
+│   ├── brand/
+│   │   └── logo.tsx              # componente `<Logo variant="..." />` — única forma de renderizar a marca oficial
 │   ├── layout/
 │   │   ├── nav-items.ts          # itens de navegação principal
 │   │   └── app-shell.tsx         # sidebar desktop + menu mobile (Sheet), a11y
@@ -29,9 +31,9 @@ Aplicação **Next.js 14 (App Router) PWA** que funciona como interface web/mobi
 │   └── under-construction.tsx    # placeholder padrão para telas ainda não implementadas
 ├── public/
 │   ├── brand/
-│   │   └── logos/                # assets oficiais de marca recebidos do cliente (JPEGs organizados)
+│   │   └── logos/                # assets oficiais de marca (JPEGs) — ver convenção de uso abaixo
 │   ├── manifest.json             # manifest da PWA (display: standalone)
-│   └── icon.svg                  # ícone legado/placeholder a ser substituído na BL-41
+│   └── icon.svg                  # símbolo derivado do skyline oficial (favicon/PWA, BL-41)
 ├── Dockerfile                    # imagem de desenvolvimento (`next dev`)
 ├── components.json               # config shadcn/ui (style "new-york", Tailwind v3)
 └── tailwind.config.ts / app/globals.css  # tema (cores da marca + tokens shadcn)
@@ -65,14 +67,18 @@ npm run lint    # ESLint
 ## Notas de implementação
 
 - **UI kit**: [shadcn/ui](https://ui.shadcn.com) (CLI clássica `2.10.0`, estilo `new-york`, Tailwind v3.4 — **não** a v4/"Nova" preset, incompatível com este projeto).
-- **Assets de marca oficiais**: os arquivos recebidos do cliente foram organizados em `public/brand/logos/` com nomes semânticos:
-	- `logo-principal-fundo-claro.jpg`
-	- `logo-horizontal-negativa-fundo-preto.jpg`
-	- `logo-contorno-fundo-preto.jpg`
-	- `logo-compacta-negativa-fundo-ardosia.jpg`
-- **Uso recomendado da marca**: variante principal em superfícies claras e institucionais; variante horizontal negativa em headers/áreas escuras; variante compacta negativa em navegação com pouco espaço; variante em contorno apenas como apoio decorativo, nunca como marca principal de navegação ou PWA.
-- **Ícones da PWA**: `public/icon.svg` ainda é o placeholder ativo. A substituição por ícone derivado da marca oficial ficou formalizada na BL-41; ao executá-la, gerar também os PNGs 192×192/512×512 e atualizar `public/manifest.json`.
-- **Cores/fontes**: extraídas dos wireframes em [02_prototipos/](../02_prototipos/) (navy `#1e3a5f`, laranja `#f97316`; fontes Inter + Manrope).
+- **Marca oficial "Garra Perícias e Avaliações" (BL-41)**: os 4 arquivos recebidos do cliente estão em `public/brand/logos/` com nomes semânticos:
+	- `logo-principal-fundo-claro.jpg` — variante principal (fundo claro/creme)
+	- `logo-horizontal-negativa-fundo-preto.jpg` — variante horizontal negativa (fundo preto)
+	- `logo-compacta-negativa-fundo-ardosia.jpg` — variante compacta negativa (fundo ardósia)
+	- `logo-contorno-fundo-preto.jpg` — variante em contorno, **somente decorativa/opcional**; nunca usada como marca principal em navegação, login, manifest ou favicon (atualmente não aplicada em nenhuma tela — reservada para uso decorativo futuro, ex.: fundo institucional de baixo contraste)
+
+  **Nunca use os arquivos JPEG diretamente** em JSX/CSS — todos passam pelo componente `components/brand/logo.tsx` (`<Logo variant="principal" | "horizontal" | "compacta" />`), que renderiza cada variante como um "selo" (`rounded-md overflow-hidden`), já que os JPEGs não têm transparência e trazem o próprio fundo embutido:
+	- `principal` → landing (Card institucional) e tela de login (fundo claro)
+	- `horizontal` → header da landing (fundo escuro, espaço horizontal amplo)
+	- `compacta` → `AppShell` (sidebar desktop + topbar/menu mobile — espaço reduzido)
+- **Ícone/favicon/PWA**: `public/icon.svg` deixou de ser o placeholder com a letra "G" e passou a ser um símbolo vetorial simplificado, derivado do skyline (casas + torres) da marca oficial, em fundo ardósia (`#253341`) — legível em tamanhos pequenos onde a logo completa não caberia. `theme_color` do `manifest.json` e do `viewport` em `app/layout.tsx` foram alinhados ao mesmo tom.
+- **Cores/fontes**: navy `#1e3a5f` (`--primary`) e laranja `#f97316` (`--brand-accent`) seguem em uso como paleta funcional (botões, destaques, ícones dos cards da home) — não fazem parte dos arquivos de logo oficiais, que usam azul acinzentado, ardósia, preto e creme. Uma eventual repintura de `--primary`/`--sidebar` para o tom ardósia exato só faz sentido com uma versão vetorial da marca (pendência de BL-19); por ora, o componente `Logo` isola essa diferença de tom em um selo com cantos arredondados, evitando qualquer recorte retangular acidental sobre o fundo da tela. Fontes: Inter + Manrope.
 - **Rotas de `inspecoes/[id]/*`**: não aparecem na navegação global (`components/layout/nav-items.ts`) — são acessadas a partir do contexto de uma edificação/contrato.
 
 ## Testes E2E (Playwright, BL-21)

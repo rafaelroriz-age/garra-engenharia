@@ -720,6 +720,32 @@ garra-engenharia/
 
 ---
 
+### ADR-13 — Templates de Relatório Derivados dos Originais `.xlsx`/`.xlsm`/PDF, sem depender de `.docx` do cliente
+
+**Contexto:** o projeto tratava a ausência dos arquivos `.docx` de template como bloqueio (B-02) para a geração fiel de PDF/DOCX (RNF-03, RF-06). O inventário de `01_output-context/` (2026-08-12) mostrou que os originais sempre estiveram disponíveis, em outro formato: RFO em `RFO INSPEÇÃO .xlsx` (77,9 MB) e `Relatório de Fiscalização 1.xlsm` (17,5 MB); RFIP em `Relatório Fotográfico de Inspeção Predial - CORTINA D'AMPAREZZO - Versão Final.xlsx` (479,3 MB); LTIP, Vistoria Cautelar e Vistoria Residencial em PDF final de alta fidelidade (32,5 / 38,5 / 21,5 MB). O `.docx` nunca chegou porque o cliente não produz esses documentos em Word — o fluxo real é planilha (RFO/RFIP) e PDF distribuído (laudos). A planilha do RFO já é, inclusive, a fonte do gabarito de sistemas prediais (ADR/DEC-13).
+
+**Alternativas consideradas:**
+- **Aguardar o `.docx` do cliente** — rejeitada: o artefato não existe na origem; a espera é indefinida e mantém BL-12/BL-13/BL-17 paradas sem qualquer contrapartida técnica.
+- **Adotar o Excel como formato de saída (openpyxl escrevendo sobre o original como template)** — rejeitada como formato primário da v1.0: RF-06 exige PDF e DOCX editável, o `.xlsm` carrega macros VBA (superfície de execução indesejada, OWASP A08) e os arquivos originais chegam a centenas de MB. Mantida como possível formato adicional na v1.1, se o cliente exigir continuidade do fluxo em planilha.
+- **Transcrever manualmente o layout a partir dos `.md` convertidos** — rejeitada pelo mesmo racional do parser do gabarito (BL-05/DEC-13): a conversão `.md` perde fonte, margem, mesclagem de células e cabeçalho, e a transcrição manual não é reprodutível nem auditável.
+
+**Decisão:** os templates são construídos internamente por script determinístico, com dois pipelines de extração conforme o formato de origem, convergindo para um artefato intermediário único:
+
+| Origem | Documentos | Extração | Saída |
+|---|---|---|---|
+| Planilha (`.xlsx`/`.xlsm`) | RFO, RFIP | `openpyxl` em modo somente leitura: área de impressão, cabeçalho/rodapé, ordem e largura de colunas, células mescladas, estilos de fonte, imagens ancoradas | `04_backend/templates/<tipo>/layout.json` |
+| PDF final | LTIP, Vistoria Cautelar, Vistoria Residencial | `pypdf`/`pdfplumber`: família e corpo de fonte, margens, cores, posição da logo e da numeração de páginas | `04_backend/templates/<tipo>/layout.json` |
+
+Do `layout.json` — versionado no repositório — derivam tanto o `.html.j2` consumido pelo WeasyPrint (ADR-01) quanto o `.docx` consumido pelo docxtpl (ADR-04), seguindo o padrão de script determinístico já validado em `build_contract_template_docx.py` (BL-40). Um `.docx` eventualmente entregue pelo cliente passa a ser insumo **opcional** de refinamento, nunca pré-requisito.
+
+**Justificativa:** substitui uma dependência externa insatisfazível pela referência de fidelidade mais precisa disponível — a planilha viva e o PDF final preservam exatamente a informação de layout que o `.md` convertido descarta. A camada intermediária `layout.json` evita reprocessar originais pesados (que ficam fora do Git) a cada ajuste e garante que PDF e DOCX derivem da mesma especificação, impedindo divergência entre os dois formatos exigidos por RF-06.
+
+**Consequências:** BL-12, BL-13 e BL-17 deixam de estar bloqueadas por B-02, que passa a cobrir apenas a logo vetorial/transparente (RN-07). Os originais permanecem em `01_output-context/` fora do controle de versão — os scripts de extração recebem o caminho por parâmetro/variável de ambiente e falham explicitamente se o arquivo não estiver presente, em vez de assumir o repositório. O `.xlsm` nunca é executado, apenas lido sem carregar VBA (OWASP A08); o RFIP de 479 MB exige leitura `read_only`/streaming para não estourar memória do worker. HT-09 (validação visual de fidelidade) passa a comparar o gerado contra o original `.xlsx`/PDF, não contra o `.md`.
+
+**Referência** | `00_docs/projeto/decisoes.md` DEC-25
+
+---
+
 ## 9. Padrões de Projeto (Design Patterns)
 
 O backend segue uma **arquitetura em camadas** (layered architecture) que isola regra de negócio, acesso a dados e infraestrutura. A tabela resume os padrões adotados; os mais relevantes para o domínio (geração de relatórios) são detalhados em seguida.
@@ -963,7 +989,7 @@ Conforme `00_docs/projeto/escopo.md` (fora de escopo da v1.0) e a lacuna #3 de `
 |---|---|---|---|
 | **RNF-01** | Usabilidade mobile em campo (PWA, sem app nativo) | Next.js 14 PWA, `manifest.json` `display: standalone`, componentes shadcn/ui responsivos | ADR-03, Seção 1 |
 | **RNF-02** | Operação offline | Cache de leitura via Service Worker; escrita offline completa fica fora da v1.0 (posição interina) | Seção 10.8 |
-| **RNF-03** | Fidelidade ao template | WeasyPrint + Jinja2 (PDF) e docxtpl (DOCX) usando o arquivo original do cliente como template | ADR-01, ADR-04, Seção 5 |
+| **RNF-03** | Fidelidade ao template | WeasyPrint + Jinja2 (PDF) e docxtpl (DOCX), com os templates derivados por script determinístico dos originais `.xlsx`/`.xlsm` (RFO, RFIP) e PDF (LTIP, vistorias) do cliente | ADR-01, ADR-04, ADR-13, Seção 5 |
 | **RNF-04** | Exportação PDF e DOCX | Pipeline dual (Template Method) gera ambos os formatos a partir do mesmo contexto de dados | Seção 5, Seção 9.8 |
 | **RNF-05** | Autenticação | JWT + bcrypt, rate limiting em `/auth/login`, refresh token | Seção 1, Seção 10.1 (A07) |
 | **RNF-06** | Performance de geração (< 60s, 200 págs., 150+ fotos) | Processamento assíncrono via Celery/Redis fora do ciclo HTTP; compressão de imagens antes da renderização | ADR-06, Seção 10.2 |

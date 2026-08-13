@@ -6,9 +6,10 @@ import { useRouter } from "next/navigation";
 import { api, ApiError, setAuthToken } from "@/lib/api-client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Logo } from "@/components/brand/logo";
 import { ApiErrorAlert } from "@/components/api-error-alert";
 
 interface TokenResponse {
@@ -41,11 +42,10 @@ export default function LoginPage() {
 
   return (
     <Card className="w-full max-w-sm">
-      <CardHeader className="space-y-2 text-center">
-        <span className="mx-auto grid h-10 w-10 place-items-center rounded-lg bg-brand-accent font-display text-lg font-extrabold text-white">
-          G
-        </span>
-        <CardTitle className="font-display text-xl">Garra Engenharia</CardTitle>
+      <CardHeader className="space-y-3 text-center">
+        <Logo variant="principal" className="mx-auto h-16" priority />
+        <CardTitle className="font-display text-xl">Acessar sua conta</CardTitle>
+        <CardDescription>Informe suas credenciais para continuar.</CardDescription>
         <Badge variant="outline" className="mx-auto w-fit">
           RNF-05 · BL-06
         </Badge>

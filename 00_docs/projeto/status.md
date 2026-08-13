@@ -3,13 +3,13 @@ title: Status do Projeto — Sistema de Automação de Relatórios Prediais
 type: gestao
 status: ativo
 owner: Garra Engenharia
-last_updated: 2026-08-11
+last_updated: 2026-08-12
 ---
 
 # Status do Projeto
 
-**Última atualização:** 2026-08-11  
-**Fase atual:** MVP funcional do sistema em evolução, com backend e frontend já operando para os fluxos principais de cadastro, inspeção, ocorrências, dashboard e portal do cliente. O principal gargalo restante continua sendo a entrega dos templates originais do cliente e a decisão de provedor de IA para legendas assistidas.  
+**Última atualização:** 2026-08-12  
+**Fase atual:** MVP funcional do sistema em evolução, com backend e frontend já operando para os fluxos principais de cadastro, inspeção, ocorrências, dashboard e portal do cliente. Com a reclassificação de B-02 (DEC-25/ADR-13), o gargalo dos templates deixa de existir — restam a decisão de provedor de IA para legendas assistidas e a validação formal das lacunas de negócio.  
 **Progresso geral:** ████████████████░ 85%
 
 ---
@@ -23,7 +23,7 @@ last_updated: 2026-08-11
 | 3. Arquitetura de Software | ✅ Concluída | 100% | [00_docs/arquitetura.md](../arquitetura.md) com stack, modelo de dados e decisões principais |
 | 3.5 Planejamento de Ciclo de Vida e Backlog | ✅ Concluída | 100% | [ciclo-de-vida.md](ciclo-de-vida.md), [cronograma.md](cronograma.md) e [backlog-tarefas.md](backlog-tarefas.md) atualizados |
 | 4. Validação com cliente (lacunas) | 🟡 Parcialmente concluída | 40% | A validação parcial avançou, mas ainda faltam respostas formais para as lacunas de negócio e arquitetura que impactam offline, multiusuário e assinatura digital |
-| 5. Prototipagem de templates PDF/DOCX | 🟡 Em andamento | 35% | Há pipeline básico de geração no backend, mas a fidelidade final ainda depende dos templates originais do cliente |
+| 5. Prototipagem de templates PDF/DOCX | 🟡 Em andamento | 45% | Há pipeline básico de geração no backend; a partir de DEC-25/ADR-13 os templates passam a ser derivados dos originais `.xlsx`/`.xlsm`/PDF já disponíveis em `01_output-context/`, sem depender de entrega adicional do cliente |
 | 6. Implementação Backend (fundação + domínio) | ✅ Em grande parte concluída | 90% | APIs para edificações, contratos, inspeções, visitas, ocorrências, fotos, dashboard, portal e autenticação já existem e estão integradas ao repositório |
 | 7. Implementação Frontend | ✅ Em grande parte concluída | 85% | Login, dashboard, CRUDs de edificações/contratos, visitas, ocorrências, upload/anotação de fotos e portal do cliente já estão presentes na interface |
 | 8. Integração + Testes | 🟡 Em andamento | 75% | Testes de integração e E2E foram adicionados; a integração completa do fluxo de geração de relatório/legendas assistidas permanece pendente |
@@ -70,7 +70,7 @@ last_updated: 2026-08-11
 | HT-12 — Board Kanban real criado no Notion (DEC-20/ADR-11) | Notion: "Backlog — Garra Engenharia" | 2026-08-07 | ✅ Concluída — banco de dados + view "Quadro" agrupada por Status, com 52 cartões (BL-01 a BL-40 e HT-01 a HT-12) |
 | Assets oficiais de marca organizados para o frontend | `03_frontend/public/brand/logos/` | 2026-08-11 | ✅ Organizado — 4 variantes JPEG da marca foram movidas da raiz do repositório para uma pasta canônica de branding com nomes semânticos; a aplicação na interface ficou formalizada na BL-41 |
 | Pauta da sessão de validação das lacunas (entregável de agente para HT-01) | [pauta-validacao-lacunas.md](pauta-validacao-lacunas.md) | 2026-08-07 | ✅ Pronta para uso — 9 lacunas remanescentes em 4 blocos, com opções de resposta e encaminhamento pós-reunião |
-| Solicitação formal dos templates `.docx` e logo (entregável de agente para HT-02) | [solicitacao-templates-docx.md](../cliente/solicitacao-templates-docx.md) | 2026-08-07 | ✅ Pronta para envio — a logo já foi recebida em JPEG e organizada em 2026-08-11; faltam a ação humana de envio e o recebimento dos templates `.docx` originais (e, idealmente, versão vetorial/transparente da marca) |
+| Solicitação formal dos templates `.docx` e logo (entregável de agente para HT-02) | [solicitacao-templates-docx.md](../cliente/solicitacao-templates-docx.md) | 2026-08-07 | ⚠️ **Obsoleta em 2026-08-12** — o inventário de `01_output-context/` mostrou que os originais (`.xlsx`/`.xlsm`/PDF) sempre estiveram disponíveis; a solicitação deve ser reduzida à confirmação de versão vigente + logo vetorial (ver DEC-25/ADR-13 e HT-02) |
 | Login funcional (BL-06 frontend) | `03_frontend/app/(auth)/login/page.tsx`, `components/layout/app-shell.tsx` (guarda de rota + logout) | 2026-07-22 | ✅ Implementado e validado — antes era só um placeholder; fluxo login → dashboard → logout testado via browser automatizado |
 | Fix: `NEXT_PUBLIC_API_URL` sem `/api/v1` (todas as chamadas do frontend voltavam 404) | `05_infra/.env`, `.env.example`, `docker-compose.yml`, `render.yaml`, `.env.render.example` | 2026-07-22 | ✅ Corrigido — bug afetava tanto dev local quanto o Blueprint de produção/staging do Render |
 | BL-40 — Template DOCX do Contrato de Prestação de Serviços (placeholders Jinja2) | `04_backend/app/scripts/build_contract_template_docx.py`, `04_backend/templates/contracts/contrato_revisado_template.docx`, `contrato_revisado_template.placeholders.md` | 2026-08-03 | ✅ Implementado — gerado a partir de `01_output-context/Contrato_Revisado_Garra_Software.md`; escopo administrativo/contratual, não resolve B-02/HT-02 (templates de relatório técnico) |
@@ -80,6 +80,7 @@ last_updated: 2026-08-11
 | BL-27 — Stack de produção em VPS próprio (alternativa ao Render) | `05_infra/docker-compose.prod.yml`, `05_infra/nginx/nginx.conf` | 2026-08-07 | ✅ Implementado — imagens GHCR com `IMAGE_TAG` imutável (rollback determinístico), nenhuma porta de banco/objeto publicada, TLS via certbot com renovação automática, rate limit de borda em `/api/v1/auth/login`, HSTS/CSP |
 | BL-29 — Backup e restauração (RNF-08) | `05_infra/backup/backup-db.sh`, `restore-db.sh`, `05_infra/README.md` | 2026-08-07 | ✅ Implementado — `pg_dump --format=custom` + espelho do bucket MinIO, retenção aplicada só após dump válido; restore exige confirmação explícita e salva dump `pre-restore`. Destino externo do backup segue `[A ESCLARECER]` (RNF-08) |
 | BL-23 — Revisão de segurança OWASP Top 10 (DEC-24) | `00_docs/projeto/revisao-seguranca-owasp.md`, `04_backend/app/core/rate_limit.py`, `app/core/middleware.py`, `app/scripts/seed_admin.py`, `tests/test_seguranca.py` | 2026-08-07 | ✅ Concluída — 6 achados corrigidos: registro público de auditor (A01, **falha crítica real**), força bruta no login (A07), `/docs` em produção e `JWT_SECRET_KEY` default (A05), cabeçalhos de segurança (A05) e `X-Request-ID` (A09); 8 testes automatizados |
+| BL-16 — Dashboard de saúde por edificação/sistema predial (RF-07): validação do agregado + revisão de regras de negócio | `04_backend/app/services/edificacao_service.py`, `app/services/ocorrencia_service.py`, `03_frontend/app/dashboard/page.tsx`, `tests/test_ocorrencias_dashboard.py` | 2026-08-12 | ✅ Concluída — agregado (conformidade por sistema, distribuição de Grau de Risco, gravidade GUT média por subsistema) revalidado via `pytest` (3 testes passando); revisão de RN-05 encontrou lacuna real (`prioridade` sem validação de intervalo 0-5) e corrigida em `ocorrencia_service._validar_payload` (`DomainError` 422 `ocorrencia-prioridade-invalida`), com teste novo cobrindo o caso |
 
 ---
 
@@ -88,19 +89,21 @@ last_updated: 2026-08-11
 | # | Bloqueio | Impacto | Responsável | Ação necessária |
 |---|---|---|---|---|
 | B-01 | 10 lacunas `[A ESCLARECER]` ainda não resolvidas formalmente; #6/#11/#12 já foram tratadas via DEC-18, #13 foi esclarecida parcialmente pelo prompt do cliente e as demais (#1, #2, #3, #4, #5, #7, #8, #9, #10) continuam pendentes | **Alto** — ainda há decisões remanescentes que podem alterar arquitetura offline, multi-usuário e assinatura digital | Gestor de Projeto | Finalizar a validação formal das lacunas remanescentes com Eng. Roniel — ver [HT-01](backlog-tarefas-humanas.md#ht-01--validar-as-10-lacunas-a-esclarecer-com-o-cliente) |
-| B-02 | Templates Word (`.docx`) originais dos 5 modelos de relatório/laudo abaixo não entregues pelo cliente (só existem as versões `.md` convertidas em `00_docs/convertidos/`, usadas como referência aproximada de layout) | **Médio** — bloqueia geração de DOCX fiel (BL-13, BL-17) e a validação final de fidelidade (HT-09); BL-12 pode prosseguir com fidelidade aproximada | Gestor de Projeto | Solicitar ao cliente todos os arquivos `.docx` de modelo — ver [HT-02](backlog-tarefas-humanas.md#ht-02--solicitar-e-receber-os-arquivos-docx-de-template-e-logo) |
+| B-02 | **Reclassificado em 2026-08-12 (DEC-25/ADR-13):** os originais dos 5 modelos **existem** em `01_output-context/` — RFO e RFIP em planilha (`.xlsx`/`.xlsm`), LTIP e as duas vistorias em PDF final de alta fidelidade. O `.docx` nunca chegou porque o cliente não produz esses documentos em Word. Resta pendente apenas a **logo vetorial/transparente** (RN-07) | **Baixo** — deixou de bloquear BL-12, BL-13 e BL-17, que passam a ser construídas a partir dos originais disponíveis; a logo em JPEG já atende provisoriamente o cabeçalho | Gestor de Projeto | Confirmar com o cliente que os arquivos em `01_output-context/` são a versão vigente e solicitar apenas a logo vetorial — ver [HT-02](backlog-tarefas-humanas.md#ht-02--confirmar-versão-vigente-dos-originais-e-obter-a-logo-vetorial) |
 | B-04 | Provedor de IA/LLM para geração assistida de legendas técnicas (RF-15, DEC-21) ainda não escolhido (lacuna #13) | **Médio** — bloqueia BL-34 a BL-39; envolve custo por chamada e política de retenção/privacidade dos dados enviados a terceiros (fotos/descrições de imóveis) | Gestor de Projeto | Definir provedor (OpenAI, Azure OpenAI, Anthropic, outro) e política de dados antes de iniciar BL-34/BL-36 a BL-39 |
 
-**Templates `.docx` exigidos para desbloquear B-02** (RF-06/RN-07 de [estudo-do-contexto.md](../estudo-do-contexto.md), original em Word — não a conversão `.md`):
+**Originais disponíveis por tipo de documento** (inventário de `01_output-context/` em 2026-08-12 — arquivos locais/OneDrive, fora do Git por convenção do `.gitignore`):
 
-1. **RFO — Relatório de Fiscalização de Obra** (§2.1) — hoje só existe `Relatorio_de_Fiscalizacao_1.md`/`Relatorio_de_Fiscalizacao.md` convertidos; falta o `.xlsm`/`.docx` original. Bloqueia BL-13.
-2. **LTIP — Laudo Técnico de Inspeção Predial** (§2.2) — referência convertida `Laudo_Tecnico_de_Inspecao_Predial_2026_-_Cond_Cortina_DAmpezzo.md`; falta o `.docx` original (150–200+ págs.). Bloqueia BL-17.
-3. **Laudo de Vistoria Cautelar de Recebimento** (§2.3) — referência convertida `Laudo_Tecnico_de_Vistoria_Cautelar_de_Recebimento_-_Reforma_New_York_-_V01.md`; falta o `.docx` original.
-4. **Vistoria de Imóvel Residencial** (§2.4) — referência convertida `Laudo_Tecnico_de_Vistoria_de_Imovel_Residencial_-_Ap_1404.md`; falta o `.docx` original.
-5. **RFIP — Relatório Fotográfico de Inspeção Predial** (§2.5) — referência convertida `Relatorio_Fotografico_de_Inspecao_Predial_-_CORTINA_DAMPAREZZO_-_Versao_Final.md`; falta o `.docx` original.
-6. **Logo da Garra Engenharia em alta resolução** (vetor `.svg`/`.ai` ou `.png` transparente) — exigido por RN-07 para o cabeçalho de todos os relatórios/laudos acima; em 2026-08-11 foram recebidas 4 variantes JPEG e organizadas em `03_frontend/public/brand/logos/`, mas a versão vetorial/transparente segue recomendada para PWA, favicon e relatórios com fidelidade máxima.
+| # | Documento | Original disponível | Formato | Uso na derivação do template (ADR-13) |
+|---|---|---|---|---|
+| 1 | **RFO** — Relatório de Fiscalização de Obra (§2.1) | `RFO INSPEÇÃO .xlsx` (77,9 MB) e `Relatório de Fiscalização 1.xlsm` (17,5 MB) | Planilha | Fonte de verdade estrutural e de layout de impressão — extração via `openpyxl`. Já foi a fonte do gabarito de sistemas prediais (BL-05/DEC-13) |
+| 2 | **LTIP** — Laudo Técnico de Inspeção Predial (§2.2) | `Laudo Técnico de Inspeção Predial 2026 - Cond. Cortina D'Ampezzo.pdf` (32,5 MB) | PDF final | Extração de métricas tipográficas (fonte, margens, cabeçalho com logo) via `pypdf`/`pdfplumber` |
+| 3 | **Vistoria Cautelar de Recebimento** (§2.3) | `Laudo Técnico de Vistoria Cautelar de Recebimento - Reforma New York - V01.pdf` (38,5 MB) | PDF final | Idem LTIP |
+| 4 | **Vistoria de Imóvel Residencial** (§2.4) | `Laudo Técnico de Vistoria de Imóvel Residencial - Ap. 1404.pdf` (21,5 MB) | PDF final | Idem LTIP |
+| 5 | **RFIP** — Relatório Fotográfico de Inspeção Predial (§2.5) | `Relatório Fotográfico de Inspeção Predial - CORTINA D'AMPAREZZO - Versão Final.xlsx` (479,3 MB) | Planilha | Extração via `openpyxl` em modo `read_only`/streaming (arquivo grande) |
+| 6 | **Logo da Garra Engenharia** (RN-07) | 4 variantes JPEG em `03_frontend/public/brand/logos/` | Raster | ⚠️ **Única pendência real de B-02** — versão vetorial (`.svg`/`.ai`) ou `.png` transparente segue recomendada para PWA, favicon e relatórios com fidelidade máxima |
 
-> Nenhum desses 5 modelos tem o `.docx`/`.xlsm` original no repositório — apenas as versões `.md` convertidas em [00_docs/convertidos/](../convertidos/), que servem só de referência aproximada de conteúdo/estrutura, não de layout fiel (fontes, margens, estilos, cabeçalho com logo). BL-40 (template do **contrato administrativo**, não um relatório técnico) não conta para esta lista e não resolve B-02.
+> As versões `.md` em [00_docs/convertidos/](../convertidos/) continuam servindo como referência de **conteúdo e estrutura**, mas deixam de ser a base de layout: a fidelidade visual passa a ser extraída dos originais acima (ADR-13). O `.xlsm` nunca deve ser executado — apenas lido, sem carregar macros VBA (OWASP A08). BL-40 (template do **contrato administrativo**) permanece um escopo distinto e não se confunde com estes 5 modelos técnicos.
 
 > B-03 (preferência de hospedagem) resolvido em 2026-07-21 — hospedagem definida como Render. Em 2026-08-03, o provisionamento foi executado via MCP; a HT-04 permanece em andamento apenas para ajustes finais (segredos, validação e organização no project).
 >
@@ -113,15 +116,16 @@ last_updated: 2026-08-11
 ## Próximos Passos (em ordem)
 
 1. **[IMEDIATO — 2 cliques no Dashboard do Render]** Adicionar `POSTGRES_PASSWORD` (via "Add from Database" apontando para `garra-db`) e `JWT_SECRET_KEY` no serviço `garra-backend`; em seguida definir Pre-Deploy Command (`cd 04_backend && alembic upgrade head`) e Health Check Path (`/health`). ⚠️ **A partir de DEC-24, com `ENVIRONMENT=production` o backend NÃO SOBE sem uma `JWT_SECRET_KEY` de pelo menos 32 caracteres** (fail-closed proposital, OWASP A05) — checklist completo em [HT-04](backlog-tarefas-humanas.md#ht-04--aplicar-o-blueprint-do-render-ou-provisionar-servidorvps-alternativo-e-registrar-domínio)
-2. **[IMEDIATO]** Enviar ao cliente a solicitação dos 5 arquivos `.docx`/`.xlsm` originais de template e do logo — texto pronto em [solicitacao-templates-docx.md](../cliente/solicitacao-templates-docx.md) — resolve B-02 e destrava BL-12/BL-13/BL-17/BL-19/HT-09
-3. **[IMEDIATO]** Agendar a sessão de validação das lacunas remanescentes (#1, #2, #3, #4, #5, #7, #8, #9, #10) — pauta pronta em [pauta-validacao-lacunas.md](pauta-validacao-lacunas.md) — reduz B-01 e destrava BL-15
-4. Rodar `gh auth login` e aplicar a proteção das branches `main`/`main_back`/`main_front` (HT-05) — comando pronto em [backlog-tarefas-humanas.md](backlog-tarefas-humanas.md#ht-05--configurar-proteção-das-branches-mainmain_frontmain_back-no-github)
-5. Rodar `python -m app.scripts.seed_admin` no ambiente de produção (Shell do Render) para criar o auditor de bootstrap — obrigatório desde DEC-24, pois `POST /auth/register` deixou de ser público
-6. Confirmar no Dashboard Render que os recursos estão no project/grupo `garraengenharia` (ou mover para ele, se necessário)
-7. Executar BL-41 com o agente `Especialista UI/UX`: refatorar o frontend para aplicar as logos oficiais em landing, login, shell autenticado, metadata e PWA, substituindo o placeholder `public/icon.svg` e a nomenclatura legada da marca
-8. Re-testar em UI o frontend de Visitas (BL-10) e Upload de fotos (BL-11); validar as regras de negócio de Ocorrências (BL-14) e do agregado do Dashboard (BL-16), cujos endpoints já existem
-9. Definir o provedor de IA e a política de dados para desbloquear BL-34 e a extensão BL-36 a BL-39 (item do Bloco 4 da pauta) — única frente de engenharia relevante ainda parada
-10. Validar `00_docs/arquitetura.md` com o cliente (stack, modelo de dados)
+2. **[IMEDIATO]** Iniciar a derivação dos templates a partir dos originais já disponíveis em `01_output-context/` (DEC-25/ADR-13): script de extração `openpyxl` para RFO/RFIP e `pypdf`/`pdfplumber` para os 3 laudos, gerando `layout.json` → `.html.j2` (WeasyPrint) + `.docx` (docxtpl) — destrava BL-12/BL-13/BL-17 sem depender do cliente
+3. **[IMEDIATO]** Confirmar com o cliente apenas duas coisas (não é mais uma solicitação de templates): que os arquivos em `01_output-context/` são a versão vigente, e o envio da logo vetorial/transparente (RN-07) — ver [HT-02](backlog-tarefas-humanas.md#ht-02--confirmar-versão-vigente-dos-originais-e-obter-a-logo-vetorial)
+4. **[IMEDIATO]** Agendar a sessão de validação das lacunas remanescentes (#1, #2, #3, #4, #5, #7, #8, #9, #10) — pauta pronta em [pauta-validacao-lacunas.md](pauta-validacao-lacunas.md) — reduz B-01 e destrava BL-15
+5. Rodar `gh auth login` e aplicar a proteção das branches `main`/`main_back`/`main_front` (HT-05) — comando pronto em [backlog-tarefas-humanas.md](backlog-tarefas-humanas.md#ht-05--configurar-proteção-das-branches-mainmain_frontmain_back-no-github)
+6. Rodar `python -m app.scripts.seed_admin` no ambiente de produção (Shell do Render) para criar o auditor de bootstrap — obrigatório desde DEC-24, pois `POST /auth/register` deixou de ser público
+7. Confirmar no Dashboard Render que os recursos estão no project/grupo `garraengenharia` (ou mover para ele, se necessário)
+8. Executar BL-41 com o agente `Especialista UI/UX`: refatorar o frontend para aplicar as logos oficiais em landing, login, shell autenticado, metadata e PWA, substituindo o placeholder `public/icon.svg` e a nomenclatura legada da marca
+9. Re-testar em UI o frontend de Visitas (BL-10), Upload de fotos (BL-11) e Ocorrências (BL-14); endpoints já existem — falta validação manual/end-to-end em navegador (BL-16 já revalidada via testes automatizados em 2026-08-12)
+10. Definir o provedor de IA e a política de dados para desbloquear BL-34 e a extensão BL-36 a BL-39 (item do Bloco 4 da pauta)
+11. Validar `00_docs/arquitetura.md` com o cliente (stack, modelo de dados)
 
 > **Regra de atualização:** ao concluir qualquer tarefa do backlog, atualizar imediatamente o status em `backlog-tarefas.md`, `backlog-tarefas-humanas.md` (se aplicável) e neste arquivo, desbloqueando (🔴→🟢) toda tarefa dependente que tinha a tarefa concluída como pré-requisito.
 
@@ -141,6 +145,6 @@ last_updated: 2026-08-11
 | Entidades no modelo ER | 14 |
 | Endpoints de API definidos | 30+ |
 | Tarefas no backlog | 39 (BL-01 a BL-39) |
-| Tarefas concluídas | 14+ (fundação técnica + BL-08/BL-09/BL-20/BL-25/BL-26/BL-30/BL-31/BL-40, com BL-10/BL-11/BL-14/BL-16 já parcialmente integrados) |
-| Tarefas desbloqueadas para início imediato | 10 (BL-08 a BL-11, BL-14, BL-16, BL-27, BL-29, BL-32, BL-33) |
+| Tarefas concluídas | 15+ (fundação técnica + BL-08/BL-09/BL-16/BL-20/BL-25/BL-26/BL-30/BL-31/BL-40, com BL-10/BL-11/BL-14 já parcialmente integrados) |
+| Tarefas desbloqueadas para início imediato | 9 (BL-08 a BL-11, BL-14, BL-27, BL-29, BL-32, BL-33) |
 | Prompts de tarefas criados | 22 (`14-*` a `39-*`) |

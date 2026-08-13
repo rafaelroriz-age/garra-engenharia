@@ -64,3 +64,6 @@ def _validar_payload(dados: OcorrenciaCreate) -> None:
         raise DomainError("Tipo de falha é obrigatório para esta classificação.", type_suffix="ocorrencia-tipo-falha-obrigatorio")
     if dados.grau_risco not in {"MINIMO", "MEDIO", "CRITICO"}:
         raise DomainError("Grau de risco inválido.", type_suffix="ocorrencia-grau-risco-invalido")
+    # RN-05: Prioridade deve estar entre 0 (sem prioridade definida) e 5.
+    if dados.prioridade is not None and not (0 <= dados.prioridade <= 5):
+        raise DomainError("Prioridade deve estar entre 0 e 5.", type_suffix="ocorrencia-prioridade-invalida")

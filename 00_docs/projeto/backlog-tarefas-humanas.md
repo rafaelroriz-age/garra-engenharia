@@ -12,7 +12,7 @@ related:
   - 00_docs/projeto/backlog-kanban.md
   - 00_docs/projeto/pauta-validacao-lacunas.md
   - 00_docs/cliente/solicitacao-templates-docx.md
-last_updated: 2026-08-07
+last_updated: 2026-08-12
 ---
 
 # Backlog de Tarefas Humanas
@@ -32,7 +32,7 @@ last_updated: 2026-08-07
 | ID | Tarefa | Motivo (só humano) | Bloqueia | Status | Tem alternativa agente/MCP? |
 |---|---|---|---|---|---|
 | [HT-01](#ht-01--validar-as-10-lacunas-a-esclarecer-com-o-cliente) | Validar as 10 lacunas `[A ESCLARECER]` com o cliente | Negociação/decisão de negócio com o cliente | BL-15, BL-18, B-01 | 🔴 Pendente — **pauta pronta** em [pauta-validacao-lacunas.md](pauta-validacao-lacunas.md) | Parcial (pauta já redigida; agente atualiza os docs após a resposta) |
-| [HT-02](#ht-02--solicitar-e-receber-os-arquivos-docx-de-template-e-logo) | Solicitar e receber os `.docx` de template e logo em alta resolução | Comunicação externa + espera de entrega pelo cliente | BL-12 (fiel), BL-13, BL-17, BL-19, B-02 | 🔴 Pendente — **minuta pronta** em [solicitacao-templates-docx.md](../cliente/solicitacao-templates-docx.md) | Parcial (mensagem já redigida; falta o envio humano) |
+| [HT-02](#ht-02--confirmar-versão-vigente-dos-originais-e-obter-a-logo-vetorial) | Confirmar que os originais em `01_output-context/` são a versão vigente e obter a logo vetorial/transparente | Comunicação externa com o cliente | Nada de engenharia — apenas a fidelidade máxima da marca (RN-07) | 🟡 Reduzida em 2026-08-12 (DEC-25/ADR-13) — os `.xlsx`/`.xlsm`/PDF originais **já existem**; BL-12/BL-13/BL-17 desbloqueadas | Sim (agente deriva os templates dos originais disponíveis) |
 | [HT-03](#ht-03--decidir-a-preferência-de-hospedagem) | Decidir a preferência de hospedagem (local vs. nuvem) | Decisão orçamentária | BL-20, BL-24, BL-28, B-03 | ✅ Decidido (Render, 2026-07-21) | Sim (Blueprint `render.yaml` já pronto) |
 | [HT-04](#ht-04--aplicar-o-blueprint-do-render-ou-provisionar-servidorvps-alternativo-e-registrar-domínio) | Aplicar o Blueprint do Render (conta + pagamento) e registrar domínio | Criação de conta, pagamento, conexão OAuth com GitHub | BL-24, BL-28 | 🟡 Em andamento — env vars não-secretas aplicadas via MCP em 2026-08-07; restam **apenas 2 segredos** (`POSTGRES_PASSWORD`, `JWT_SECRET_KEY`) + Pre-Deploy Command + Health Check Path | Sim, parcialmente (MCP não expõe senha do banco nem edição de Settings do serviço) |
 | [HT-05](#ht-05--configurar-proteção-das-branches-mainmain_frontmain_back-no-github) | Configurar proteção das 3 branches (`main`/`main_front`/`main_back`) no GitHub | Configuração administrativa sensível do repositório | BL-25/26 (item pendente), DEC-17/DEC-22 | 🔴 Pendente — `gh` CLI **não autenticado** na máquina (verificado em 2026-08-07); MCP do GitHub não expõe branch protection | Sim, via `gh` CLI após `gh auth login` (comando pronto abaixo) |
@@ -43,6 +43,21 @@ last_updated: 2026-08-07
 | [HT-10](#ht-10--coleta-de-dados-e-fotos-em-campo-durante-a-vistoriainspeção) | Coleta de dados e fotos em campo durante a vistoria/inspeção | Atividade física de engenharia, fora do escopo de software | Alimenta BL-10/BL-11 (dados de entrada) | 🔴 Recorrente | Não |
 | [HT-11](#ht-11--negociar-e-assinar-o-contrato-de-prestação-de-serviços) | Negociar e assinar o contrato de prestação de serviços/aditivos | Assinatura com validade jurídica | Formalização comercial | 🔴 Pendente | Parcial (minuta/revisão do contrato) |
 | [HT-12](#ht-12--autenticar-o-servidor-mcp-do-notion) | Autenticar o servidor MCP do Notion (OAuth) e selecionar o workspace/página de destino | Login/OAuth e escolha de workspace são atos do próprio usuário; credencial não deve passar por chat/agente | Criação do board `backlog-kanban.md` real dentro do Notion (DEC-20) | ✅ Concluída (2026-08-07) — board criado, ver [HT-12](#ht-12--autenticar-o-servidor-mcp-do-notion) | Sim (board criado integralmente pelo agente após a autenticação) |
+
+---
+
+## Bloqueios do projeto (B-01 a B-04)
+
+> Esses IDs não são classes, enums, constantes de código ou variáveis da aplicação. Eles representam **bloqueios de gestão/projeto** usados para sinalizar pendências que exigem decisão ou ação humana. A definição formal fica em [status.md](status.md#bloqueios-ativos) e em [backlog-tarefas.md](backlog-tarefas.md).
+
+| ID | Nome | Descrição | Tarefa humana associada |
+|---|---|---|---|
+| B-01 | Lacunas de requisitos pendentes | 10 pontos `[A ESCLARECER]` que ainda precisam ser validados com o cliente antes de definir o desenho final do sistema | HT-01 |
+| B-02 | Fidelidade de template (reclassificado) | Os originais `.xlsx`/`.xlsm`/PDF dos 5 modelos **estão disponíveis** em `01_output-context/` e passam a ser a base dos templates (DEC-25/ADR-13). Resta apenas a logo vetorial/transparente para fidelidade máxima da marca | HT-02 |
+| B-03 | Preferência de hospedagem | Decisão orçamentária/estratégica da plataforma de deploy (Render vs. VPS/local) | HT-03 e HT-04 |
+| B-04 | Provedor de IA/LLM não definido | Decide a política de privacidade/retensão e o provedor para legendas assistidas por IA | Decisão de negócio / não há HT dedicada ainda |
+
+**Observação:** o sufixo `B` significa “Bloqueio”. Já o sufixo `HT` significa “Tarefa Humana”. Em outras palavras, as tarefas humanas resolvem ou destravam os bloqueios de projeto.
 
 ---
 
@@ -69,30 +84,33 @@ last_updated: 2026-08-07
 
 ---
 
-## HT-02 — Solicitar e receber os `.docx` de template e logo
+## HT-02 — Confirmar versão vigente dos originais e obter a logo vetorial
 
-**Por que só um humano:** é comunicação externa com o cliente e espera pela entrega de arquivos que só o cliente possui (RFO, LTIP, Vistoria Cautelar, RFIP, logo em alta resolução).
+> **Reescrita em 2026-08-12 (DEC-25/ADR-13).** A versão anterior desta tarefa pedia ao cliente os arquivos `.docx` dos 5 modelos, partindo da premissa de que o projeto só tinha as conversões `.md`. O inventário de `01_output-context/` mostrou que os **originais sempre estiveram disponíveis**, em outro formato — o cliente não produz esses documentos em Word. A tarefa foi reduzida ao que de fato falta.
 
-**Bloqueia:** B-02 (`status.md`), BL-12 (fidelidade completa), BL-13, BL-17, BL-19 (`backlog-tarefas.md`).
+**Por que só um humano:** é comunicação externa com o cliente — confirmar qual versão dos arquivos está vigente e pedir o único artefato que ainda não existe no projeto (a marca em vetor).
 
-**Templates `.docx` exigidos (lista explícita, ver também [status.md § Bloqueios Ativos](status.md#bloqueios-ativos)):**
-1. RFO — Relatório de Fiscalização de Obra (referência convertida: `Relatorio_de_Fiscalizacao_1.md`/`Relatorio_de_Fiscalizacao.md`).
-2. LTIP — Laudo Técnico de Inspeção Predial (referência convertida: `Laudo_Tecnico_de_Inspecao_Predial_2026_-_Cond_Cortina_DAmpezzo.md`).
-3. Laudo Técnico de Vistoria Cautelar de Recebimento (referência convertida: `Laudo_Tecnico_de_Vistoria_Cautelar_de_Recebimento_-_Reforma_New_York_-_V01.md`).
-4. Vistoria de Imóvel Residencial (referência convertida: `Laudo_Tecnico_de_Vistoria_de_Imovel_Residencial_-_Ap_1404.md`).
-5. RFIP — Relatório Fotográfico de Inspeção Predial (referência convertida: `Relatorio_Fotografico_de_Inspecao_Predial_-_CORTINA_DAMPAREZZO_-_Versao_Final.md`).
-6. Logo da Garra Engenharia em alta resolução (vetor `.svg`/`.ai` ou `.png` transparente), exigido por RN-07 no cabeçalho de todos os itens acima.
+**Bloqueia:** nada de engenharia. BL-12, BL-13 e BL-17 foram desbloqueadas por DEC-25/ADR-13 e são construídas a partir dos originais já disponíveis. O impacto residual é apenas a fidelidade máxima da marca no cabeçalho (RN-07) e no PWA/favicon.
 
-**Passo a passo:**
-1. Confirmar a lista acima com o cliente antes de enviar (os `.md` já convertidos em `00_docs/convertidos/` são só referência aproximada, não substituem o `.docx`/`.xlsm` original fiel).
-2. Enviar solicitação formal ao cliente (e-mail ou canal já usado no contrato).
-3. Receber os arquivos e salvá-los localmente — **atenção:** por convenção do repositório, arquivos binários originais do cliente (`.docx`, `.pdf`, `.pbix`, `.xlsm`) não são versionados no Git (ver `.gitignore` e nota em memória de repositório); mantê-los em `01_output-context/` local (OneDrive) e não commitar.
-4. Avisar o time técnico (ou pedir para um agente) para iniciar a conversão/uso como template real (desbloqueia BL-12/BL-13/BL-17/BL-19).
-5. Remover o bloqueio B-02 de [status.md](status.md#bloqueios-ativos).
+**Originais já disponíveis em `01_output-context/`** (não precisam ser solicitados):
 
-**Alternativa via agente/MCP (parcial) — já executada:**
-- O texto completo da solicitação (assunto + corpo da mensagem + tabela com os 6 arquivos exigidos + instruções para evitar retrabalho) já está pronto em [solicitacao-templates-docx.md](../cliente/solicitacao-templates-docx.md) — basta copiar e enviar.
-- Depois de recebidos, o agente "conversor-documentos-md" pode gerar a versão `.md` de referência (como já feito para os documentos em `00_docs/convertidos/`), mas o **envio, recebimento e organização dos arquivos originais é sempre humano**.
+| # | Documento | Arquivo original | Formato |
+|---|---|---|---|
+| 1 | RFO — Relatório de Fiscalização de Obra | `RFO INSPEÇÃO .xlsx` (77,9 MB), `Relatório de Fiscalização 1.xlsm` (17,5 MB) | Planilha |
+| 2 | LTIP — Laudo Técnico de Inspeção Predial | `Laudo Técnico de Inspeção Predial 2026 - Cond. Cortina D'Ampezzo.pdf` (32,5 MB) | PDF final |
+| 3 | Vistoria Cautelar de Recebimento | `Laudo Técnico de Vistoria Cautelar de Recebimento - Reforma New York - V01.pdf` (38,5 MB) | PDF final |
+| 4 | Vistoria de Imóvel Residencial | `Laudo Técnico de Vistoria de Imóvel Residencial - Ap. 1404.pdf` (21,5 MB) | PDF final |
+| 5 | RFIP — Relatório Fotográfico de Inspeção Predial | `Relatório Fotográfico de Inspeção Predial - CORTINA D'AMPAREZZO - Versão Final.xlsx` (479,3 MB) | Planilha |
+
+**Passo a passo (o que ainda precisa ser feito):**
+1. Confirmar com o cliente que os 5 arquivos acima são a **versão vigente** dos modelos — se houver revisão mais recente, pedir a atualização do arquivo (mesmo formato, não `.docx`).
+2. Solicitar a **logo em vetor** (`.svg`/`.ai`/`.eps`) ou `.png` com fundo transparente. As 4 variantes JPEG recebidas em 2026-08-11 (`03_frontend/public/brand/logos/`) atendem provisoriamente, mas raster com fundo branco degrada o cabeçalho dos relatórios e o ícone do PWA.
+3. Perguntar, sem bloquear a v1.0, se o fluxo de trabalho seguirá em Excel — se sim, avaliar a exportação `.xlsx` como formato adicional de saída na v1.1 (ponto aberto registrado em DEC-25).
+4. Manter os originais **fora do Git** (`.gitignore` já bloqueia `.xlsx`/`.xlsm`/`.pdf`/`.docx`/`.pbix` em `01_output-context/`) — apenas o `layout.json` e os templates gerados são versionados.
+
+**Alternativa via agente/MCP:**
+- A derivação dos templates (`openpyxl` para as planilhas, `pypdf`/`pdfplumber` para os PDFs → `layout.json` → `.html.j2` + `.docx`) é 100% executável por agente a partir dos arquivos já presentes — é o escopo de BL-12/BL-13/BL-17.
+- ⚠️ A minuta antiga em [solicitacao-templates-docx.md](../cliente/solicitacao-templates-docx.md) está **obsoleta**: pedir `.docx` que o cliente não possui gera retrabalho e ruído. Reescrever antes de enviar, cobrindo apenas os itens 1 a 3 acima.
 
 ---
 
@@ -247,7 +265,7 @@ last_updated: 2026-08-07
 
 **Passo a passo:**
 1. Gerar um relatório de teste (RFO/LTIP) com dados de exemplo.
-2. Abrir lado a lado com o `.docx`/PDF original do cliente.
+2. Abrir lado a lado com o original do cliente arquivado em `01_output-context/` — `.xlsx`/`.xlsm` para RFO/RFIP, PDF final para LTIP e as vistorias (ADR-13).
 3. Conferir: cabeçalho/rodapé por página, tabelas, quebras de página, fotos e legendas, tipografia.
 4. Registrar aprovação (ou lista de ajustes) — pode ser um comentário no PR ou uma nota em `00_docs/projeto/status.md`.
 

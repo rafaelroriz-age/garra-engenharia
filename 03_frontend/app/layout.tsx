@@ -21,11 +21,11 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   title: {
-    default: "Garra Engenharia · Relatórios Prediais",
-    template: "%s · Garra Engenharia",
+    default: "Garra Perícias e Avaliações · Relatórios Prediais",
+    template: "%s · Garra Perícias e Avaliações",
   },
   description:
-    "Sistema de automação de relatórios de inspeção predial (RFO, LTIP, vistorias cautelares) da Garra Engenharia.",
+    "Sistema de automação de relatórios de inspeção predial (RFO, LTIP, vistorias cautelares) da Garra Perícias e Avaliações.",
   manifest: "/manifest.json",
   icons: {
     icon: "/icon.svg",
@@ -33,14 +33,14 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Garra Engenharia",
+    title: "Garra Perícias",
   },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#1e3a5f",
+  themeColor: "#253341",
 };
 
 export default function RootLayout({

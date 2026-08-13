@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { LogOut, Menu } from "lucide-react";
 
 import { navItems, portalNavItems } from "./nav-items";
+import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -22,13 +23,8 @@ const PUBLIC_ROUTES = ["/", "/login"];
 
 function BrandMark() {
   return (
-    <Link href="/" className="flex items-center gap-2.5" aria-label="Garra Engenharia — início">
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-accent font-display text-base font-extrabold text-white">
-        G
-      </span>
-      <span className="font-display text-sm font-bold tracking-tight text-white">
-        GARRA ENGENHARIA
-      </span>
+    <Link href="/" aria-label="Garra Perícias e Avaliações — início">
+      <Logo variant="compacta" className="h-9" priority />
     </Link>
   );
 }

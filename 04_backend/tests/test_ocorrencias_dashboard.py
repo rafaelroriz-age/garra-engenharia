@@ -127,6 +127,28 @@ def test_criar_e_listar_ocorrencias(auth_headers, inspecao_context):
     assert len(list_response.json()["items"]) >= 1
 
 
+def test_criar_ocorrencia_rejeita_prioridade_fora_do_intervalo(auth_headers, inspecao_context):
+    payload = {
+        "inspecao_id": str(inspecao_context["inspecao"].id),
+        "sistema_id": str(inspecao_context["sistema"].id),
+        "subsistema_id": str(inspecao_context["subsistema"].id),
+        "situacao": "NAO_CONFORME",
+        "classificacao": "ANOMALIA",
+        "tipo_anomalia": "Fissura",
+        "grau_risco": "MEDIO",
+        "prioridade": 7,
+    }
+
+    response = client.post(
+        f"/api/v1/inspecoes/{inspecao_context['inspecao'].id}/ocorrencias",
+        json=payload,
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 422
+    assert response.json()["type"].endswith("/ocorrencia-prioridade-invalida")
+
+
 def test_dashboard_edificacao_retorna_agregados(auth_headers, inspecao_context):
     payload_1 = {
         "inspecao_id": str(inspecao_context["inspecao"].id),

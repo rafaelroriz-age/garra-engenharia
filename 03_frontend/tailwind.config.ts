@@ -64,7 +64,7 @@ const config: Config = {
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
   			},
-  			// Cores de marca (Garra Engenharia) — uso pontual em destaques visuais
+  			// Cores de marca (Garra Perícias e Avaliações) — uso pontual em destaques visuais
   			// (hero, badges), fora da paleta semântica shadcn/ui acima.
   			brand: {
   				navy: 'hsl(var(--brand-navy))',

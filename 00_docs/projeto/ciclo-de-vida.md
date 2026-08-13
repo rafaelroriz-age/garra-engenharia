@@ -22,7 +22,7 @@ A decisão foi registrada como **DEC-08** em [decisoes.md](decisoes.md#dec-08--m
 |---|---|---|
 | Equipe pequena (1 engenheiro ou pequena equipe, sem PM dedicado) | Descarta Scrum formal completo (overhead de cerimônias/papéis desproporcional) e V-model (exige planos de teste e especificação formal muito extensos antes de codificar) | Sprints curtos e backlog único reduzem overhead de gestão, mantendo previsibilidade |
 | 10 lacunas `[A ESCLARECER]` não validadas com o cliente (**bloqueio B-01**, risco **R-06**) | Descarta cascata pura — exigiria fechar 100% dos requisitos antes de iniciar qualquer construção, o que travaria o projeto indefinidamente | Permite iniciar imediatamente a fundação técnica e o incremento RFO (não depende das lacunas) enquanto a validação com o cliente ocorre em paralelo |
-| Templates Word originais ainda não entregues (**bloqueio B-02**, risco **R-05**) | Descarta qualquer modelo que assuma "templates prontos" como pré-condição de início (ex.: waterfall clássico) | O incremento RFO prototipa o template HTML/CSS (PDF) usando o documento de referência já convertido (`00_docs/convertidos/Relatorio_de_Fiscalizacao.md`); a geração DOCX via docxtpl (DEC-04) só entra quando o `.docx` original chegar, sem re-arquitetar o restante do sistema |
+| Templates originais disponíveis apenas em `.xlsx`/`.xlsm`/PDF, nunca em `.docx` (**B-02 reclassificado**, risco **R-05** rebaixado) | Descarta qualquer modelo que assuma "templates prontos em Word" como pré-condição de início (ex.: waterfall clássico) | O incremento RFO deriva o template do próprio original do cliente por script determinístico (`openpyxl` para planilha, `pypdf`/`pdfplumber` para PDF → `layout.json`), do qual saem tanto o HTML/CSS do WeasyPrint (DEC-01) quanto o DOCX do docxtpl (DEC-04) — ver DEC-25/ADR-13 |
 | Necessidade de entregar valor cedo (relatório fiel ao template é o principal ganho percebido pelo cliente) | Descarta modelos que só produzem um artefato utilizável no fim do projeto | A primeira fatia vertical entregável é o **RFO completo** (cadastro → visita → relatório PDF/DOCX), demonstrável ao cliente antes dos módulos mais complexos (LTIP) |
 | Escopo já formalmente congelado para v1.0 (`escopo.md`) | Reduz o risco de scope creep que normalmente motiva controles pesados de mudança (cascata/V-model) | Incremental aceita ajustes pontuais por sprint sem necessidade de replanejamento formal completo |
 
@@ -41,7 +41,7 @@ Infraestrutura de desenvolvimento, scaffolding de backend/frontend, modelo de da
 Sessão de validação dos 10 itens `[A ESCLARECER]` da seção 9 de `estudo-do-contexto.md`, priorizando os de maior impacto arquitetural (offline, multi-usuário, assinatura digital). Resolve **B-01**/**R-06**/**R-07**.
 
 ### Etapa 2 — Obtenção e Validação dos Templates Word *(paralela, conduzida pelo Gestor de Projeto)*
-Solicitação e recebimento dos arquivos `.docx` originais (RFO, LTIP, Vistoria Cautelar, RFIP) e logo em alta resolução. Resolve **B-02**/**R-05**.
+Confirmação da versão vigente dos originais já arquivados (`.xlsx`/`.xlsm`/PDF) e obtenção da logo vetorial/transparente. Encerra **B-02**/**R-05**.
 
 ### Etapa 3 — Incremento RFO (Relatório de Fiscalização de Obra)
 Primeira fatia vertical completa: cadastro de edificação/contrato → visitas diárias → geração de relatório PDF (e DOCX quando a Etapa 2 concluir).
@@ -73,6 +73,6 @@ Configuração de infraestrutura de produção (Docker Compose ou nuvem — depe
 ## 4. Regras de Governança do Ciclo de Vida
 
 1. Nenhuma tarefa da Etapa 4 relacionada a RN-04 pode ser fechada (ex.: sobrescrita manual de prioridade) sem a validação da Etapa 1.
-2. A geração DOCX (docxtpl) de qualquer tipo de documento só é implementada após o `.docx` correspondente ser recebido e validado (Etapa 2).
+2. A geração DOCX (docxtpl) de qualquer tipo de documento parte do `layout.json` extraído do original correspondente (`.xlsx`/`.xlsm` ou PDF), garantindo que PDF e DOCX derivem da mesma especificação (DEC-25/ADR-13).
 3. Cada incremento (Etapas 3, 4, 5) deve terminar com uma demonstração funcional ao cliente antes de iniciar o próximo.
 4. Mudanças de escopo dentro de um incremento em andamento exigem registro em `decisoes.md`, não replanejamento formal completo.
