@@ -72,16 +72,16 @@ last_updated: 2026-07-27
 
 ---
 
-### R-05 — Template DOCX do cliente não fornecido ou desatualizado
+### R-05 — Template do cliente não fornecido ou desatualizado
 
 | Campo | Valor |
 |---|---|
-| **Probabilidade** | M |
-| **Impacto** | M |
-| **Prioridade** | Média |
-| **Descrição** | A estratégia docxtpl exige o arquivo `.docx` original como template. Se o cliente não fornecer ou fornecer versão desatualizada, o DOCX gerado não será fiel. |
-| **Mitigação** | Solicitar todos os templates Word ao cliente na fase de kickoff. Incluir no checklist de onboarding. |
-| **Gatilho de escalada** | Início da fase de implementação sem os arquivos template. |
+| **Probabilidade** | B |
+| **Impacto** | B |
+| **Prioridade** | Baixa |
+| **Descrição** | O risco original assumia que a estratégia docxtpl exigia um `.docx` do cliente que nunca foi entregue. **Revisado em 2026-08-12 (DEC-25/ADR-13):** os originais existem em `01_output-context/` — `.xlsx`/`.xlsm` para RFO e RFIP, PDF final para LTIP e as duas vistorias — e passam a ser a base da derivação dos templates. O risco residual é apenas o cliente estar trabalhando com uma revisão mais recente do que a arquivada, gerando divergência de layout após a entrega. |
+| **Mitigação** | Confirmar com o cliente que os arquivos arquivados são a versão vigente (HT-02/BL-19) antes do sign-off de fidelidade (HT-09). Manter o `layout.json` como camada intermediária versionada: uma revisão nova do original exige apenas reexecutar o script de extração, não reescrever os templates à mão. |
+| **Gatilho de escalada** | Cliente informar que o modelo em uso difere do arquivado, ou reprovação de fidelidade em HT-09. |
 | **Responsável** | Gestor de Projeto |
 
 ---

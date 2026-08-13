@@ -12,6 +12,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Logo } from "@/components/brand/logo";
 
 interface HubCard {
   href: string;
@@ -79,14 +80,7 @@ export default function HomePage() {
       <header className="bg-primary text-primary-foreground">
         <div className="mx-auto max-w-6xl px-6 py-16">
           <div className="mb-8 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-lg bg-brand-accent font-display text-base font-extrabold text-white">
-                G
-              </span>
-              <span className="font-display text-lg font-bold tracking-tight">
-                GARRA ENGENHARIA
-              </span>
-            </div>
+            <Logo variant="horizontal" className="h-10 sm:h-12" priority />
             <Link
               href="/login"
               className="inline-flex items-center gap-1.5 rounded-md border border-white/20 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-white/10"

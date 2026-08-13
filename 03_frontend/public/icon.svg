@@ -1,13 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Garra Engenharia">
-  <rect width="512" height="512" rx="96" fill="#1e3a5f" />
-  <text
-    x="50%"
-    y="53%"
-    dominant-baseline="middle"
-    text-anchor="middle"
-    font-family="Arial, sans-serif"
-    font-weight="800"
-    font-size="300"
-    fill="#f97316"
-  >G</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Garra Perícias e Avaliações">
+  <rect width="512" height="512" rx="96" fill="#253341" />
+  <!-- Símbolo derivado do skyline (casas + torres) da marca oficial, simplificado para legibilidade em favicon/PWA (BL-41). -->
+  <path
+    d="M88 344 L176 240 L232 292 L256 176 L280 292 L336 240 L424 344 Z"
+    fill="#f4f1ea"
+  />
 </svg>

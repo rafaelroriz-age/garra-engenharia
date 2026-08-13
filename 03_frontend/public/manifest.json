@@ -1,14 +1,14 @@
 {
-  "name": "Garra Engenharia · Relatórios Prediais",
-  "short_name": "Garra Engenharia",
-  "description": "Sistema de automação de relatórios de inspeção predial (RFO, LTIP, vistorias cautelares) da Garra Engenharia.",
+  "name": "Garra Perícias e Avaliações · Relatórios Prediais",
+  "short_name": "Garra Perícias",
+  "description": "Sistema de automação de relatórios de inspeção predial (RFO, LTIP, vistorias cautelares) da Garra Perícias e Avaliações.",
   "start_url": "/",
   "scope": "/",
   "id": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#f8fafc",
-  "theme_color": "#1e3a5f",
+  "theme_color": "#253341",
   "lang": "pt-BR",
   "icons": [
     {
