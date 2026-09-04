@@ -4,7 +4,9 @@ Endpoints de domínio (edificações, contratos, autenticação, etc.) são
 adicionados em tarefas subsequentes do backlog (BL-06 e seguintes). Ver
 `00_docs/arquitetura.md` Seção 7 e `00_docs/projeto/decisoes.md` DEC-05.
 """
+import asyncio
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,11 +27,22 @@ from app.core.config import get_settings
 from app.core.database import engine
 from app.core.exception_handlers import register_exception_handlers
 from app.core.middleware import RequestIdMiddleware, SecurityHeadersMiddleware
+from app.core.migrations import aplicar_migrations
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 settings = get_settings()
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Garante o schema do banco antes de servir tráfego, quando habilitado."""
+    if settings.run_migrations_on_startup:
+        logger.info("Aplicando migrations Alembic (RUN_MIGRATIONS_ON_STARTUP=true)...")
+        await asyncio.to_thread(aplicar_migrations)
+        logger.info("Migrations aplicadas com sucesso.")
+    yield
 
 # Documentação interativa só em desenvolvimento (OWASP A05, arquitetura.md Seção 10.1).
 _docs_habilitados = settings.is_development
@@ -40,6 +53,7 @@ app = FastAPI(
     docs_url="/docs" if _docs_habilitados else None,
     redoc_url="/redoc" if _docs_habilitados else None,
     openapi_url="/openapi.json" if _docs_habilitados else None,
+    lifespan=lifespan,
 )
 
 app.add_middleware(SecurityHeadersMiddleware, hsts=not settings.is_development)

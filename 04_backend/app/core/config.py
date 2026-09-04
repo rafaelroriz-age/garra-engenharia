@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     app_name: str = "Sistema de Automação de Relatórios Prediais"
     environment: str = "development"
     backend_cors_origins: str = "http://localhost:3000"
+    # Para plataformas sem Pre-Deploy Command (Render, runtime nativo): aplica
+    # `alembic upgrade head` no boot. Ver `app/core/migrations.py`.
+    run_migrations_on_startup: bool = False
 
     # --- PostgreSQL (DEC-07) ---------------------------------------------------
     postgres_user: str = "garra"

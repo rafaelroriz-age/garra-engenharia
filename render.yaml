@@ -55,6 +55,12 @@ services:
     envVars:
       - key: ENVIRONMENT
         value: production
+      # O serviço `garra-backend` realmente provisionado usa o runtime NATIVO
+      # do Render (criado via MCP, não pelo Apply deste Blueprint) e por isso
+      # NÃO tem `preDeployCommand` — nele esta variável precisa ser "true"
+      # para o `alembic upgrade head` rodar no boot (app/core/migrations.py).
+      - key: RUN_MIGRATIONS_ON_STARTUP
+        value: "false"
       # URL pública do frontend — ajuste se o Render atribuir outro hostname
       # (ver comentário no topo do arquivo).
       - key: BACKEND_CORS_ORIGINS
