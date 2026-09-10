@@ -6,14 +6,16 @@
 - `PUT /edificacoes/{id}` — atualiza edificação.
 - `POST /edificacoes/{id}/documentos` — upload de documento técnico (DEC-16, RF-01).
 
-Todos protegidos por `get_current_user` (BL-06) — não expõem dados sem autenticação.
+Leitura liberada à equipe (`auditor`/`auxiliar`); escrita restrita ao `auditor`
+(RN-18, DEC-27) — nenhuma rota aceita apenas "estar autenticado", para que um
+usuário do Portal do Cliente não alcance dados internos (OWASP A01).
 """
 import uuid
 
 from fastapi import APIRouter, Depends, File, Form, Query, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import require_auditor, require_equipe
 from app.core.database import get_db
 from app.core.errors import DomainError
 from app.models import Edificacao, Usuario
@@ -35,7 +37,7 @@ async def listar_edificacoes(
     nome: str | None = Query(None),
     endereco: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_equipe),
 ) -> PaginatedResponse:
     """Lista edificações paginadas, com filtro opcional por nome e/ou endereço."""
     items, total = await edificacao_service.listar(
@@ -48,7 +50,7 @@ async def listar_edificacoes(
 async def criar_edificacao(
     dados: EdificacaoCreate,
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_auditor),
 ) -> Edificacao:
     """Cria uma nova edificação (RF-01)."""
     return await edificacao_service.criar(db, dados)
@@ -58,7 +60,7 @@ async def criar_edificacao(
 async def obter_edificacao(
     edificacao_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_equipe),
 ) -> Edificacao:
     """Detalhe da edificação com o histórico de contratos vinculados."""
     return await edificacao_service.obter_por_id(db, edificacao_id)
@@ -69,7 +71,7 @@ async def atualizar_edificacao(
     edificacao_id: uuid.UUID,
     dados: EdificacaoUpdate,
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_auditor),
 ) -> Edificacao:
     """Atualiza os dados de uma edificação existente."""
     return await edificacao_service.atualizar(db, edificacao_id, dados)
@@ -82,7 +84,7 @@ async def enviar_documento_tecnico(
     tipo: str = Form(...),
     db: AsyncSession = Depends(get_db),
     storage: StorageClient = Depends(get_storage_client),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_auditor),
 ) -> Edificacao:
     """Envia um documento técnico (projeto, ART) e o anexa a `documentos_tecnicos` (DEC-16)."""
     edificacao = await edificacao_service.obter_por_id(db, edificacao_id)

@@ -5,13 +5,16 @@
 - `GET /ocorrencias/{id}` — detalhe da ocorrência.
 - `PUT /ocorrencias/{id}` — atualiza ocorrência.
 - `DELETE /ocorrencias/{id}` — remove ocorrência.
+
+Dados de campo: liberados à equipe (`auditor`/`auxiliar`), com autoria gravada
+em `Ocorrencia.criado_por_id` (RN-18, DEC-27).
 """
 import uuid
 
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import require_equipe
 from app.core.database import get_db
 from app.models import Ocorrencia, Usuario
 from app.schemas.common import PaginatedResponse
@@ -27,7 +30,7 @@ async def listar_ocorrencias_da_inspecao(
     sistema_id: str | None = Query(None),
     grau_risco: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_equipe),
 ) -> PaginatedResponse:
     """Lista ocorrências da inspeção com filtros opcionais por sistema e grau de risco."""
     itens = await ocorrencia_service.listar_por_inspecao(
@@ -44,17 +47,19 @@ async def criar_ocorrencia(
     inspecao_id: uuid.UUID,
     dados: OcorrenciaCreate,
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(get_current_user),
+    usuario: Usuario = Depends(require_equipe),
 ) -> Ocorrencia:
     """Cria uma nova ocorrência vinculada a uma inspeção."""
-    return await ocorrencia_service.criar(db, inspecao_id=inspecao_id, dados=dados)
+    return await ocorrencia_service.criar(
+        db, inspecao_id=inspecao_id, dados=dados, criado_por_id=usuario.id
+    )
 
 
 @router.get("/ocorrencias/{ocorrencia_id}", response_model=OcorrenciaRead)
 async def obter_ocorrencia(
     ocorrencia_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_equipe),
 ) -> Ocorrencia:
     """Retorna uma ocorrência específica."""
     return await ocorrencia_service.obter_por_id(db, ocorrencia_id)
@@ -65,7 +70,7 @@ async def atualizar_ocorrencia(
     ocorrencia_id: uuid.UUID,
     dados: OcorrenciaCreate,
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_equipe),
 ) -> Ocorrencia:
     """Atualiza uma ocorrência existente."""
     return await ocorrencia_service.atualizar(db, ocorrencia_id, dados)
@@ -75,7 +80,7 @@ async def atualizar_ocorrencia(
 async def remover_ocorrencia(
     ocorrencia_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_equipe),
 ) -> None:
     """Remove uma ocorrência existente."""
     await ocorrencia_service.remover(db, ocorrencia_id)

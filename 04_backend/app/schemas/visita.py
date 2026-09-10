@@ -25,6 +25,8 @@ class VisitaRead(VisitaBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
+    # Somente leitura: a autoria vem do usuário autenticado, nunca do payload (RN-18).
+    criado_por_id: uuid.UUID | None = None
 
 
 class VisitaCreatePayload(BaseModel):

@@ -13,7 +13,8 @@ gap de integração encontrado ao implementar os testes E2E (BL-21).
   engenheiro ou pequena equipe).
 - `POST /responsaveis` — cria um Responsável.
 
-Protegidos por `get_current_user` (BL-06), mesmo padrão dos demais endpoints.
+Leitura liberada à equipe (`auditor`/`auxiliar`); criação restrita ao `auditor`
+(RN-18, DEC-27) — responsável técnico/legal é dado contratual, não de campo.
 """
 import uuid
 
@@ -21,7 +22,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import require_auditor, require_equipe
 from app.core.database import get_db
 from app.core.errors import NotFoundError
 from app.models import Responsavel, Usuario
@@ -34,7 +35,7 @@ router = APIRouter(prefix="/api/v1/responsaveis", tags=["responsaveis"])
 async def listar_responsaveis(
     tipo: str | None = Query(None, description="Filtra por tipo (ex.: fiscal, responsavel_legal, rte, sindico)"),
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_equipe),
 ) -> list[Responsavel]:
     """Lista responsáveis, com filtro opcional por `tipo`."""
     query = select(Responsavel).order_by(Responsavel.nome)
@@ -48,7 +49,7 @@ async def listar_responsaveis(
 async def criar_responsavel(
     dados: ResponsavelCreate,
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_auditor),
 ) -> Responsavel:
     """Cria um novo Responsável (fiscal, responsável legal, RTE ou contratante)."""
     responsavel = Responsavel(**dados.model_dump())
@@ -62,7 +63,7 @@ async def criar_responsavel(
 async def obter_responsavel(
     responsavel_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_equipe),
 ) -> Responsavel:
     """Detalhe de um Responsável (usado para validação pontual, ex.: pré-preencher formulário)."""
     responsavel = await db.get(Responsavel, responsavel_id)

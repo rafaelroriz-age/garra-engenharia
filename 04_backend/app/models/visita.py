@@ -25,6 +25,10 @@ class Visita(Base):
     servicos_executados: Mapped[str] = mapped_column(Text, nullable=True)
     observacoes: Mapped[str] = mapped_column(Text, nullable=True)
     seq_numero: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Autoria de campo (RN-18/DEC-27): quem coletou o dado, distinto de quem emite o relatório.
+    criado_por_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True
+    )
 
     inspecao: Mapped["Inspecao"] = relationship(back_populates="visitas")
     mao_obra: Mapped[list["VisitaMaoObra"]] = relationship(back_populates="visita")

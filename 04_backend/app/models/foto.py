@@ -30,6 +30,10 @@ class Foto(Base):
     origem: Mapped[str] = mapped_column(String, nullable=False)
     ordem: Mapped[int] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # Autoria de campo (RN-18/DEC-27): quem coletou o dado, distinto de quem emite o relatório.
+    criado_por_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True
+    )
 
     ocorrencia: Mapped["Ocorrencia | None"] = relationship(back_populates="fotos")
     visita: Mapped["Visita | None"] = relationship(back_populates="fotos")

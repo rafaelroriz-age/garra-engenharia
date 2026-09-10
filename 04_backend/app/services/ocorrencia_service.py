@@ -35,9 +35,17 @@ async def listar_todas_por_inspecao(db: AsyncSession, *, inspecao_id: uuid.UUID)
     return await ocorrencia_repository.list_all_by_inspecao(db, inspecao_id=inspecao_id)
 
 
-async def criar(db: AsyncSession, *, inspecao_id: uuid.UUID, dados: OcorrenciaCreate) -> Ocorrencia:
+async def criar(
+    db: AsyncSession,
+    *,
+    inspecao_id: uuid.UUID,
+    dados: OcorrenciaCreate,
+    criado_por_id: uuid.UUID | None = None,
+) -> Ocorrencia:
     _validar_payload(dados)
-    return await ocorrencia_repository.create(db, inspecao_id=inspecao_id, dados=dados)
+    return await ocorrencia_repository.create(
+        db, inspecao_id=inspecao_id, dados=dados, criado_por_id=criado_por_id
+    )
 
 
 async def atualizar(db: AsyncSession, ocorrencia_id: uuid.UUID, dados: OcorrenciaCreate) -> Ocorrencia:

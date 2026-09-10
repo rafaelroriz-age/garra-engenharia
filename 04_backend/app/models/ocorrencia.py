@@ -42,6 +42,10 @@ class Ocorrencia(Base):
     gut_urgencia: Mapped[float] = mapped_column(Float, nullable=True)
     gut_tendencia: Mapped[float] = mapped_column(Float, nullable=True)
     seq_numero: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Autoria de campo (RN-18/DEC-27): quem coletou o dado, distinto de quem emite o relatório.
+    criado_por_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True
+    )
 
     inspecao: Mapped["Inspecao"] = relationship(back_populates="ocorrencias")
     sistema: Mapped["SistemaPredial"] = relationship(back_populates="ocorrencias")
