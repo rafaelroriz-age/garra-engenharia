@@ -2,7 +2,7 @@
 # Dependências principais do backend FastAPI (DEC-05). Scaffold inicial (BL-02);
 # versões futuras podem ser fixadas com maior precisão conforme o projeto evolui.
 
-fastapi>=0.111,<1.0
+fastapi>=0.141.1,<1.0
 uvicorn[standard]>=0.51.0,<1.0
 sqlalchemy[asyncio]>=2.0,<3.0
 alembic>=1.13,<2.0
