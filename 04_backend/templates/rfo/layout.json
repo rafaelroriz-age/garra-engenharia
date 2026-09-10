@@ -1,0 +1,362 @@
+{
+  "versao_schema": 1,
+  "tipo_documento": "RFO",
+  "origem": {
+    "arquivo": "Relatório de Fiscalização 1.xlsm",
+    "sha256": "3d9704f436b3b4b3206e51f136c0740bbbae85b68f7a4a36fd4d65e66bdc5cfc",
+    "aba_capa": "Informações Gerais",
+    "abas_visita": [
+      "Dia 01",
+      "Dia 02",
+      "Dia 03",
+      "Dia 04",
+      "Dia 05",
+      "Dia 06",
+      "Dia 07",
+      "Dia 08",
+      "Dia 09",
+      "Dia 10"
+    ]
+  },
+  "pagina": {
+    "tamanho": "A4",
+    "orientacao": "portrait",
+    "area_impressao": "'Dia 01'!$A$1:$AC$90",
+    "quebras_de_linha": [
+      90
+    ],
+    "margens_cm": {
+      "esquerda": 1.5,
+      "direita": 0.6,
+      "superior": 1.9,
+      "inferior": 1.9
+    }
+  },
+  "tipografia": {
+    "familia": "Arial",
+    "corpo_pt": 10.0,
+    "titulo_pt": 48.0
+  },
+  "cores": {
+    "cabecalho_secao_fundo": "#D9D9D9",
+    "texto": "#000000"
+  },
+  "cabecalho": {
+    "titulo": {
+      "texto": "Relatório de Fiscalização",
+      "fonte_pt": 48.0
+    },
+    "linhas_texto": [
+      "Rua Coronel José Augusto Perilo Qd. 47 Lt. 36 Sala 05 - Parque Veiga Jardim I, Aparecida de Goiânia/GO. CEP: 74954-102 contato@construtoragarra.com"
+    ],
+    "logos": [
+      {
+        "coluna": "A",
+        "linha": 1,
+        "largura_px": 475,
+        "altura_px": 286
+      }
+    ]
+  },
+  "capa": {
+    "aba": "Informações Gerais",
+    "colunas": {
+      "A": 2.66,
+      "B": 11.33,
+      "C": 7.44,
+      "D": 8.78,
+      "E": 8.43,
+      "F": 10.44,
+      "G": 8.78,
+      "H": 8.0,
+      "I": 7.11,
+      "J": 8.33,
+      "K": 5.66,
+      "L": 11.55,
+      "M": 6.78,
+      "N": 6.44,
+      "O": 5.78,
+      "P": 5.11,
+      "Q": 6.44,
+      "R": 7.66,
+      "S": 8.78,
+      "T": 8.43,
+      "U": 8.43,
+      "V": 2.78,
+      "W": 8.43
+    },
+    "secoes": [
+      {
+        "titulo": "INFORMAÇÕES DA EDIFICAÇÃO",
+        "linha": 9,
+        "celula": "B9",
+        "campos": [
+          {
+            "rotulo": "Local:",
+            "celula_rotulo": "B10",
+            "celula_valor": "C10"
+          },
+          {
+            "rotulo": "CNPJ:",
+            "celula_rotulo": "G10",
+            "celula_valor": null
+          },
+          {
+            "rotulo": "Representante Legal:",
+            "celula_rotulo": "K10",
+            "celula_valor": "N10"
+          },
+          {
+            "rotulo": "CPF:",
+            "celula_rotulo": "S10",
+            "celula_valor": "T10"
+          },
+          {
+            "rotulo": "Endereço:",
+            "celula_rotulo": "B11",
+            "celula_valor": "C11"
+          },
+          {
+            "rotulo": "Finalidade:",
+            "celula_rotulo": "L11",
+            "celula_valor": "N11"
+          }
+        ]
+      },
+      {
+        "titulo": "INFORMAÇÕES TÉCNICAS DA FISCALIZAÇÃO",
+        "linha": 13,
+        "celula": "B13",
+        "campos": [
+          {
+            "rotulo": "Contrato:",
+            "celula_rotulo": "B14",
+            "celula_valor": "C14"
+          },
+          {
+            "rotulo": "E-mail:",
+            "celula_rotulo": "I14",
+            "celula_valor": "M14"
+          },
+          {
+            "rotulo": "Responsável Legal:",
+            "celula_rotulo": "B15",
+            "celula_valor": "D15"
+          },
+          {
+            "rotulo": "Fiscal:",
+            "celula_rotulo": "B16",
+            "celula_valor": "C16"
+          }
+        ]
+      },
+      {
+        "titulo": "INFORMAÇÕES TÉCNICAS DA OBRA",
+        "linha": 18,
+        "celula": "B18",
+        "campos": [
+          {
+            "rotulo": "Contrato:",
+            "celula_rotulo": "B19",
+            "celula_valor": "C19"
+          },
+          {
+            "rotulo": "Início:",
+            "celula_rotulo": "G19",
+            "celula_valor": "H19"
+          },
+          {
+            "rotulo": "Prazo:",
+            "celula_rotulo": "J19",
+            "celula_valor": "K19"
+          },
+          {
+            "rotulo": "Término Previsto:",
+            "celula_rotulo": "M19",
+            "celula_valor": "P19"
+          },
+          {
+            "rotulo": "Empresa: Executora:",
+            "celula_rotulo": "B20",
+            "celula_valor": "C20"
+          },
+          {
+            "rotulo": "CNPJ:",
+            "celula_rotulo": "M20",
+            "celula_valor": "N20"
+          },
+          {
+            "rotulo": "Empresa: Executora:",
+            "celula_rotulo": "B21",
+            "celula_valor": "C21"
+          },
+          {
+            "rotulo": "CNPJ:",
+            "celula_rotulo": "M21",
+            "celula_valor": "N21"
+          },
+          {
+            "rotulo": "Endereço:",
+            "celula_rotulo": "B22",
+            "celula_valor": "C22"
+          },
+          {
+            "rotulo": "CEP:",
+            "celula_rotulo": "Q22",
+            "celula_valor": "R22"
+          }
+        ]
+      },
+      {
+        "titulo": "OBJETO DO CONTRATO",
+        "linha": 29,
+        "celula": "B29",
+        "campos": []
+      },
+      {
+        "titulo": "NBR's - REFERÊNCIAS",
+        "linha": 39,
+        "celula": "B39",
+        "campos": []
+      },
+      {
+        "titulo": "OBSERVAÇÕES GERAIS",
+        "linha": 51,
+        "celula": "B51",
+        "campos": []
+      }
+    ]
+  },
+  "visita": {
+    "aba_modelo": "Dia 01",
+    "colunas": {
+      "A": 2.66,
+      "B": 9.11,
+      "C": 11.33,
+      "D": 8.78,
+      "E": 8.43,
+      "F": 6.66,
+      "G": 10.66,
+      "H": 2.11,
+      "I": 8.78,
+      "J": 4.22,
+      "K": 6.66,
+      "L": 5.44,
+      "M": 13.55,
+      "N": 8.11,
+      "O": 8.43,
+      "P": 6.78,
+      "Q": 6.44,
+      "R": 11.33,
+      "S": 11.66,
+      "T": 3.11,
+      "U": 4.55,
+      "V": 0.78,
+      "W": 8.43,
+      "X": 4.33,
+      "Y": 8.78,
+      "Z": 9.78,
+      "AA": 8.78,
+      "AB": 2.78,
+      "AC": 8.43
+    },
+    "secoes": [
+      {
+        "titulo": "RELATÓRIO DIÁRIO DE FISCALIZAÇÃO",
+        "linha": 9,
+        "celula": "B9",
+        "campos": [
+          {
+            "rotulo": "Status:",
+            "celula_rotulo": "I10",
+            "celula_valor": null
+          },
+          {
+            "rotulo": "Data:",
+            "celula_rotulo": "R10",
+            "celula_valor": "S10"
+          },
+          {
+            "rotulo": "Obra:",
+            "celula_rotulo": "B11",
+            "celula_valor": "C11"
+          },
+          {
+            "rotulo": "Local:",
+            "celula_rotulo": "B12",
+            "celula_valor": "C12"
+          },
+          {
+            "rotulo": "Condições Climáticas:",
+            "celula_rotulo": "I12",
+            "celula_valor": null
+          },
+          {
+            "rotulo": "Período:",
+            "celula_rotulo": "M12",
+            "celula_valor": "R12"
+          },
+          {
+            "rotulo": "Fiscal:",
+            "celula_rotulo": "B13",
+            "celula_valor": "C13"
+          },
+          {
+            "rotulo": "CREA nº:",
+            "celula_rotulo": "B14",
+            "celula_valor": "C14"
+          }
+        ]
+      },
+      {
+        "titulo": "ATIVIDADES CONSTATADAS NO DIA DA VISITA",
+        "linha": 16,
+        "celula": "B16",
+        "campos": []
+      },
+      {
+        "titulo": "EQUIPE EFETIVA EM OBRA",
+        "linha": 23,
+        "celula": "B23",
+        "campos": []
+      },
+      {
+        "titulo": "OCORRÊNCIAS / NÃO CONFORMIDADES",
+        "linha": 27,
+        "celula": "B27",
+        "campos": []
+      },
+      {
+        "titulo": "REGISTRO FOTOGRÁFICO",
+        "linha": 34,
+        "celula": "B34",
+        "campos": []
+      }
+    ],
+    "registro_fotografico": {
+      "encontrado": true,
+      "total_no_original": 12,
+      "fotos_por_linha": 2,
+      "colunas_inicio": [
+        "B",
+        "L"
+      ],
+      "linhas_legenda": [
+        36,
+        54,
+        72,
+        94,
+        112,
+        130
+      ],
+      "linhas_por_foto": 18,
+      "prefixo_legenda": "Foto"
+    },
+    "assinaturas": [
+      "RESPONSÁVEL TÉCNICO / FISCALIZAÇÃO",
+      "CONTRATADA",
+      "CONTRATANTE"
+    ]
+  },
+  "extraido_em": "2026-09-10T14:20:35+00:00"
+}
