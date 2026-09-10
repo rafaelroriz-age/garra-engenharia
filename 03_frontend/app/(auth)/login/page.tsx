@@ -43,7 +43,7 @@ export default function LoginPage() {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader className="space-y-3 text-center">
-        <Logo variant="principal" className="mx-auto h-16" priority />
+        <Logo variant="principal" className="mx-auto" />
         <CardTitle className="font-display text-xl">Acessar sua conta</CardTitle>
         <CardDescription>Informe suas credenciais para continuar.</CardDescription>
         <Badge variant="outline" className="mx-auto w-fit">
