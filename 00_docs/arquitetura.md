@@ -8,7 +8,7 @@ related:
   - 00_docs/convertidos/RFO_INSPECAO.md
   - 00_docs/projeto/decisoes.md
 tags: [arquitetura, stack, modelo-de-dados, api, pdf, lightshot, padroes-de-projeto, system-design, seguranca, rbac, portal-cliente, mcp, notion, ia-legendas]
-last_updated: 2026-07-27
+last_updated: 2026-09-10
 ---
 
 <!-- ai-summary
@@ -16,7 +16,7 @@ System: blueprint técnico do sistema de automação de relatórios prediais da 
 Flow: Next.js (PWA) -> FastAPI -> PostgreSQL + MinIO -> fila Redis/Celery -> gerador de PDF/DOCX (WeasyPrint + docxtpl).
 Owner: Eng. Civil Esp. Roniel Ribeiro Costa.
 Systems: Next.js, FastAPI, PostgreSQL, MinIO, Redis, Celery, WeasyPrint, docxtpl, Lightshot.
-Status: draft — sujeito a validação das lacunas [A ESCLARECER] listadas em estudo-do-contexto.md. Seções 9-11 (padrões de projeto, system design, RNF) adicionadas em 2026-07-17.
+Status: draft — as lacunas de maior impacto arquitetural foram fechadas em 2026-09-10 (offline, perfis de acesso e assinatura digital — ADR-14/ADR-15). Seções 9-11 (padrões de projeto, system design, RNF) adicionadas em 2026-07-17.
 -->
 
 # Arquitetura de Software — Sistema de Automação de Relatórios Prediais
@@ -36,7 +36,7 @@ Status: draft — sujeito a validação das lacunas [A ESCLARECER] listadas em e
 | **Geração de PDF** | WeasyPrint + Jinja2 (HTML→PDF) | Permite construir templates HTML/CSS fiéis ao layout atual; suporte a imagens, tabelas complexas e paginação personalizada. Melhor controle de layout que ReportLab para documentos de alta fidelidade visual. |
 | **Geração de DOCX** | docxtpl (python-docx + Jinja2) | Usa um arquivo .docx como template com tags `{{ variavel }}`; preserva a formatação exata do documento original. |
 | **Autenticação** | FastAPI + JWT (python-jose) + bcrypt | Simples e seguro para uso individual/pequena equipe; sem dependência de serviço externo. |
-| **Autorização (RBAC)** | Papéis `auditor` / `cliente` em `Usuario.role` + dependency `require_role()` no FastAPI | Dois perfis de acesso: auditor (engenheiro/equipe, acesso total de escrita) e cliente (contratante/síndico, somente leitura e escopado às próprias Edificações/Contratos via Portal do Cliente — ver DEC-18, RF-13). |
+| **Autorização (RBAC)** | Papéis `auditor` / `auxiliar` / `cliente` em `Usuario.role` + dependency `require_role()` no FastAPI | Três perfis de acesso: auditor (engenheiro responsável técnico, acesso total de escrita e emissão), auxiliar (escrita apenas de dados de campo — visitas, ocorrências e fotos — sem emitir relatório nem cadastrar usuários, ver ADR-14/DEC-27) e cliente (contratante/síndico, somente leitura e escopado às próprias Edificações/Contratos via Portal do Cliente — ver DEC-18, RF-13). |
 | **Anotação de Imagens** | Fabric.js (canvas client-side) no frontend | Permite ao auditor desenhar setas, formas, texto e traço livre diretamente sobre a foto no browser antes de salvar — reproduz dentro do sistema a função de marcação hoje feita externamente no Lightshot (ver DEC-19, RF-14). Não exige nenhum endpoint novo de backend: a imagem já achatada (canvas → blob) é enviada aos endpoints de upload existentes (BL-11). |
 | **Geração de Legendas por IA** | LLM externo via Adapter `LegendaIAClient` — provedor a definir | Transforma anotação de campo/transcrição de áudio fornecida pelo auditor em legenda técnica estruturada, usando um prompt-sistema versionado (tabela `prompts_ia`) fornecido pelo cliente. Sempre gera uma minuta editável — nunca substitui a legenda automaticamente — sujeita a aprovação do profissional habilitado (ver ADR-12, RF-15, RN-16, RN-17). |
 | **Fila / Cache** | Redis 7 | Broker de tarefas assíncronas (Celery) e cache de curto prazo para gabarito de sistemas prediais e agregados do dashboard (ver ADR-06 e Seção 10.4). |
@@ -568,7 +568,7 @@ garra-engenharia/
 
 **Decisão:** PWA com Next.js. Manifest configurado para `display: standalone`. Cache de dados críticos (gabarito de sistemas, contratos em andamento) via Service Worker para uso parcialmente offline.
 
-**Consequências:** [A ESCLARECER] confirmar se o offline completo é necessário. Acesso à câmera via PWA funciona em HTTPS; a captura via Lightshot (clipboard paste) também requer HTTPS.
+**Consequências:** o cliente confirmou (2026-09-10, ADR-15/DEC-26) que **não há necessidade de operação offline** — o Service Worker cacheia somente leitura e escritas exigem conectividade. Acesso à câmera via PWA funciona em HTTPS; a captura via Lightshot (clipboard paste) também requer HTTPS.
 
 ---
 
@@ -746,6 +746,40 @@ Do `layout.json` — versionado no repositório — derivam tanto o `.html.j2` c
 
 ---
 
+### ADR-14 — RBAC: terceiro perfil `auxiliar`, com escrita limitada e autoria rastreável
+
+**Contexto:** a lacuna #2 de `00_docs/estudo-do-contexto.md` foi resolvida em 2026-09-10 — o engenheiro fiscal **não trabalha sozinho**: auxiliares também registram ocorrências e fotos em campo. O RBAC de ADR-09 só prevê `auditor` (escrita total) e `cliente` (leitura escopada), o que obrigaria os auxiliares a compartilhar a credencial de `auditor` — o risco residual de A01 já registrado em `revisao-seguranca-owasp.md` como "dependente da lacuna #2".
+
+**Alternativas consideradas:**
+- **Compartilhar a credencial `auditor`**: escalonamento de privilégio real (auxiliar poderia emitir relatório em nome do responsável técnico e cadastrar usuários) e perda total de rastreabilidade de quem coletou cada registro.
+- **Segregação por equipe com hierarquia de gestores**: mesmo racional de rejeição de ADR-09 — overengineering para um responsável técnico e poucos auxiliares.
+- **Terceiro valor no enum `Usuario.role` já existente**, com autorização por operação via `require_role()` e coluna de autoria nos registros de campo.
+
+**Decisão:** `Usuario.role` passa a aceitar `auditor` | `auxiliar` | `cliente`. O `auxiliar` escreve apenas dados de campo (visitas, ocorrências, fotos, incluindo upload/anotação); **não** gera ou emite relatórios, **não** cria/edita contratos, edificações e responsáveis, **não** cadastra usuários e **não** acessa `/portal/*`. Visitas, ocorrências e fotos ganham `criado_por_id` (FK para `Usuario`), separando quem coletou o dado de quem assume a responsabilidade técnica pelo documento emitido (RN-07).
+
+**Consequências:** nova migration Alembic (`criado_por_id` em `visitas`, `ocorrencias` e `fotos`; `usuarios.role` já é `String`, sem alteração de tipo). `require_role()` de ADR-09 é reaproveitado sem mudança de assinatura. Onboarding do auxiliar segue o mesmo fluxo privilegiado do Cliente (`POST /auth/register` por auditor autenticado, ADR/DEC-24). O frontend oculta as ações não permitidas, mas a autorização efetiva é sempre validada no backend. Gera BL-42 em `backlog-tarefas.md`.
+
+**Referência** | `00_docs/projeto/decisoes.md` DEC-27
+
+---
+
+### ADR-15 — Operação offline completa fora do escopo da v1.0 (PWA online-first)
+
+**Contexto:** a lacuna #3 de `00_docs/estudo-do-contexto.md` (RNF-02) foi resolvida em 2026-09-10: o cliente confirmou que há cobertura 4G ou Wi-Fi em todas as edificações inspecionadas, e que **não há necessidade de registrar ocorrências sem conexão**. Até aqui a Seção 10.8 era uma posição provisória e o risco R-07 mantinha aberta a possibilidade de reescrever a camada de dados do frontend.
+
+**Alternativas consideradas:**
+- **Offline completo preventivo (Service Worker de escrita + IndexedDB + fila de sincronização)**: alto custo e complexidade de reconciliação de conflitos para um requisito declarado inexistente pelo próprio operador de campo.
+- **Fila de escrita mínima "por garantia"**: mesma classe de problema (idempotência de upload de foto, ordenação de eventos, token expirado offline) sem demanda real.
+- **Confirmar a posição online-first como definitiva da v1.0**, mantendo apenas o cache de leitura.
+
+**Decisão:** a operação offline completa fica formalmente fora do escopo da v1.0. O Service Worker (ADR-03) cacheia só leitura de baixa volatilidade; escritas exigem conectividade e falham com erro explícito. RNF-02 deixa de ser `[A ESCLARECER]`.
+
+**Consequências:** a Seção 10.8 deixa de ser provisória e o risco R-07 é encerrado. Se a necessidade surgir no futuro, continua valendo o encaminhamento original — incremento arquitetural dedicado com replanejamento de escopo/cronograma, nunca incorporado retroativamente.
+
+**Referência** | `00_docs/projeto/decisoes.md` DEC-26
+
+---
+
 ## 9. Padrões de Projeto (Design Patterns)
 
 O backend segue uma **arquitetura em camadas** (layered architecture) que isola regra de negócio, acesso a dados e infraestrutura. A tabela resume os padrões adotados; os mais relevantes para o domínio (geração de relatórios) são detalhados em seguida.
@@ -823,7 +857,7 @@ classDiagram
 
 | Categoria OWASP | Risco no contexto do sistema | Mitigação arquitetural |
 |---|---|---|
-| **A01 — Broken Access Control** | Usuário acessar/editar contratos ou relatórios de outro engenheiro (cenário multi-usuário, lacuna #2); cliente do Portal (RF-13) acessar dados de Edificação/Contrato de outro cliente | Toda query de leitura/escrita filtrada por proprietário no repository layer; checagem de posse antes de update/delete; IDs em UUID (não sequenciais/adivinháveis). Endpoints `/portal/*` aplicam RBAC (`role=cliente`) e escopo obrigatório por `Responsavel.usuario_id` (DEC-18, RN-14) — nunca confiam em `edificacao_id`/`contrato_id` vindo da query string sem validar o vínculo. |
+| **A01 — Broken Access Control** | Auxiliar de campo emitir relatório ou cadastrar usuários usando credencial de auditor (lacuna #2, resolvida em 2026-09-10); cliente do Portal (RF-13) acessar dados de Edificação/Contrato de outro cliente | Toda query de leitura/escrita filtrada por proprietário no repository layer; checagem de posse antes de update/delete; IDs em UUID (não sequenciais/adivinháveis). Perfil `auxiliar` com escrita restrita a dados de campo e autoria gravada em `criado_por_id` (ADR-14/DEC-27, BL-42) — elimina o compartilhamento de credencial `auditor`. Endpoints `/portal/*` aplicam RBAC (`role=cliente`) e escopo obrigatório por `Responsavel.usuario_id` (DEC-18, RN-14) — nunca confiam em `edificacao_id`/`contrato_id` vindo da query string sem validar o vínculo. |
 | **A02 — Cryptographic Failures** | Exposição de CPF/CNPJ, endereços e fotos de imóveis (dados sensíveis); envio de fotos/descrições de imóveis a um provedor de IA externo para geração de legendas (RF-15) | HTTPS obrigatório em todos os ambientes (também exigido pela Clipboard API); senhas com bcrypt; segredos via variáveis de ambiente fora do repositório (`.env`, nunca commitado); URLs de download do MinIO pré-assinadas com expiração curta. O provedor de LLM (ADR-12) deve ser escolhido considerando política de retenção/treinamento sobre os dados enviados — decisão pendente (lacuna #13). |
 | **A03 — Injection** | Filtros dinâmicos em listagens (`/contratos`, `/edificacoes`) e dashboard | SQLAlchemy ORM com bind parameters em 100% das queries; nenhuma concatenação de SQL; validação de entrada via Pydantic antes de qualquer acesso ao banco. |
 | **A04 — Insecure Design** | Emissão de relatório inconsistente ou duplicado; legenda gerada por IA (alucinação/erro factual) sendo incluída no relatório sem revisão | RN-08 (bloqueia emissão sem campos obrigatórios); idempotency key no job de geração (ADR-06); versionamento explícito e imutável de relatórios emitidos (RF-11); RN-16 impede que a sugestão de IA componha o relatório sem aprovação explícita do profissional habilitado (ADR-12). |
@@ -973,13 +1007,13 @@ Todas as respostas de erro seguem RFC 7807 (`application/problem+json`, ver ADR-
 
 Um exception handler global em `app/core/exception_handlers.py` converte três famílias de exceção para esse formato: `ValidationError` (Pydantic, 422), `DomainError` (violação de regra de negócio, 422/409) e `NotFoundError` (404). Erros 5xx não expõem stack trace ao cliente — apenas um `title` genérico e o `request_id` para correlação com os logs (Seção 10.3).
 
-### 10.8 Estratégia de Offline (posição provisória)
+### 10.8 Estratégia de Offline (posição definitiva da v1.0)
 
-Conforme `00_docs/projeto/escopo.md` (fora de escopo da v1.0) e a lacuna #3 de `estudo-do-contexto.md` (RNF-02), o suporte offline completo (Service Worker + IndexedDB + fila de sincronização) **não está incluído na v1.0**. Posição arquitetural interina:
+Conforme `00_docs/projeto/escopo.md` e a lacuna #3 de `estudo-do-contexto.md` (RNF-02), **resolvida em 2026-09-10** (ADR-15/DEC-26: o cliente confirmou haver 4G/Wi-Fi em todas as edificações inspecionadas), o suporte offline completo (Service Worker + IndexedDB + fila de sincronização) **não está incluído na v1.0**:
 
 - O Service Worker da PWA (ADR-03) cacheia apenas dados de **leitura** de baixa volatilidade: gabarito de sistemas prediais, lista de contratos em andamento.
 - Operações de **escrita** (criar visita, ocorrência, foto) exigem conectividade — falha de rede resulta em erro explícito ao usuário, sem fila local.
-- Caso a sessão de validação com o cliente (BL-18, risco R-07) confirme a necessidade de offline completo, isso deve ser tratado como incremento arquitetural dedicado (fila local IndexedDB + sincronização com resolução de conflito), não incorporado retroativamente sem replanejamento de escopo/cronograma.
+- Se a necessidade surgir no futuro (ex.: obra em área sem cobertura), isso deve ser tratado como incremento arquitetural dedicado (fila local IndexedDB + sincronização com resolução de conflito), não incorporado retroativamente sem replanejamento de escopo/cronograma.
 
 ---
 
@@ -988,7 +1022,7 @@ Conforme `00_docs/projeto/escopo.md` (fora de escopo da v1.0) e a lacuna #3 de `
 | RNF | Requisito | Como a arquitetura atende | Seção |
 |---|---|---|---|
 | **RNF-01** | Usabilidade mobile em campo (PWA, sem app nativo) | Next.js 14 PWA, `manifest.json` `display: standalone`, componentes shadcn/ui responsivos | ADR-03, Seção 1 |
-| **RNF-02** | Operação offline | Cache de leitura via Service Worker; escrita offline completa fica fora da v1.0 (posição interina) | Seção 10.8 |
+| **RNF-02** | Operação offline | Cache de leitura via Service Worker; escrita offline completa fora do escopo da v1.0, por decisão do cliente (ADR-15/DEC-26) | Seção 10.8 |
 | **RNF-03** | Fidelidade ao template | WeasyPrint + Jinja2 (PDF) e docxtpl (DOCX), com os templates derivados por script determinístico dos originais `.xlsx`/`.xlsm` (RFO, RFIP) e PDF (LTIP, vistorias) do cliente | ADR-01, ADR-04, ADR-13, Seção 5 |
 | **RNF-04** | Exportação PDF e DOCX | Pipeline dual (Template Method) gera ambos os formatos a partir do mesmo contexto de dados | Seção 5, Seção 9.8 |
 | **RNF-05** | Autenticação | JWT + bcrypt, rate limiting em `/auth/login`, refresh token | Seção 1, Seção 10.1 (A07) |

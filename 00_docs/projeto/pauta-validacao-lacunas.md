@@ -7,12 +7,14 @@ related:
   - 00_docs/estudo-do-contexto.md
   - 00_docs/projeto/ata-validacao-lacunas.md
   - 00_docs/projeto/backlog-tarefas-humanas.md
-last_updated: 2026-08-07
+last_updated: 2026-09-10
 ---
 
 # Pauta — sessão de validação das lacunas com o cliente
 
-**Objetivo:** fechar as 9 lacunas remanescentes de [estudo-do-contexto.md §9](../estudo-do-contexto.md#9-lacunas-a-esclarecer) e destravar o bloqueio B-01 (que hoje prende BL-15 e BL-18).
+> **Status em 2026-09-10:** o **Bloco 1 foi respondido** (#3 = a, #2 = b, #9 = a) e está registrado em [ata-validacao-lacunas.md](ata-validacao-lacunas.md), gerando DEC-26, DEC-27 e DEC-28. Restam os **Blocos 2, 3 e 4**.
+
+**Objetivo:** fechar as lacunas remanescentes de [estudo-do-contexto.md §9](../estudo-do-contexto.md#9-lacunas-a-esclarecer) e destravar o bloqueio B-01 (que ainda prende BL-15 pela lacuna #10).
 
 **Participantes:** Eng. Roniel Ribeiro Costa (cliente/responsável técnico) + gestor do projeto.
 **Duração sugerida:** 45–60 min.
@@ -20,13 +22,13 @@ last_updated: 2026-08-07
 
 ---
 
-## Bloco 1 — Alto impacto arquitetural (prioridade máxima, ~25 min)
+## Bloco 1 — Alto impacto arquitetural — ✅ RESPONDIDO EM 2026-09-10
 
-| # | Pergunta ao cliente | Por que importa | Opções a apresentar |
+| # | Pergunta ao cliente | Resposta | Decisão |
 |---|---|---|---|
-| 3 | O registro de ocorrências/fotos precisa funcionar **sem internet** em campo? | Define se entra Service Worker + IndexedDB + fila de sincronização. Muda a arquitetura do frontend (risco R-07). | (a) Não — sempre há 4G/Wi-Fi → mantém a posição atual (§10.8 de arquitetura.md); (b) Sim, ocasional → cache de leitura + fila de escrita simples; (c) Sim, sempre → incremento arquitetural dedicado, com replanejamento de prazo. |
-| 2 | O engenheiro trabalha **sozinho** ou há auxiliares que também registram em campo? | Define se o RBAC precisa de mais perfis além de `auditor`/`cliente` e se há necessidade de segregar dados por autor (OWASP A01). | (a) Sozinho → mantém como está; (b) Equipe pequena → adicionar perfil `auxiliar` com permissão de escrita limitada. |
-| 9 | Os PDFs emitidos usam **assinatura digital ICP-Brasil** ou basta o CREA impresso no documento? | Se for ICP-Brasil, abre HT-08 (obtenção do certificado) e um módulo novo de assinatura PDF/PKCS#7. | (a) CREA impresso apenas → nada muda; (b) ICP-Brasil → nova tarefa de backlog + compra do e-CPF. |
+| 3 | O registro de ocorrências/fotos precisa funcionar **sem internet** em campo? | **(a)** Não — sempre há 4G/Wi-Fi. Mantém a posição online-first (§10.8 de arquitetura.md). | DEC-26 / ADR-15 — RNF-02 fechado, risco R-07 encerrado |
+| 2 | O engenheiro trabalha **sozinho** ou há auxiliares que também registram em campo? | **(b)** Equipe pequena — há auxiliares que registram em campo. | DEC-27 / ADR-14 — perfil `auxiliar` (RN-18), gera BL-42 |
+| 9 | Os PDFs emitidos usam **assinatura digital ICP-Brasil** ou basta o CREA impresso no documento? | **(a)** CREA/ART impressos apenas. | DEC-28 — sem módulo de assinatura na v1.0; HT-08 sem efeito |
 
 ## Bloco 2 — Regras de negócio e modelo de dados (~20 min)
 
@@ -55,7 +57,7 @@ last_updated: 2026-08-07
 
 ## Encaminhamento após a reunião
 
-1. Registrar as respostas em [ata-validacao-lacunas.md](ata-validacao-lacunas.md), substituindo os itens hoje marcados como "Pendente".
-2. Atualizar [estudo-do-contexto.md §9](../estudo-do-contexto.md#9-lacunas-a-esclarecer) e as regras afetadas (RN-04, RN-13, RNF-02, RNF-08).
-3. Rebaixar ou remover B-01 (e B-04, se o item 13 for decidido) em [status.md](status.md#bloqueios-ativos).
-4. Desbloquear BL-15 e fechar BL-18/HT-01 em [backlog-tarefas.md](backlog-tarefas.md) e [backlog-tarefas-humanas.md](backlog-tarefas-humanas.md).
+1. Registrar as respostas em [ata-validacao-lacunas.md](ata-validacao-lacunas.md), substituindo os itens hoje marcados como "Pendente". — *feito para o Bloco 1 em 2026-09-10.*
+2. Atualizar [estudo-do-contexto.md §9](../estudo-do-contexto.md#9-lacunas-a-esclarecer) e as regras afetadas (RN-04, RN-13, RNF-02, RNF-08). — *feito para RNF-02, RN-07 e a nova RN-18; RN-04/RN-13/RNF-08 seguem pendentes dos Blocos 2 e 3.*
+3. Rebaixar ou remover B-01 (e B-04, se o item 13 for decidido) em [status.md](status.md#bloqueios-ativos). — *B-01 rebaixado a impacto Médio em 2026-09-10; B-04 segue ativo.*
+4. Desbloquear BL-15 e fechar BL-18/HT-01 em [backlog-tarefas.md](backlog-tarefas.md) e [backlog-tarefas-humanas.md](backlog-tarefas-humanas.md). — *BL-18/HT-01 passaram a parciais; BL-15 continua presa à lacuna #10 (Bloco 2).*

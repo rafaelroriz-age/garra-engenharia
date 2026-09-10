@@ -39,6 +39,9 @@ tmp_benchmark/
 01_output-context/*.pdf
 01_output-context/*.docx
 01_output-context/*.pbix
+# Amostras renderizadas para a conferência visual de fidelidade (HT-09): são
+# saídas descartáveis do pipeline, regeradas a qualquer momento pelo script.
+01_output-context/_amostras_ht09/
 
 # OS / editor
 .DS_Store

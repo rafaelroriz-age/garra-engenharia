@@ -34,9 +34,10 @@ Revisão de código do backend (`04_backend`) e do frontend (`03_frontend`) cont
 | S-09 | A03 — Injection | Queries dinâmicas de listagem/dashboard | — | ✅ Conforme (SQLAlchemy com bind params, zero SQL concatenado) |
 | S-10 | A08 — Data Integrity Failures | Upload de imagem maliciosa disfarçada de foto | — | ✅ Conforme (magic bytes + recodificação Pillow, BL-11) |
 | S-11 | A10 — SSRF | Endpoint que busque URL fornecida pelo cliente | — | ✅ Conforme (nenhum endpoint aceita URL externa) |
-| S-12 | A01 — Broken Access Control | Endpoints de auditor não filtram por proprietário (qualquer auditor vê todos os contratos) | **Baixa** | ⚠️ Aceito conscientemente — ver "Riscos residuais" |
+| S-12 | A01 — Broken Access Control | Endpoints de auditor não filtram por proprietário (qualquer auditor vê todos os contratos) e não havia perfil próprio para auxiliares de campo | **Baixa** | 🔄 Em tratamento — lacuna #2 respondida em 2026-09-10; perfil `auxiliar` definido em DEC-27 e endereçado por BL-42 |
 | S-13 | A06 — Vulnerable Components | Bumps major de dependência pendentes (Next 16, React 19, ESLint 10, Node 25) | **Baixa** | ⚠️ Pendente (decisão consciente, DEC-22) |
 | S-14 | A07 — Auth Failures | Sem refresh token nem revogação de token emitido | **Baixa** | ⚠️ Aceito para a v1.0 |
+| S-15 | A01 — Broken Access Control | Endpoints internos (`/edificacoes`, `/contratos`, `/responsaveis`, `/inspecoes`, `/visitas`, `/ocorrencias`, `/fotos`, `/dashboard`) exigiam apenas `get_current_user` — um usuário `cliente` do Portal, com token válido, conseguia ler e escrever dados internos de qualquer contratante | **Alta** | ✅ Corrigido (2026-09-10, BL-42) |
 
 ---
 
@@ -67,11 +68,17 @@ O estado é in-process — suficiente para o porte atual (um worker). Com múlti
 
 Implementado junto com BL-32/BL-33: todo endpoint `/portal/*` resolve o escopo a partir de `Responsavel.usuario_id = current_user.id` e valida o vínculo antes de qualquer leitura. Acesso a recurso de outro contratante responde **404** (não 403), para não revelar a existência de dados de terceiros. O download nunca expõe a chave do storage — devolve URL pré-assinada de 15 minutos.
 
+### S-15 — Endpoints internos sem verificação de perfil (A01)
+
+> Encontrado em 2026-09-10, ao implementar BL-42. **Não é um achado teórico:** a DEC-18 afirmava que "endpoints existentes continuam exclusivos do perfil `auditor`", mas nada no código implementava isso — os routers usavam apenas `get_current_user`, que valida o token e ignora o `role`. Na prática, o usuário criado para o Portal do Cliente (DEC-18) podia chamar `GET /api/v1/edificacoes`, `GET /api/v1/contratos` e os endpoints de escrita de visita/ocorrência/foto com o próprio token, alcançando dados de todos os contratantes — exatamente o isolamento que o Portal existia para garantir (RN-14).
+
+Correção: `app/api/deps.py` passou a expor `require_auditor` e `require_equipe` (derivadas de `require_role`), aplicadas em todos os routers internos — `auditor` para atos administrativos (edificação, contrato, responsável, documento técnico) e `auditor`+`auxiliar` para dados de campo e leituras internas. Nenhuma rota interna aceita mais "apenas estar autenticado". Coberto por `tests/test_rbac_auxiliar.py::test_cliente_nao_acessa_rotas_internas`.
+
 ---
 
 ## Riscos residuais aceitos
 
-- **S-12 — Isolamento entre auditores:** hoje qualquer usuário `auditor` autenticado enxerga todos os contratos/edificações. É compatível com o uso previsto (um engenheiro ou uma pequena equipe da mesma empresa, RNF-05) e depende da lacuna #2 de [estudo-do-contexto.md](../estudo-do-contexto.md) (o engenheiro trabalha sozinho ou com auxiliares?). Se a resposta for "equipe com segregação", será necessário filtrar por proprietário na camada de repositório.
+- **S-12 — Isolamento entre auditores:** hoje qualquer usuário `auditor` autenticado enxerga todos os contratos/edificações. **Atualizado em 2026-09-10:** a lacuna #2 foi respondida — há auxiliares de campo, mas todos da mesma empresa, sob o mesmo responsável técnico. Não é preciso segregar dados entre membros da equipe; o que faltava era impedir que o auxiliar operasse com credencial `auditor` (emitindo relatório e cadastrando usuários). Isso passa a ser endereçado pelo perfil `auxiliar` de DEC-27/ADR-14 (BL-42), com autoria gravada em `criado_por_id`. O filtro por proprietário na camada de repositório permanece desnecessário para o porte atual.
 - **S-13 — Dependências major:** bumps não testados (Next 16, React 19, ESLint 10, Node 25) permanecem fechados por decisão consciente (DEC-22). O scan Trivy + `pip-audit`/`npm audit` do `ci.yml` continua bloqueando severidade HIGH/CRITICAL.
 - **S-14 — Ciclo de vida do token:** o access token JWT expira em 60 minutos e não há refresh token nem lista de revogação. Um token vazado é válido até expirar. Aceito para a v1.0; revisitar se o Portal do Cliente passar a ter uso amplo.
 - **Provedor de LLM (RF-15, R-10):** o envio de fotos/descrições a um provedor externo (A02) continua bloqueado por B-04 até a definição de provedor e política de retenção.
@@ -82,7 +89,7 @@ Implementado junto com BL-32/BL-33: todo endpoint `/portal/*` resolve o escopo a
 
 ```bash
 cd 04_backend
-.venv/Scripts/python -m pytest tests/test_seguranca.py tests/test_auth.py tests/test_portal_cliente.py tests/test_rbac_portal.py -q
+.venv/Scripts/python -m pytest tests/test_seguranca.py tests/test_auth.py tests/test_portal_cliente.py tests/test_rbac_portal.py tests/test_rbac_auxiliar.py -q
 ```
 
-Cobertura automatizada dos controles: bloqueio após 5 falhas de login, reset por login bem-sucedido, presença dos cabeçalhos de segurança, propagação do `X-Request-ID`, `403` no registro sem autenticação, e recusa de configuração de produção insegura (`JWT_SECRET_KEY` default e CORS `*`).
+Cobertura automatizada dos controles: bloqueio após 5 falhas de login, reset por login bem-sucedido, presença dos cabeçalhos de segurança, propagação do `X-Request-ID`, `403` no registro sem autenticação, recusa de configuração de produção insegura (`JWT_SECRET_KEY` default e CORS `*`) e autorização por perfil em todas as rotas internas (S-15).
