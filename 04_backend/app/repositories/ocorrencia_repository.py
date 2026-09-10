@@ -53,7 +53,13 @@ async def list_all_by_inspecao(db: AsyncSession, *, inspecao_id: uuid.UUID) -> l
     return list(result.scalars().all())
 
 
-async def create(db: AsyncSession, *, inspecao_id: uuid.UUID, dados: OcorrenciaCreate) -> Ocorrencia:
+async def create(
+    db: AsyncSession,
+    *,
+    inspecao_id: uuid.UUID,
+    dados: OcorrenciaCreate,
+    criado_por_id: uuid.UUID | None = None,
+) -> Ocorrencia:
     ocorrencia = Ocorrencia(
         inspecao_id=inspecao_id,
         sistema_id=dados.sistema_id,
@@ -70,6 +76,7 @@ async def create(db: AsyncSession, *, inspecao_id: uuid.UUID, dados: OcorrenciaC
         gut_urgencia=dados.gut_urgencia,
         gut_tendencia=dados.gut_tendencia,
         seq_numero=await _proximo_seq_numero(db, inspecao_id),
+        criado_por_id=criado_por_id,
     )
     db.add(ocorrencia)
     await db.commit()

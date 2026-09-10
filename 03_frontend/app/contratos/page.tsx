@@ -31,6 +31,7 @@ import {
   type Edificacao,
   type Paginated,
 } from "@/lib/types";
+import { useUsuarioAtual } from "@/lib/use-usuario-atual";
 import { ContratoForm } from "./contrato-form";
 
 const PAGE_SIZE = 10;
@@ -60,6 +61,7 @@ export default function ContratosPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<ApiError | Error | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const { isAuditor } = useUsuarioAtual();
 
   useEffect(() => {
     api
@@ -107,25 +109,28 @@ export default function ContratosPage() {
           title="Contratos"
           description="Contratos com múltiplas empresas executoras e NBRs aplicáveis (RF-02, RF-12)."
         />
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <Button className="gap-1.5" onClick={() => setIsCreateOpen(true)}>
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            Novo contrato
-          </Button>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>Novo contrato</DialogTitle>
-              <DialogDescription>
-                Empresas executoras (RN-06) e ART de Fiscalização (RN-09) obrigatória.
-              </DialogDescription>
-            </DialogHeader>
-            <ContratoForm
-              submitLabel="Criar contrato"
-              onSubmit={handleCreate}
-              onCancel={() => setIsCreateOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
+        {/* Contrato é ato administrativo: só auditor (RN-18). O backend rejeita de qualquer forma. */}
+        {isAuditor && (
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <Button className="gap-1.5" onClick={() => setIsCreateOpen(true)}>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Novo contrato
+            </Button>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Novo contrato</DialogTitle>
+                <DialogDescription>
+                  Empresas executoras (RN-06) e ART de Fiscalização (RN-09) obrigatória.
+                </DialogDescription>
+              </DialogHeader>
+              <ContratoForm
+                submitLabel="Criar contrato"
+                onSubmit={handleCreate}
+                onCancel={() => setIsCreateOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">

@@ -5,14 +5,15 @@
 - `GET /contratos/{id}` — detalhe completo (executoras, NBRs, inspeção).
 - `PUT /contratos/{id}` — atualiza contrato substituindo executoras e NBRs.
 
-Todos protegidos por `get_current_user` (BL-06).
+Leitura liberada à equipe (`auditor`/`auxiliar`); escrita restrita ao `auditor`
+(RN-18, DEC-27) — contrato é ato administrativo, não dado de campo.
 """
 import uuid
 
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import require_auditor, require_equipe
 from app.core.database import get_db
 from app.models import Contrato, Usuario
 from app.schemas.common import PaginatedResponse
@@ -35,7 +36,7 @@ async def listar_contratos(
     status_contrato: str | None = Query(None, alias="status"),
     edificacao_id: uuid.UUID | None = Query(None),
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_equipe),
 ) -> PaginatedResponse:
     """Lista contratos paginados, com filtro opcional por tipo de serviço, status e edificação."""
     items, total = await contrato_service.listar(
@@ -53,7 +54,7 @@ async def listar_contratos(
 async def criar_contrato(
     dados: ContratoCreatePayload,
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_auditor),
 ) -> Contrato:
     """Cria um contrato com N empresas executoras e N NBRs (RN-06, RF-12), e a Inspeção originada."""
     return await contrato_service.criar(db, dados)
@@ -63,7 +64,7 @@ async def criar_contrato(
 async def obter_contrato(
     contrato_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_equipe),
 ) -> Contrato:
     """Detalhe completo do contrato, incluindo executoras, NBRs e inspeção."""
     return await contrato_service.obter_por_id(db, contrato_id)
@@ -74,7 +75,7 @@ async def atualizar_contrato(
     contrato_id: uuid.UUID,
     dados: ContratoUpdatePayload,
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_auditor),
 ) -> Contrato:
     """Atualiza um contrato, substituindo integralmente suas executoras e NBRs."""
     return await contrato_service.atualizar(db, contrato_id, dados)

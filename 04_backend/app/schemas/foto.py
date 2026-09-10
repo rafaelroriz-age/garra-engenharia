@@ -24,6 +24,8 @@ class FotoRead(FotoBase):
 
     id: uuid.UUID
     created_at: datetime
+    # Somente leitura: a autoria vem do usuário autenticado, nunca do payload (RN-18).
+    criado_por_id: uuid.UUID | None = None
 
 
 class FotoUploadResponse(BaseModel):

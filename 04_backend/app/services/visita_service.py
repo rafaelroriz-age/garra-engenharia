@@ -19,9 +19,15 @@ async def obter_por_id(db: AsyncSession, visita_id: uuid.UUID) -> Visita:
     return visita
 
 
-async def criar_visita(db: AsyncSession, inspecao_id: uuid.UUID, dados: VisitaCreatePayload) -> Visita:
+async def criar_visita(
+    db: AsyncSession,
+    inspecao_id: uuid.UUID,
+    dados: VisitaCreatePayload,
+    *,
+    criado_por_id: uuid.UUID | None = None,
+) -> Visita:
     await inspecao_service.obter_por_id(db, inspecao_id)  # garante que a Inspeção existe (404 caso contrário)
-    return await visita_repository.create_visita(db, inspecao_id, dados)
+    return await visita_repository.create_visita(db, inspecao_id, dados, criado_por_id=criado_por_id)
 
 
 async def atualizar_visita(db: AsyncSession, visita_id: uuid.UUID, dados: VisitaUpdatePayload) -> Visita:

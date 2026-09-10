@@ -83,6 +83,14 @@ def require_role(*roles: str):
     return dependency
 
 
+# Perfis de acesso (RN-18, DEC-27/ADR-14). `require_equipe` cobre os dados de campo e as
+# leituras internas; `require_auditor` cobre o que exige responsabilidade técnica ou
+# administração (contratos, edificações, responsáveis, emissão de relatório e cadastro
+# de usuários). O perfil `cliente` nunca alcança nenhuma das duas — só acessa `/portal/*`.
+require_auditor = require_role("auditor")
+require_equipe = require_role("auditor", "auxiliar")
+
+
 async def get_current_cliente_responsavel(
     current_user: Usuario = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
