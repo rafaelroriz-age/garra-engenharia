@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+{#
+  ARQUIVO GERADO — não editar à mão. Produzido por `python -m app.scripts.build_ltip_templates` a partir de templates/ltip/layout.json (ADR-13/DEC-25).
+
+  Layout derivado do PDF original sha256 9ef997756220786c…
+  (199 páginas medidas). O nome do arquivo não é versionado:
+  identifica o cliente inspecionado (OWASP A02).
+#}
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>LAUDO TÉCNICO DE INSPEÇÃO PREDIAL — {{ edificacao.nome }}</title>
+<style>
+  @page {
+    size: A4 portrait;
+    margin: 2.79cm 1.99cm 1.91cm 2.01cm;
+    @bottom-center {
+      content: "Eng. Civil - CREA-GO nº 1020613386/D-GO\A roniel.engcivil@gmail.com / (62) 9 8250-9779";
+      font-family: Times New Roman, serif;
+      font-size: 9.0pt;
+      white-space: pre-line;
+    }
+    @bottom-right {
+      content: counter(page);
+      font-family: Times New Roman, serif;
+      font-size: 9.0pt;
+    }
+  }
+  @page capa { margin: 0; @bottom-center { content: none; } @bottom-right { content: none; } }
+  body {
+    font-family: Times New Roman, "DejaVu Serif", serif;
+    font-size: 12.0pt;
+    color: #000000;
+    margin: 0;
+    text-align: justify;
+  }
+  h1 { font-size: 14.0pt; font-weight: bold; text-transform: uppercase; margin: 0.5cm 0 0.25cm 0; }
+  h2 { font-size: 14.0pt; font-weight: bold; margin: 0.4cm 0 0.2cm 0; }
+  h3 { font-size: 14.0pt; font-weight: bold; margin: 0.3cm 0 0.15cm 0; }
+  p { margin: 0 0 0.2cm 0; line-height: 1.35; }
+  .capa { page: capa; height: 100%; position: relative; text-align: center; }
+  .capa .logo { width: 7.62cm; margin-top: 0.02cm; }
+  .capa .titulo {
+    font-family: Open Sans, sans-serif;
+    font-size: 45.4pt;
+    font-weight: bold;
+    line-height: 1.1;
+    margin-top: 6cm;
+  }
+  .capa .autoria { font-family: Open Sans, sans-serif; font-size: 16pt; font-weight: bold; margin-top: 4cm; }
+  .capitulo { page-break-before: always; }
+  figure.figura { margin: 0.3cm 0; text-align: center; }
+  figure.figura img { max-width: 100%; }
+  figure.figura figcaption { font-size: 9.0pt; font-style: italic; }
+  /* Relatório fotográfico por sistema (RN-11): uma ficha por ocorrência. */
+  .sistema { page-break-before: always; }
+  .fichas { display: flex; flex-wrap: wrap; gap: 0.4cm; }
+  .ficha { width: 48.0%; page-break-inside: avoid; border: 0.5pt solid #999; }
+  .ficha .rotulo-foto {
+    background: #D9D9D9;
+    font-weight: bold;
+    text-align: center;
+    padding: 2pt;
+  }
+  .ficha img { width: 100%; display: block; }
+  .ficha table { width: 100%; border-collapse: collapse; font-size: 9.0pt; }
+  .ficha th, .ficha td { border: 0.5pt solid #999; padding: 1.5pt 3pt; text-align: left; vertical-align: top; }
+  .ficha th { background: #D9D9D9; white-space: nowrap; }
+  .risco-CRITICO { font-weight: bold; }
+</style>
+</head>
+<body>
+  <section class="capa">
+    {% if logo_data_uri %}<img class="logo" src="{{ logo_data_uri }}" alt="Garra Engenharia">{% endif %}
+    <div class="titulo">LAUDO TÉCNICO DE INSPEÇÃO PREDIAL</div>
+    <div class="autoria">
+      Autor:<br>
+      {{ fiscal.nome }}<br>
+      CREA nº {{ fiscal.crea }}<br>
+      {{ data_emissao }}
+    </div>
+  </section>
+
+  <section class="capitulo">
+    <h1>1. INTRODUÇÃO</h1>
+    {% for paragrafo in introducao_paragrafos %}<p>{{ paragrafo }}</p>{% endfor %}
+  </section>
+  <section class="capitulo">
+    <h1>2. CONSIDERAÇÕES PRELIMINARES</h1>
+    {% for paragrafo in consideracoes_preliminares_paragrafos %}<p>{{ paragrafo }}</p>{% endfor %}
+  </section>
+  <section class="capitulo">
+    <h1>3. OBJETIVO</h1>
+    {% for paragrafo in objetivo_paragrafos %}<p>{{ paragrafo }}</p>{% endfor %}
+  </section>
+  <section class="capitulo">
+    <h1>4. OBJETO</h1>
+    {% for paragrafo in objeto_paragrafos %}<p>{{ paragrafo }}</p>{% endfor %}
+  </section>
+  <section class="capitulo">
+    <h1>5. METODOLOGIA</h1>
+    {% for paragrafo in metodologia_paragrafos %}<p>{{ paragrafo }}</p>{% endfor %}
+  </section>
+  <section class="capitulo">
+    <h1>6. DOCUMENTAÇÃO ANALISADA</h1>
+    {% for paragrafo in documentacao_analisada_paragrafos %}<p>{{ paragrafo }}</p>{% endfor %}
+  </section>
+
+  <section class="capitulo">
+    <h1>7. RELATÓRIO FOTOGRÁFICO POR SISTEMA</h1>
+    <p>
+      As ocorrências abaixo estão organizadas por Sistema Predial e, dentro de cada sistema,
+      por Subsistema (RN-11). O Grau de Risco segue o método GUT (RN-04).
+    </p>
+  </section>
+
+  {% for sistema in sistemas %}
+  <section class="sistema">
+    <h2>7.{{ loop.index }}. {{ sistema.nome }}</h2>
+    <div class="fichas">
+      {% for ocorrencia in sistema.ocorrencias %}
+      <div class="ficha">
+        <div class="rotulo-foto">Foto nº {{ "%02d"|format(ocorrencia.seq_numero) }}</div>
+        {% if ocorrencia.foto_data_uri %}<img src="{{ ocorrencia.foto_data_uri }}" alt="Foto nº {{ ocorrencia.seq_numero }}">{% endif %}
+        <table>
+          <tr><th>SITUAÇÃO</th><td>{{ ocorrencia.situacao }}</td></tr>
+          <tr><th>PRIORIDADE</th><td>{{ ocorrencia.prioridade if ocorrencia.prioridade is not none else "—" }}</td></tr>
+          <tr><th>GRAVIDADE</th><td>{{ ocorrencia.gut_gravidade or "—" }}</td></tr>
+          <tr><th>URGÊNCIA</th><td>{{ ocorrencia.gut_urgencia or "—" }}</td></tr>
+          <tr><th>TENDÊNCIA</th><td>{{ ocorrencia.gut_tendencia or "—" }}</td></tr>
+          <tr><th>PONTUAÇÃO</th><td>{{ ocorrencia.pontuacao_gut }}</td></tr>
+          <tr><th>CLASSIFICAÇÃO</th><td>{{ ocorrencia.classificacao }}</td></tr>
+          <tr><th>TIPO</th><td>{{ ocorrencia.tipo_anomalia or ocorrencia.tipo_falha or "—" }}</td></tr>
+          <tr><th>GRAU DE RISCO</th><td class="risco-{{ ocorrencia.grau_risco }}">{{ ocorrencia.grau_risco }}</td></tr>
+          <tr><th>SUBSISTEMA</th><td>{{ ocorrencia.subsistema or "—" }}</td></tr>
+          <tr><th>LOCALIZAÇÃO</th><td>{{ ocorrencia.localizacao or "—" }}</td></tr>
+          <tr><th>OBSERVAÇÕES TÉCNICAS</th><td>{{ ocorrencia.descricao or "—" }}</td></tr>
+        </table>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+
+  <section class="capitulo">
+    <h1>8. CONCLUSÃO</h1>
+    {% for paragrafo in conclusao_paragrafos %}<p>{{ paragrafo }}</p>{% endfor %}
+    <p>
+      {{ fiscal.nome }}<br>
+      Eng. Civil — CREA nº {{ fiscal.crea }}<br>
+      ART nº {{ contrato.art_fiscalizacao }}
+    </p>
+  </section>
+</body>
+</html>
