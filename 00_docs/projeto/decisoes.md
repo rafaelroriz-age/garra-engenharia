@@ -3,7 +3,7 @@ title: Registro de Decisões — Sistema de Automação de Relatórios Prediais
 type: gestao
 status: ativo
 owner: Garra Engenharia
-last_updated: 2026-08-12
+last_updated: 2026-09-10
 ---
 
 # Registro de Decisões (Decision Log)
@@ -47,12 +47,12 @@ last_updated: 2026-08-12
 | Campo | Valor |
 |---|---|
 | **Data** | 2026-07-08 |
-| **Status** | Aprovada (pendente confirmação de necessidade offline) |
+| **Status** | Aprovada (necessidade offline resolvida em 2026-09-10 por DEC-26) |
 | **Contexto** | Engenheiro usa smartphone em campo para registrar ocorrências e fotos (RNF-01). |
 | **Alternativas** | App nativo React Native (melhor experiência, custo 3x maior), Flutter (idem), App Nativo puro (inviável para equipe pequena) |
 | **Decisão** | PWA com Next.js 14. `manifest.json` com `display: standalone`. Service Worker para cache parcial. |
 | **Justificativa** | Entregue como parte do frontend sem infraestrutura adicional. Suporte a câmera via `getUserMedia` e clipboard via API browser. |
-| **Consequências** | [A ESCLARECER] confirmar necessidade de offline completo. Requer HTTPS para Clipboard API. |
+| **Consequências** | Offline completo confirmado como desnecessário pelo cliente (DEC-26): o Service Worker cacheia apenas leitura, e escritas exigem conectividade. Requer HTTPS para Clipboard API. |
 | **Referência** | `00_docs/arquitetura.md` ADR-03 |
 
 ---
@@ -384,4 +384,49 @@ last_updated: 2026-08-12
 | **Justificativa** | Remove uma dependência externa que não tinha como ser satisfeita e substitui a referência de fidelidade pelo artefato mais fiel disponível: a planilha viva (RFO/RFIP) e o PDF final (laudos) preservam fonte, margem, cabeçalho e estilo reais — informação que o `.md` convertido perde por completo. Também dá a HT-09 uma linha de base objetiva de comparação. Manter `layout.json` como camada intermediária evita reextrair o original (pesado e fora do Git) a cada ajuste de template e mantém PDF e DOCX derivados da mesma especificação, sem divergirem entre si. |
 | **Consequências** | **B-02 deixa de ser bloqueio de engenharia:** BL-12, BL-13 e BL-17 são desbloqueadas; HT-02 fica reduzida à obtenção da logo vetorial/transparente (RN-07) e à confirmação de que os arquivos em `01_output-context/` são a versão vigente. Os originais permanecem fora do Git (`.gitignore`) — apenas `layout.json` e os templates gerados são versionados, e os scripts de extração devem receber o caminho do original por parâmetro/variável de ambiente, sem assumir presença no repositório. O `.xlsm` **nunca deve ser executado**: leitura apenas via `openpyxl` sem carregar VBA (OWASP A08). O RFIP de 479 MB exige leitura em modo streaming/`read_only` para não estourar memória. Fica um ponto em aberto para o cliente, que **não bloqueia** a v1.0: se o fluxo de trabalho real permanece em Excel, avaliar a exportação `.xlsx` como formato adicional de saída na v1.1. |
 | **Referência** | `00_docs/arquitetura.md` ADR-13, `00_docs/projeto/status.md` (B-02), `00_docs/projeto/backlog-tarefas-humanas.md` (HT-02), DEC-01, DEC-04, DEC-13 |
+
+---
+
+## DEC-26 — Operação offline completa fora do escopo da v1.0 (PWA online-first)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-09-10 |
+| **Status** | Aprovada |
+| **Contexto** | Resposta do cliente ao Bloco 1 da sessão de validação de lacunas (HT-01/BL-18, ver `ata-validacao-lacunas.md`): a lacuna #3 de `estudo-do-contexto.md` foi respondida com a opção **(a) — não há necessidade de operação offline**, porque as edificações inspecionadas têm cobertura 4G ou Wi-Fi disponível durante a vistoria. Até aqui a Seção 10.8 de `arquitetura.md` sustentava apenas uma "posição provisória" online-first, e o risco R-07 (`riscos.md`) tratava a descoberta tardia desse requisito como risco de prioridade alta sobre toda a arquitetura do frontend. |
+| **Alternativas** | (a) Implementar offline completo preventivamente (Service Worker de escrita + IndexedDB + fila de sincronização com resolução de conflito) — rejeitada: custo alto e complexidade de conflito de dados para um requisito que o cliente declarou inexistente; (b) Implementar uma fila de escrita mínima "por garantia" — rejeitada: mesma classe de complexidade (idempotência de upload de foto, ordenação de eventos, reconciliação), sem demanda real; (c) Confirmar a posição online-first como decisão definitiva da v1.0, mantendo apenas o cache de leitura já previsto na PWA. |
+| **Decisão** | Adotada a alternativa (c). A operação offline completa fica **formalmente fora do escopo da v1.0**. O Service Worker da PWA (ADR-03) continua cacheando somente dados de leitura de baixa volatilidade (gabarito de sistemas prediais, contratos em andamento); operações de escrita (visita, ocorrência, foto) exigem conectividade e falham com erro explícito ao usuário, sem fila local. RNF-02 deixa de ser `[A ESCLARECER]` e passa a ser um requisito fechado nesses termos. |
+| **Justificativa** | Remove a maior incerteza arquitetural do frontend sem custo de implementação: a alternativa offline afetaria modelo de dados (IDs gerados no cliente), upload de fotos (idempotência), autenticação (token expirado offline) e a UX inteira de erro. Confirmado pelo próprio usuário do sistema, que é quem opera em campo. |
+| **Consequências** | Risco **R-07 encerrado** (`riscos.md`). `escopo.md` deixa de marcar "Suporte offline completo" como `[A ESCLARECER]` e passa a listá-lo como fora de escopo por decisão do cliente. A Seção 10.8 de `arquitetura.md` deixa de ser "posição provisória". Se a necessidade surgir no futuro (ex.: obra em área sem cobertura), continua valendo o encaminhamento original: incremento arquitetural dedicado, com replanejamento de escopo e cronograma — nunca incorporado retroativamente. A premissa 4 de `escopo.md` ("o engenheiro tem acesso a internet durante o uso") passa de premissa a fato confirmado. |
+| **Referência** | `00_docs/arquitetura.md` ADR-15, ADR-03 e Seção 10.8, `00_docs/estudo-do-contexto.md` RNF-02 e lacuna #3, `00_docs/projeto/riscos.md` R-07, `00_docs/projeto/ata-validacao-lacunas.md` |
+
+---
+
+## DEC-27 — RBAC: terceiro perfil `auxiliar` com escrita limitada e autoria rastreável
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-09-10 |
+| **Status** | Aprovada |
+| **Contexto** | Resposta do cliente ao Bloco 1 da sessão de validação de lacunas: a lacuna #2 de `estudo-do-contexto.md` foi respondida com a opção **(b) — o engenheiro não trabalha sozinho**; há auxiliares que também registram ocorrências e fotos em campo. O RBAC implementado em DEC-18/BL-30 só prevê `auditor` (escrita total) e `cliente` (leitura escopada), o que obrigaria os auxiliares a compartilhar uma credencial `auditor` — exatamente o cenário que a revisão OWASP (BL-23/DEC-24) já havia registrado como risco residual aceito "dependente da lacuna #2". |
+| **Alternativas** | (a) Manter só `auditor` e dar essa credencial aos auxiliares — rejeitada: escalonamento de privilégio de fato (o auxiliar poderia emitir relatório em nome do responsável técnico e cadastrar usuários, OWASP A01) e perda de rastreabilidade de autoria; (b) Multi-tenancy/segregação por equipe com hierarquia de gestores — rejeitada pelo mesmo motivo de DEC-18: overengineering para o porte atual (um responsável técnico e poucos auxiliares); (c) Terceiro valor no enum `Usuario.role` já existente, com uma dependency de autorização por operação e registro de autoria nos registros criados. |
+| **Decisão** | Adotada a alternativa (c). `Usuario.role` passa a aceitar `auditor` \| `auxiliar` \| `cliente`. O perfil `auxiliar` **pode**: criar/editar visitas, ocorrências e fotos (incluindo upload e anotação) dos contratos em que atua. O perfil `auxiliar` **não pode**: gerar ou emitir relatórios (`/relatorios/*`), criar/editar contratos, edificações e responsáveis, cadastrar usuários (`POST /auth/register`) nem acessar rotas do Portal do Cliente. Os registros de domínio criados em campo passam a gravar o autor (`criado_por_id` → `Usuario`), preservando a responsabilidade técnica: a autoria do laudo continua sendo do `auditor` que o emite, e o auxiliar aparece como quem coletou o dado. |
+| **Justificativa** | Reaproveita integralmente a infraestrutura de RBAC já entregue em BL-30 (`Usuario.role` + `require_role()`), sem sistema de permissões novo. Fecha o risco residual de A01 registrado em `revisao-seguranca-owasp.md` e mantém intacto o princípio de que só o profissional habilitado emite documento técnico (RN-07). |
+| **Consequências** | Gera **BL-42** em `backlog-tarefas.md`: migration Alembic (coluna `criado_por_id` em `visitas`, `ocorrencias` e `fotos`; sem mudança de tipo em `usuarios.role`, que já é `String`), ajuste de `require_role()` nos routers de escrita, `UsuarioCreate.role` passa a aceitar o novo valor e testes de autorização por perfil. O onboarding do auxiliar segue o mesmo fluxo manual do Cliente (auditor autenticado chamando `POST /auth/register`, DEC-24). O frontend precisa esconder as ações não permitidas — mas a autorização real é sempre validada no backend, nunca só na UI. Enquanto BL-42 não for implementada, auxiliares continuam sem credencial própria. |
+| **Referência** | `00_docs/arquitetura.md` ADR-14 e Seção 10.1 (A01), DEC-18, DEC-24, `00_docs/projeto/revisao-seguranca-owasp.md`, `00_docs/estudo-do-contexto.md` RN-14 e lacuna #2 |
+
+---
+
+## DEC-28 — Assinatura dos PDFs emitidos: CREA/ART impressos, sem ICP-Brasil na v1.0
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-09-10 |
+| **Status** | Aprovada |
+| **Contexto** | Resposta do cliente ao Bloco 1 da sessão de validação de lacunas: a lacuna #9 de `estudo-do-contexto.md` foi respondida com a opção **(a) — basta o CREA impresso**. A responsabilidade técnica dos laudos e relatórios é registrada pelo número do CREA do engenheiro fiscal e pela ART correspondente, impressos no corpo do documento (RN-07/RN-09); nenhum contratante atual exige assinatura digital ICP-Brasil nos documentos entregues. |
+| **Alternativas** | (a) Implementar assinatura PDF/PKCS#7 com certificado ICP-Brasil (e-CPF A3/A1) — rejeitada: exige compra e custódia de certificado (HT-08), biblioteca de assinatura, gestão de PIN/HSM e um fluxo de emissão distinto, sem demanda do cliente; (b) Assinatura eletrônica simples (imagem de assinatura digitalizada aplicada ao PDF) — não decidida agora: é mudança de template, não de arquitetura, e pode ser tratada como ajuste de layout se o cliente pedir; (c) Manter o documento como está hoje, com CREA e ART impressos. |
+| **Decisão** | Adotada a alternativa (c). Nenhum módulo de assinatura digital entra na v1.0. Os templates continuam imprimindo CREA, ART e o bloco de assinaturas já presente nos originais (`RESPONSÁVEL TÉCNICO/FISCALIZAÇÃO`, `CONTRATADA`, `CONTRATANTE` — ver ADR-13/BL-12). |
+| **Justificativa** | Preserva o comportamento atual dos documentos que o cliente já entrega e evita introduzir custódia de material criptográfico pessoal (e-CPF) na aplicação, que traria obrigações de segurança desproporcionais ao ganho. |
+| **Consequências** | **HT-08** (obtenção do certificado ICP-Brasil) fica sem efeito para a v1.0 em `backlog-tarefas-humanas.md`. `escopo.md` deixa de marcar "Módulo de assinatura digital ICP-Brasil" como `[A ESCLARECER]` e passa a listá-lo como fora de escopo por decisão do cliente. Se um contratante futuro exigir ICP-Brasil, isso volta como incremento próprio (biblioteca de assinatura + custódia do certificado + revisão de fluxo de emissão), não como ajuste de template. |
+| **Referência** | `00_docs/estudo-do-contexto.md` RN-07, RN-09 e lacuna #9, `00_docs/projeto/escopo.md`, `00_docs/projeto/backlog-tarefas-humanas.md` (HT-08) |
 

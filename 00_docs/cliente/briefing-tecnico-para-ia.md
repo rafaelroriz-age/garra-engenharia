@@ -60,7 +60,7 @@ Em resumo: **é a criação de um produto de software completo e funcional**, n�
 - **Gabarito pré-carregado** de sistemas e subsistemas prediais (dados mestre editáveis).
 - **Autenticação** com login e senha (JWT + bcrypt).
 
-**Fora do escopo atual:** app nativo iOS/Android, integração com API do CREA, assinatura digital ICP-Brasil, módulo financeiro/NF, integração direta com Power BI, suporte offline completo — todos marcados como "a esclarecer" ou explicitamente fora do escopo da v1.0.
+**Fora do escopo atual:** app nativo iOS/Android, integração com API do CREA, módulo financeiro/NF, integração direta com Power BI, **assinatura digital ICP-Brasil** e **suporte offline completo** — estes dois últimos confirmados fora de escopo pelo cliente em 2026-09-10 (há 4G/Wi-Fi em campo; a responsabilidade técnica é atestada por CREA/ART impressos).
 
 ---
 
@@ -121,7 +121,7 @@ Next.js (navegador/PWA) → FastAPI (API REST) → PostgreSQL (dados) + MinIO (a
 - Fase concluída: levantamento de contexto e documentação (estudo do domínio, arquitetura, escopo).
 - Estrutura de código já criada: `03_frontend/` (Next.js) e `04_backend/` (FastAPI), com componentes, rotas de API, modelos de dados e testes iniciais.
 - Protótipos de tela (HTML navegável) já produzidos em `02_prototipos/`.
-- Itens ainda pendentes de validação com o cliente estão listados como "[A ESCLARECER]" na documentação técnica (ex.: necessidade de uso offline, periodicidade de re-inspeção por grau de risco, preferência final de hospedagem).
+- Itens ainda pendentes de validação com o cliente estão listados como "[A ESCLARECER]" na documentação técnica (ex.: periodicidade de re-inspeção por grau de risco, formato das medições do RFO, destino do backup). Uso offline, perfis de acesso da equipe e assinatura digital foram resolvidos em 2026-09-10.
 
 ---
 

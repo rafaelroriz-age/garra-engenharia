@@ -12,7 +12,7 @@ related:
   - 00_docs/projeto/backlog-kanban.md
   - 00_docs/projeto/pauta-validacao-lacunas.md
   - 00_docs/cliente/solicitacao-templates-docx.md
-last_updated: 2026-08-12
+last_updated: 2026-09-10
 ---
 
 # Backlog de Tarefas Humanas
@@ -31,15 +31,15 @@ last_updated: 2026-08-12
 
 | ID | Tarefa | Motivo (só humano) | Bloqueia | Status | Tem alternativa agente/MCP? |
 |---|---|---|---|---|---|
-| [HT-01](#ht-01--validar-as-10-lacunas-a-esclarecer-com-o-cliente) | Validar as 10 lacunas `[A ESCLARECER]` com o cliente | Negociação/decisão de negócio com o cliente | BL-15, BL-18, B-01 | 🔴 Pendente — **pauta pronta** em [pauta-validacao-lacunas.md](pauta-validacao-lacunas.md) | Parcial (pauta já redigida; agente atualiza os docs após a resposta) |
+| [HT-01](#ht-01--validar-as-10-lacunas-a-esclarecer-com-o-cliente) | Validar as lacunas `[A ESCLARECER]` com o cliente | Negociação/decisão de negócio com o cliente | BL-15, BL-18, B-01 | 🟡 Parcial — **Bloco 1 respondido em 2026-09-10** (#2, #3, #9 → DEC-26/27/28); faltam os Blocos 2 e 3 (#1, #4, #5, #7, #8, #10) e o Bloco 4 (provedor de IA) | Parcial (pauta já redigida; agente atualiza os docs após a resposta) |
 | [HT-02](#ht-02--confirmar-versão-vigente-dos-originais-e-obter-a-logo-vetorial) | Confirmar que os originais em `01_output-context/` são a versão vigente e obter a logo vetorial/transparente | Comunicação externa com o cliente | Nada de engenharia — apenas a fidelidade máxima da marca (RN-07) | 🟡 Reduzida em 2026-08-12 (DEC-25/ADR-13) — os `.xlsx`/`.xlsm`/PDF originais **já existem**; BL-12/BL-13/BL-17 desbloqueadas | Sim (agente deriva os templates dos originais disponíveis) |
 | [HT-03](#ht-03--decidir-a-preferência-de-hospedagem) | Decidir a preferência de hospedagem (local vs. nuvem) | Decisão orçamentária | BL-20, BL-24, BL-28, B-03 | ✅ Decidido (Render, 2026-07-21) | Sim (Blueprint `render.yaml` já pronto) |
 | [HT-04](#ht-04--aplicar-o-blueprint-do-render-ou-provisionar-servidorvps-alternativo-e-registrar-domínio) | Aplicar o Blueprint do Render (conta + pagamento) e registrar domínio | Criação de conta, pagamento, conexão OAuth com GitHub | BL-24, BL-28 | 🟡 Em andamento — env vars não-secretas aplicadas via MCP em 2026-08-07; restam **apenas 2 segredos** (`POSTGRES_PASSWORD`, `JWT_SECRET_KEY`) + Pre-Deploy Command + Health Check Path | Sim, parcialmente (MCP não expõe senha do banco nem edição de Settings do serviço) |
 | [HT-05](#ht-05--configurar-proteção-das-branches-mainmain_frontmain_back-no-github) | Configurar proteção das 3 branches (`main`/`main_front`/`main_back`) no GitHub | Configuração administrativa sensível do repositório | BL-25/26 (item pendente), DEC-17/DEC-22 | 🔴 Pendente — `gh` CLI **não autenticado** na máquina (verificado em 2026-08-07); MCP do GitHub não expõe branch protection | Sim, via `gh` CLI após `gh auth login` (comando pronto abaixo) |
 | [HT-06](#ht-06--cadastrar-secrets-do-github-actions) | Cadastrar Secrets do GitHub Actions (SSH, `.env` de produção) | Segredos/credenciais nunca devem passar por chat/agente | BL-28 | 🔴 Pendente | Não recomendado — apenas humano |
 | [HT-07](#ht-07--aprovar-manualmente-o-deploy-de-produção) | Aprovar manualmente o deploy de produção (GitHub Environment) | Gate de governança intencional (segregação de funções, DEC-14) | Deploys em produção (recorrente) | 🔴 Recorrente | Não — é por design |
-| [HT-08](#ht-08--obter-certificado-digital-icp-brasil-se-necessário) | Obter certificado digital ICP-Brasil (se lacuna #9 confirmar necessidade) | Processo legal com autoridade certificadora, identidade do engenheiro | Módulo de assinatura digital (futuro) | 🔴 Condicional a HT-01 | Não para obtenção; integração técnica sim, depois de obtido |
-| [HT-09](#ht-09--validar-visualmente-a-fidelidade-dos-relatórios-gerados) | Validar visualmente a fidelidade dos relatórios PDF/DOCX gerados vs. template original | Julgamento de qualidade/aprovação antes de ir a produção | BL-12, BL-13, BL-17 (sign-off) | 🔴 Pendente | Parcial (comparação visual assistida) |
+| [HT-08](#ht-08--obter-certificado-digital-icp-brasil-se-necessário) | Obter certificado digital ICP-Brasil | Processo legal com autoridade certificadora, identidade do engenheiro | Módulo de assinatura digital (futuro) | ⚪ Sem efeito para a v1.0 (2026-09-10) — lacuna #9 respondida: basta CREA/ART impressos (DEC-28) | Não para obtenção; integração técnica sim, depois de obtido |
+| [HT-09](#ht-09--validar-visualmente-a-fidelidade-dos-relatórios-gerados) | Validar visualmente a fidelidade dos relatórios PDF/DOCX gerados vs. template original | Julgamento de qualidade/aprovação antes de ir a produção | BL-12, BL-13, BL-17 (sign-off) | � **Pronta para conferência (2026-09-10)** — amostra do RFO já renderizada em `01_output-context/_amostras_ht09/` | Parcial (agente gera a amostra; o parecer é humano) |
 | [HT-10](#ht-10--coleta-de-dados-e-fotos-em-campo-durante-a-vistoriainspeção) | Coleta de dados e fotos em campo durante a vistoria/inspeção | Atividade física de engenharia, fora do escopo de software | Alimenta BL-10/BL-11 (dados de entrada) | 🔴 Recorrente | Não |
 | [HT-11](#ht-11--negociar-e-assinar-o-contrato-de-prestação-de-serviços) | Negociar e assinar o contrato de prestação de serviços/aditivos | Assinatura com validade jurídica | Formalização comercial | 🔴 Pendente | Parcial (minuta/revisão do contrato) |
 | [HT-12](#ht-12--autenticar-o-servidor-mcp-do-notion) | Autenticar o servidor MCP do Notion (OAuth) e selecionar o workspace/página de destino | Login/OAuth e escolha de workspace são atos do próprio usuário; credencial não deve passar por chat/agente | Criação do board `backlog-kanban.md` real dentro do Notion (DEC-20) | ✅ Concluída (2026-08-07) — board criado, ver [HT-12](#ht-12--autenticar-o-servidor-mcp-do-notion) | Sim (board criado integralmente pelo agente após a autenticação) |
@@ -52,7 +52,7 @@ last_updated: 2026-08-12
 
 | ID | Nome | Descrição | Tarefa humana associada |
 |---|---|---|---|
-| B-01 | Lacunas de requisitos pendentes | 10 pontos `[A ESCLARECER]` que ainda precisam ser validados com o cliente antes de definir o desenho final do sistema | HT-01 |
+| B-01 | Lacunas de requisitos pendentes (reduzido em 2026-09-10) | Pontos `[A ESCLARECER]` que ainda precisam ser validados com o cliente. As três de maior impacto arquitetural (#2, #3, #9) foram fechadas no Bloco 1 da pauta — DEC-26/27/28. Restam #1, #4, #5, #7, #8 e #10 | HT-01 |
 | B-02 | Fidelidade de template (reclassificado) | Os originais `.xlsx`/`.xlsm`/PDF dos 5 modelos **estão disponíveis** em `01_output-context/` e passam a ser a base dos templates (DEC-25/ADR-13). Resta apenas a logo vetorial/transparente para fidelidade máxima da marca | HT-02 |
 | B-03 | Preferência de hospedagem | Decisão orçamentária/estratégica da plataforma de deploy (Render vs. VPS/local) | HT-03 e HT-04 |
 | B-04 | Provedor de IA/LLM não definido | Decide a política de privacidade/retensão e o provedor para legendas assistidas por IA | Decisão de negócio / não há HT dedicada ainda |
@@ -67,12 +67,12 @@ last_updated: 2026-08-12
 
 **Bloqueia:** B-01 (`status.md`), BL-15, BL-18 (`backlog-tarefas.md`).
 
-**Estado atual (2026-07-29):** a lacuna #13 foi esclarecida parcialmente pelo prompt do cliente em [00_docs/cliente/prompt-lado-cliente.md](../cliente/prompt-lado-cliente.md); as lacunas #6, #11 e #12 já foram tratadas/definidas via DEC-18 em [00_docs/projeto/decisoes.md](decisoes.md). As lacunas remanescentes (#1, #2, #3, #4, #5, #7, #8, #9, #10) ainda precisam de confirmação formal, inclusive a decisão de provedor de IA e política de retenção/privacidade para o fluxo de legendas assistidas por IA.
+**Estado atual (2026-09-10):** o **Bloco 1 da pauta foi respondido pelo cliente** — #3 (sem necessidade de operação offline → DEC-26), #2 (há auxiliares de campo → perfil `auxiliar`, DEC-27, gera BL-42) e #9 (sem ICP-Brasil, apenas CREA/ART impressos → DEC-28). As respostas estão em [ata-validacao-lacunas.md](ata-validacao-lacunas.md). Antes disso, a lacuna #13 já havia sido esclarecida parcialmente pelo prompt do cliente em [00_docs/cliente/prompt-lado-cliente.md](../cliente/prompt-lado-cliente.md) e as #6, #11 e #12 tratadas via DEC-18. **Faltam:** #1, #4, #5, #7 e #8 (Blocos 2 e 3), #10 (Bloco 2 — única que ainda prende BL-15) e a decisão de provedor de IA/política de dados (Bloco 4, B-04).
 
 **Passo a passo:**
 1. Revisar a lista completa das 10 lacunas em [estudo-do-contexto.md §9](../estudo-do-contexto.md#9-lacunas-a-esclarecer).
 2. Agendar reunião com o Eng. Roniel (ou responsável técnico do cliente) — canal a critério do gestor (e-mail, WhatsApp, chamada).
-3. Conduzir a reunião cobrindo os 10 itens, com atenção prioritária a: offline (#3), multiusuário (#2), assinatura digital (#9) — citados como prioritários em [status.md](status.md#próximos-passos-em-ordem).
+3. Conduzir a reunião cobrindo os itens restantes — **Blocos 2, 3 e 4** da pauta. O Bloco 1 (offline #3, multiusuário #2, assinatura digital #9) foi concluído em 2026-09-10; a prioridade agora é a lacuna **#10**, única que ainda prende BL-15.
 4. Documentar as respostas (ata ou anotações) e guardar em `00_docs/` (ex.: novo arquivo `ata-validacao-lacunas.md`).
 5. Atualizar `estudo-do-contexto.md` marcando as lacunas já esclarecidas (#6, #11, #12) e a lacuna #13 como parcialmente resolvida, mantendo as demais como pendentes e ajustando RN-04, RN-13, RNF-02, RNF-08 conforme as respostas.
 6. Atualizar o status de B-01 para "parcialmente resolvido" em [status.md](status.md#bloqueios-ativos) e ajustar BL-15/BL-18 em `backlog-tarefas.md` para refletir o que ficou esclarecido e o que ainda precisa confirmação.
@@ -243,9 +243,11 @@ last_updated: 2026-08-12
 
 ## HT-08 — Obter certificado digital ICP-Brasil (se necessário)
 
+> ⚪ **Sem efeito para a v1.0 (2026-09-10).** A lacuna #9 foi respondida pelo cliente: a responsabilidade técnica é atestada pelo CREA e pela ART impressos no documento, e nenhum contratante exige assinatura ICP-Brasil (DEC-28). Esta tarefa só volta a valer se um contratante futuro passar a exigir assinatura digital.
+
 **Por que só um humano:** é um processo legal com uma Autoridade Certificadora (compra de e-CPF/e-CNPJ, validação presencial ou por vídeo, identidade do engenheiro responsável) — nenhuma ferramenta de código resolve isso.
 
-**Depende de:** resposta à lacuna #9 em HT-01 (o cliente/engenheiro usa assinatura digital ICP-Brasil ou apenas CREA impresso?).
+**Depende de:** resposta à lacuna #9 em HT-01 — **respondida em 2026-09-10: apenas CREA impresso**, sem ICP-Brasil.
 
 **Passo a passo (se confirmado necessário):**
 1. Contratar certificado digital e-CPF (A1 ou A3) junto a uma AC credenciada pela ICP-Brasil.
@@ -263,8 +265,12 @@ last_updated: 2026-08-12
 
 **Bloqueia:** aprovação final de BL-12, BL-13, BL-17 antes de uso em produção.
 
+> **Amostra pronta para conferência (2026-09-10).** O agente já executou o passo 1: `01_output-context/_amostras_ht09/amostra_rfo.pdf` (5 páginas) e `amostra_rfo.docx`, renderizados pelo pipeline real (`rfo_pipeline`) com os templates derivados do original em BL-12/BL-13 — capa, 2 relatórios diários com equipe, medições, ocorrências e registro fotográfico. A pasta é ignorada pelo Git (saída descartável, regerável). **Falta apenas o passo 2 em diante: a comparação visual e o parecer do engenheiro.**
+>
+> Para regerar: `docker compose up -d backend` em `05_infra/`, copiar `04_backend/templates/rfo` e o script de amostra para dentro do container (não há bind-mount) e executá-lo — o WeasyPrint não roda no Windows local (faltam as libs GTK).
+
 **Passo a passo:**
-1. Gerar um relatório de teste (RFO/LTIP) com dados de exemplo.
+1. ~~Gerar um relatório de teste (RFO/LTIP) com dados de exemplo.~~ ✅ feito para o RFO — ver amostra acima. O LTIP ainda depende do `ltip_pipeline.py` (renderização), que não faz parte de BL-17.
 2. Abrir lado a lado com o original do cliente arquivado em `01_output-context/` — `.xlsx`/`.xlsm` para RFO/RFIP, PDF final para LTIP e as vistorias (ADR-13).
 3. Conferir: cabeçalho/rodapé por página, tabelas, quebras de página, fotos e legendas, tipografia.
 4. Registrar aprovação (ou lista de ajustes) — pode ser um comentário no PR ou uma nota em `00_docs/projeto/status.md`.

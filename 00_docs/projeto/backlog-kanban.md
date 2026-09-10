@@ -30,14 +30,13 @@ last_updated: 2026-08-07
 
 ---
 
-## 🔵 Backlog (12)
+## 🔵 Backlog (11)
 
 | ID | Tarefa | Requisitos/Decisões | Agente |
 |---|---|---|---|
 | BL-12 | Prototipagem do template HTML/CSS do RFO para PDF (WeasyPrint) | RF-06, RNF-03, DEC-01 | Prototipagem e Documentação para Cliente |
 | BL-13 | Geração de DOCX do RFO via docxtpl | RF-06, DEC-04 | Engenheiro Backend |
 | BL-15 | Regra de prioridade automática por Grau de Risco CMM | RN-04 | Engenheiro Backend |
-| BL-17 | Prototipagem de templates HTML/CSS do LTIP + relatório fotográfico | RF-06, RN-11, RNF-03 | Prototipagem e Documentação para Cliente |
 | BL-18 | Agendar e conduzir sessão de validação das lacunas `[A ESCLARECER]` | — | Gestor de Projeto |
 | BL-19 | Solicitar e receber arquivos `.docx` de template e logo em alta resolução | — | Gestor de Projeto |
 | BL-34 | Legendas assistidas por IA (backend): `prompts_ia`, campos em `Foto`, Adapter `LegendaIAClient` | RF-15, RN-16, RN-17, DEC-21 | Engenheiro Backend |
@@ -67,7 +66,7 @@ last_updated: 2026-08-07
 | BL-16 | Dashboard de saúde por edificação/sistema predial | RF-07 | Engenheiro Backend + Frontend |
 | BL-24 | Deploy de produção (Render) — faltam `POSTGRES_PASSWORD`/`JWT_SECRET_KEY` | HT-04, DEC-22 | Engenheiro DevOps |
 
-## 🟢 Done (18)
+## 🟢 Done (19)
 
 | ID | Tarefa | Requisitos/Decisões | Agente |
 |---|---|---|---|
@@ -80,6 +79,7 @@ last_updated: 2026-08-07
 | BL-07 | Storage service: MinIO/S3 (boto3) | RNF-07, DEC-02 | Engenheiro Backend |
 | BL-08 | CRUD de Edificações | RF-01 | Engenheiro Backend + Frontend |
 | BL-09 | CRUD de Contratos | RF-02, RF-12, RN-06, RN-09 | Engenheiro Backend + Frontend |
+| BL-42 | RBAC — perfil `auxiliar` (escrita limitada de dados de campo + autoria `criado_por_id`) | RN-18, DEC-27 | Engenheiro Backend + Frontend |
 | BL-20 | Definir preferência de hospedagem (Render) | — | Gestor de Projeto |
 | BL-25 | Repositório Git remoto no GitHub | DEC-14 | Engenheiro DevOps |
 | BL-26 | `ci.yml` (lint, testes, build, scan Trivy) | DEC-14 | Engenheiro DevOps |

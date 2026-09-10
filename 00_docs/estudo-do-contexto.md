@@ -9,7 +9,7 @@ related:
   - 00_docs/convertidos/Relatorio_de_Fiscalizacao_1.md
   - 00_docs/convertidos/Laudo_Tecnico_de_Inspecao_Predial_2026_-_Cond_Cortina_DAmpezzo.md
 tags: [contexto, domínio, requisitos, regras-de-negócio, rbac, portal-cliente, ia-legendas]
-last_updated: 2026-07-27
+last_updated: 2026-09-10
 ---
 
 <!-- ai-summary
@@ -82,6 +82,7 @@ Documento subsidiário ao LTIP ou entregue de forma independente. Composto exclu
 | Ator | Papel | Observações |
 |---|---|---|
 | **Engenheiro Fiscal** | Profissional responsável pela fiscalização. É o autor dos relatórios. | Roniel Ribeiro Costa; possui CREA e emite ART de Fiscalização. |
+| **Auxiliar de Campo** | Integrante da equipe que acompanha o Engenheiro Fiscal e também registra visitas, ocorrências e fotos em campo. Não emite relatório nem assume responsabilidade técnica. | Confirmado pelo cliente em 2026-09-10 (lacuna #2). Perfil de acesso próprio `auxiliar`, com escrita limitada e autoria rastreável — ver RN-18 e DEC-27. |
 | **Responsável Técnico pela Execução (RTE)** | Engenheiro da empresa executora que assina a ART de Execução. | Diferente do fiscal; pode ser de outra empresa. |
 | **Responsável Legal da Empresa Executora** | Representante jurídico da construtora/reformadora. | Pode haver duas empresas executoras no mesmo contrato. |
 | **Contratante / Cliente** | Pessoa física ou jurídica que contratou o serviço. Pode ser o dono do imóvel, síndico ou administradora. Acompanha a auditoria/fiscalização feita pelo Engenheiro Fiscal através de um Portal do Cliente próprio (dashboard + documentos) — ver RF-13. | Tem CPF ou CNPJ; assina o contrato. Perfil de acesso distinto do Engenheiro Fiscal (RBAC, ver RN-14). |
@@ -137,7 +138,7 @@ Documento subsidiário ao LTIP ou entregue de forma independente. Composto exclu
 | **RN-04** | O Grau de Risco CMM de uma Ocorrência determina sua Prioridade padrão: Crítico = Prioridade 5, Médio = Prioridade 3, Mínimo = Prioridade 1. [A ESCLARECER] se o engenheiro pode sobrescrever manualmente. |
 | **RN-05** | Toda Ocorrência deve ser classificada em: Situação (Conforme/Não Conforme), Classificação (Anomalia, Falha, Anomalia+Falha, Não se Aplica), Tipo de Anomalia (se aplicável), Tipo de Falha (se aplicável), Grau de Risco e Prioridade (0 a 5). |
 | **RN-06** | Um Contrato pode envolver mais de uma empresa executora (subcontratadas), cada uma com CNPJ, Responsável Legal e RTE próprios. |
-| **RN-07** | O documento final (Relatório/Laudo) deve ser fiel ao layout, terminologia e estrutura dos modelos atuais do cliente, incluindo cabeçalho com logo, dados do engenheiro e do CREA. |
+| **RN-07** | O documento final (Relatório/Laudo) deve ser fiel ao layout, terminologia e estrutura dos modelos atuais do cliente, incluindo cabeçalho com logo, dados do engenheiro e do CREA. A responsabilidade técnica é atestada pelo CREA e pela ART impressos no documento — não há exigência de assinatura digital ICP-Brasil (confirmado em 2026-09-10, lacuna #9 / DEC-28). |
 | **RN-08** | Um Relatório somente pode ser marcado como "emitido" após ter todos os campos obrigatórios preenchidos e pelo menos uma foto por Ocorrência Não Conforme. |
 | **RN-09** | Contratos possuem ART de Fiscalização (do engenheiro fiscal) e, quando aplicável, ART de Execução (do RTE). Os números devem constar no cabeçalho do relatório. |
 | **RN-10** | Cada sistema predial inspecionado deve ser avaliado individualmente. A ausência de um sistema na edificação deve ser registrada como "Não se Aplica". |
@@ -148,6 +149,7 @@ Documento subsidiário ao LTIP ou entregue de forma independente. Composto exclu
 | **RN-15** | A imagem resultante do editor de anotação (RF-14) — com setas, formas, texto ou traço livre aplicados — substitui a imagem enviada como a Foto definitiva vinculada à Ocorrência/Visita; o sistema não é obrigado a reter a versão sem marcação. |
 | **RN-16** | A legenda técnica sugerida por IA (RF-15) é sempre uma minuta sujeita à revisão e aprovação do profissional responsável antes de compor um relatório emitido; o sistema não deve permitir que uma legenda gerada por IA seja incluída no relatório sem essa aprovação explícita. |
 | **RN-17** | Toda legenda gerada por IA deve preservar a rastreabilidade da origem: texto bruto/transcrição original, sugestão da IA, versão do prompt-sistema utilizada, usuário que aprovou/editou e data/hora da aprovação. |
+| **RN-18** | Um usuário do tipo Auxiliar de Campo (RBAC) pode criar e editar apenas dados de campo — visitas, ocorrências e fotos — e não pode gerar/emitir relatórios, criar ou editar contratos, edificações e responsáveis, cadastrar usuários nem acessar o Portal do Cliente. Todo registro de campo grava o usuário que o criou, mantendo separadas a coleta do dado e a responsabilidade técnica pelo documento emitido (RN-07). |
 
 ---
 
@@ -178,7 +180,7 @@ Documento subsidiário ao LTIP ou entregue de forma independente. Composto exclu
 | Código | Requisito |
 |---|---|
 | **RNF-01** | **Usabilidade mobile em campo**: a interface de registro de visitas e ocorrências deve funcionar em smartphone (tela ≥ 5,5") sem necessidade de instalação de app nativo. Preferência por PWA. |
-| **RNF-02** | **Operação offline**: [A ESCLARECER] se é necessário suporte a registro offline com sincronização posterior (em campo, nem sempre há conexão). |
+| **RNF-02** | **Operação offline**: não é necessária. Confirmado pelo cliente em 2026-09-10 (lacuna #3): há cobertura 4G ou Wi-Fi em todas as edificações inspecionadas. O sistema é online-first — o Service Worker da PWA cacheia apenas leitura e as operações de escrita exigem conectividade (DEC-26). |
 | **RNF-03** | **Fidelidade ao template**: o relatório gerado deve ser visualmente indistinguível dos documentos atuais entregues ao cliente. Qualquer diferença no layout é inaceitável. |
 | **RNF-04** | **Exportação PDF e DOCX**: o sistema deve gerar ambos os formatos; o DOCX permite edição manual pelo engenheiro antes da entrega final. |
 | **RNF-05** | **Autenticação**: o sistema deve ter login com senha. Como é uso individual (um engenheiro) ou de pequena equipe, autenticação simples é suficiente. Dados de clientes devem ser protegidos. |
@@ -233,19 +235,21 @@ Cadastra Edificação (obra em fase final) -> Cadastra Contrato (Vistoria Cautel
 
 ## 9. Lacunas [A ESCLARECER]
 
+> Atualização 2026-09-10: o cliente respondeu ao **Bloco 1** da [pauta de validação](projeto/pauta-validacao-lacunas.md) — lacunas **#2, #3 e #9 resolvidas**, gerando DEC-26 (sem operação offline), DEC-27 (perfil `auxiliar` no RBAC) e DEC-28 (sem assinatura ICP-Brasil). Respostas registradas em [ata-validacao-lacunas.md](projeto/ata-validacao-lacunas.md). Permanecem abertas as lacunas #1, #4, #5, #7, #8 e #10 (Blocos 2 e 3 da pauta) e a decisão de provedor de IA da #13 (Bloco 4).
+>
 > Atualização 2026-07-29: o prompt do cliente em [00_docs/cliente/prompt-lado-cliente.md](../cliente/prompt-lado-cliente.md) esclarece parcialmente a lacuna #13 (prompt-sistema universal para legendas técnicas, regras de não invenção, rastreabilidade e aprovação humana obrigatória). As lacunas #6, #11 e #12 já foram tratadas/definidas via DEC-18 em [00_docs/projeto/decisoes.md](./projeto/decisoes.md). O conteúdo do prompt já permite tratar o fluxo de legendas assistidas por IA como parcialmente definido, mas não substitui a decisão do provedor de IA nem a política de retenção/privacidade dos dados enviados a terceiros. As demais continuam abertas e precisam de validação formal.
 
 | # | Dúvida | Impacto |
 |---|---|---|
 | 1 | Existe periodicidade de re-inspeção mandatória por grau de risco (Crítico < 90 dias, Médio < 180 dias, Mínimo < 1 ano)? | Define se o sistema precisa de alertas/calendário. |
-| 2 | O engenheiro trabalha sozinho ou tem auxiliares que também fazem registro em campo? | Define se autenticação multi-usuário é necessária. |
-| 3 | O sistema precisa funcionar totalmente offline em campo (sem internet)? | Define necessidade de PWA com Service Worker + IndexedDB. |
+| 2 | ~~O engenheiro trabalha sozinho ou tem auxiliares que também fazem registro em campo?~~ **RESOLVIDA (2026-09-10):** há auxiliares que também registram ocorrências e fotos em campo. | Gerou o perfil `auxiliar` no RBAC (RN-18, DEC-27/ADR-14) e a tarefa BL-42. Encerra o risco residual de A01 sobre credencial compartilhada. |
+| 3 | ~~O sistema precisa funcionar totalmente offline em campo (sem internet)?~~ **RESOLVIDA (2026-09-10):** não — há cobertura 4G/Wi-Fi em todas as edificações inspecionadas. | Fecha RNF-02 como online-first (DEC-26/ADR-15). Offline completo permanece fora do escopo da v1.0; risco R-07 encerrado. |
 | 4 | As fotos do Lightshot são salvas automaticamente em pasta monitorada ou somente na área de transferência? | Define estratégia de integração com Lightshot. |
 | 5 | O DOCX gerado serve como rascunho editável antes da entrega, ou o PDF final deve ser definitivo sem edição manual? | Define se WeasyPrint (PDF direto) é suficiente ou se docxtpl (DOCX intermediário) é obrigatório. |
 | 6 | ~~O cliente (síndico/proprietário) precisa ter acesso ao sistema para consultar relatórios, ou o engenheiro sempre entrega o PDF por e-mail?~~ **RESOLVIDA (2026-07-24):** sim, o cliente terá acesso a um Portal do Cliente próprio (dashboard de acompanhamento da auditoria + documentos), com login separado do Engenheiro Fiscal. | Gerou RF-13, RN-14 e a decisão de arquitetura DEC-18 (RBAC) em `00_docs/projeto/decisoes.md`. |
 | 7 | Existe integração necessária com o CREA para consulta ou validação de ARTs? | Define complexidade da integração com sistemas externos. |
 | 8 | As medições do RFO têm formato fixo (m²) ou variam por contrato (unidades, horas, etc.)? | Define flexibilidade do modelo de medições. |
-| 9 | O engenheiro usa assinatura digital (ICP-Brasil) nos PDFs emitidos, ou a assinatura é apenas o CREA impresso? | Define se é necessário módulo de assinatura digital. |
+| 9 | ~~O engenheiro usa assinatura digital (ICP-Brasil) nos PDFs emitidos, ou a assinatura é apenas o CREA impresso?~~ **RESOLVIDA (2026-09-10):** apenas CREA e ART impressos no documento; nenhum contratante exige ICP-Brasil. | Nenhum módulo de assinatura digital na v1.0 (DEC-28); HT-08 (certificado e-CPF) fica sem efeito. |
 | 10 | O campo "Prioridade 0" significa "sem prioridade definida" ou "não aplicável"? | Define tratamento no banco e na geração do relatório. |
 | 11 | Definido interinamente (2026-07-24): o acesso do cliente ao Portal (RF-13) é feito por criação manual de credencial pelo engenheiro fiscal, sem auto-cadastro público. | Define o fluxo de onboarding do usuário Cliente (BL-30). |
 | 12 | Definido interinamente (2026-07-24): o Portal do Cliente é escopado por vínculo contratante/Responsável; não há necessidade de definir um cadastro separado por edificação/contrato. | Define o vínculo Usuario↔Responsavel e o escopo do Portal do Cliente (BL-30). |
