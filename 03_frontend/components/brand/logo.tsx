@@ -1,46 +1,72 @@
-import Image, { type StaticImageData } from "next/image";
-
 import { cn } from "@/lib/utils";
 
-import logoCompacta from "@/public/brand/logos/logo-compacta-negativa-fundo-ardosia.jpg";
-import logoHorizontal from "@/public/brand/logos/logo-horizontal-negativa-fundo-preto.jpg";
-import logoPrincipal from "@/public/brand/logos/logo-principal-fundo-claro.jpg";
+import { GarraMark } from "./garra-mark";
 
 export type LogoVariant = "principal" | "horizontal" | "compacta";
-
-const LOGO_SOURCES: Record<LogoVariant, StaticImageData> = {
-  principal: logoPrincipal,
-  horizontal: logoHorizontal,
-  compacta: logoCompacta,
-};
 
 const LOGO_ALT = "Garra Perícias e Avaliações";
 
 interface LogoProps {
   variant: LogoVariant;
   className?: string;
-  priority?: boolean;
 }
 
 /**
- * Marca oficial "Garra Perícias e Avaliações" (BL-41).
+ * Marca oficial "Garra Perícias e Avaliações" (BL-41/BL-19).
  *
- * Os 3 arquivos oficiais são JPEGs com fundo próprio (sem transparência), por
- * isso cada variante é sempre renderizada como um "selo" (`rounded-md
- * overflow-hidden`) — nunca solta sobre outra cor de fundo, evitando um
- * recorte retangular acidental. Escolha a variante pelo fundo da superfície:
- * `principal` (clara), `horizontal` (escura, com espaço horizontal) ou
- * `compacta` (escura, espaço reduzido — navegação/shell).
+ * Vetorizada em SVG (`GarraMark`, `fill="currentColor"`) + texto real
+ * (`font-display`) no lugar dos 4 JPEGs originais com fundo/cores embutidas:
+ * escala sem perda em qualquer tamanho e herda a cor certa de cada
+ * superfície via classe de texto — navy (`text-primary`) sobre fundo claro,
+ * branco (`text-primary-foreground`) sobre o navy da marca (`bg-primary`).
+ *
+ * `principal` (fundo claro, ex.: login) → ícone empilhado sobre o nome.
+ * `horizontal` (fundo navy, ex.: header da landing) → ícone + nome em linha.
+ * `compacta` (fundo navy, ex.: sidebar/topbar) → ícone + nome em 2 linhas.
  */
-export function Logo({ variant, className, priority }: LogoProps) {
+export function Logo({ variant, className }: LogoProps) {
+  if (variant === "principal") {
+    return (
+      <span
+        role="img"
+        aria-label={LOGO_ALT}
+        className={cn("inline-flex flex-col items-center gap-2 text-primary", className)}
+      >
+        <GarraMark className="h-14 w-14" />
+        <span className="text-center font-display text-base font-extrabold leading-tight tracking-tight sm:text-lg">
+          Garra Perícias
+          <br />e Avaliações
+        </span>
+      </span>
+    );
+  }
+
+  if (variant === "horizontal") {
+    return (
+      <span
+        role="img"
+        aria-label={LOGO_ALT}
+        className={cn("inline-flex items-center gap-3 text-primary-foreground", className)}
+      >
+        <GarraMark className="h-10 w-10 sm:h-12 sm:w-12" />
+        <span className="whitespace-nowrap font-display text-lg font-extrabold leading-tight tracking-tight sm:text-xl">
+          Garra Perícias e Avaliações
+        </span>
+      </span>
+    );
+  }
+
   return (
-    <span className={cn("inline-block shrink-0 overflow-hidden rounded-md shadow-sm", className)}>
-      <Image
-        src={LOGO_SOURCES[variant]}
-        alt={LOGO_ALT}
-        priority={priority}
-        className="block h-full w-auto"
-      />
+    <span
+      role="img"
+      aria-label={LOGO_ALT}
+      className={cn("inline-flex items-center gap-2 text-primary-foreground", className)}
+    >
+      <GarraMark className="h-8 w-8" />
+      <span className="font-display text-xs font-bold leading-[1.15] tracking-tight">
+        Garra Perícias
+        <br />e Avaliações
+      </span>
     </span>
   );
 }
