@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+{#
+  ARQUIVO GERADO — não editar à mão. Produzido por `python -m app.scripts.build_rfo_templates` a partir de templates/rfo/layout.json (ADR-13/DEC-25).
+
+  Layout derivado de: Relatório de Fiscalização 1.xlsm (sha256 3d9704f436b3b4b3…)
+  Abas usadas: capa='Informações Gerais', visita modelo='Dia 01'
+#}
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Relatório de Fiscalização — {{ contrato.numero }}</title>
+<style>
+  @page {
+    size: A4 portrait;
+    margin: 1.9cm 0.6cm 1.9cm 1.5cm;
+    @bottom-right {
+      content: "Folha nº " counter(page) " de " counter(pages);
+      font-family: Arial, sans-serif;
+      font-size: 8pt;
+    }
+  }
+  body {
+    font-family: Arial, "DejaVu Sans", sans-serif;
+    font-size: 10.0pt;
+    color: #000000;
+    margin: 0;
+  }
+  .marca { display: flex; align-items: center; gap: 0.4cm; border-bottom: 1pt solid #000000; padding-bottom: 0.2cm; }
+  .marca img { height: 2.2cm; }
+  .marca .titulo { font-size: 20pt; font-weight: bold; flex: 1; }
+  .marca .endereco { font-size: 8pt; text-align: right; max-width: 6cm; }
+  h2.secao {
+    background: #D9D9D9;
+    font-size: 10.0pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin: 0.35cm 0 0.15cm 0;
+    padding: 2pt 4pt;
+  }
+  table.campos { width: 100%; border-collapse: collapse; }
+  table.campos td { border-bottom: 0.5pt solid #999; padding: 2pt 4pt; vertical-align: top; }
+  table.campos td.rotulo { font-weight: bold; white-space: nowrap; width: 1%; }
+  table.equipe { width: 60%; border-collapse: collapse; }
+  table.equipe th, table.equipe td { border: 0.5pt solid #999; padding: 2pt 4pt; text-align: left; }
+  table.equipe th { background: #D9D9D9; }
+  ul.itens { margin: 0; padding-left: 0.6cm; }
+  ul.itens li { text-align: justify; }
+  .fotos { display: flex; flex-wrap: wrap; gap: 0.3cm; }
+  .foto { width: 48.0%; }
+  .foto img { width: 100%; border: 0.5pt solid #999; }
+  .foto .legenda { font-size: 10.0pt; font-weight: bold; text-align: center; border-bottom: 0.5pt solid #999; }
+  .foto .descricao { font-size: 8pt; text-align: justify; }
+  .assinaturas { display: flex; justify-content: space-between; margin-top: 1.2cm; }
+  .assinatura { width: 30%; text-align: center; font-size: 8pt; }
+  .assinatura .linha { display: block; border-top: 0.5pt solid #000000; margin-bottom: 2pt; }
+  .visita { page-break-before: always; }
+</style>
+</head>
+<body>
+  {% macro marca() %}
+  <header class="marca">
+    {% if logo_data_uri %}<img src="{{ logo_data_uri }}" alt="Garra Engenharia">{% endif %}
+    <div class="titulo">Relatório de Fiscalização</div>
+    <div class="endereco">Rua Coronel José Augusto Perilo Qd. 47 Lt. 36 Sala 05 - Parque Veiga Jardim I, Aparecida de Goiânia/GO. CEP: 74954-102 contato@construtoragarra.com</div>
+  </header>
+  {% endmacro %}
+
+  <section class="capa">
+    {{ marca() }}
+
+    <h2 class="secao">INFORMAÇÕES DA EDIFICAÇÃO</h2>
+    <table class="campos">
+      <tr><td class="rotulo">Local:</td><td>{{ edificacao.nome }}</td></tr>
+      <tr><td class="rotulo">Endereço:</td><td>{{ edificacao.endereco }}</td></tr>
+      <tr><td class="rotulo">Finalidade:</td><td>{{ edificacao.tipologia or "—" }}</td></tr>
+    </table>
+
+    <h2 class="secao">Informações Técnicas da Fiscalização</h2>
+    <table class="campos">
+      <tr><td class="rotulo">Contrato:</td><td>{{ contrato.numero }}</td></tr>
+      <tr><td class="rotulo">Fiscal:</td><td>{{ fiscal.nome }}</td></tr>
+      <tr><td class="rotulo">Nº CREA:</td><td>{{ fiscal.crea }}</td></tr>
+      <tr><td class="rotulo">E-mail:</td><td>{{ fiscal.email or "—" }}</td></tr>
+      <tr><td class="rotulo">ART de Fiscalização:</td><td>{{ contrato.art_fiscalizacao }}</td></tr>
+    </table>
+
+    <h2 class="secao">Informações Técnicas da Obra</h2>
+    <table class="campos">
+      <tr><td class="rotulo">Objeto:</td><td>{{ contrato.objeto }}</td></tr>
+      <tr><td class="rotulo">Início:</td><td>{{ contrato.data_inicio }}</td></tr>
+      <tr><td class="rotulo">Prazo:</td><td>{{ contrato.prazo_dias }} dias</td></tr>
+      {% for executor in executores %}
+      <tr><td class="rotulo">Empresa Executora:</td><td>{{ executor.razao_social }} — CNPJ {{ executor.cnpj }}</td></tr>
+      <tr><td class="rotulo">ART de Execução:</td><td>{{ executor.art_execucao }}</td></tr>
+      {% endfor %}
+    </table>
+
+    {% if nbrs %}
+    <h2 class="secao">NBR's — Referências</h2>
+    <ul class="itens">
+      {% for nbr in nbrs %}<li>{{ nbr.codigo_nbr }}{% if nbr.descricao %} — {{ nbr.descricao }}{% endif %}</li>{% endfor %}
+    </ul>
+    {% endif %}
+  </section>
+
+  {% for visita in visitas %}
+  <section class="visita">
+    {{ marca() }}
+
+    <h2 class="secao">Relatório Diário de Fiscalização — Nº {{ visita.seq_numero }}</h2>
+    <table class="campos">
+      <tr><td class="rotulo">Data:</td><td>{{ visita.data }}</td><td class="rotulo">Obra:</td><td>{{ contrato.objeto }}</td></tr>
+      <tr><td class="rotulo">Local:</td><td>{{ edificacao.nome }}</td><td class="rotulo">Fiscal:</td><td>{{ fiscal.nome }}</td></tr>
+      <tr><td class="rotulo">CREA nº:</td><td>{{ fiscal.crea }}</td><td class="rotulo">Prazo contratual:</td><td>{{ contrato.prazo_dias }} dias</td></tr>
+    </table>
+
+    <h2 class="secao">Atividades Constatadas no Dia da Visita</h2>
+    <ul class="itens">
+      {% for atividade in visita.servicos_executados_lista %}<li>{{ atividade }}</li>{% endfor %}
+    </ul>
+
+    {% if visita.mao_obra %}
+    <h2 class="secao">Equipe Efetiva em Obra</h2>
+    <table class="equipe">
+      <thead><tr><th>Qtd.</th><th>Função</th></tr></thead>
+      <tbody>
+        {% for mo in visita.mao_obra %}<tr><td>{{ mo.quantidade }}</td><td>{{ mo.funcao }}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    {% if visita.medicoes %}
+    <h2 class="secao">Medições</h2>
+    <table class="equipe">
+      <thead><tr><th>Descrição</th><th>Quantidade</th><th>Unidade</th></tr></thead>
+      <tbody>
+        {% for medicao in visita.medicoes %}<tr><td>{{ medicao.descricao }}</td><td>{{ medicao.quantidade }}</td><td>{{ medicao.unidade }}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    {% if visita.observacoes %}
+    <h2 class="secao">Ocorrências / Não Conformidades</h2>
+    <ul class="itens">
+      {% for ocorrencia in visita.observacoes_lista %}<li>{{ ocorrencia }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if visita.fotos %}
+    <h2 class="secao">Registro Fotográfico</h2>
+    <div class="fotos">
+      {% for foto in visita.fotos %}
+      <figure class="foto">
+        <figcaption class="legenda">Foto {{ "%02d"|format(loop.index) }}</figcaption>
+        <img src="{{ foto.data_uri }}" alt="Foto {{ loop.index }}">
+        {% if foto.legenda %}<div class="descricao">{{ foto.legenda }}</div>{% endif %}
+      </figure>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="assinaturas">
+      <div class="assinatura"><span class="linha"></span>RESPONSÁVEL TÉCNICO / FISCALIZAÇÃO</div>
+      <div class="assinatura"><span class="linha"></span>CONTRATADA</div>
+      <div class="assinatura"><span class="linha"></span>CONTRATANTE</div>
+    </div>
+  </section>
+  {% endfor %}
+</body>
+</html>
