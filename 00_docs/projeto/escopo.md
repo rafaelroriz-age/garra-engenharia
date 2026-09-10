@@ -3,7 +3,7 @@ title: Escopo do Projeto — Sistema de Automação de Relatórios Prediais
 type: gestao
 status: aprovado
 owner: Garra Engenharia
-last_updated: 2026-07-24
+last_updated: 2026-09-10
 ---
 
 # Escopo do Projeto
@@ -56,11 +56,11 @@ last_updated: 2026-07-24
 |---|---|
 | App nativo iOS/Android | PWA cobre os requisitos; custo 3x maior sem benefício proporcional |
 | Integração API com CREA | [A ESCLARECER] — nenhuma referência nos documentos |
-| Módulo de assinatura digital ICP-Brasil | [A ESCLARECER] — não confirmado uso |
+| Módulo de assinatura digital ICP-Brasil | **Confirmado fora de escopo (2026-09-10, DEC-28)** — o cliente usa apenas CREA e ART impressos no documento |
 | App desktop de pasta monitorada para Lightshot | Versão futura (pós v1.0) |
 | Módulo financeiro / emissão de NF | Fora do domínio técnico |
 | Integração com Power BI | Dados exportáveis via API; BI é responsabilidade do cliente |
-| Suporte offline completo (Service Worker + IndexedDB) | [A ESCLARECER] — necessidade ainda não confirmada |
+| Suporte offline completo (Service Worker + IndexedDB) | **Confirmado fora de escopo (2026-09-10, DEC-26)** — há cobertura 4G/Wi-Fi em todas as edificações inspecionadas |
 | Auto-cadastro público de usuários Cliente no Portal | [A ESCLARECER] lacuna #11 — posição interina: criação manual da credencial pelo engenheiro fiscal (ver `00_docs/estudo-do-contexto.md`) |
 
 ---
@@ -69,8 +69,8 @@ last_updated: 2026-07-24
 
 1. O Eng. Roniel utiliza Lightshot como ferramenta padrão de captura em campo e continuará usando.
 2. O layout dos documentos atuais (DOCX/PDF) é o padrão definitivo — sem alterações de design.
-3. O sistema será usado primariamente por um único engenheiro (ou pequena equipe).
-4. O engenheiro tem acesso a internet durante o uso (campo com 4G).
+3. O sistema será usado por um engenheiro responsável técnico e por auxiliares de campo, que também registram visitas/ocorrências/fotos com credencial própria (confirmado em 2026-09-10, DEC-27).
+4. O engenheiro tem acesso a internet durante o uso (campo com 4G/Wi-Fi) — confirmado pelo cliente em 2026-09-10 (DEC-26).
 5. Os templates Word/HTML serão fornecidos ou validados pelo cliente antes da implementação.
 6. O gabarito de sistemas em `RFO_INSPECAO.md` é a fonte definitiva dos dados mestre.
 

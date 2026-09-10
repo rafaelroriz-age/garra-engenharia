@@ -22,6 +22,7 @@ import { PaginationBar } from "@/components/pagination-bar";
 import { ApiErrorAlert } from "@/components/api-error-alert";
 import { api, ApiError } from "@/lib/api-client";
 import { normalizePaginated, type Edificacao, type EdificacaoInput, type Paginated } from "@/lib/types";
+import { useUsuarioAtual } from "@/lib/use-usuario-atual";
 import { EdificacaoForm } from "./edificacao-form";
 
 const PAGE_SIZE = 10;
@@ -34,6 +35,7 @@ export default function EdificacoesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<ApiError | Error | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const { isAuditor } = useUsuarioAtual();
 
   const loadEdificacoes = useCallback(async () => {
     setIsLoading(true);
@@ -73,23 +75,26 @@ export default function EdificacoesPage() {
           title="Edificações"
           description="Cadastro das edificações inspecionadas, com histórico de contratos (RF-01)."
         />
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <Button className="gap-1.5" onClick={() => setIsCreateOpen(true)}>
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            Nova edificação
-          </Button>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Nova edificação</DialogTitle>
-              <DialogDescription>Preencha os dados da edificação (RF-01).</DialogDescription>
-            </DialogHeader>
-            <EdificacaoForm
-              submitLabel="Criar edificação"
-              onSubmit={handleCreate}
-              onCancel={() => setIsCreateOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
+        {/* Cadastro é ato administrativo: só auditor (RN-18). O backend rejeita de qualquer forma. */}
+        {isAuditor && (
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <Button className="gap-1.5" onClick={() => setIsCreateOpen(true)}>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Nova edificação
+            </Button>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Nova edificação</DialogTitle>
+                <DialogDescription>Preencha os dados da edificação (RF-01).</DialogDescription>
+              </DialogHeader>
+              <EdificacaoForm
+                submitLabel="Criar edificação"
+                onSubmit={handleCreate}
+                onCancel={() => setIsCreateOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <div className="mb-4 max-w-sm">

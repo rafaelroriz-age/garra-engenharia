@@ -3,7 +3,7 @@ title: Ciclo de Vida de Desenvolvimento — Sistema de Automação de Relatório
 type: gestao
 status: aprovado
 owner: Garra Engenharia
-last_updated: 2026-07-17
+last_updated: 2026-09-10
 ---
 
 # Ciclo de Vida de Desenvolvimento
@@ -21,7 +21,7 @@ A decisão foi registrada como **DEC-08** em [decisoes.md](decisoes.md#dec-08--m
 | Fator do projeto | Por que descarta outros modelos | Por que favorece o incremental escolhido |
 |---|---|---|
 | Equipe pequena (1 engenheiro ou pequena equipe, sem PM dedicado) | Descarta Scrum formal completo (overhead de cerimônias/papéis desproporcional) e V-model (exige planos de teste e especificação formal muito extensos antes de codificar) | Sprints curtos e backlog único reduzem overhead de gestão, mantendo previsibilidade |
-| 10 lacunas `[A ESCLARECER]` não validadas com o cliente (**bloqueio B-01**, risco **R-06**) | Descarta cascata pura — exigiria fechar 100% dos requisitos antes de iniciar qualquer construção, o que travaria o projeto indefinidamente | Permite iniciar imediatamente a fundação técnica e o incremento RFO (não depende das lacunas) enquanto a validação com o cliente ocorre em paralelo |
+| Lacunas `[A ESCLARECER]` não validadas com o cliente (**bloqueio B-01**, risco **R-06**; reduzidas em 2026-09-10, ver Etapa 1) | Descarta cascata pura — exigiria fechar 100% dos requisitos antes de iniciar qualquer construção, o que travaria o projeto indefinidamente | Permite iniciar imediatamente a fundação técnica e o incremento RFO (não depende das lacunas) enquanto a validação com o cliente ocorre em paralelo |
 | Templates originais disponíveis apenas em `.xlsx`/`.xlsm`/PDF, nunca em `.docx` (**B-02 reclassificado**, risco **R-05** rebaixado) | Descarta qualquer modelo que assuma "templates prontos em Word" como pré-condição de início (ex.: waterfall clássico) | O incremento RFO deriva o template do próprio original do cliente por script determinístico (`openpyxl` para planilha, `pypdf`/`pdfplumber` para PDF → `layout.json`), do qual saem tanto o HTML/CSS do WeasyPrint (DEC-01) quanto o DOCX do docxtpl (DEC-04) — ver DEC-25/ADR-13 |
 | Necessidade de entregar valor cedo (relatório fiel ao template é o principal ganho percebido pelo cliente) | Descarta modelos que só produzem um artefato utilizável no fim do projeto | A primeira fatia vertical entregável é o **RFO completo** (cadastro → visita → relatório PDF/DOCX), demonstrável ao cliente antes dos módulos mais complexos (LTIP) |
 | Escopo já formalmente congelado para v1.0 (`escopo.md`) | Reduz o risco de scope creep que normalmente motiva controles pesados de mudança (cascata/V-model) | Incremental aceita ajustes pontuais por sprint sem necessidade de replanejamento formal completo |
@@ -38,7 +38,7 @@ Infraestrutura de desenvolvimento, scaffolding de backend/frontend, modelo de da
 | RNF-05 (autenticação), RNF-07 (storage de imagens), RF-10 (gabarito de sistemas prediais), DEC-05 (FastAPI), DEC-06 (Next.js), DEC-07 (PostgreSQL), DEC-02 (MinIO) |
 
 ### Etapa 1 — Validação de Lacunas com o Cliente *(paralela, conduzida pelo Gestor de Projeto)*
-Sessão de validação dos 10 itens `[A ESCLARECER]` da seção 9 de `estudo-do-contexto.md`, priorizando os de maior impacto arquitetural (offline, multi-usuário, assinatura digital). Resolve **B-01**/**R-06**/**R-07**.
+Sessão de validação dos itens `[A ESCLARECER]` da seção 9 de `estudo-do-contexto.md`, priorizando os de maior impacto arquitetural. **Bloco 1 concluído em 2026-09-10** — offline (#3), multi-usuário (#2) e assinatura digital (#9) resolvidos por DEC-26/27/28: **R-07 encerrado**, **R-06 rebaixado** e **B-01 reduzido** às lacunas de regra de negócio (#1, #4, #5, #7, #8, #10).
 
 ### Etapa 2 — Obtenção e Validação dos Templates Word *(paralela, conduzida pelo Gestor de Projeto)*
 Confirmação da versão vigente dos originais já arquivados (`.xlsx`/`.xlsm`/PDF) e obtenção da logo vetorial/transparente. Encerra **B-02**/**R-05**.

@@ -22,6 +22,7 @@ async def create(
     ocorrencia_id: uuid.UUID | None = None,
     visita_id: uuid.UUID | None = None,
     url_publica: str | None = None,
+    criado_por_id: uuid.UUID | None = None,
 ) -> Foto:
     foto = Foto(
         storage_key=storage_key,
@@ -31,6 +32,7 @@ async def create(
         ocorrencia_id=ocorrencia_id,
         visita_id=visita_id,
         url_publica=url_publica,
+        criado_por_id=criado_por_id,
     )
     db.add(foto)
     await db.commit()

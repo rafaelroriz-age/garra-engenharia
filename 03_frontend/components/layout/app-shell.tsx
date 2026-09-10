@@ -24,7 +24,7 @@ const PUBLIC_ROUTES = ["/", "/login"];
 function BrandMark() {
   return (
     <Link href="/" aria-label="Garra Perícias e Avaliações — início">
-      <Logo variant="compacta" className="h-9" priority />
+      <Logo variant="compacta" />
     </Link>
   );
 }

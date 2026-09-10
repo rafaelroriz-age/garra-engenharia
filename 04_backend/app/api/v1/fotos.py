@@ -7,7 +7,8 @@
 - `PUT /fotos/{id}` — atualiza legenda/ordem.
 - `DELETE /fotos/{id}` — remove vínculo e objeto do storage.
 
-Todos protegidos por `get_current_user` (BL-06). Mitigações OWASP: A08
+Dados de campo: liberados à equipe (`auditor`/`auxiliar`), com autoria gravada
+em `Foto.criado_por_id` (RN-18, DEC-27). Mitigações OWASP: A08
 (reprocessamento Pillow de toda imagem antes de persistir, ver
 `app.services.image_processing`) e A10 (nunca aceita URL fornecida pelo
 cliente — apenas multipart ou base64 processados localmente).
@@ -17,7 +18,7 @@ import uuid
 from fastapi import APIRouter, Depends, File, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import require_equipe
 from app.core.database import get_db
 from app.models import Foto, Usuario
 from app.schemas.foto import (
@@ -38,7 +39,7 @@ router = APIRouter(prefix="/api/v1", tags=["fotos"])
 async def upload_foto(
     arquivo: UploadFile = File(...),
     storage: StorageClient = Depends(get_storage_client),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_equipe),
 ) -> FotoUploadResponse:
     """Upload manual de arquivo de imagem (multipart/form-data) — Opção B (Seção 6)."""
     conteudo = await arquivo.read()
@@ -52,7 +53,7 @@ async def upload_foto(
 async def upload_foto_clipboard(
     dados: FotoUploadClipboardPayload,
     storage: StorageClient = Depends(get_storage_client),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_equipe),
 ) -> FotoUploadResponse:
     """Upload via clipboard paste (base64) — Opção A (Seção 6), integração Lightshot."""
     storage_key, url = await foto_service.upload_clipboard(dados.imagem_base64, storage)
@@ -66,7 +67,7 @@ async def vincular_foto_a_ocorrencia(
     ocorrencia_id: uuid.UUID,
     dados: FotoVincularPayload,
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(get_current_user),
+    usuario: Usuario = Depends(require_equipe),
 ) -> Foto:
     """Vincula uma foto (já enviada via `/fotos/upload*`) a uma Ocorrência, com legenda (RN-03, RN-11)."""
     return await foto_service.vincular_a_ocorrencia(
@@ -76,6 +77,7 @@ async def vincular_foto_a_ocorrencia(
         legenda=dados.legenda,
         ordem=dados.ordem,
         origem=dados.origem,
+        criado_por_id=usuario.id,
     )
 
 
@@ -84,7 +86,7 @@ async def vincular_foto_a_visita(
     visita_id: uuid.UUID,
     dados: FotoVincularPayload,
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(get_current_user),
+    usuario: Usuario = Depends(require_equipe),
 ) -> Foto:
     """Vincula uma foto (já enviada via `/fotos/upload*`) a uma Visita de fiscalização."""
     return await foto_service.vincular_a_visita(
@@ -94,6 +96,7 @@ async def vincular_foto_a_visita(
         legenda=dados.legenda,
         ordem=dados.ordem,
         origem=dados.origem,
+        criado_por_id=usuario.id,
     )
 
 
@@ -102,7 +105,7 @@ async def atualizar_foto(
     foto_id: uuid.UUID,
     dados: FotoUpdatePayload,
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_equipe),
 ) -> Foto:
     """Atualiza a legenda e/ou a ordem de uma foto."""
     return await foto_service.atualizar(db, foto_id, legenda=dados.legenda, ordem=dados.ordem)
@@ -113,7 +116,7 @@ async def remover_foto(
     foto_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     storage: StorageClient = Depends(get_storage_client),
-    _usuario: Usuario = Depends(get_current_user),
+    _usuario: Usuario = Depends(require_equipe),
 ) -> None:
     """Remove o vínculo (registro `Foto`) e o objeto correspondente no storage."""
     await foto_service.remover(db, foto_id, storage)

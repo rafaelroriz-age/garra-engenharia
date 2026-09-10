@@ -80,7 +80,7 @@ export default function HomePage() {
       <header className="bg-primary text-primary-foreground">
         <div className="mx-auto max-w-6xl px-6 py-16">
           <div className="mb-8 flex items-center justify-between gap-3">
-            <Logo variant="horizontal" className="h-10 sm:h-12" priority />
+            <Logo variant="horizontal" />
             <Link
               href="/login"
               className="inline-flex items-center gap-1.5 rounded-md border border-white/20 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-white/10"

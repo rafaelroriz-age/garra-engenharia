@@ -62,7 +62,7 @@ async def upload_clipboard(imagem_base64: str, storage: StorageClient) -> tuple[
 
 async def vincular_a_ocorrencia(
     db: AsyncSession, ocorrencia_id: uuid.UUID, *, storage_key: str, legenda: str | None, ordem: int | None,
-    origem: str,
+    origem: str, criado_por_id: uuid.UUID | None = None,
 ) -> Foto:
     ocorrencia = await db.get(Ocorrencia, ocorrencia_id)
     if ocorrencia is None:
@@ -76,12 +76,13 @@ async def vincular_a_ocorrencia(
         ordem=ordem,
         origem=origem,
         ocorrencia_id=ocorrencia_id,
+        criado_por_id=criado_por_id,
     )
 
 
 async def vincular_a_visita(
     db: AsyncSession, visita_id: uuid.UUID, *, storage_key: str, legenda: str | None, ordem: int | None,
-    origem: str,
+    origem: str, criado_por_id: uuid.UUID | None = None,
 ) -> Foto:
     visita = await db.get(Visita, visita_id)
     if visita is None:
@@ -93,6 +94,7 @@ async def vincular_a_visita(
         ordem=ordem,
         origem=origem,
         visita_id=visita_id,
+        criado_por_id=criado_por_id,
     )
 
 

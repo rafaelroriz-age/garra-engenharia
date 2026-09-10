@@ -67,18 +67,14 @@ npm run lint    # ESLint
 ## Notas de implementação
 
 - **UI kit**: [shadcn/ui](https://ui.shadcn.com) (CLI clássica `2.10.0`, estilo `new-york`, Tailwind v3.4 — **não** a v4/"Nova" preset, incompatível com este projeto).
-- **Marca oficial "Garra Perícias e Avaliações" (BL-41)**: os 4 arquivos recebidos do cliente estão em `public/brand/logos/` com nomes semânticos:
-	- `logo-principal-fundo-claro.jpg` — variante principal (fundo claro/creme)
-	- `logo-horizontal-negativa-fundo-preto.jpg` — variante horizontal negativa (fundo preto)
-	- `logo-compacta-negativa-fundo-ardosia.jpg` — variante compacta negativa (fundo ardósia)
-	- `logo-contorno-fundo-preto.jpg` — variante em contorno, **somente decorativa/opcional**; nunca usada como marca principal em navegação, login, manifest ou favicon (atualmente não aplicada em nenhuma tela — reservada para uso decorativo futuro, ex.: fundo institucional de baixo contraste)
+- **Marca oficial "Garra Perícias e Avaliações" (BL-41/BL-19)**: vetorizada em SVG — `components/brand/garra-mark.tsx` (símbolo do skyline, `fill="currentColor"`) + texto real em `font-display` (Manrope), compostos por `components/brand/logo.tsx` (`<Logo variant="principal" | "horizontal" | "compacta" />`). Sem fundo embutido nem dimensões fixas de imagem: escala sem perda em qualquer tamanho e herda a cor certa da superfície via classe de texto (`text-primary` sobre fundo claro, `text-primary-foreground` sobre `bg-primary`).
+	- `principal` → landing (Card institucional) e tela de login (fundo claro): ícone empilhado sobre o nome.
+	- `horizontal` → header da landing (fundo navy, espaço horizontal amplo): ícone + nome em linha.
+	- `compacta` → `AppShell` (sidebar desktop + topbar/menu mobile — espaço reduzido): ícone + nome em 2 linhas.
 
-  **Nunca use os arquivos JPEG diretamente** em JSX/CSS — todos passam pelo componente `components/brand/logo.tsx` (`<Logo variant="principal" | "horizontal" | "compacta" />`), que renderiza cada variante como um "selo" (`rounded-md overflow-hidden`), já que os JPEGs não têm transparência e trazem o próprio fundo embutido:
-	- `principal` → landing (Card institucional) e tela de login (fundo claro)
-	- `horizontal` → header da landing (fundo escuro, espaço horizontal amplo)
-	- `compacta` → `AppShell` (sidebar desktop + topbar/menu mobile — espaço reduzido)
-- **Ícone/favicon/PWA**: `public/icon.svg` deixou de ser o placeholder com a letra "G" e passou a ser um símbolo vetorial simplificado, derivado do skyline (casas + torres) da marca oficial, em fundo ardósia (`#253341`) — legível em tamanhos pequenos onde a logo completa não caberia. `theme_color` do `manifest.json` e do `viewport` em `app/layout.tsx` foram alinhados ao mesmo tom.
-- **Cores/fontes**: navy `#1e3a5f` (`--primary`) e laranja `#f97316` (`--brand-accent`) seguem em uso como paleta funcional (botões, destaques, ícones dos cards da home) — não fazem parte dos arquivos de logo oficiais, que usam azul acinzentado, ardósia, preto e creme. Uma eventual repintura de `--primary`/`--sidebar` para o tom ardósia exato só faz sentido com uma versão vetorial da marca (pendência de BL-19); por ora, o componente `Logo` isola essa diferença de tom em um selo com cantos arredondados, evitando qualquer recorte retangular acidental sobre o fundo da tela. Fontes: Inter + Manrope.
+  Os 4 JPEGs originais do cliente permanecem em `public/brand/logos/` apenas como referência histórica (dimensões inconsistentes entre si e fundo/cores embutidos no arquivo) — **não são mais usados em nenhuma tela**; não importe esses arquivos diretamente em JSX/CSS.
+- **Ícone/favicon/PWA**: `public/icon.svg` usa o mesmo traço de skyline do `GarraMark`, em fundo ardósia (`#253341`) — legível em tamanhos pequenos onde a logo completa não caberia. `theme_color` do `manifest.json` e do `viewport` em `app/layout.tsx` foram alinhados ao mesmo tom.
+- **Cores/fontes**: navy `#1e3a5f` (`--primary`) e laranja `#f97316` (`--brand-accent`) são a paleta funcional (botões, destaques, ícones dos cards da home) e agora também a paleta da marca vetorizada, via `text-primary`/`text-primary-foreground` — resolvendo a divergência de tom que antes existia entre os JPEGs (azul acinzentado/ardósia/creme) e o tema da aplicação. Fontes: Inter + Manrope.
 - **Rotas de `inspecoes/[id]/*`**: não aparecem na navegação global (`components/layout/nav-items.ts`) — são acessadas a partir do contexto de uma edificação/contrato.
 
 ## Testes E2E (Playwright, BL-21)

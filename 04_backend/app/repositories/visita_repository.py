@@ -30,7 +30,13 @@ async def _proximo_seq_numero(db: AsyncSession, inspecao_id: uuid.UUID) -> int:
     return (maior_atual or 0) + 1
 
 
-async def create_visita(db: AsyncSession, inspecao_id: uuid.UUID, dados: VisitaCreatePayload) -> Visita:
+async def create_visita(
+    db: AsyncSession,
+    inspecao_id: uuid.UUID,
+    dados: VisitaCreatePayload,
+    *,
+    criado_por_id: uuid.UUID | None = None,
+) -> Visita:
     seq_numero = await _proximo_seq_numero(db, inspecao_id)
     visita = Visita(
         inspecao_id=inspecao_id,
@@ -38,6 +44,7 @@ async def create_visita(db: AsyncSession, inspecao_id: uuid.UUID, dados: VisitaC
         servicos_executados=dados.servicos_executados,
         observacoes=dados.observacoes,
         seq_numero=seq_numero,
+        criado_por_id=criado_por_id,
     )
     db.add(visita)
     await db.commit()

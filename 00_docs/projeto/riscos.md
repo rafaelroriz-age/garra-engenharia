@@ -3,7 +3,7 @@ title: Registro de Riscos — Sistema de Automação de Relatórios Prediais
 type: gestao
 status: ativo
 owner: Garra Engenharia
-last_updated: 2026-07-27
+last_updated: 2026-09-10
 ---
 
 # Registro de Riscos
@@ -88,31 +88,31 @@ last_updated: 2026-07-27
 
 ## Riscos de Negócio / Requisitos
 
-### R-06 — Lacunas [A ESCLARECER] não resolvidas antes da implementação
-
-| Campo | Valor |
-|---|---|
-| **Probabilidade** | A |
-| **Impacto** | M |
-| **Prioridade** | Alta |
-| **Descrição** | Existem 10 itens `[A ESCLARECER]` em `estudo-do-contexto.md`. Se não forem resolvidos antes da implementação, pode ocorrer retrabalho significativo (ex.: suporte offline muda toda a arquitetura frontend). |
-| **Mitigação** | Sessão de validação com o cliente antes de iniciar cada fase de implementação. Os 10 itens devem ser priorizados por impacto arquitetural. |
-| **Gatilho de escalada** | Início de sprint de implementação sem resolver lacunas de alto impacto (especialmente offline, multi-usuário, assinatura digital). |
-| **Responsável** | Gestor de Projeto |
-
----
-
-### R-07 — Requisito de offline completo descoberto tardiamente
+### R-06 — Lacunas [A ESCLARECER] não resolvidas antes da implementação (rebaixado A/M → M/M em 2026-09-10)
 
 | Campo | Valor |
 |---|---|
 | **Probabilidade** | M |
-| **Impacto** | A |
-| **Prioridade** | Alta |
-| **Descrição** | Se confirmado que o engenheiro precisa registrar ocorrências sem internet (campo sem 4G), toda a estratégia de PWA precisa de Service Worker + IndexedDB + estratégia de sync, aumentando o escopo significativamente. |
-| **Mitigação** | Resolver lacuna #3 de `estudo-do-contexto.md` na primeira reunião com o cliente. Se necessário, planejar offline como fase 2. |
-| **Gatilho de escalada** | Confirmação de necessidade offline após início da implementação do frontend. |
-| **Responsável** | Gestor de Projeto + Engenheiro Frontend |
+| **Impacto** | M |
+| **Prioridade** | Média |
+| **Descrição** | Existem itens `[A ESCLARECER]` em `estudo-do-contexto.md`. Se não forem resolvidos antes da implementação, pode ocorrer retrabalho. **Rebaixado em 2026-09-10:** as três lacunas de maior impacto arquitetural (offline #3, multi-usuário #2 e assinatura digital #9) foram resolvidas com o cliente — ver DEC-26/DEC-27/DEC-28. Restam #1, #4, #5, #7, #8 e #10, todas de escopo localizado (regra de negócio ou formato de campo), além da escolha de provedor de IA da #13 (tratada em R-10/B-04). |
+| **Mitigação** | Conduzir os Blocos 2 e 3 da [pauta de validação](pauta-validacao-lacunas.md) antes de iniciar as tarefas que dependem delas (BL-15 depende de #10). |
+| **Gatilho de escalada** | Início de BL-15 (RN-04) ou de qualquer tarefa de medição/re-inspeção sem a resposta correspondente. |
+| **Responsável** | Gestor de Projeto |
+
+---
+
+### R-07 — Requisito de offline completo descoberto tardiamente — **ENCERRADO (2026-09-10)**
+
+| Campo | Valor |
+|---|---|
+| **Probabilidade** | — |
+| **Impacto** | — |
+| **Prioridade** | Encerrado |
+| **Descrição** | O risco cobria a possibilidade de o cliente exigir registro sem internet, o que obrigaria a reescrever a camada de dados do frontend (Service Worker de escrita + IndexedDB + fila de sincronização). **Não se materializou:** o cliente confirmou em 2026-09-10 (lacuna #3) que há cobertura 4G/Wi-Fi em todas as edificações inspecionadas. |
+| **Mitigação** | Encerrada. A posição online-first virou decisão definitiva da v1.0 (DEC-26/ADR-15, Seção 10.8 de `arquitetura.md`). Uma eventual necessidade futura entra como incremento arquitetural dedicado, com replanejamento de escopo e cronograma. |
+| **Gatilho de escalada** | — |
+| **Responsável** | — |
 
 ---
 

@@ -1,17 +1,19 @@
-"""Pipeline mínimo de geração de Relatório RFO (PDF via WeasyPrint, DOCX via docxtpl).
+"""Pipeline de geração de Relatório RFO (PDF via WeasyPrint, DOCX via docxtpl).
 
-Criado para viabilizar o benchmark de BL-22 (RNF-06, R-03). BL-12/BL-13
-(fidelidade final ao template do cliente + fila assíncrona Celery/Redis do
-ADR-06) continuam bloqueadas por B-02 — este módulo usa templates de
-fidelidade APROXIMADA (não o modelo original do cliente) só para produzir uma
-medição real e reproduzível de tempo de geração. Não deve ser tratado como a
-implementação definitiva de BL-12/BL-13.
+Os templates consumidos aqui são os derivados do original do cliente
+(`templates/rfo/`), produzidos por `python -m app.scripts.build_rfo_templates`
+a partir de `templates/rfo/layout.json` — ADR-13/DEC-25, BL-12/BL-13.
+
+A fila assíncrona Celery/Redis do ADR-06 continua pendente: este módulo expõe
+apenas as funções de renderização síncronas consumidas pelos scripts de
+benchmark (BL-22) e pelo futuro worker.
 """
 from __future__ import annotations
 
 import base64
 import copy
 import io
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -23,8 +25,39 @@ from PIL import Image
 from weasyprint import HTML
 
 TEMPLATES_DIR = Path(__file__).resolve().parents[3] / "templates"
-HTML_TEMPLATE_NAME = "rfo_template.html.j2"
-DOCX_TEMPLATE_NAME = "rfo_benchmark_template.docx"
+RFO_TEMPLATES_DIR = TEMPLATES_DIR / "rfo"
+HTML_TEMPLATE_NAME = "rfo/rfo_template.html.j2"
+DOCX_TEMPLATE_NAME = "rfo/rfo_template.docx"
+LOGO_PATH = TEMPLATES_DIR / "assets" / "logo-garra.jpg"
+
+
+def _em_itens(texto: str | None) -> list[str]:
+    """Quebra um campo de texto livre em itens (uma constatação por linha)."""
+    if not texto:
+        return []
+    return [item.strip() for item in re.split(r"[\r\n]+", texto) if item.strip()]
+
+
+def _logo_data_uri() -> str | None:
+    if not LOGO_PATH.is_file():
+        return None
+    return "data:image/jpeg;base64," + base64.b64encode(LOGO_PATH.read_bytes()).decode("ascii")
+
+
+def normalizar_contexto(contexto: dict[str, Any]) -> dict[str, Any]:
+    """Completa o contexto com o que o template derivado espera.
+
+    Mantém compatível qualquer chamador que monte apenas os campos básicos
+    (contrato/edificacao/fiscal/visitas), sem duplicar essa lógica em cada um.
+    """
+    normalizado = copy.deepcopy(contexto)
+    normalizado.setdefault("executores", [])
+    normalizado.setdefault("nbrs", [])
+    normalizado.setdefault("logo_data_uri", _logo_data_uri())
+    for visita in normalizado.get("visitas", []):
+        visita.setdefault("servicos_executados_lista", _em_itens(visita.get("servicos_executados")))
+        visita.setdefault("observacoes_lista", _em_itens(visita.get("observacoes")))
+    return normalizado
 
 
 def otimizar_imagem(conteudo: bytes, *, max_lado: int = 1200, qualidade: int = 72) -> bytes:
@@ -59,7 +92,7 @@ def gerar_pdf(contexto: dict[str, Any], fotos_bytes: dict[str, bytes], destino: 
 
     # Cópia profunda: evita mutar o `contexto` original (reaproveitado depois
     # para gerar o DOCX) ao anexar o data URI base64 de cada foto.
-    contexto_html = copy.deepcopy(contexto)
+    contexto_html = normalizar_contexto(contexto)
     for visita in contexto_html["visitas"]:
         for foto in visita["fotos"]:
             b64 = base64.b64encode(fotos_bytes[foto["storage_key"]]).decode("ascii")
@@ -91,10 +124,11 @@ def gerar_docx(contexto: dict[str, Any], fotos_bytes: dict[str, bytes], destino:
     """
     template_path = TEMPLATES_DIR / DOCX_TEMPLATE_NAME
     tpl = DocxTemplate(str(template_path))
+    contexto_docx = normalizar_contexto(contexto)
 
     inicio_subdocs = time.perf_counter()
     visitas_ctx = []
-    for visita in contexto["visitas"]:
+    for visita in contexto_docx["visitas"]:
         subdoc = tpl.new_subdoc()
         for foto in visita["fotos"]:
             subdoc.add_picture(io.BytesIO(fotos_bytes[foto["storage_key"]]), width=Mm(90))
@@ -103,7 +137,7 @@ def gerar_docx(contexto: dict[str, Any], fotos_bytes: dict[str, bytes], destino:
         visitas_ctx.append({**visita, "fotos_doc": subdoc})
     fim_subdocs = time.perf_counter()
 
-    render_ctx = {**contexto, "visitas": visitas_ctx}
+    render_ctx = {**contexto_docx, "visitas": visitas_ctx}
     tpl.render(render_ctx)
     tpl.save(str(destino))
     fim_render = time.perf_counter()

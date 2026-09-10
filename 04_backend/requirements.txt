@@ -25,6 +25,15 @@ docxtpl>=0.17,<1.0
 # declarada do pacote docxtpl — precisa ser instalada explicitamente.
 docxcompose>=1.4,<3.0
 jinja2>=3.1,<4.0
+# Leitura dos originais .xlsx/.xlsm do cliente para derivar os templates de
+# relatório (ADR-13/DEC-25, BL-12/BL-13). As macros do .xlsm nunca são
+# carregadas nem executadas (`keep_vba=False`).
+openpyxl>=3.1,<4.0
+# Leitura dos PDFs finais do cliente (LTIP e vistorias) para medir as métricas
+# tipográficas dos templates (ADR-13/DEC-25, BL-17). Apenas leitura — nenhum
+# PDF recebido é executado ou reescrito.
+pdfplumber>=0.11,<1.0
+pypdf>=5.0,<7.0
 pillow>=10.3,<11.0
 python-multipart>=0.0.9,<1.0
 

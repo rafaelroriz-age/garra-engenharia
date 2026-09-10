@@ -12,8 +12,8 @@ class UsuarioBase(BaseModel):
 
 class UsuarioCreate(UsuarioBase):
     senha: str = Field(min_length=8, description="Senha em texto plano — nunca armazenada nem retornada.")
-    # Onboarding do usuário Cliente é manual, feito por um auditor (DEC-18).
-    role: Literal["auditor", "cliente"] = "auditor"
+    # Onboarding dos usuários Cliente (DEC-18) e Auxiliar (DEC-27) é manual, feito por um auditor.
+    role: Literal["auditor", "auxiliar", "cliente"] = "auditor"
 
 
 class UsuarioRead(UsuarioBase):

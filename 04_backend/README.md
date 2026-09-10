@@ -107,6 +107,33 @@ Endpoints (somente leitura, dados mestre editados no futuro via CRUD de BL-14+):
 
 Ver DEC-13 em [decisoes.md](../00_docs/projeto/decisoes.md) para a justificativa de `TipoAnomalia`/`TipoFalha`/`Localizacao` serem tabelas novas fora do diagrama ER original (o campo correspondente em `Ocorrencia` permanece texto livre até a BL-14+).
 
+## Templates de relatório derivados do original do cliente (BL-12/BL-13)
+
+Os templates do RFO **não são escritos à mão**: o layout é medido do original do
+cliente (`01_output-context/Relatório de Fiscalização 1.xlsm`) e materializado em
+`templates/rfo/layout.json`, do qual derivam o `.html.j2` (WeasyPrint, DEC-01) e o
+`.docx` (docxtpl, DEC-04) — garantindo que PDF e DOCX não divirjam (ADR-13/DEC-25).
+
+```powershell
+cd 04_backend
+# Re-extrai o layout do original e regera os dois templates
+python -m app.scripts.build_rfo_templates --original "..\01_output-context\Relatório de Fiscalização 1.xlsm"
+
+# Apenas regera os templates a partir do layout.json já versionado
+# (para máquinas/CI sem acesso aos originais do cliente)
+python -m app.scripts.build_rfo_templates
+```
+
+| Arquivo | Papel |
+|---|---|
+| `app/scripts/rfo_layout_extractor.py` | Lê a planilha com `openpyxl` (`keep_vba=False` — as macros do `.xlsm` nunca são carregadas nem executadas, OWASP A08) e devolve margens, tipografia, cores de seção, rótulos, grade fotográfica e assinaturas |
+| `app/scripts/build_rfo_templates.py` | CLI que persiste o `layout.json` e gera os dois templates |
+| `templates/rfo/layout.json` | Especificação intermediária **versionada** — contém apenas geometria; os valores preenchidos no exemplar do cliente (CPF, e-mails, nomes) são descartados antes do commit |
+| `templates/rfo/rfo_template.html.j2` / `rfo_template.docx` | Artefatos gerados — não editar à mão, alterar o gerador e regerar |
+
+> O WeasyPrint não roda no venv local do Windows (faltam as libs GTK): a renderização
+> real do PDF só funciona dentro do container `garra-backend`.
+
 ## Autenticação JWT + bcrypt (BL-06)
 
 Entidade `Usuario` própria (`email`, `senha_hash`, `nome`, `ativo`) — não reaproveita `Responsavel` (ver DEC-15). Senha nunca é armazenada em texto plano (`passlib[bcrypt]`) nem retornada pela API. Token JWT (`python-jose`) assinado com `JWT_SECRET_KEY`, expiração configurável via `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` (padrão 60 min).

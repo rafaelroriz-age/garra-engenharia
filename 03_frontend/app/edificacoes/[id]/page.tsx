@@ -17,6 +17,7 @@ import { ApiErrorAlert } from "@/components/api-error-alert";
 import { api, ApiError } from "@/lib/api-client";
 import { humanizeStatus } from "@/lib/utils";
 import type { Contrato, EdificacaoDetail, EdificacaoInput } from "@/lib/types";
+import { useUsuarioAtual } from "@/lib/use-usuario-atual";
 import { EdificacaoForm } from "../edificacao-form";
 
 interface DocumentoTecnico {
@@ -37,6 +38,7 @@ export default function EdificacaoDetailPage() {
   const [isUploadingDocumento, setIsUploadingDocumento] = useState(false);
   const [documentoError, setDocumentoError] = useState<ApiError | Error | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { isAuditor } = useUsuarioAtual();
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -120,7 +122,7 @@ export default function EdificacaoDetailPage() {
           </Button>
           <PageHeader title={edificacao.nome} description={edificacao.endereco} />
         </div>
-        {!isEditing ? (
+        {!isEditing && isAuditor ? (
           <Button variant="outline" className="gap-1.5" onClick={() => setIsEditing(true)}>
             <Pencil className="h-4 w-4" aria-hidden="true" />
             Editar
@@ -197,38 +199,41 @@ export default function EdificacaoDetailPage() {
 
           <ApiErrorAlert error={documentoError} />
 
-          <div className="flex flex-wrap items-end gap-2">
-            <div className="min-w-[10rem] flex-1 space-y-1.5">
-              <Label htmlFor="tipo-documento">Tipo do documento</Label>
+          {/* Anexar documento técnico é ato administrativo: só auditor (RN-18). */}
+          {isAuditor && (
+            <div className="flex flex-wrap items-end gap-2">
+              <div className="min-w-[10rem] flex-1 space-y-1.5">
+                <Label htmlFor="tipo-documento">Tipo do documento</Label>
+                <Input
+                  id="tipo-documento"
+                  placeholder="Ex.: Projeto arquitetônico, ART"
+                  value={tipoDocumento}
+                  onChange={(event) => setTipoDocumento(event.target.value)}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-1.5"
+                disabled={isUploadingDocumento}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <FileUp className="h-4 w-4" aria-hidden="true" />
+                Enviar documento
+              </Button>
               <Input
-                id="tipo-documento"
-                placeholder="Ex.: Projeto arquitetônico, ART"
-                value={tipoDocumento}
-                onChange={(event) => setTipoDocumento(event.target.value)}
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                aria-label="Selecionar arquivo do documento técnico"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void handleUploadDocumento(file);
+                  event.target.value = "";
+                }}
               />
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              className="gap-1.5"
-              disabled={isUploadingDocumento}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <FileUp className="h-4 w-4" aria-hidden="true" />
-              Enviar documento
-            </Button>
-            <Input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              aria-label="Selecionar arquivo do documento técnico"
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (file) void handleUploadDocumento(file);
-                event.target.value = "";
-              }}
-            />
-          </div>
+          )}
         </CardContent>
       </Card>
 
