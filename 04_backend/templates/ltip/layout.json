@@ -1,0 +1,99 @@
+{
+  "versao_schema": 1,
+  "tipo_documento": "LTIP",
+  "origem": {
+    "sha256": "9ef997756220786c1b333e668df64b6b6633703cdb6bfaacdb2be71a802079d4",
+    "paginas": 199
+  },
+  "pagina": {
+    "tamanho": "A4",
+    "orientacao": "portrait",
+    "largura_pt": 595.5,
+    "altura_pt": 842.25,
+    "margens_cm": {
+      "esquerda": 2.01,
+      "direita": 1.99,
+      "superior": 2.79,
+      "inferior": 1.91
+    }
+  },
+  "tipografia": {
+    "familia": "Times New Roman",
+    "familia_postscript": "TimesNewRomanPSMT",
+    "corpo_pt": 12.0,
+    "titulo_pt": 14.0,
+    "legenda_pt": 9.0
+  },
+  "titulos": [
+    {
+      "nivel": 1,
+      "fonte_pt": 14.0,
+      "negrito": true
+    },
+    {
+      "nivel": 2,
+      "fonte_pt": 14.0,
+      "negrito": true
+    },
+    {
+      "nivel": 3,
+      "fonte_pt": 14.0,
+      "negrito": true
+    },
+    {
+      "nivel": 4,
+      "fonte_pt": 14.0,
+      "negrito": true
+    },
+    {
+      "nivel": 5,
+      "fonte_pt": 12.0,
+      "negrito": true
+    }
+  ],
+  "cores": {
+    "texto": "#000000",
+    "cabecalho_secao_fundo": "#D9D9D9"
+  },
+  "capa": {
+    "titulo": {
+      "texto": "LAUDO TÉCNICO DE INSPEÇÃO PREDIAL",
+      "fonte_pt": 45.4,
+      "familia": "Open Sans"
+    },
+    "logo": {
+      "x_pt": 189.8,
+      "topo_pt": 0.7,
+      "largura_pt": 216.1,
+      "altura_pt": 104.3
+    },
+    "imagem_de_fundo": true
+  },
+  "rodape": {
+    "linhas": [
+      "Eng. Civil - CREA-GO nº 1020613386/D-GO",
+      "roniel.engcivil@gmail.com / (62) 9 8250-9779"
+    ],
+    "numeracao_pagina": true,
+    "topo_pt": 788.0
+  },
+  "relatorio_fotografico": {
+    "fichas_por_pagina": 2,
+    "rotulo_foto": "Foto nº",
+    "campos": [
+      "SITUAÇÃO",
+      "PRIORIDADE",
+      "GRAVIDADE",
+      "URGÊNCIA",
+      "TENDÊNCIA",
+      "PONTUAÇÃO",
+      "CLASSIFICAÇÃO",
+      "GRAU DE RISCO",
+      "SISTEMA",
+      "SUBSISTEMA",
+      "LOCALIZAÇÃO",
+      "OBSERVAÇÕES TÉCNICAS"
+    ]
+  },
+  "gerado_em": "2026-09-10T20:38:53+00:00"
+}
