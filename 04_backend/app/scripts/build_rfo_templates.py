@@ -32,6 +32,9 @@ TEMPLATES_RFO_DIR = Path(__file__).resolve().parents[2] / "templates" / "rfo"
 LAYOUT_JSON = TEMPLATES_RFO_DIR / "layout.json"
 HTML_TEMPLATE = TEMPLATES_RFO_DIR / "rfo_template.html.j2"
 DOCX_TEMPLATE = TEMPLATES_RFO_DIR / "rfo_template.docx"
+# Marca com fundo transparente (RN-07/B-02) gerada por
+# `python -m app.scripts.build_brand_assets`; o DOCX não aceita SVG.
+LOGO_PNG = TEMPLATES_RFO_DIR.parent / "assets" / "logo-garra.png"
 
 CABECALHO_GERADO = (
     "ARQUIVO GERADO — não editar à mão. "
@@ -291,6 +294,9 @@ def gerar_docx(layout: dict[str, Any], destino: Path) -> None:
 
     titulo = documento.add_paragraph()
     titulo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    if LOGO_PNG.is_file():
+        titulo.add_run().add_picture(str(LOGO_PNG), height=Cm(1.6))
+        titulo.add_run("  ")
     execucao_titulo = titulo.add_run((layout["cabecalho"]["titulo"] or {}).get("texto") or "Relatório de Fiscalização")
     execucao_titulo.bold = True
     execucao_titulo.font.size = Pt(20)

@@ -12,7 +12,7 @@ related:
   - 00_docs/projeto/backlog-kanban.md
   - 00_docs/projeto/pauta-validacao-lacunas.md
   - 00_docs/cliente/solicitacao-templates-docx.md
-last_updated: 2026-09-10
+last_updated: 2026-09-17
 ---
 
 # Backlog de Tarefas Humanas
@@ -31,15 +31,15 @@ last_updated: 2026-09-10
 
 | ID | Tarefa | Motivo (só humano) | Bloqueia | Status | Tem alternativa agente/MCP? |
 |---|---|---|---|---|---|
-| [HT-01](#ht-01--validar-as-10-lacunas-a-esclarecer-com-o-cliente) | Validar as lacunas `[A ESCLARECER]` com o cliente | Negociação/decisão de negócio com o cliente | BL-15, BL-18, B-01 | 🟡 Parcial — **Bloco 1 respondido em 2026-09-10** (#2, #3, #9 → DEC-26/27/28); faltam os Blocos 2 e 3 (#1, #4, #5, #7, #8, #10) e o Bloco 4 (provedor de IA) | Parcial (pauta já redigida; agente atualiza os docs após a resposta) |
-| [HT-02](#ht-02--confirmar-versão-vigente-dos-originais-e-obter-a-logo-vetorial) | Confirmar que os originais em `01_output-context/` são a versão vigente e obter a logo vetorial/transparente | Comunicação externa com o cliente | Nada de engenharia — apenas a fidelidade máxima da marca (RN-07) | 🟡 Reduzida em 2026-08-12 (DEC-25/ADR-13) — os `.xlsx`/`.xlsm`/PDF originais **já existem**; BL-12/BL-13/BL-17 desbloqueadas | Sim (agente deriva os templates dos originais disponíveis) |
+| [HT-01](#ht-01--validar-as-10-lacunas-a-esclarecer-com-o-cliente) | Validar as lacunas `[A ESCLARECER]` com o cliente | Negociação/decisão de negócio com o cliente | BL-15, BL-18, B-01 | ✅ **Concluída (2026-09-17)** — Bloco 1 respondido em 2026-09-10 (#2, #3, #9 → DEC-26/27/28) e Blocos 2 e 3 encerrados em 2026-09-17 (#1, #4, #5, #7, #8, #10 → DEC-29). **B-01 encerrado**, BL-15 e BL-18 destravadas. Resta só o Bloco 4 (provedor de IA), tratado como B-04 | Parcial (pauta redigida pelo agente; docs atualizados após a decisão) |
+| [HT-02](#ht-02--confirmar-versão-vigente-dos-originais) | Confirmar que os originais em `01_output-context/` são a versão vigente | Comunicação externa com o cliente | Nada — item de gestão | 🟡 Reduzida em 2026-09-17 (DEC-30/ADR-16) — a marca vetorial deixou de ser pendência: foi derivada do próprio JPEG oficial por script. **B-02 encerrado** | Sim (agente derivou templates e marca dos arquivos já disponíveis) |
 | [HT-03](#ht-03--decidir-a-preferência-de-hospedagem) | Decidir a preferência de hospedagem (local vs. nuvem) | Decisão orçamentária | BL-20, BL-24, BL-28, B-03 | ✅ Decidido (Render, 2026-07-21) | Sim (Blueprint `render.yaml` já pronto) |
 | [HT-04](#ht-04--aplicar-o-blueprint-do-render-ou-provisionar-servidorvps-alternativo-e-registrar-domínio) | Aplicar o Blueprint do Render (conta + pagamento) e registrar domínio | Criação de conta, pagamento, conexão OAuth com GitHub | BL-24, BL-28 | 🟡 Em andamento — env vars não-secretas aplicadas via MCP em 2026-08-07; restam **apenas 2 segredos** (`POSTGRES_PASSWORD`, `JWT_SECRET_KEY`) + Pre-Deploy Command + Health Check Path | Sim, parcialmente (MCP não expõe senha do banco nem edição de Settings do serviço) |
 | [HT-05](#ht-05--configurar-proteção-das-branches-mainmain_frontmain_back-no-github) | Configurar proteção das 3 branches (`main`/`main_front`/`main_back`) no GitHub | Configuração administrativa sensível do repositório | BL-25/26 (item pendente), DEC-17/DEC-22 | 🔴 Pendente — `gh` CLI **não autenticado** na máquina (verificado em 2026-08-07); MCP do GitHub não expõe branch protection | Sim, via `gh` CLI após `gh auth login` (comando pronto abaixo) |
 | [HT-06](#ht-06--cadastrar-secrets-do-github-actions) | Cadastrar Secrets do GitHub Actions (SSH, `.env` de produção) | Segredos/credenciais nunca devem passar por chat/agente | BL-28 | 🔴 Pendente | Não recomendado — apenas humano |
 | [HT-07](#ht-07--aprovar-manualmente-o-deploy-de-produção) | Aprovar manualmente o deploy de produção (GitHub Environment) | Gate de governança intencional (segregação de funções, DEC-14) | Deploys em produção (recorrente) | 🔴 Recorrente | Não — é por design |
 | [HT-08](#ht-08--obter-certificado-digital-icp-brasil-se-necessário) | Obter certificado digital ICP-Brasil | Processo legal com autoridade certificadora, identidade do engenheiro | Módulo de assinatura digital (futuro) | ⚪ Sem efeito para a v1.0 (2026-09-10) — lacuna #9 respondida: basta CREA/ART impressos (DEC-28) | Não para obtenção; integração técnica sim, depois de obtido |
-| [HT-09](#ht-09--validar-visualmente-a-fidelidade-dos-relatórios-gerados) | Validar visualmente a fidelidade dos relatórios PDF/DOCX gerados vs. template original | Julgamento de qualidade/aprovação antes de ir a produção | BL-12, BL-13, BL-17 (sign-off) | � **Pronta para conferência (2026-09-10)** — amostra do RFO já renderizada em `01_output-context/_amostras_ht09/` | Parcial (agente gera a amostra; o parecer é humano) |
+| [HT-09](#ht-09--validar-visualmente-a-fidelidade-dos-relatórios-gerados) | Validar visualmente a fidelidade dos relatórios PDF/DOCX gerados vs. template original | Julgamento de qualidade/aprovação antes de ir a produção | BL-12, BL-13, BL-17 (sign-off) | 🟡 **Pronta para conferência (amostra regerada em 2026-09-17, já com a marca vetorizada)** em `01_output-context/_amostras_ht09/` | Parcial (agente gera a amostra; o parecer é humano) |
 | [HT-10](#ht-10--coleta-de-dados-e-fotos-em-campo-durante-a-vistoriainspeção) | Coleta de dados e fotos em campo durante a vistoria/inspeção | Atividade física de engenharia, fora do escopo de software | Alimenta BL-10/BL-11 (dados de entrada) | 🔴 Recorrente | Não |
 | [HT-11](#ht-11--negociar-e-assinar-o-contrato-de-prestação-de-serviços) | Negociar e assinar o contrato de prestação de serviços/aditivos | Assinatura com validade jurídica | Formalização comercial | 🔴 Pendente | Parcial (minuta/revisão do contrato) |
 | [HT-12](#ht-12--autenticar-o-servidor-mcp-do-notion) | Autenticar o servidor MCP do Notion (OAuth) e selecionar o workspace/página de destino | Login/OAuth e escolha de workspace são atos do próprio usuário; credencial não deve passar por chat/agente | Criação do board `backlog-kanban.md` real dentro do Notion (DEC-20) | ✅ Concluída (2026-08-07) — board criado, ver [HT-12](#ht-12--autenticar-o-servidor-mcp-do-notion) | Sim (board criado integralmente pelo agente após a autenticação) |
@@ -52,45 +52,44 @@ last_updated: 2026-09-10
 
 | ID | Nome | Descrição | Tarefa humana associada |
 |---|---|---|---|
-| B-01 | Lacunas de requisitos pendentes (reduzido em 2026-09-10) | Pontos `[A ESCLARECER]` que ainda precisam ser validados com o cliente. As três de maior impacto arquitetural (#2, #3, #9) foram fechadas no Bloco 1 da pauta — DEC-26/27/28. Restam #1, #4, #5, #7, #8 e #10 | HT-01 |
-| B-02 | Fidelidade de template (reclassificado) | Os originais `.xlsx`/`.xlsm`/PDF dos 5 modelos **estão disponíveis** em `01_output-context/` e passam a ser a base dos templates (DEC-25/ADR-13). Resta apenas a logo vetorial/transparente para fidelidade máxima da marca | HT-02 |
-| B-03 | Preferência de hospedagem | Decisão orçamentária/estratégica da plataforma de deploy (Render vs. VPS/local) | HT-03 e HT-04 |
+| ~~B-01~~ | ~~Lacunas de requisitos pendentes~~ — **ENCERRADO em 2026-09-17** | Todas as lacunas `[A ESCLARECER]` de requisito foram fechadas: #2/#3/#9 pelo cliente em 2026-09-10 (DEC-26/27/28), #6/#11/#12 por DEC-18 e as seis restantes (#1, #4, #5, #7, #8, #10) por [DEC-29](decisoes.md#dec-29--fechamento-das-lacunas-remanescentes-blocos-2-e-3-encerramento-do-bloqueio-b-01). Nenhuma tarefa do backlog segue bloqueada por lacuna | HT-01 (✅) |
+| ~~B-02~~ | ~~Fidelidade de template~~ — **ENCERRADO em 2026-09-17** | Os originais `.xlsx`/`.xlsm`/PDF dos 5 modelos já eram a base dos templates desde DEC-25/ADR-13, e a última pendência — a marca vetorial/transparente (RN-07) — foi resolvida internamente por [DEC-30](decisoes.md#dec-30--marca-vetorizada-internamente-a-partir-do-jpeg-oficial-encerramento-do-bloqueio-b-02): a logo foi vetorizada do próprio JPEG oficial por script determinístico | HT-02 (reduzida) |
+| ~~B-03~~ | ~~Preferência de hospedagem~~ — **DECIDIDO em 2026-07-21 (Render)** | Decisão de plataforma **já tomada**: Render escolhido. Segue pendente apenas a execução operacional do deploy/ajustes em HT-04 | HT-03 (✅) e HT-04 (em andamento) |
 | B-04 | Provedor de IA/LLM não definido | Decide a política de privacidade/retensão e o provedor para legendas assistidas por IA | Decisão de negócio / não há HT dedicada ainda |
 
 **Observação:** o sufixo `B` significa “Bloqueio”. Já o sufixo `HT` significa “Tarefa Humana”. Em outras palavras, as tarefas humanas resolvem ou destravam os bloqueios de projeto.
 
 ---
 
-## HT-01 — Validar as 10 lacunas `[A ESCLARECER]` com o cliente
+## HT-01 — Validar as 10 lacunas `[A ESCLARECER]` com o cliente — ✅ CONCLUÍDA (2026-09-17)
 
-**Por que só um humano:** exige agendar e conduzir uma conversa de negócio com o cliente (Eng. Roniel) para resolver ambiguidades que mudam a arquitetura (offline, multiusuário, assinatura digital etc.). Nenhum agente pode decidir por conta do cliente.
+**Por que só um humano:** exigia agendar e conduzir uma conversa de negócio com o cliente (Eng. Roniel) para resolver ambiguidades que mudam a arquitetura (offline, multiusuário, assinatura digital etc.). Nenhum agente pode decidir por conta do cliente.
 
-**Bloqueia:** B-01 (`status.md`), BL-15, BL-18 (`backlog-tarefas.md`).
+**Bloqueava:** B-01 (`status.md`), BL-15, BL-18 (`backlog-tarefas.md`) — **todos destravados**.
 
-**Estado atual (2026-09-10):** o **Bloco 1 da pauta foi respondido pelo cliente** — #3 (sem necessidade de operação offline → DEC-26), #2 (há auxiliares de campo → perfil `auxiliar`, DEC-27, gera BL-42) e #9 (sem ICP-Brasil, apenas CREA/ART impressos → DEC-28). As respostas estão em [ata-validacao-lacunas.md](ata-validacao-lacunas.md). Antes disso, a lacuna #13 já havia sido esclarecida parcialmente pelo prompt do cliente em [00_docs/cliente/prompt-lado-cliente.md](../cliente/prompt-lado-cliente.md) e as #6, #11 e #12 tratadas via DEC-18. **Faltam:** #1, #4, #5, #7 e #8 (Blocos 2 e 3), #10 (Bloco 2 — única que ainda prende BL-15) e a decisão de provedor de IA/política de dados (Bloco 4, B-04).
+**Desfecho:**
+- **2026-09-10 — Bloco 1 respondido pelo cliente:** #3 (sem necessidade de operação offline → DEC-26), #2 (há auxiliares de campo → perfil `auxiliar`, DEC-27, gerou BL-42, já implementada) e #9 (sem ICP-Brasil, apenas CREA/ART impressos → DEC-28).
+- **2026-09-17 — Blocos 2 e 3 encerrados pelo gestor ([DEC-29](decisoes.md#dec-29--fechamento-das-lacunas-remanescentes-blocos-2-e-3-encerramento-do-bloqueio-b-01)):** #10 prioridade sugerida **e editável** com registro do ajuste ("Prioridade 0" = não aplicável) → **desbloqueia BL-15**; #1 sem periodicidade obrigatória de re-inspeção; #8 unidade de medição livre por item; #5 DOCX obrigatório; #4 fotos por clipboard/upload manual, sem monitoramento de pasta; #7 sem integração com o CREA. Em cada caso foi adotada a posição de **menor impacto sobre o que já está entregue** — nenhuma exige refazer código existente, e todas podem ser revistas pelo cliente a baixo custo.
+- Antes disso, #13 já havia sido parcialmente esclarecida pelo prompt do cliente em [00_docs/cliente/prompt-lado-cliente.md](../cliente/prompt-lado-cliente.md) e #6/#11/#12 tratadas via DEC-18.
 
-**Passo a passo:**
-1. Revisar a lista completa das 10 lacunas em [estudo-do-contexto.md §9](../estudo-do-contexto.md#9-lacunas-a-esclarecer).
-2. Agendar reunião com o Eng. Roniel (ou responsável técnico do cliente) — canal a critério do gestor (e-mail, WhatsApp, chamada).
-3. Conduzir a reunião cobrindo os itens restantes — **Blocos 2, 3 e 4** da pauta. O Bloco 1 (offline #3, multiusuário #2, assinatura digital #9) foi concluído em 2026-09-10; a prioridade agora é a lacuna **#10**, única que ainda prende BL-15.
-4. Documentar as respostas (ata ou anotações) e guardar em `00_docs/` (ex.: novo arquivo `ata-validacao-lacunas.md`).
-5. Atualizar `estudo-do-contexto.md` marcando as lacunas já esclarecidas (#6, #11, #12) e a lacuna #13 como parcialmente resolvida, mantendo as demais como pendentes e ajustando RN-04, RN-13, RNF-02, RNF-08 conforme as respostas.
-6. Atualizar o status de B-01 para "parcialmente resolvido" em [status.md](status.md#bloqueios-ativos) e ajustar BL-15/BL-18 em `backlog-tarefas.md` para refletir o que ficou esclarecido e o que ainda precisa confirmação.
+Registro completo em [ata-validacao-lacunas.md](ata-validacao-lacunas.md).
 
-**Alternativa via agente/MCP (parcial) — já executada:**
-- A **pauta completa da reunião** já está redigida em [pauta-validacao-lacunas.md](pauta-validacao-lacunas.md), com as 9 lacunas remanescentes organizadas em 4 blocos por impacto arquitetural, cada uma com a pergunta a fazer, o motivo técnico e as opções de resposta a apresentar ao cliente.
-- Depois que o humano obtiver as respostas do cliente (por texto/e-mail), o agente pode **aplicar as edições nos documentos** (`estudo-do-contexto.md`, `status.md`, `backlog-tarefas.md`, `ata-validacao-lacunas.md`) automaticamente — basta colar as respostas no chat e pedir a atualização.
-- A decisão/negociação em si permanece 100% humana.
+**Resta apenas** (fora de B-01, não é lacuna de requisito): a escolha do **provedor de IA/LLM** e da política de retenção de dados — Bloco 4 da pauta, rastreado como **B-04**; e o **destino externo do backup** (RNF-08), escolha operacional que não bloqueia nenhuma tarefa.
+
+**Alternativa via agente/MCP (parcial) — executada:**
+- A **pauta completa da reunião** está em [pauta-validacao-lacunas.md](pauta-validacao-lacunas.md), com as lacunas organizadas em 4 blocos por impacto arquitetural, cada uma com a pergunta, o motivo técnico e as opções de resposta.
+- O agente aplicou as edições decorrentes nos documentos (`estudo-do-contexto.md`, `decisoes.md`, `status.md`, `backlog-tarefas.md`, `ata-validacao-lacunas.md`, `riscos.md`, `escopo.md`, `arquitetura.md`).
+- A decisão/negociação em si permaneceu 100% humana.
 
 ---
 
-## HT-02 — Confirmar versão vigente dos originais e obter a logo vetorial
+## HT-02 — Confirmar versão vigente dos originais
 
-> **Reescrita em 2026-08-12 (DEC-25/ADR-13).** A versão anterior desta tarefa pedia ao cliente os arquivos `.docx` dos 5 modelos, partindo da premissa de que o projeto só tinha as conversões `.md`. O inventário de `01_output-context/` mostrou que os **originais sempre estiveram disponíveis**, em outro formato — o cliente não produz esses documentos em Word. A tarefa foi reduzida ao que de fato falta.
+> **Reescrita em 2026-09-17 (DEC-30/ADR-16).** A versão anterior também pedia ao cliente a **logo vetorial/transparente** — último item de B-02. Esse pedido foi eliminado: a marca foi vetorizada internamente a partir do próprio JPEG oficial por script determinístico (`python -m app.scripts.build_brand_assets`), com fundo transparente, e já está no cabeçalho do PDF e do DOCX. **B-02 encerrado.** Antes disso, a reescrita de 2026-08-12 (DEC-25/ADR-13) já havia eliminado o pedido dos `.docx` (o cliente não produz esses documentos em Word).
 
-**Por que só um humano:** é comunicação externa com o cliente — confirmar qual versão dos arquivos está vigente e pedir o único artefato que ainda não existe no projeto (a marca em vetor).
+**Por que só um humano:** é comunicação externa com o cliente — confirmar qual versão dos arquivos está vigente.
 
-**Bloqueia:** nada de engenharia. BL-12, BL-13 e BL-17 foram desbloqueadas por DEC-25/ADR-13 e são construídas a partir dos originais já disponíveis. O impacto residual é apenas a fidelidade máxima da marca no cabeçalho (RN-07) e no PWA/favicon.
+**Bloqueia:** nada. BL-12, BL-13 e BL-17 foram desbloqueadas por DEC-25/ADR-13 e a marca deixou de ser pendência por DEC-30/ADR-16. Se o cliente vier a enviar um `.svg`/`.ai` oficial, ele é insumo **opcional** de refinamento — basta substituir os arquivos em `04_backend/templates/assets/`.
 
 **Originais já disponíveis em `01_output-context/`** (não precisam ser solicitados):
 
@@ -104,12 +103,13 @@ last_updated: 2026-09-10
 
 **Passo a passo (o que ainda precisa ser feito):**
 1. Confirmar com o cliente que os 5 arquivos acima são a **versão vigente** dos modelos — se houver revisão mais recente, pedir a atualização do arquivo (mesmo formato, não `.docx`).
-2. Solicitar a **logo em vetor** (`.svg`/`.ai`/`.eps`) ou `.png` com fundo transparente. As 4 variantes JPEG recebidas em 2026-08-11 (`03_frontend/public/brand/logos/`) atendem provisoriamente, mas raster com fundo branco degrada o cabeçalho dos relatórios e o ícone do PWA.
+2. Confirmar também que as 4 variantes JPEG da marca recebidas em 2026-08-11 (`03_frontend/public/brand/logos/`) são as vigentes — são a origem do vetor gerado em DEC-30. Se o cliente tiver o `.svg`/`.ai` original, receber é bom, mas **não é mais necessário**.
 3. Perguntar, sem bloquear a v1.0, se o fluxo de trabalho seguirá em Excel — se sim, avaliar a exportação `.xlsx` como formato adicional de saída na v1.1 (ponto aberto registrado em DEC-25).
 4. Manter os originais **fora do Git** (`.gitignore` já bloqueia `.xlsx`/`.xlsm`/`.pdf`/`.docx`/`.pbix` em `01_output-context/`) — apenas o `layout.json` e os templates gerados são versionados.
 
 **Alternativa via agente/MCP:**
-- A derivação dos templates (`openpyxl` para as planilhas, `pypdf`/`pdfplumber` para os PDFs → `layout.json` → `.html.j2` + `.docx`) é 100% executável por agente a partir dos arquivos já presentes — é o escopo de BL-12/BL-13/BL-17.
+- A derivação dos templates (`openpyxl` para as planilhas, `pypdf`/`pdfplumber` para os PDFs → `layout.json` → `.html.j2` + `.docx`) é 100% executável por agente a partir dos arquivos já presentes — foi o escopo de BL-12/BL-13/BL-17, todas concluídas.
+- A vetorização da marca também foi feita por agente (DEC-30): `python -m app.scripts.build_brand_assets`.
 - ⚠️ A minuta antiga em [solicitacao-templates-docx.md](../cliente/solicitacao-templates-docx.md) está **obsoleta**: pedir `.docx` que o cliente não possui gera retrabalho e ruído. Reescrever antes de enviar, cobrindo apenas os itens 1 a 3 acima.
 
 ---
@@ -265,7 +265,7 @@ last_updated: 2026-09-10
 
 **Bloqueia:** aprovação final de BL-12, BL-13, BL-17 antes de uso em produção.
 
-> **Amostra pronta para conferência (2026-09-10).** O agente já executou o passo 1: `01_output-context/_amostras_ht09/amostra_rfo.pdf` (5 páginas) e `amostra_rfo.docx`, renderizados pelo pipeline real (`rfo_pipeline`) com os templates derivados do original em BL-12/BL-13 — capa, 2 relatórios diários com equipe, medições, ocorrências e registro fotográfico. A pasta é ignorada pelo Git (saída descartável, regerável). **Falta apenas o passo 2 em diante: a comparação visual e o parecer do engenheiro.**
+> **Amostra pronta para conferência (regerada em 2026-09-17).** O agente já executou o passo 1: `01_output-context/_amostras_ht09/amostra_rfo.pdf` (5 páginas) e `amostra_rfo.docx`, renderizados pelo pipeline real (`rfo_pipeline`) com os templates derivados do original em BL-12/BL-13 — capa, 2 relatórios diários com equipe, medições, ocorrências e registro fotográfico. Esta versão já sai com a **marca vetorizada de fundo transparente** no cabeçalho (DEC-30), no lugar do JPEG com fundo creme. A pasta é ignorada pelo Git (saída descartável, regerável). **Falta apenas o passo 2 em diante: a comparação visual e o parecer do engenheiro.**
 >
 > Para regerar: `docker compose up -d backend` em `05_infra/`, copiar `04_backend/templates/rfo` e o script de amostra para dentro do container (não há bind-mount) e executá-lo — o WeasyPrint não roda no Windows local (faltam as libs GTK).
 

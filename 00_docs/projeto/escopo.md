@@ -3,7 +3,7 @@ title: Escopo do Projeto — Sistema de Automação de Relatórios Prediais
 type: gestao
 status: aprovado
 owner: Garra Engenharia
-last_updated: 2026-09-10
+last_updated: 2026-09-17
 ---
 
 # Escopo do Projeto
@@ -55,12 +55,13 @@ last_updated: 2026-09-10
 | Item | Motivo |
 |---|---|
 | App nativo iOS/Android | PWA cobre os requisitos; custo 3x maior sem benefício proporcional |
-| Integração API com CREA | [A ESCLARECER] — nenhuma referência nos documentos |
+| Integração API com CREA | **Confirmado fora de escopo (2026-09-17, DEC-29)** — lacuna #7: os números de CREA e ART são digitados manualmente |
 | Módulo de assinatura digital ICP-Brasil | **Confirmado fora de escopo (2026-09-10, DEC-28)** — o cliente usa apenas CREA e ART impressos no documento |
-| App desktop de pasta monitorada para Lightshot | Versão futura (pós v1.0) |
+| App desktop de pasta monitorada para Lightshot | **Confirmado fora de escopo (2026-09-17, DEC-29)** — lacuna #4: o fluxo permanece por clipboard/upload manual, com a marcação feita no editor interno (RF-14/BL-31) |
 | Módulo financeiro / emissão de NF | Fora do domínio técnico |
 | Integração com Power BI | Dados exportáveis via API; BI é responsabilidade do cliente |
 | Suporte offline completo (Service Worker + IndexedDB) | **Confirmado fora de escopo (2026-09-10, DEC-26)** — há cobertura 4G/Wi-Fi em todas as edificações inspecionadas |
+| Calendário/alertas de re-inspeção por grau de risco | **Confirmado fora de escopo (2026-09-17, DEC-29)** — lacuna #1: não há periodicidade obrigatória; o prazo de retorno é recomendação técnica escrita no laudo (RN-13) |
 | Auto-cadastro público de usuários Cliente no Portal | [A ESCLARECER] lacuna #11 — posição interina: criação manual da credencial pelo engenheiro fiscal (ver `00_docs/estudo-do-contexto.md`) |
 
 ---

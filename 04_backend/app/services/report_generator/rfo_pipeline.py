@@ -28,7 +28,10 @@ TEMPLATES_DIR = Path(__file__).resolve().parents[3] / "templates"
 RFO_TEMPLATES_DIR = TEMPLATES_DIR / "rfo"
 HTML_TEMPLATE_NAME = "rfo/rfo_template.html.j2"
 DOCX_TEMPLATE_NAME = "rfo/rfo_template.docx"
-LOGO_PATH = TEMPLATES_DIR / "assets" / "logo-garra.jpg"
+# Marca vetorizada com fundo transparente (RN-07/B-02), gerada por
+# `python -m app.scripts.build_brand_assets`. O DOCX não aceita SVG e já traz
+# o PNG equivalente embutido no próprio template.
+LOGO_SVG_PATH = TEMPLATES_DIR / "assets" / "logo-garra.svg"
 
 
 def _em_itens(texto: str | None) -> list[str]:
@@ -39,9 +42,9 @@ def _em_itens(texto: str | None) -> list[str]:
 
 
 def _logo_data_uri() -> str | None:
-    if not LOGO_PATH.is_file():
+    if not LOGO_SVG_PATH.is_file():
         return None
-    return "data:image/jpeg;base64," + base64.b64encode(LOGO_PATH.read_bytes()).decode("ascii")
+    return "data:image/svg+xml;base64," + base64.b64encode(LOGO_SVG_PATH.read_bytes()).decode("ascii")
 
 
 def normalizar_contexto(contexto: dict[str, Any]) -> dict[str, Any]:

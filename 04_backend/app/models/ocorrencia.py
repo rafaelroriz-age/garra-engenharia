@@ -7,8 +7,9 @@ Os campos de classificação (`situacao`, `classificacao`, `tipo_anomalia`,
 CRUD (BL-14 em diante), não neste modelo de dados.
 """
 import uuid
+from datetime import datetime
 
-from sqlalchemy import Float, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -37,6 +38,13 @@ class Ocorrencia(Base):
     tipo_falha: Mapped[str] = mapped_column(String, nullable=True)
     grau_risco: Mapped[str] = mapped_column(String, nullable=True)
     prioridade: Mapped[int] = mapped_column(Integer, nullable=True)
+    # RN-04/DEC-29 (BL-15): prioridade sugerida a partir do Grau de Risco CMM e
+    # rastreio da sobrescrita explícita pelo engenheiro (quem e quando ajustou).
+    prioridade_sugerida: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    prioridade_ajustada_por_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True
+    )
+    prioridade_ajustada_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     descricao: Mapped[str] = mapped_column(Text, nullable=True)
     gut_gravidade: Mapped[float] = mapped_column(Float, nullable=True)
     gut_urgencia: Mapped[float] = mapped_column(Float, nullable=True)

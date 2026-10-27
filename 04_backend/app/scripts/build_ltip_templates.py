@@ -33,6 +33,9 @@ TEMPLATES_LTIP_DIR = Path(__file__).resolve().parents[2] / "templates" / "ltip"
 LAYOUT_JSON = TEMPLATES_LTIP_DIR / "layout.json"
 HTML_TEMPLATE = TEMPLATES_LTIP_DIR / "ltip_template.html.j2"
 DOCX_TEMPLATE = TEMPLATES_LTIP_DIR / "ltip_template.docx"
+# Marca com fundo transparente (RN-07/B-02) gerada por
+# `python -m app.scripts.build_brand_assets`; o DOCX não aceita SVG.
+LOGO_PNG = TEMPLATES_LTIP_DIR.parent / "assets" / "logo-garra.png"
 
 CABECALHO_GERADO = (
     "ARQUIVO GERADO — não editar à mão. "
@@ -254,6 +257,10 @@ def gerar_docx(layout: dict[str, Any], destino: Path) -> None:
 
     capa_titulo = documento.add_paragraph()
     capa_titulo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    if LOGO_PNG.is_file():
+        largura_logo = (capa["logo"] or {}).get("largura_pt") or 216
+        capa_titulo.add_run().add_picture(str(LOGO_PNG), width=Cm(round(largura_logo / 28.35, 2)))
+        capa_titulo.add_run("\n")
     execucao_capa = capa_titulo.add_run(capa["titulo"]["texto"])
     execucao_capa.bold = True
     execucao_capa.font.size = Pt(min(capa["titulo"]["fonte_pt"], 45))

@@ -7,14 +7,14 @@ related:
   - 00_docs/estudo-do-contexto.md
   - 00_docs/projeto/ata-validacao-lacunas.md
   - 00_docs/projeto/backlog-tarefas-humanas.md
-last_updated: 2026-09-10
+last_updated: 2026-09-17
 ---
 
 # Pauta — sessão de validação das lacunas com o cliente
 
-> **Status em 2026-09-10:** o **Bloco 1 foi respondido** (#3 = a, #2 = b, #9 = a) e está registrado em [ata-validacao-lacunas.md](ata-validacao-lacunas.md), gerando DEC-26, DEC-27 e DEC-28. Restam os **Blocos 2, 3 e 4**.
+> **Status em 2026-09-17:** o **Bloco 1 foi respondido** em 2026-09-10 (#3 = a, #2 = b, #9 = a → DEC-26/27/28) e os **Blocos 2 e 3 foram encerrados** em 2026-09-17 (#10 = b, #1 = a, #8 = b, #5 = a, #4 = b, #7 = a → [DEC-29](decisoes.md#dec-29--fechamento-das-lacunas-remanescentes-blocos-2-e-3-encerramento-do-bloqueio-b-01)). Tudo registrado em [ata-validacao-lacunas.md](ata-validacao-lacunas.md). **O bloqueio B-01 está encerrado.** Resta apenas o **Bloco 4** (provedor de IA, bloqueio B-04).
 
-**Objetivo:** fechar as lacunas remanescentes de [estudo-do-contexto.md §9](../estudo-do-contexto.md#9-lacunas-a-esclarecer) e destravar o bloqueio B-01 (que ainda prende BL-15 pela lacuna #10).
+**Objetivo:** fechar as lacunas remanescentes de [estudo-do-contexto.md §9](../estudo-do-contexto.md#9-lacunas-a-esclarecer) e destravar o bloqueio B-01 — *concluído em 2026-09-17; BL-15 desbloqueada*.
 
 **Participantes:** Eng. Roniel Ribeiro Costa (cliente/responsável técnico) + gestor do projeto.
 **Duração sugerida:** 45–60 min.
@@ -30,22 +30,22 @@ last_updated: 2026-09-10
 | 2 | O engenheiro trabalha **sozinho** ou há auxiliares que também registram em campo? | **(b)** Equipe pequena — há auxiliares que registram em campo. | DEC-27 / ADR-14 — perfil `auxiliar` (RN-18), gera BL-42 |
 | 9 | Os PDFs emitidos usam **assinatura digital ICP-Brasil** ou basta o CREA impresso no documento? | **(a)** CREA/ART impressos apenas. | DEC-28 — sem módulo de assinatura na v1.0; HT-08 sem efeito |
 
-## Bloco 2 — Regras de negócio e modelo de dados (~20 min)
+## Bloco 2 — Regras de negócio e modelo de dados — ✅ ENCERRADO EM 2026-09-17 (DEC-29)
 
-| # | Pergunta ao cliente | Por que importa | Opções a apresentar |
+| # | Pergunta ao cliente | Posição adotada | Efeito |
 |---|---|---|---|
-| 10 | O engenheiro pode **sobrescrever manualmente** a Prioridade calculada a partir do Grau de Risco CMM (RN-04)? E "Prioridade 0" significa "sem prioridade definida" ou "não aplicável"? | Desbloqueia BL-15 diretamente. | (a) Prioridade sempre derivada, sem edição; (b) Sugerida pelo sistema e editável, com registro de quem alterou. |
-| 1 | Existe **periodicidade obrigatória de re-inspeção** por grau de risco (ex.: Crítico ≤ 90 dias, Médio ≤ 180, Mínimo ≤ 1 ano)? | Define se o sistema precisa de calendário/alertas (RN-13). | (a) Não é obrigatório; (b) Sim, com os prazos X/Y/Z → gera nova funcionalidade de agenda. |
-| 8 | As **medições do RFO** têm unidade fixa (m²) ou variam por contrato (unidades, horas, verba)? | Define se o campo de medição é numérico simples ou precisa de unidade configurável. | (a) Sempre m²; (b) Unidade livre por item de medição. |
-| 5 | O **DOCX** é rascunho editável antes da entrega, ou o **PDF** já é o documento definitivo? | Define se docxtpl (BL-13) é obrigatório ou se o pipeline pode ser só WeasyPrint. | (a) DOCX é obrigatório (posição atual, RNF-04); (b) PDF direto basta → simplifica o pipeline e reduz a dependência do template Word. |
+| 10 | O engenheiro pode **sobrescrever manualmente** a Prioridade calculada a partir do Grau de Risco CMM (RN-04)? E "Prioridade 0" significa "sem prioridade definida" ou "não aplicável"? | **(b)** Sugerida pelo sistema e editável, com registro de quem alterou. "Prioridade 0" = **não aplicável**. | **BL-15 desbloqueada**; RN-04 fechada |
+| 1 | Existe **periodicidade obrigatória de re-inspeção** por grau de risco? | **(a)** Não é obrigatória — recomendação técnica caso a caso no laudo. | RN-13 fechada; sem agenda/alertas na v1.0 |
+| 8 | As **medições do RFO** têm unidade fixa (m²) ou variam por contrato? | **(b)** Unidade livre por item de medição. | Zero mudança — `VisitaMedicao.unidade` já é texto livre |
+| 5 | O **DOCX** é rascunho editável antes da entrega, ou o **PDF** já é o documento definitivo? | **(a)** DOCX obrigatório (mantém RNF-04). | BL-13 permanece válida |
 
-## Bloco 3 — Integrações e operação (~10 min)
+## Bloco 3 — Integrações e operação — ✅ ENCERRADO EM 2026-09-17 (DEC-29), exceto backup
 
-| # | Pergunta ao cliente | Por que importa | Opções a apresentar |
+| # | Pergunta ao cliente | Posição adotada | Efeito |
 |---|---|---|---|
-| 4 | As fotos são salvas automaticamente numa **pasta monitorada** ou ficam só na área de transferência? | Confirma se a Opção C do §6 de arquitetura.md (agente desktop) chega a ser necessária. Com o editor de anotação interno (BL-31, já pronto), a tendência é (b). | (a) Pasta fixa → avaliar cliente desktop no futuro; (b) Clipboard/upload manual + editor interno já resolve. |
-| 7 | Há necessidade de **integração com o CREA** para consultar/validar ARTs? | Define se entra uma integração externa no escopo. | (a) Não, os números são digitados manualmente; (b) Sim → nova tarefa, sujeita à existência de API pública. |
-| — | **Backup** (RNF-08): qual frequência e onde guardar a cópia fora do host de produção? | Desbloqueia BL-29 com parâmetros concretos. | Sugestão técnica: dump diário do Postgres + espelho das fotos, retenção 30 dias, cópia em provedor distinto do Render. |
+| 4 | As fotos são salvas automaticamente numa **pasta monitorada** ou ficam só na área de transferência? | **(b)** Clipboard/upload manual + editor interno (RF-14/BL-31). | Agente desktop (Opção C do §6 de `arquitetura.md`) sai do escopo |
+| 7 | Há necessidade de **integração com o CREA** para consultar/validar ARTs? | **(a)** Não — números digitados manualmente. | Sem integração externa na v1.0 |
+| — | **Backup** (RNF-08): qual frequência e onde guardar a cópia fora do host de produção? | 🔴 **Ainda em aberto** — não integra B-01. Sugestão técnica: dump diário do Postgres + espelho das fotos, retenção 30 dias, cópia em provedor distinto do Render. | BL-29 já entregue; falta só escolher o destino externo |
 
 ## Bloco 4 — Decisão pendente sobre IA (~5 min)
 
@@ -57,7 +57,7 @@ last_updated: 2026-09-10
 
 ## Encaminhamento após a reunião
 
-1. Registrar as respostas em [ata-validacao-lacunas.md](ata-validacao-lacunas.md), substituindo os itens hoje marcados como "Pendente". — *feito para o Bloco 1 em 2026-09-10.*
-2. Atualizar [estudo-do-contexto.md §9](../estudo-do-contexto.md#9-lacunas-a-esclarecer) e as regras afetadas (RN-04, RN-13, RNF-02, RNF-08). — *feito para RNF-02, RN-07 e a nova RN-18; RN-04/RN-13/RNF-08 seguem pendentes dos Blocos 2 e 3.*
-3. Rebaixar ou remover B-01 (e B-04, se o item 13 for decidido) em [status.md](status.md#bloqueios-ativos). — *B-01 rebaixado a impacto Médio em 2026-09-10; B-04 segue ativo.*
-4. Desbloquear BL-15 e fechar BL-18/HT-01 em [backlog-tarefas.md](backlog-tarefas.md) e [backlog-tarefas-humanas.md](backlog-tarefas-humanas.md). — *BL-18/HT-01 passaram a parciais; BL-15 continua presa à lacuna #10 (Bloco 2).*
+1. Registrar as respostas em [ata-validacao-lacunas.md](ata-validacao-lacunas.md), substituindo os itens marcados como "Pendente". — *concluído: Bloco 1 em 2026-09-10, Blocos 2 e 3 em 2026-09-17.*
+2. Atualizar [estudo-do-contexto.md §9](../estudo-do-contexto.md#9-lacunas-a-esclarecer) e as regras afetadas (RN-04, RN-13, RNF-02, RNF-08). — *concluído para RN-04, RN-13, RNF-02, RN-07 e RN-18; só RNF-08 (destino do backup) segue aberto.*
+3. Rebaixar ou remover B-01 (e B-04, se o item 13 for decidido) em [status.md](status.md#bloqueios-ativos). — *B-01 **encerrado** em 2026-09-17 (DEC-29); B-04 segue ativo.*
+4. Desbloquear BL-15 e fechar BL-18/HT-01 em [backlog-tarefas.md](backlog-tarefas.md) e [backlog-tarefas-humanas.md](backlog-tarefas-humanas.md). — *concluído em 2026-09-17: BL-15 🟢 desbloqueada, BL-18 e HT-01 ✅.*

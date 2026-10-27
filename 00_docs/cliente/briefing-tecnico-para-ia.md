@@ -121,7 +121,7 @@ Next.js (navegador/PWA) → FastAPI (API REST) → PostgreSQL (dados) + MinIO (a
 - Fase concluída: levantamento de contexto e documentação (estudo do domínio, arquitetura, escopo).
 - Estrutura de código já criada: `03_frontend/` (Next.js) e `04_backend/` (FastAPI), com componentes, rotas de API, modelos de dados e testes iniciais.
 - Protótipos de tela (HTML navegável) já produzidos em `02_prototipos/`.
-- Itens ainda pendentes de validação com o cliente estão listados como "[A ESCLARECER]" na documentação técnica (ex.: periodicidade de re-inspeção por grau de risco, formato das medições do RFO, destino do backup). Uso offline, perfis de acesso da equipe e assinatura digital foram resolvidos em 2026-09-10.
+- A validação de requisitos com o cliente foi **concluída**: uso offline, perfis de acesso da equipe e assinatura digital em 2026-09-10; periodicidade de re-inspeção, formato das medições do RFO, obrigatoriedade do DOCX, origem das fotos e integração com o CREA em 2026-09-17. Restam apenas duas escolhas operacionais, não de requisito: o provedor de IA para as legendas assistidas e o destino externo do backup.
 
 ---
 

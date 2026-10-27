@@ -7,7 +7,7 @@ related:
   - 00_docs/projeto/backlog-tarefas.md
   - 00_docs/projeto/decisoes.md
   - .vscode/mcp.json
-last_updated: 2026-08-07
+last_updated: 2026-09-17
 ---
 
 # Backlog Kanban — espelho para o Notion (DEC-20 / ADR-11)
@@ -16,7 +16,7 @@ last_updated: 2026-08-07
 >
 > Cada cartão = 1 tarefa de [backlog-tarefas.md](backlog-tarefas.md), com **ID**, **Requisitos/Decisões** e **Agente** como propriedades do banco de dados no Notion (colunas da view Tabela). A coluna aqui embaixo é a propriedade **Status** (agrupamento da view Quadro). Não duplica o conteúdo detalhado — sempre que `backlog-tarefas.md` mudar de status, atualizar este arquivo e o board real no Notion.
 >
-> **Critério de mapeamento de status → coluna:** ✅ Concluída → **Done**; 🟢 desbloqueada sem trabalho iniciado → **To do**; 🟢 (parcial)/parcialmente em execução → **In progress**; 🔴 bloqueada (B-01/B-02/depende de outra tarefa) → **Backlog**.
+> **Critério de mapeamento de status → coluna:** ✅ Concluída → **Done**; 🟢 desbloqueada sem trabalho iniciado → **To do**; 🟢 (parcial)/parcialmente em execução → **In progress**; 🔴 bloqueada (B-04 ou depende de outra tarefa) → **Backlog**. B-01 (lacunas) foi encerrado em 2026-09-17 e não bloqueia mais nenhum cartão.
 
 ## Propriedades do banco de dados no Notion
 
@@ -30,15 +30,13 @@ last_updated: 2026-08-07
 
 ---
 
-## 🔵 Backlog (11)
+## 🔵 Backlog (9)
 
 | ID | Tarefa | Requisitos/Decisões | Agente |
 |---|---|---|---|
 | BL-12 | Prototipagem do template HTML/CSS do RFO para PDF (WeasyPrint) | RF-06, RNF-03, DEC-01 | Prototipagem e Documentação para Cliente |
 | BL-13 | Geração de DOCX do RFO via docxtpl | RF-06, DEC-04 | Engenheiro Backend |
-| BL-15 | Regra de prioridade automática por Grau de Risco CMM | RN-04 | Engenheiro Backend |
-| BL-18 | Agendar e conduzir sessão de validação das lacunas `[A ESCLARECER]` | — | Gestor de Projeto |
-| BL-19 | Solicitar e receber arquivos `.docx` de template e logo em alta resolução | — | Gestor de Projeto |
+| BL-19 | Confirmar versão vigente dos originais em `01_output-context/` | — | Gestor de Projeto |
 | BL-34 | Legendas assistidas por IA (backend): `prompts_ia`, campos em `Foto`, Adapter `LegendaIAClient` | RF-15, RN-16, RN-17, DEC-21 | Engenheiro Backend |
 | BL-35 | Legendas assistidas por IA (frontend): geração, revisão e aprovação da legenda sugerida | RF-15, RN-16, RN-17 | Engenheiro Frontend |
 | BL-36 | Extensão da modelagem de dados para legendas assistidas por IA | RF-15, RN-16, RN-17, DEC-21 | Engenheiro Backend |
@@ -46,10 +44,11 @@ last_updated: 2026-08-07
 | BL-38 | Integração do upload/edição de fotos com a geração de legendas por IA | RF-15, RN-16, RN-17, BL-11 | Engenheiro Backend + Frontend |
 | BL-39 | Integração do editor de anotação com o fluxo de aprovação de legendas por IA | RF-15, RN-16, RN-17, BL-31 | Engenheiro Frontend |
 
-## 🟡 To do (5)
+## 🟡 To do (6)
 
 | ID | Tarefa | Requisitos/Decisões | Agente |
 |---|---|---|---|
+| BL-15 | Prioridade da Ocorrência: sugestão pelo Grau de Risco + sobrescrita rastreável (desbloqueada por DEC-29) | RN-04, RN-05, DEC-29 | Engenheiro Backend |
 | BL-23 | Revisão de segurança OWASP Top 10 | RNF-05 | Engenheiro de Software |
 | BL-27 | `docker-compose.prod.yml` + `nginx/nginx.conf` | DEC-14 | Engenheiro DevOps |
 | BL-29 | `backup-db.sh` / `restore-db.sh` + agendamento | DEC-14, RNF-08 | Engenheiro DevOps |
@@ -66,10 +65,11 @@ last_updated: 2026-08-07
 | BL-16 | Dashboard de saúde por edificação/sistema predial | RF-07 | Engenheiro Backend + Frontend |
 | BL-24 | Deploy de produção (Render) — faltam `POSTGRES_PASSWORD`/`JWT_SECRET_KEY` | HT-04, DEC-22 | Engenheiro DevOps |
 
-## 🟢 Done (19)
+## 🟢 Done (20)
 
 | ID | Tarefa | Requisitos/Decisões | Agente |
 |---|---|---|---|
+| BL-18 | Sessão de validação das lacunas `[A ESCLARECER]` — B-01 encerrado | DEC-26/27/28, DEC-29 | Gestor de Projeto |
 | BL-01 | Setup do ambiente de desenvolvimento (Docker Compose, PostgreSQL, MinIO) | DEC-02, DEC-07 | Engenheiro DevOps |
 | BL-02 | Scaffold do backend FastAPI | DEC-05 | Engenheiro Backend |
 | BL-03 | Scaffold do frontend Next.js 14 PWA | DEC-03, DEC-06, RNF-01 | Engenheiro Frontend |

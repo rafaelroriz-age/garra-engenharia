@@ -1,7 +1,8 @@
-"""Repository de `Ocorrencia` (BL-14, RF-04, RN-03, RN-05, RN-10)."""
+"""Repository de `Ocorrencia` (BL-14/BL-15, RF-04, RN-03, RN-04, RN-05, RN-10)."""
 import uuid
+from datetime import datetime
 
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -59,6 +60,10 @@ async def create(
     inspecao_id: uuid.UUID,
     dados: OcorrenciaCreate,
     criado_por_id: uuid.UUID | None = None,
+    prioridade: int | None = None,
+    prioridade_sugerida: int | None = None,
+    prioridade_ajustada_por_id: uuid.UUID | None = None,
+    prioridade_ajustada_em: datetime | None = None,
 ) -> Ocorrencia:
     ocorrencia = Ocorrencia(
         inspecao_id=inspecao_id,
@@ -70,7 +75,10 @@ async def create(
         tipo_anomalia=dados.tipo_anomalia,
         tipo_falha=dados.tipo_falha,
         grau_risco=dados.grau_risco,
-        prioridade=dados.prioridade,
+        prioridade=prioridade,
+        prioridade_sugerida=prioridade_sugerida,
+        prioridade_ajustada_por_id=prioridade_ajustada_por_id,
+        prioridade_ajustada_em=prioridade_ajustada_em,
         descricao=dados.descricao,
         gut_gravidade=dados.gut_gravidade,
         gut_urgencia=dados.gut_urgencia,
@@ -84,9 +92,24 @@ async def create(
     return ocorrencia
 
 
-async def update(db: AsyncSession, ocorrencia: Ocorrencia, dados: OcorrenciaCreate) -> Ocorrencia:
+async def update(
+    db: AsyncSession,
+    ocorrencia: Ocorrencia,
+    dados: OcorrenciaCreate,
+    *,
+    prioridade: int | None = None,
+    prioridade_sugerida: int | None = None,
+    prioridade_ajustada_por_id: uuid.UUID | None = None,
+    prioridade_ajustada_em: datetime | None = None,
+) -> Ocorrencia:
     for campo, valor in dados.model_dump().items():
         setattr(ocorrencia, campo, valor)
+    # RN-04/DEC-29 (BL-15): a prioridade efetiva e o rastreio da sobrescrita são
+    # calculados no service, nunca vêm crus do payload.
+    ocorrencia.prioridade = prioridade
+    ocorrencia.prioridade_sugerida = prioridade_sugerida
+    ocorrencia.prioridade_ajustada_por_id = prioridade_ajustada_por_id
+    ocorrencia.prioridade_ajustada_em = prioridade_ajustada_em
     await db.commit()
     await db.refresh(ocorrencia)
     return ocorrencia
