@@ -1,0 +1,326 @@
+import json
+import subprocess
+from pathlib import Path
+
+import pytest
+
+from backlog_auto import guard, hooks, runner
+from backlog_auto.backlog import gravar_status, ler, lote, prontas, validar
+from backlog_auto.config import ConfigErro, carregar
+from backlog_auto.scaffold import init
+
+BACKLOG = """# B
+
+## Bloco A
+
+### T01 · Primeira
+- **Status:** todo
+- **Papel:** x
+- **Depende:** —
+- **Ambiente:** offline
+- **Dificuldade:** baixa
+- **Toca:** src/a.py, docs/a.md
+- **Prompt:**
+```text
+faça A
+```
+
+### T02 · Segunda
+- **Status:** todo
+- **Depende:** T01
+- **Ambiente:** offline
+- **Toca:** src/b.py
+- **Prompt:**
+```text
+faça B
+```
+
+### T03 · Terceira
+- **Status:** todo
+- **Depende:** —
+- **Ambiente:** offline
+- **Dificuldade:** alta
+- **Toca:** docs/x.md
+- **Prompt:**
+```text
+faça C
+```
+"""
+
+
+def sh(cwd, *a):
+    return subprocess.run(["git", *a], cwd=cwd, capture_output=True, text=True, check=True).stdout
+
+
+@pytest.fixture
+def projeto(tmp_path, monkeypatch):
+    monkeypatch.delenv("CLAUDE_PROJECT_DIR", raising=False)
+    init(tmp_path, "Teste", False, True, True)
+    (tmp_path / "BACKLOG.md").write_text(BACKLOG, encoding="utf-8")
+    sh(tmp_path, "init", "-b", "main")
+    sh(tmp_path, "config", "user.email", "t@t")
+    sh(tmp_path, "config", "user.name", "t")
+    sh(tmp_path, "add", "-A")
+    sh(tmp_path, "commit", "-m", "base")
+    monkeypatch.chdir(tmp_path)
+    return carregar(tmp_path)
+
+
+def test_init_cria_arquivos_e_hooks(projeto):
+    r = projeto.raiz
+    assert (r / "backlog.toml").exists() and (r / "docs" / "BACKLOG-MANUAL.md").exists()
+    s = json.loads((r / ".claude" / "settings.json").read_text(encoding="utf-8"))
+    assert "backlog_auto.hooks guard" in json.dumps(s["hooks"]["PreToolUse"])
+    assert "backlog_auto.hooks lembrete" in json.dumps(s["hooks"]["PostToolUse"])
+    assert ".claude/worktrees/" in (r / ".gitignore").read_text(encoding="utf-8")
+
+
+def test_init_e_idempotente(projeto):
+    init(projeto.raiz, "Teste", False, True, True)
+    s = json.loads((projeto.raiz / ".claude" / "settings.json").read_text(encoding="utf-8"))
+    assert len(s["hooks"]["PreToolUse"]) == 1 and len(s["hooks"]["PostToolUse"]) == 1
+
+
+def test_template_ambientes_fica_no_topo(projeto):
+    # Antes de qualquer [tabela]: senão o TOML o lê como projeto.ambientes e o valor editado é ignorado.
+    toml = projeto.raiz / "backlog.toml"
+    toml.write_text(toml.read_text(encoding="utf-8").replace('["offline", "humano"]', '["offline", "banco"]'),
+                    encoding="utf-8")
+    assert carregar(projeto.raiz).ambientes == ["offline", "banco"]
+
+
+def test_sem_config_erro(tmp_path, monkeypatch):
+    monkeypatch.delenv("CLAUDE_PROJECT_DIR", raising=False)
+    with pytest.raises(ConfigErro):
+        carregar(tmp_path)
+
+
+def test_parser_e_dependencias(projeto):
+    _, t = ler(projeto)
+    assert list(t) == ["T01", "T02", "T03"]
+    assert t["T01"]["bloco"] == "Bloco A" and t["T02"]["dificuldade"] == "media"
+    assert [x["id"] for x in prontas(t)] == ["T01", "T03"]
+
+
+def test_lote_evita_conflito_de_toca(projeto):
+    _, t = ler(projeto)
+    assert {x["id"] for x in lote(prontas(t))} == {"T01", "T03"}
+    t["T03"]["toca"] = "docs"
+    assert {x["id"] for x in lote(prontas(t))} == {"T01"}
+
+
+def test_gravar_status_so_muda_a_linha(projeto):
+    linhas, t = ler(projeto)
+    gravar_status(projeto, linhas, t, "T01", "done")
+    _, t2 = ler(projeto)
+    assert t2["T01"]["status"] == "done" and t2["T02"]["status"] == "todo"
+    assert [x["id"] for x in prontas(t2)] == ["T02", "T03"]
+    with pytest.raises(ValueError):
+        gravar_status(projeto, linhas, t, "T01", "feito")
+
+
+def test_validar_acusa_problemas(projeto):
+    _, t = ler(projeto)
+    assert validar(projeto, t) == []
+    t["T02"]["depende"] = "T09"
+    t["T01"]["depende"] = "T02"
+    t["T02"]["depende"] = "T01"
+    erros = " ".join(validar(projeto, t))
+    assert "ciclo" in erros
+
+
+def test_validar_exige_doc_dentro_de_toca(projeto):
+    _, t = ler(projeto)
+    t["T03"]["doc"] = "docs/outro.md §2, docs/x.md"
+    erros = validar(projeto, t)
+    assert any("T03" in e and "docs/outro.md" in e for e in erros)
+    assert not any("docs/x.md" in e for e in erros)
+    t["T03"]["status"] = "done"
+    assert validar(projeto, t) == []
+
+
+def test_rota_e_comando_da_sessao(projeto):
+    _, t = ler(projeto)
+    cmd = runner.comando_sessao(projeto, "claude", t["T03"], None)
+    assert cmd[cmd.index("--model") + 1] == "opus" and cmd[cmd.index("--max-budget-usd") + 1] == "8"
+    assert cmd[cmd.index("--permission-mode") + 1] == "bypassPermissions"
+    assert cmd[-1].endswith("faça C")
+    forcado = runner.comando_sessao(projeto, "claude", t["T03"], "haiku")
+    assert forcado[forcado.index("--model") + 1] == "haiku"
+
+
+def test_guard_bloqueia_e_libera(projeto, monkeypatch):
+    sql = "DROP " + "TABLE clientes"
+    assert guard.violacoes(projeto, sql) == ["DML/DDL SQL"]
+    assert guard.violacoes(projeto, "SELECT 1") == []
+    monkeypatch.setenv("BACKLOG_ESCRITA", "1")
+    assert guard.violacoes(projeto, sql) == []
+
+
+def test_guard_comando_so_com_gatilho_e_codigo_sempre(projeto):
+    sql = "DELETE " + "FROM t"
+    assert guard.avaliar(projeto, {"command": f'echo "{sql}"'}) == []
+    assert guard.avaliar(projeto, {"command": f'psql -c "{sql}"'}) != []
+    assert guard.avaliar(projeto, {"file_path": "x/a.py", "content": sql}) != []
+    assert guard.avaliar(projeto, {"file_path": "x/.claude/hooks/a.py", "content": sql}) == []
+    destino = "/Tab" + "les/"
+    assert guard.avaliar(projeto, {"file_path": "a.py", "content": f'df.write.save("abfss://x{destino}t")'}) != []
+
+
+def test_hook_guard_e_fail_open(projeto, monkeypatch, capsys):
+    import io
+    sql = "DROP " + "TABLE t"
+    monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps({"tool_input": {"file_path": "a.sql", "content": sql}})))
+    assert hooks.main(["guard"]) == 2
+    monkeypatch.setattr("sys.stdin", io.StringIO("não é json"))
+    assert hooks.main(["guard"]) == 0
+
+
+def test_hook_lembrete(projeto, monkeypatch, capsys):
+    import io
+    monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps({"tool_input": {"file_path": "src/a.py"}})))
+    assert hooks.main(["lembrete"]) == 0
+    assert "additionalContext" in capsys.readouterr().out
+
+
+def _simular_sessao(projeto, tid, arquivo, texto):
+    nome = projeto.sessao_prefixo + tid
+    wt = projeto.worktrees / nome
+    sh(projeto.raiz, "worktree", "add", str(wt), "-b", f"worktree-{nome}")
+    (wt / arquivo).parent.mkdir(parents=True, exist_ok=True)
+    (wt / arquivo).write_text(texto, encoding="utf-8")
+    return wt
+
+
+def test_colher_integra_e_marca_done(projeto, monkeypatch):
+    monkeypatch.setattr(runner, "sessoes_ativas", lambda exe: [])
+    monkeypatch.setattr(runner, "achar_claude", lambda cfg: None)
+    linhas, t = ler(projeto)
+    gravar_status(projeto, linhas, t, "T01", "doing")
+    sh(projeto.raiz, "commit", "-am", "doing")
+    _simular_sessao(projeto, "T01", "src/a.py", "x = 1\n")  # sem commit: o integrador deve commitar
+    assert runner.colher(projeto)["feitas"] == 1
+    _, t2 = ler(projeto)
+    assert t2["T01"]["status"] == "done"
+    assert (projeto.raiz / "src" / "a.py").exists()
+    assert "worktree-backlog-T01" not in sh(projeto.raiz, "branch")
+    assert sh(projeto.raiz, "status", "--porcelain", "--untracked-files=no").strip() == ""
+
+
+def test_colher_sessao_vazia_vira_blocked(projeto, monkeypatch):
+    monkeypatch.setattr(runner, "sessoes_ativas", lambda exe: [])
+    monkeypatch.setattr(runner, "achar_claude", lambda cfg: None)
+    linhas, t = ler(projeto)
+    gravar_status(projeto, linhas, t, "T03", "doing")
+    sh(projeto.raiz, "commit", "-am", "doing")
+    nome = projeto.sessao_prefixo + "T03"
+    sh(projeto.raiz, "worktree", "add", str(projeto.worktrees / nome), "-b", f"worktree-{nome}")
+    assert runner.colher(projeto)["problemas"] == 1
+    assert ler(projeto)[1]["T03"]["status"] == "blocked"
+
+
+def test_colher_respeita_sessao_ocupada_e_main_suja(projeto, monkeypatch):
+    monkeypatch.setattr(runner, "achar_claude", lambda cfg: "claude")
+    monkeypatch.setattr(runner, "sessoes_ativas", lambda exe: [{"name": "backlog-T01", "status": "busy", "id": "a"}])
+    linhas, t = ler(projeto)
+    gravar_status(projeto, linhas, t, "T01", "doing")
+    sh(projeto.raiz, "commit", "-am", "doing")
+    assert runner.colher(projeto)["ocupadas"] == 1
+    (projeto.raiz / "docs" / "BACKLOG-MANUAL.md").write_text("mudou", encoding="utf-8")
+    projeto.d["projeto"]["autocommit"] = False
+    with pytest.raises(runner.ColherErro):
+        runner.colher(projeto)
+
+
+def test_colher_commita_pendencias_sem_chave_de_assinatura(projeto, monkeypatch):
+    monkeypatch.setattr(runner, "achar_claude", lambda cfg: None)
+    monkeypatch.setattr(runner, "sessoes_ativas", lambda exe: [])
+    sh(projeto.raiz, "config", "commit.gpgsign", "true")
+    sh(projeto.raiz, "config", "gpg.program", "programa-que-nao-existe")
+    linhas, t = ler(projeto)
+    gravar_status(projeto, linhas, t, "T01", "doing")
+    sh(projeto.raiz, "-c", "commit.gpgsign=false", "commit", "-am", "doing")
+    _simular_sessao(projeto, "T01", "src/a.py", "x = 1\n")
+    (projeto.raiz / "docs" / "BACKLOG-MANUAL.md").write_text("mudou", encoding="utf-8")
+    assert runner.colher(projeto)["feitas"] == 1
+    assert sh(projeto.raiz, "status", "--porcelain", "--untracked-files=no").strip() == ""
+    assert "pendentes antes de integrar" in sh(projeto.raiz, "log", "--format=%s")
+
+
+def test_restart_descarta_worktree_e_volta_para_todo(projeto, monkeypatch):
+    monkeypatch.setattr(runner, "sessoes_ativas", lambda exe: [])
+    monkeypatch.setattr(runner, "achar_claude", lambda cfg: None)
+    linhas, t = ler(projeto)
+    gravar_status(projeto, linhas, t, "T01", "doing")
+    gravar_status(projeto, linhas, t, "T03", "done")
+    sh(projeto.raiz, "commit", "-am", "doing")
+    _simular_sessao(projeto, "T01", "src/a.py", "x = 1\n")
+    with pytest.raises(ValueError):
+        runner.reiniciar(projeto, ["T03"])
+    assert runner.reiniciar(projeto, dry=True) == ["T01"]
+    assert ler(projeto)[1]["T01"]["status"] == "doing"
+    assert runner.reiniciar(projeto) == ["T01"]
+    assert ler(projeto)[1]["T01"]["status"] == "todo"
+    assert not (projeto.worktrees / "backlog-T01").exists()
+    assert "worktree-backlog-T01" not in sh(projeto.raiz, "branch")
+
+
+def test_restart_poupa_sessao_trabalhando(projeto, monkeypatch):
+    monkeypatch.setattr(runner, "achar_claude", lambda cfg: "claude")
+    monkeypatch.setattr(runner, "sessoes_ativas", lambda exe: [{"name": "backlog-T01", "status": "busy", "id": "a"}])
+    linhas, t = ler(projeto)
+    gravar_status(projeto, linhas, t, "T01", "doing")
+    assert runner.reiniciar(projeto, dry=True) == []
+    assert runner.reiniciar(projeto, forcar=True, dry=True) == ["T01"]
+
+
+def test_status_gera_painel(projeto, monkeypatch):
+    monkeypatch.setattr(runner, "achar_claude", lambda cfg: None)
+    txt = runner.status(projeto)
+    assert "0/3 concluídas" in txt and "T01" in txt and projeto.progresso.exists()
+
+
+def test_preparo_insere_uma_vez_e_trava_o_resto(projeto):
+    from backlog_auto import preparo
+    assert preparo.garantir(projeto) is True and preparo.garantir(projeto) is False
+    _, t = ler(projeto)
+    assert [i for i in t if t[i]["fase"] == "preparo"] == ["D01", "D02", "D03", "D04", "D05"]
+    assert validar(projeto, t) == []
+    assert [x["id"] for x in prontas(t)] == ["D01", "D02"]          # D01 e D02 em paralelo; T01..T03 travadas
+    assert {x["id"] for x in lote(prontas(t))} == {"D01", "D02"}
+    assert "01_sistema.md" in t["D01"]["prompt"] and "efetiva" in t["D03"]["prompt"]
+
+
+def test_preparo_libera_o_backlog_so_no_fim(projeto):
+    from backlog_auto import preparo
+    preparo.garantir(projeto)
+    for i in ("D01", "D02", "D03", "D04"):
+        linhas, t = ler(projeto)
+        gravar_status(projeto, linhas, t, i, "done")
+    assert [x["id"] for x in prontas(ler(projeto)[1])] == ["D05"]
+    linhas, t = ler(projeto)
+    gravar_status(projeto, linhas, t, "D05", "done")
+    assert [x["id"] for x in prontas(ler(projeto)[1])] == ["T01", "T03"]
+    assert preparo.refazer(projeto) == 5
+    assert [x["id"] for x in prontas(ler(projeto)[1])] == ["D01", "D02"]
+
+
+def test_preparo_usa_objetivo_declarado_e_detecta_colisao(projeto):
+    from backlog_auto import preparo
+    projeto.d["preparo"]["objetivo"] = "prever consumo de amostras"
+    assert "prever consumo de amostras" in preparo.definicao(projeto)[0]["prompt"]
+    assert "inferido" in (lambda c: (c.d["preparo"].update(objetivo=""), preparo.definicao(c)[0]["prompt"])[1])(projeto)
+    projeto.d["preparo"]["prefixo_id"] = "T"
+    with pytest.raises(ConfigErro):
+        preparo.garantir(projeto)
+
+
+def test_disparar_adiciona_preparo_quando_ativo(projeto, capsys):
+    runner.disparar(projeto, dry=True)
+    out = capsys.readouterr().out
+    assert "D01" in out and "D02" in out and "T01" not in out
+
+
+def test_init_cria_guia_do_celular(projeto):
+    txt = (projeto.raiz / "docs" / "CELULAR.md").read_text(encoding="utf-8")
+    assert "Teste" in txt and "{{" not in txt and "backlog-auto auto" in txt
