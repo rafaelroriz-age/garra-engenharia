@@ -42,7 +42,7 @@ Tarefa D01. Leia o sistema deste repositório (estrutura, código-fonte, configu
 ```
 
 ### D02 · Inventariar a documentação existente
-- **Status:** doing
+- **Status:** done
 - **Fase:** preparo
 - **Papel:** analista
 - **Depende:** —
