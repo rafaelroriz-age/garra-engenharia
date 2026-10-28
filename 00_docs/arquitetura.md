@@ -8,7 +8,7 @@ related:
   - 00_docs/convertidos/RFO_INSPECAO.md
   - 00_docs/projeto/decisoes.md
 tags: [arquitetura, stack, modelo-de-dados, api, pdf, lightshot, padroes-de-projeto, system-design, seguranca, rbac, portal-cliente, mcp, notion, ia-legendas]
-last_updated: 2026-09-10
+last_updated: 2026-09-17
 ---
 
 <!-- ai-summary
@@ -42,7 +42,7 @@ Status: draft — as lacunas de maior impacto arquitetural foram fechadas em 202
 | **Fila / Cache** | Redis 7 | Broker de tarefas assíncronas (Celery) e cache de curto prazo para gabarito de sistemas prediais e agregados do dashboard (ver ADR-06 e Seção 10.4). |
 | **Processamento assíncrono** | Celery (worker dedicado) | Geração de PDF/DOCX de até 200 páginas roda fora do ciclo de requisição HTTP, cumprindo RNF-06 sem bloquear a API (ver ADR-06). |
 | **Integração Lightshot** | Upload via clipboard paste (browser API) + upload manual | Ver seção 6. |
-| **Deploy (sugestão)** | Docker Compose (local) ou Railway/Render (nuvem) | [A ESCLARECER] preferência de hospedagem. |
+| **Deploy** | Docker Compose (local) ou Render (nuvem) | Hospedagem definida como Render em 2026-07-21 (B-03 resolvido). |
 
 ---
 
@@ -448,9 +448,9 @@ O Lightshot tem opção de salvar como arquivo local. O engenheiro salva e depoi
 **Prós:** funciona em qualquer contexto; mais simples de implementar.  
 **Contras:** adiciona um passo manual (salvar + fazer upload).
 
-### Opção C — Pasta Monitorada (Futuro)
+### Opção C — Pasta Monitorada — ❌ descartada (2026-09-17, DEC-29)
 
-[A ESCLARECER] Se o engenheiro salva fotos em uma pasta local específica, um cliente desktop leve poderia monitorar essa pasta e fazer upload automático. Escopo fora desta fase.
+Um cliente desktop leve poderia monitorar uma pasta local e fazer upload automático. **Descartada:** a lacuna #4 foi fechada com a opção (b) — as fotos entram por clipboard/upload manual e a marcação técnica é feita no editor interno (RF-14/BL-31, ADR-10), que já cobre o caso de uso real do Lightshot. Um artefato instalável no desktop contrariaria a escolha de PWA (ADR-03/DEC-03).
 
 **Implementação recomendada:** disponibilizar ambas as Opções A e B na interface. Botão "Colar da área de transferência" (A) ao lado de botão "Enviar arquivo" (B), ambos vinculando a foto à ocorrência selecionada.
 
@@ -740,7 +740,7 @@ Do `layout.json` — versionado no repositório — derivam tanto o `.html.j2` c
 
 **Justificativa:** substitui uma dependência externa insatisfazível pela referência de fidelidade mais precisa disponível — a planilha viva e o PDF final preservam exatamente a informação de layout que o `.md` convertido descarta. A camada intermediária `layout.json` evita reprocessar originais pesados (que ficam fora do Git) a cada ajuste e garante que PDF e DOCX derivem da mesma especificação, impedindo divergência entre os dois formatos exigidos por RF-06.
 
-**Consequências:** BL-12, BL-13 e BL-17 deixam de estar bloqueadas por B-02, que passa a cobrir apenas a logo vetorial/transparente (RN-07). Os originais permanecem em `01_output-context/` fora do controle de versão — os scripts de extração recebem o caminho por parâmetro/variável de ambiente e falham explicitamente se o arquivo não estiver presente, em vez de assumir o repositório. O `.xlsm` nunca é executado, apenas lido sem carregar VBA (OWASP A08); o RFIP de 479 MB exige leitura `read_only`/streaming para não estourar memória do worker. HT-09 (validação visual de fidelidade) passa a comparar o gerado contra o original `.xlsx`/PDF, não contra o `.md`.
+**Consequências:** BL-12, BL-13 e BL-17 deixam de estar bloqueadas por B-02, que passou a cobrir apenas a logo vetorial/transparente (RN-07) — **encerrado em 2026-09-17 por ADR-16/DEC-30**, que deriva a marca vetorial do próprio JPEG oficial. Os originais permanecem em `01_output-context/` fora do controle de versão — os scripts de extração recebem o caminho por parâmetro/variável de ambiente e falham explicitamente se o arquivo não estiver presente, em vez de assumir o repositório. O `.xlsm` nunca é executado, apenas lido sem carregar VBA (OWASP A08); o RFIP de 479 MB exige leitura `read_only`/streaming para não estourar memória do worker. HT-09 (validação visual de fidelidade) passa a comparar o gerado contra o original `.xlsx`/PDF, não contra o `.md`.
 
 **Referência** | `00_docs/projeto/decisoes.md` DEC-25
 
@@ -777,6 +777,26 @@ Do `layout.json` — versionado no repositório — derivam tanto o `.html.j2` c
 **Consequências:** a Seção 10.8 deixa de ser provisória e o risco R-07 é encerrado. Se a necessidade surgir no futuro, continua valendo o encaminhamento original — incremento arquitetural dedicado com replanejamento de escopo/cronograma, nunca incorporado retroativamente.
 
 **Referência** | `00_docs/projeto/decisoes.md` DEC-26
+
+---
+
+### ADR-16 — Marca vetorizada por script determinístico a partir do JPEG oficial
+
+**Contexto:** ADR-13 reduziu B-02 a um único item — a marca da Garra só existe em JPEG (4 variantes em `03_frontend/public/brand/logos/`), sempre com o fundo chapado embutido no arquivo. O cabeçalho dos relatórios (RN-07) imprimia, portanto, um retângulo creme sobre o papel, serrilhado em qualquer escala, e o PDF/DOCX ficava preso à resolução do arquivo recebido. O vetor dependia de uma entrega do cliente (HT-02) que pode simplesmente não existir na origem — o mesmo padrão que gerou a premissa falsa do B-02 original.
+
+**Alternativas consideradas:**
+- **Aguardar o `.svg`/`.ai` do cliente** — rejeitada: mantém um bloqueio aberto por um artefato possivelmente inexistente, sem contrapartida técnica.
+- **Apenas remover o fundo (PNG transparente)** — resolve o retângulo creme, mas continua raster: não escala e não serve para PWA/favicon.
+- **Redesenhar a marca à mão em SVG** — é o que BL-41 fez para o ícone da PWA (skyline simplificado): rápido, mas entrega uma interpretação, não a marca do cliente.
+- **Vetorizar o JPEG oficial por script determinístico**, versionando o SVG resultante.
+
+**Decisão:** a marca passa a ser derivada por script, no mesmo modelo de ADR-13: `app/scripts/bitmap_tracer.py` (rastreamento de contornos por trincas de pixel → Douglas-Peucker → caminho SVG com reta nos cantos vivos e Bézier quadrática nas curvas da tipografia) e `app/scripts/build_brand_assets.py` (CLI). Saídas versionadas em `04_backend/templates/assets/`: `logo-garra.svg`, `logo-garra-negativa.svg`, `logo-garra-simbolo.svg`, `logo-garra.png` (transparente) e `marca.json` (procedência). O `rfo_pipeline` embute o SVG no HTML/PDF (WeasyPrint, ADR-01) e os templates DOCX de RFO e LTIP embutem o PNG, porque o formato Office não aceita SVG (ADR-04).
+
+**Justificativa:** o resultado é reprodutível a partir do repositório — o `marca.json` guarda o sha256 do original, o recorte, a paleta medida e a tolerância de simplificação — em vez de depender de uma conversão manual num editor gráfico. Não acrescenta dependência: o tracer usa apenas Pillow, já exigido pelo backend (as bibliotecas prontas de vetorização avaliadas quebram em processo junto do Pillow neste ambiente). Como a saída é derivada da marca oficial e não um redesenho, um vetor entregue pelo cliente no futuro é insumo **opcional** de refinamento.
+
+**Consequências:** B-02 encerrado; HT-02 fica reduzida à confirmação da versão vigente dos originais. `templates/assets/logo-garra.jpg` foi removido para não haver duas fontes da marca. Os arquivos gerados trazem cabeçalho "ARQUIVO GERADO" e não devem ser editados à mão: quando a marca mudar, reexecutar `python -m app.scripts.build_brand_assets`. O ícone da PWA (`03_frontend/public/icon.svg`, BL-41) permanece o símbolo simplificado por legibilidade em 16-32 px — agora uma decisão de design, não uma limitação de asset.
+
+**Referência** | `00_docs/projeto/decisoes.md` DEC-30
 
 ---
 
@@ -1023,7 +1043,7 @@ Conforme `00_docs/projeto/escopo.md` e a lacuna #3 de `estudo-do-contexto.md` (R
 |---|---|---|---|
 | **RNF-01** | Usabilidade mobile em campo (PWA, sem app nativo) | Next.js 14 PWA, `manifest.json` `display: standalone`, componentes shadcn/ui responsivos | ADR-03, Seção 1 |
 | **RNF-02** | Operação offline | Cache de leitura via Service Worker; escrita offline completa fora do escopo da v1.0, por decisão do cliente (ADR-15/DEC-26) | Seção 10.8 |
-| **RNF-03** | Fidelidade ao template | WeasyPrint + Jinja2 (PDF) e docxtpl (DOCX), com os templates derivados por script determinístico dos originais `.xlsx`/`.xlsm` (RFO, RFIP) e PDF (LTIP, vistorias) do cliente | ADR-01, ADR-04, ADR-13, Seção 5 |
+| **RNF-03** | Fidelidade ao template | WeasyPrint + Jinja2 (PDF) e docxtpl (DOCX), com os templates derivados por script determinístico dos originais `.xlsx`/`.xlsm` (RFO, RFIP) e PDF (LTIP, vistorias) do cliente, e a marca vetorizada do JPEG oficial | ADR-01, ADR-04, ADR-13, ADR-16, Seção 5 |
 | **RNF-04** | Exportação PDF e DOCX | Pipeline dual (Template Method) gera ambos os formatos a partir do mesmo contexto de dados | Seção 5, Seção 9.8 |
 | **RNF-05** | Autenticação | JWT + bcrypt, rate limiting em `/auth/login`, refresh token | Seção 1, Seção 10.1 (A07) |
 | **RNF-06** | Performance de geração (< 60s, 200 págs., 150+ fotos) | Processamento assíncrono via Celery/Redis fora do ciclo HTTP; compressão de imagens antes da renderização | ADR-06, Seção 10.2 |

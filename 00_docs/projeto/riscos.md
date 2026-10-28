@@ -3,7 +3,7 @@ title: Registro de Riscos — Sistema de Automação de Relatórios Prediais
 type: gestao
 status: ativo
 owner: Garra Engenharia
-last_updated: 2026-09-10
+last_updated: 2026-09-17
 ---
 
 # Registro de Riscos
@@ -50,7 +50,7 @@ last_updated: 2026-09-10
 | **Impacto** | M |
 | **Prioridade** | Média |
 | **Descrição** | WeasyPrint pode ser lento para documentos grandes. O RNF-06 exige geração em menos de 60 segundos. |
-| **Mitigação** | Processamento assíncrono via Celery ou FastAPI BackgroundTasks (ADR-06, ainda não implementado — BL-12/BL-13 bloqueadas por B-02). Compressão de imagens (Pillow) antes de inserir no PDF/DOCX. |
+| **Mitigação** | Processamento assíncrono via Celery ou FastAPI BackgroundTasks (ADR-06, ainda não implementado). Compressão de imagens (Pillow) antes de inserir no PDF/DOCX. |
 | **Benchmark realizado (BL-22, 2026-08-05)** | Medição real com pipeline mínimo de fidelidade aproximada (ver [relatorio-benchmark-geracao-pdf-docx.md](relatorio-benchmark-geracao-pdf-docx.md)), 191 páginas / 570 fotos (pior caso ≥ RNF-06). Job único gerando PDF+DOCX (dual-pass, ADR-06 Seção 5): **sem otimização de imagem, 112,8s** (viola RNF-06, arquivos de 280 MB/138 MB); **otimizando a imagem a cada geração, 83,2s** (ainda viola RNF-06); **com as fotos já redimensionadas no upload (fix aplicado em BL-11, `MAX_LADO_ARMAZENADO_PX=2000`) + compressão adicional no embed do relatório, 44,2s** — dentro do limite, ~26% de margem. Risco rebaixado de "ação necessária" para **mitigado sob a condição de que BL-12/BL-13 reaproveitem o padrão de fotos já otimizadas no upload**, não a de recomprimir tudo a cada geração. |
 | **Risco residual** | (1) Medição feita com pipeline aproximado, síncrono, sem Celery/Redis — a versão final (BL-12/BL-13, ADR-06) precisa ser re-medida quando implementada; (2) variação observada entre execuções locais (`tempo_registro_final_storage_e_db_s` variou de 1,7s a 9,2s) por contenção de I/O no ambiente de desenvolvimento — recomenda-se nova medição em ambiente de produção/staging dedicado antes do sign-off final de RNF-06. |
 | **Gatilho de escalada** | Tempo de geração > 60s em teste de carga da implementação final (BL-12/BL-13) com laudo de 200 páginas. |
@@ -88,17 +88,17 @@ last_updated: 2026-09-10
 
 ## Riscos de Negócio / Requisitos
 
-### R-06 — Lacunas [A ESCLARECER] não resolvidas antes da implementação (rebaixado A/M → M/M em 2026-09-10)
+### R-06 — Lacunas [A ESCLARECER] não resolvidas antes da implementação — **ENCERRADO (2026-09-17)**
 
 | Campo | Valor |
 |---|---|
-| **Probabilidade** | M |
-| **Impacto** | M |
-| **Prioridade** | Média |
-| **Descrição** | Existem itens `[A ESCLARECER]` em `estudo-do-contexto.md`. Se não forem resolvidos antes da implementação, pode ocorrer retrabalho. **Rebaixado em 2026-09-10:** as três lacunas de maior impacto arquitetural (offline #3, multi-usuário #2 e assinatura digital #9) foram resolvidas com o cliente — ver DEC-26/DEC-27/DEC-28. Restam #1, #4, #5, #7, #8 e #10, todas de escopo localizado (regra de negócio ou formato de campo), além da escolha de provedor de IA da #13 (tratada em R-10/B-04). |
-| **Mitigação** | Conduzir os Blocos 2 e 3 da [pauta de validação](pauta-validacao-lacunas.md) antes de iniciar as tarefas que dependem delas (BL-15 depende de #10). |
-| **Gatilho de escalada** | Início de BL-15 (RN-04) ou de qualquer tarefa de medição/re-inspeção sem a resposta correspondente. |
-| **Responsável** | Gestor de Projeto |
+| **Probabilidade** | — |
+| **Impacto** | — |
+| **Prioridade** | Encerrado |
+| **Descrição** | O risco cobria o retrabalho decorrente de implementar sobre requisitos ambíguos. **Não se materializou:** as três lacunas de maior impacto arquitetural (offline #3, multiusuário #2 e assinatura digital #9) foram resolvidas com o cliente em 2026-09-10 (DEC-26/27/28) e as seis restantes (#1, #4, #5, #7, #8, #10) foram fechadas em 2026-09-17 por [DEC-29](decisoes.md#dec-29--fechamento-das-lacunas-remanescentes-blocos-2-e-3-encerramento-do-bloqueio-b-01), adotando em cada caso a posição de menor impacto sobre o que já estava entregue — nenhuma exigiu refazer código. O bloqueio **B-01 foi encerrado**. |
+| **Mitigação** | Encerrada. Permanece aberta apenas a escolha do provedor de IA (lacuna #13), tratada em **R-10/B-04**, e o destino externo do backup (RNF-08), que é escolha operacional. Se o cliente revisar alguma das posições de DEC-29, o impacto é localizado: só #10 gerou campos novos (BL-15). |
+| **Gatilho de escalada** | — |
+| **Responsável** | — |
 
 ---
 
@@ -162,13 +162,13 @@ last_updated: 2026-09-10
 
 | Risco | Prioridade | Status |
 |---|---|---|
-| R-06 — Lacunas não resolvidas | Alta | **Ação imediata** |
-| R-07 — Offline descoberto tarde | Alta | **Ação imediata** |
+| R-06 — Lacunas não resolvidas | — | **Encerrado (2026-09-17)** — todas as lacunas de requisito fechadas (DEC-26/27/28 e DEC-29) |
+| R-07 — Offline descoberto tarde | — | **Encerrado (2026-09-10)** — cliente confirmou cobertura 4G/Wi-Fi (DEC-26) |
 | R-01 — Fidelidade visual PDF | Alta | Mitigado (protótipo antecipado) |
 | R-02 — Clipboard API | Média | Mitigado (fallback upload manual) |
 | R-03 — Performance PDF | Média | Mitigado sob condição — benchmark real em 2026-08-05, ver [relatorio-benchmark-geracao-pdf-docx.md](relatorio-benchmark-geracao-pdf-docx.md) |
 | R-04 — Complexidade modelo | Média | Mitigado (modelo ER definido) |
-| R-05 — Template DOCX ausente | Média | Ação necessária (kickoff) |
+| R-05 — Original do cliente desatualizado | Baixa | Mitigado (templates e marca derivados dos originais arquivados — DEC-25/DEC-30); resta confirmar versão vigente (HT-02) |
 | R-08 — Escopo crescente | Média | Mitigado (congelamento v1.0) |
 | R-09 — Hospedagem indefinida | Baixa | Mitigado (Docker Compose agnóstico) |
 | R-10 — Dados enviados a IA externa (RF-15) | Média | Ação necessária (escolher provedor — lacuna #13, B-04) |

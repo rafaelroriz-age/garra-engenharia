@@ -18,7 +18,7 @@ last_updated: 2026-07-17
 | 1. Validação de Lacunas (paralela) | 1 semana | 2026-07-20 | 2026-07-24 | Agendamento com Eng. Roniel (Gestor de Projeto) |
 | 2. Obtenção de Templates Word (paralela) | 1-2 semanas | 2026-07-20 | 2026-07-31 | Cliente enviar arquivos `.docx` |
 | 3. Incremento RFO | 3 semanas | 2026-08-03 | 2026-08-21 | Etapa 0 concluída; DOCX final depende da Etapa 2 |
-| 4. Incremento LTIP + Dashboard | 4 semanas | 2026-08-24 | 2026-09-18 | Etapa 3 concluída; regra RN-04 depende da Etapa 1 |
+| 4. Incremento LTIP + Dashboard | 4 semanas | 2026-08-24 | 2026-09-18 | Etapa 3 concluída; regra RN-04 liberada em 2026-09-17 (DEC-29) |
 | 5. Vistoria Cautelar + Residencial + RFIP | 2 semanas | 2026-09-21 | 2026-10-02 | Etapa 4 concluída (reaproveita motor de relatório) |
 | 6. Integração, Testes, Hardening | 2 semanas | 2026-10-05 | 2026-10-16 | Etapas 3, 4 e 5 concluídas |
 | 7. Deploy e Documentação Final | 1 semana | 2026-10-19 | 2026-10-23 | Etapa 6 concluída; preferência de hospedagem definida (B-03) |

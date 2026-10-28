@@ -70,10 +70,10 @@ async def atualizar_ocorrencia(
     ocorrencia_id: uuid.UUID,
     dados: OcorrenciaCreate,
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(require_equipe),
+    usuario: Usuario = Depends(require_equipe),
 ) -> Ocorrencia:
     """Atualiza uma ocorrência existente."""
-    return await ocorrencia_service.atualizar(db, ocorrencia_id, dados)
+    return await ocorrencia_service.atualizar(db, ocorrencia_id, dados, usuario_id=usuario.id)
 
 
 @router.delete("/ocorrencias/{ocorrencia_id}", status_code=status.HTTP_204_NO_CONTENT)

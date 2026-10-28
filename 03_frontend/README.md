@@ -31,7 +31,8 @@ Aplicação **Next.js 14 (App Router) PWA** que funciona como interface web/mobi
 │   └── under-construction.tsx    # placeholder padrão para telas ainda não implementadas
 ├── public/
 │   ├── brand/
-│   │   └── logos/                # assets oficiais de marca (JPEGs) — ver convenção de uso abaixo
+│   │   ├── logo-garra*.svg        # marca vetorizada do JPEG oficial (gerada por `app.scripts.build_brand_assets`, DEC-30)
+│   │   └── logos/                # JPEGs originais do cliente — referência histórica, ver convenção de uso abaixo
 │   ├── manifest.json             # manifest da PWA (display: standalone)
 │   └── icon.svg                  # símbolo derivado do skyline oficial (favicon/PWA, BL-41)
 ├── Dockerfile                    # imagem de desenvolvimento (`next dev`)
@@ -47,7 +48,7 @@ npm install
 npm run dev
 ```
 
-Abre em `http://localhost:3000`. As telas principais já carregam com formulários e integração real com a API, embora a geração final do relatório com fidelidade total ainda dependa do recebimento dos templates originais do cliente.
+Abre em `http://localhost:3000`. As telas principais já carregam com formulários e integração real com a API. Os templates de relatório (RFO e LTIP) já são derivados dos originais do cliente (ADR-13), mas o RFIP e o pipeline de renderização do LTIP seguem pendentes.
 
 ## Como rodar via Docker Compose
 
@@ -72,7 +73,7 @@ npm run lint    # ESLint
 	- `horizontal` → header da landing (fundo navy, espaço horizontal amplo): ícone + nome em linha.
 	- `compacta` → `AppShell` (sidebar desktop + topbar/menu mobile — espaço reduzido): ícone + nome em 2 linhas.
 
-  Os 4 JPEGs originais do cliente permanecem em `public/brand/logos/` apenas como referência histórica (dimensões inconsistentes entre si e fundo/cores embutidos no arquivo) — **não são mais usados em nenhuma tela**; não importe esses arquivos diretamente em JSX/CSS.
+  Os 4 JPEGs originais do cliente permanecem em `public/brand/logos/` apenas como referência histórica (dimensões inconsistentes entre si e fundo/cores embutidos no arquivo) — **não são mais usados em nenhuma tela**; não importe esses arquivos diretamente em JSX/CSS. Desde 2026-09-17 (DEC-30/ADR-16), a marca completa também existe em vetor com fundo transparente em `public/brand/logo-garra.svg` (mais `logo-garra-negativa.svg` e `logo-garra-simbolo.svg`), gerada do JPEG oficial por `python -m app.scripts.build_brand_assets` — use esses arquivos quando precisar da marca com a tipografia original (ex.: documento impresso ou material enviado ao cliente); para a UI, prefira `<Logo />`, que recolore e escala melhor.
 - **Ícone/favicon/PWA**: `public/icon.svg` usa o mesmo traço de skyline do `GarraMark`, em fundo ardósia (`#253341`) — legível em tamanhos pequenos onde a logo completa não caberia. `theme_color` do `manifest.json` e do `viewport` em `app/layout.tsx` foram alinhados ao mesmo tom.
 - **Cores/fontes**: navy `#1e3a5f` (`--primary`) e laranja `#f97316` (`--brand-accent`) são a paleta funcional (botões, destaques, ícones dos cards da home) e agora também a paleta da marca vetorizada, via `text-primary`/`text-primary-foreground` — resolvendo a divergência de tom que antes existia entre os JPEGs (azul acinzentado/ardósia/creme) e o tema da aplicação. Fontes: Inter + Manrope.
 - **Rotas de `inspecoes/[id]/*`**: não aparecem na navegação global (`components/layout/nav-items.ts`) — são acessadas a partir do contexto de uma edificação/contrato.

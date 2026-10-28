@@ -46,3 +46,10 @@ tmp_benchmark/
 # OS / editor
 .DS_Store
 Thumbs.db
+
+# backlog-auto (ver 00_docs/backlog-auto/BACKLOG-MANUAL.md): worktrees das sessões em
+# background, logs de lote e painel gerado por `backlog-auto status`.
+.claude/worktrees/
+.claude/logs/
+.claude/settings.local.json
+PROGRESSO.md

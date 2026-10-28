@@ -1,0 +1,100 @@
+# Configuração do backlog-auto. Tudo é opcional: o que faltar usa o padrão do módulo.
+# Manual: 00_docs/backlog-auto/BACKLOG-MANUAL.md
+
+# Ambientes que as tarefas podem declarar em "- **Ambiente:**". O primeiro é o padrão.
+#   offline — só código, docs e testes que não precisam de serviço (lint, build do frontend, testes unitários)
+#   docker  — precisa do PostgreSQL/MinIO de 05_infra/docker-compose.yml rodando (pytest do 04_backend, e2e)
+#   humano  — decisão de negócio, cliente, credencial ou ato jurídico: a sessão só prepara material
+ambientes = ["offline", "docker", "humano"]
+
+[projeto]
+nome = "Garra Engenharia — Automação de Relatórios Prediais"
+branch_principal = "main"     # branch de integração (plano-gestao-configuracao.md §1.1); as de deploy
+                              # (main_back, main_front, staging_back, staging_front) só recebem PR, nunca o `colher`
+backlog = "BACKLOG.md"
+progresso = "PROGRESSO.md"    # painel gerado por `backlog-auto status` (fora do git)
+prefixo_id = "T"              # T01, T02... (o backlog de produto continua usando BL-XX em 00_docs/projeto/backlog-tarefas.md)
+autocommit = false            # desligado: com trabalho manual em andamento na main, o commit automático (`git add -u`)
+                              # levaria arquivos modificados sem os arquivos novos (ex.: migration). O `colher` recusa
+                              # rodar até a main estar commitada ou com `git stash`.
+# claude_exe = "C:\\caminho\\claude.exe"   # se o `claude` não estiver no PATH
+
+[agente]
+permissao = "bypassPermissions"   # sem aprovação manual; a segurança fica no [guard] e no worktree isolado
+regras_extras = [
+  "Estrutura do monorepo: documentação em 00_docs/, frontend em 03_frontend/, backend em 04_backend/, infraestrutura em 05_infra/; não crie pastas na raiz (05_infra/README.md, DEC-09).",
+  "Comandos Python, pytest e alembic rodam a partir de 04_backend/; npm a partir de 03_frontend/; docker compose a partir de 05_infra/.",
+  "Os testes do backend precisam do PostgreSQL de 05_infra/docker-compose.yml (localhost:5433); se ele não estiver no ar, registre que não rodou em vez de inventar resultado.",
+  "Antes de commitar, rode o que o checklist de .github/pull_request_template.md pede para a parte tocada: `pytest` e `ruff check .` em 04_backend, `npm run lint` e `npm run build` em 03_frontend.",
+  "Migration Alembic nova sempre com downgrade(); variável de ambiente nova entra no .env.example correspondente; nunca commite .env, chaves ou tokens.",
+  "Commits em Conventional Commits com escopo da pasta e rodapé de referência, ex.: `feat(backend): ... (BL-15)` / `Refs BL-15` (00_docs/projeto/plano-gestao-configuracao.md §1.2).",
+  "Nunca altere nem apague os originais do cliente em 01_output-context/: são a fonte dos templates (PDF e DOCX derivam do mesmo layout.json, DEC-25/ADR-13).",
+  "Não edite os documentos de gestão compartilhados (00_docs/projeto/backlog-tarefas.md, backlog-kanban.md, status.md, decisoes.md, riscos.md): registre o resultado e qualquer decisão proposta no Doc da tarefa; eles são atualizados no fechamento de lote.",
+  "Requisitos (RF/RNF/RN) estão em 00_docs/estudo-do-contexto.md; arquitetura e ADRs em 00_docs/arquitetura.md; decisões vigentes (DEC-XX) em 00_docs/projeto/decisoes.md. Leia só a seção relevante.",
+  "Se o Papel da tarefa corresponder a um agente de .github/agents/ (backend, frontend, devops, arquiteto-software, design-ui-ux...), siga as instruções do arquivo .agent.md correspondente.",
+  "Nunca faça push nem toque nas branches main_back, main_front, staging_back e staging_front.",
+]
+
+# Dificuldade da tarefa -> modelo, esforço e teto de gasto (US$) por sessão.
+[rota.baixa]
+model = "haiku"
+effort = "low"
+budget = 1
+
+[rota.media]
+model = "sonnet"
+effort = "medium"
+budget = 3
+
+[rota.alta]
+model = "opus"
+effort = "high"
+budget = 8
+
+[guard]
+ativo = true
+variavel_liberacao = "BACKLOG_ESCRITA"   # só uma pessoa define =1 para liberar uma escrita legítima
+# O preset "sql" fica de fora: ele também inspeciona arquivos .py, e testes e migrations deste projeto têm SQL legítimo.
+# O banco que as sessões alcançam é o PostgreSQL local de desenvolvimento; o risco real é apagar volumes, restaurar
+# backup por cima, tocar a produção no Render, apagar originais do cliente e dar push.
+presets = ["destrutivo"]
+comando_gatilho = ""                     # vazio = inspeciona todos os comandos de shell
+isentos = ["/.claude/", "/backlog-auto/"]   # o código do próprio módulo contém os padrões que o guard procura
+mensagem = "Bloqueado pela barreira de dados do backlog-auto: não apague volumes, originais do cliente nem dados de produção, e não faça push."
+
+[guard.padroes]
+"git push" = "\\bgit\\s+push\\b"
+"apagar volumes Docker" = "docker[\\s-]+compose\\b[^\\n]*\\bdown\\b[^\\n]*(\\s-v\\b|--volumes)|docker\\s+(volume\\s+(rm|prune)|system\\s+prune)"
+"restaurar backup do banco" = "restore-db\\.sh"
+"banco de produção no Render" = "dpg-[a-z0-9]+|render\\.com[^\\n]*postgres|postgres(ql)?://[^\\s'\"]*render\\.com"
+"SQL destrutivo via psql" = "(psql|docker\\s+(compose\\s+)?exec)[^\\n]*\\b(DROP\\s+(TABLE|SCHEMA|DATABASE)|TRUNCATE|DELETE\\s+FROM)\\b"
+"alembic downgrade até a base" = "alembic\\s+downgrade\\s+base"
+"apagar originais do cliente" = "(\\brm\\b|Remove-Item|\\bdel\\b|\\bmv\\b|Move-Item)[^\\n]*01_output-context"
+
+[preparo]
+# Antes de qualquer tarefa, 5 sessões em background documentam o sistema: mapeiam o objetivo, inventariam a documentação
+# existente, classificam cada documento (efetiva / parcial / refazer / ausente), criam ou refazem o que for preciso e
+# conferem contra o código. O backlog normal só é liberado quando isso terminar. Para pular: ativo = false.
+ativo = true
+prefixo_id = "D"                       # D01..D05
+pasta_docs = "00_docs"                 # onde a documentação do projeto já vive
+pasta_trabalho = "00_docs/_preparo"    # mapa, inventário, classificação e relatório
+idioma = "português do Brasil"
+objetivo = "Sistema web (PWA) da Garra Engenharia que automatiza a produção de relatórios técnicos de engenharia predial (RFO, LTIP e relatório fotográfico): o engenheiro registra edificações, contratos, visitas e ocorrências com fotos pelo celular e gera PDF e DOCX fiéis aos modelos do cliente, com classificação de anomalias (CMM/GUT), dashboard de saúde da edificação e portal do cliente."
+
+[fechamento]
+# Quando a última tarefa de um lote é colhida, uma sessão `claude -p` atualiza a documentação (usa o texto de
+# "## Fechamento de lote" do BACKLOG.md) antes do próximo lote. O resultado só é integrado se não tocar em código.
+ativo = true
+model = "sonnet"
+effort = "medium"
+budget = 3                        # teto de gasto em US$
+timeout = 1800                    # segundos
+# prompt = "..."                  # opcional: substitui o texto do BACKLOG.md
+proibidas_extensoes = ["py", "ipynb", "sql", "ts", "tsx", "js", "jsx", "j2", "sh", "ps1", "toml", "yml", "yaml"]
+
+[lembrete]
+ativo = true
+extensoes = ["py", "sql", "ts", "tsx", "j2"]
+execucao = ["pytest", "alembic", "npm"]
+texto = "Lembrete: antes de encerrar, registre o resultado no Doc da tarefa (o que mudou, comandos e resultado dos testes) e aponte o que precisa ir para 00_docs/ no fechamento de lote."

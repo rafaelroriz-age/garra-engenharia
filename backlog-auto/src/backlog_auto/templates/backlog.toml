@@ -1,0 +1,80 @@
+# Configuração do backlog-auto. Tudo é opcional: o que faltar usa o padrão do módulo.
+
+# Ambientes que as tarefas podem declarar em "- **Ambiente:**". O primeiro é o padrão.
+# Exemplos: "offline" (roda sem acesso externo), "humano" (só prepara material), "banco", "api".
+ambientes = ["offline", "humano"]
+
+[projeto]
+nome = "{{nome}}"
+branch_principal = "main"     # branch onde o `colher` integra as tarefas
+backlog = "BACKLOG.md"
+progresso = "PROGRESSO.md"    # painel gerado por `backlog-auto status`
+prefixo_id = "T"              # T01, T02...
+autocommit = true             # o `colher` commita sozinho as mudanças pendentes em arquivos rastreados da branch principal
+                              # (arquivos novos não entram). Nenhum commit usa chave de assinatura nem pede credenciais.
+# claude_exe = "C:\\caminho\\claude.exe"   # se o `claude` não estiver no PATH
+
+[agente]
+permissao = "bypassPermissions"   # sem aprovação manual; a segurança fica no [guard] e no worktree isolado
+# preambulo = "..."               # substitui o texto que abre o prompt de toda sessão
+regras_extras = [
+  # "Nunca altere dados que já existem no banco; leia à vontade.",
+  # "Documentação fica em docs/; registre o resultado lá.",
+]
+
+# Dificuldade da tarefa -> modelo, esforço e teto de gasto (US$) por sessão.
+[rota.baixa]
+model = "haiku"
+effort = "low"
+budget = 1
+
+[rota.media]
+model = "sonnet"
+effort = "medium"
+budget = 3
+
+[rota.alta]
+model = "opus"
+effort = "high"
+budget = 8
+
+[guard]
+ativo = {{guard_ativo}}
+variavel_liberacao = "BACKLOG_ESCRITA"   # só uma pessoa define =1 para liberar uma escrita legítima
+presets = ["sql", "delta"]               # disponíveis: sql, delta, destrutivo
+# Só inspeciona comandos de shell que casem com esta regex (evita falso positivo). Vazio = todos.
+comando_gatilho = "sql|psql|sqlcmd|pyodbc|spark|delta|lakehouse|supabase|prisma|alembic"
+isentos = ["/.claude/"]                  # caminhos que o guard ignora
+mensagem = "Bloqueado pela barreira de dados: este projeto não altera nem apaga dados existentes."
+
+[guard.padroes]
+# "nome do padrão" = "regex"   # padrões próprios, somados aos presets
+# "Prisma reset" = "prisma\\s+migrate\\s+reset"
+
+[preparo]
+# Antes de qualquer tarefa, 5 sessões em background documentam o sistema: mapeiam o objetivo, inventariam a documentação
+# existente, classificam cada documento (efetiva / parcial / refazer / ausente), criam ou refazem o que for preciso e
+# conferem contra o código. O backlog normal só é liberado quando isso terminar.
+ativo = true
+prefixo_id = "D"                  # D01..D05
+pasta_docs = "docs"               # onde a documentação final vive
+pasta_trabalho = "docs/_preparo"  # onde ficam mapa, inventário, classificação e relatório
+idioma = "português do Brasil"
+objetivo = ""                     # opcional: o objetivo do sistema, com suas palavras. Vazio = inferido do código.
+
+[fechamento]
+# Quando a última tarefa de um lote é colhida, uma sessão `claude -p` atualiza a documentação (usa o texto de
+# "## Fechamento de lote" do BACKLOG.md) antes do próximo lote. O resultado só é integrado se não tocar em código.
+ativo = true
+model = "sonnet"
+effort = "medium"
+budget = 3                        # teto de gasto em US$
+timeout = 1800                    # segundos
+# prompt = "..."                  # opcional: substitui o texto do BACKLOG.md
+proibidas_extensoes = ["py", "ipynb", "sql", "ts", "tsx", "js", "jsx", "j2", "sh", "ps1", "toml", "yml", "yaml"]
+
+[lembrete]
+ativo = {{lembrete_ativo}}
+extensoes = ["py", "ipynb", "sql"]
+execucao = ["python", "pytest"]
+texto = "Lembrete: antes de encerrar, registre o que mudou na documentação do projeto e no backlog."

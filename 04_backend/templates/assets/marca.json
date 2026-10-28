@@ -1,0 +1,22 @@
+{
+  "gerado_em": "2026-09-17T15:21:33+00:00",
+  "gerado_por": "app.scripts.build_brand_assets",
+  "origem": {
+    "sha256": "75c76d890c3c1d03834496b2a5e76b81d96187171434d5b1664f1a6f66480ccb",
+    "dimensoes_px": [
+      1024,
+      1024
+    ]
+  },
+  "recorte_px": [
+    814,
+    737
+  ],
+  "linha_de_corte_simbolo_px": 465,
+  "cor_fundo_removida": "#faf7f0",
+  "paleta": {
+    "escuro": "#0c5276",
+    "claro": "#257195"
+  },
+  "tolerancia_px": 0.6
+}

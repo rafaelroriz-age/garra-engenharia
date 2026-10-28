@@ -31,7 +31,7 @@ Aplicação **FastAPI (Python 3.12)** responsável pela API, regras de negócio,
 │   │   ├── database.py          # engine/sessão assíncrona SQLAlchemy 2
 │   │   └── security.py          # hash/verify de senha (bcrypt) + create/decode de JWT
 │   └── main.py                  # instância FastAPI, CORS, GET /health e inclusão dos routers
-├── templates/assets/            # logo, CSS compartilhado (vazio — BL-12+)
+├── templates/assets/            # marca vetorizada do JPEG oficial (DEC-30): logo-garra.svg (PDF), logo-garra.png transparente (DOCX), negativa, símbolo e marca.json
 ├── alembic.ini                  # config do Alembic (URL sobrescrita em runtime por env.py)
 ├── alembic/
 │   ├── env.py                    # migrations async (asyncio.run + run_sync), target_metadata = app.models.Base.metadata
@@ -133,6 +133,31 @@ python -m app.scripts.build_rfo_templates
 
 > O WeasyPrint não roda no venv local do Windows (faltam as libs GTK): a renderização
 > real do PDF só funciona dentro do container `garra-backend`.
+
+## Marca vetorizada no cabeçalho dos relatórios (DEC-30/ADR-16)
+
+A marca da Garra só existe em JPEG, com o fundo chapado embutido no arquivo. Em vez de
+imprimir esse retângulo creme no cabeçalho do relatório, os assets de `templates/assets/`
+são **derivados por script** do JPEG oficial — mesmo princípio do `layout.json` acima.
+
+```powershell
+cd 04_backend
+python -m app.scripts.build_brand_assets
+```
+
+| Arquivo | Papel |
+|---|---|
+| `app/scripts/bitmap_tracer.py` | Vetorizador: contornos da máscara → Douglas-Peucker → caminho SVG (reta nos cantos vivos, Bézier quadrática nas curvas da tipografia). Só depende do Pillow |
+| `app/scripts/build_brand_assets.py` | CLI: detecta e remove o fundo, mede a paleta, separa símbolo e nome, grava os SVGs, o PNG transparente e `marca.json` |
+| `templates/assets/logo-garra.svg` | Marca em 2 tons, fundo transparente — embutida no HTML/PDF por `rfo_pipeline` |
+| `templates/assets/logo-garra.png` | Mesma marca em raster transparente — o formato Office não aceita SVG, então é o que vai embutido nos templates DOCX |
+| `templates/assets/logo-garra-negativa.svg` / `logo-garra-simbolo.svg` | Variante branca (fundo escuro) e só o skyline |
+| `templates/assets/marca.json` | Procedência: sha256 do JPEG de origem, recorte, paleta medida e tolerância |
+
+> Os arquivos gerados trazem o cabeçalho "ARQUIVO GERADO" e não devem ser editados à
+> mão. Se o cliente enviar uma marca nova, substituir o JPEG de origem e reexecutar o
+> comando acima; depois regerar os templates DOCX (`build_rfo_templates`/`build_ltip_templates`),
+> que embutem o PNG.
 
 ## Autenticação JWT + bcrypt (BL-06)
 
