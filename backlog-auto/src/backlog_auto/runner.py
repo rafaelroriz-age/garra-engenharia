@@ -11,7 +11,7 @@ from datetime import datetime
 from pathlib import Path
 
 from . import preparo
-from .backlog import gravar_status, ler, lote, prontas
+from .backlog import fechamento_do_backlog, gravar_status, ler, lote, prontas
 from .config import Config
 
 ICONE = {"todo": "⬜", "doing": "🔄", "done": "✅", "blocked": "⛔"}
@@ -117,8 +117,11 @@ def disparar(cfg: Config, ambiente: str | None = None, modelo: str | None = None
     return len(ok)
 
 
-def integrar(cfg: Config, tid: str, dry: bool) -> tuple[str, str]:
-    """Retorna (estado, mensagem); estado: ok | vazio | ausente | conflito."""
+def integrar(cfg: Config, tid: str, dry: bool, proibidas: set[str] | None = None) -> tuple[str, str]:
+    """Retorna (estado, mensagem); estado: ok | vazio | ausente | conflito | recusado.
+
+    `proibidas`: extensões que a branch não pode ter alterado (usado no fechamento de lote, que só mexe em documentação).
+    """
     nome = cfg.sessao_prefixo + tid
     wt, branch = cfg.worktrees / nome, f"worktree-{nome}"
     if not wt.exists():
@@ -130,6 +133,11 @@ def integrar(cfg: Config, tid: str, dry: bool) -> tuple[str, str]:
         git(cfg, "commit", "-m", f"{tid}: commit automático do integrador", cwd=wt)
     if not git(cfg, "log", "--oneline", f"{cfg.principal}..{branch}").stdout.strip():
         return "vazio", "terminou sem nenhuma mudança (veja `claude logs`)"
+    if proibidas:
+        mexidos = git(cfg, "diff", "--name-only", f"{cfg.principal}...{branch}").stdout.split()
+        codigo = [f for f in mexidos if f.rsplit(".", 1)[-1].lower() in proibidas]
+        if codigo:
+            return "recusado", f"alterou arquivos de código ({', '.join(codigo[:5])}); nada foi integrado"
     if dry:
         return "ok", "(simulação) merge"
     r = git(cfg, "merge", "--no-ff", "-m", f"Integra {tid} (backlog)", branch)
@@ -145,6 +153,21 @@ def integrar(cfg: Config, tid: str, dry: bool) -> tuple[str, str]:
     return "ok", "integrada"
 
 
+def conferir_principal(cfg: Config) -> None:
+    """A principal precisa estar na branch certa e sem mudanças soltas antes de qualquer merge."""
+    atual = git(cfg, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+    if atual != cfg.principal:
+        raise ColherErro(f"a branch atual é '{atual}', não '{cfg.principal}'.")
+    if cfg.d["projeto"]["autocommit"] and salvar_pendentes(cfg):
+        print("  principal: mudanças pendentes commitadas automaticamente.")
+    sujas = [l for l in git(cfg, "status", "--porcelain", "--untracked-files=no").stdout.splitlines()
+             if l[3:].strip().strip('"') not in cfg.arquivos_controle]
+    if sujas:
+        raise ColherErro("a branch principal tem mudanças não commitadas"
+                         + ("" if cfg.d["projeto"]["autocommit"] else " (autocommit desligado)")
+                         + "; commite ou guarde (git stash).")
+
+
 def colher(cfg: Config, dry: bool = False) -> dict:
     """Integra o que terminou. Retorna contagens: feitas, ocupadas, esperando, problemas."""
     res = {"feitas": 0, "ocupadas": 0, "esperando": 0, "problemas": 0}
@@ -156,17 +179,7 @@ def colher(cfg: Config, dry: bool = False) -> dict:
         print("Nada em andamento.")
         return res
     if not dry:
-        atual = git(cfg, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
-        if atual != cfg.principal:
-            raise ColherErro(f"a branch atual é '{atual}', não '{cfg.principal}'.")
-        if cfg.d["projeto"]["autocommit"] and salvar_pendentes(cfg):
-            print("  principal: mudanças pendentes commitadas automaticamente.")
-        sujas = [l for l in git(cfg, "status", "--porcelain", "--untracked-files=no").stdout.splitlines()
-                 if l[3:].strip().strip('"') not in cfg.arquivos_controle]
-        if sujas:
-            raise ColherErro("a branch principal tem mudanças não commitadas"
-                             + ("" if cfg.d["projeto"]["autocommit"] else " (autocommit desligado)")
-                             + "; commite ou guarde (git stash).")
+        conferir_principal(cfg)
     for t in doing:
         s = sessoes.get(cfg.sessao_prefixo + t["id"])
         estado = s.get("status") if s else "encerrada"
@@ -191,6 +204,8 @@ def colher(cfg: Config, dry: bool = False) -> dict:
             res["problemas"] += 1
         else:
             res["feitas"] += 1
+            if t["fase"] != "preparo":  # o preparo (D04/D05) já documenta; fechamento extra seria redundante
+                registrar_pendente(cfg, t["id"])
         if s and exe:
             subprocess.run([exe, "stop", s["id"]], capture_output=True)
             subprocess.run([exe, "rm", s["id"]], capture_output=True)
@@ -203,17 +218,115 @@ def colher(cfg: Config, dry: bool = False) -> dict:
     return res
 
 
-def auto(cfg: Config, ambiente: str | None, intervalo: int, max_rodadas: int) -> None:
+def _pendentes(cfg: Config) -> list[str]:
+    try:
+        return json.loads(cfg.pendente_fechamento.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+
+
+def registrar_pendente(cfg: Config, tid: str) -> None:
+    """Lembra, em disco, que `tid` entrou na principal e ainda não passou pelo fechamento de lote."""
+    ids = _pendentes(cfg)
+    if tid not in ids:
+        cfg.logs.mkdir(parents=True, exist_ok=True)
+        cfg.pendente_fechamento.write_text(json.dumps(ids + [tid]), encoding="utf-8")
+
+
+def prompt_fechamento(cfg: Config, ids: list[str], tarefas: dict) -> str:
+    """Texto do 'Fechamento de lote' do backlog (ou do toml), mais o contexto do lote e as regras desta sessão."""
+    a, f = cfg.d["agente"], cfg.d["fechamento"]
+    base = f["prompt"].strip() or fechamento_do_backlog(cfg)
+    lote_txt = "; ".join(f"{i} ({tarefas[i]['titulo']}; Doc: {tarefas[i]['doc'] or '—'})" for i in ids if i in tarefas)
+    ext = ", ".join(f"*.{e}" for e in f["proibidas_extensoes"])
+    return " ".join([
+        a["preambulo"].strip(), *[r.strip() for r in a["regras_extras"]],
+        "ESTA É A SESSÃO DE FECHAMENTO DE LOTE: a regra que reserva os documentos de gestão ao fechamento vale para as outras "
+        "sessões, não para você; é você quem os atualiza. Não edite o arquivo do backlog nem o de progresso (o integrador cuida). "
+        f"Altere somente documentação; o integrador recusa o merge se houver mudança em {ext}.",
+    ]) + f"\n\nTarefas integradas neste lote: {lote_txt or ', '.join(ids)}.\n\n" + base
+
+
+def fechar(cfg: Config, dry: bool = False) -> str:
+    """Roda a sessão de fechamento de lote e integra o resultado. Retorna: nada | adiado | ok | falha."""
+    ids = _pendentes(cfg)
+    linhas, tarefas = ler(cfg)
+    if not ids:
+        print("Nenhum lote a fechar.")
+        return "nada"
+    if any(t["status"] == "doing" for t in tarefas.values()):
+        print("Fechamento adiado: ainda há tarefas em andamento.")
+        return "adiado"
+    nome = cfg.sessao_prefixo + "fechamento"
+    wt, branch = cfg.worktrees / nome, f"worktree-{nome}"
+    f = cfg.d["fechamento"]
+    print(f"{'(simulação) ' if dry else ''}Fechamento de lote ({', '.join(ids)}) → {f['model']}/{f['effort']}/US${f['budget']}")
+    if dry:
+        return "ok"
+    exe = achar_claude(cfg)
+    if not exe:
+        print("  CLI `claude` não encontrado; fechamento não executado.")
+        return "falha"
+    try:
+        conferir_principal(cfg)
+    except ColherErro as e:
+        print(f"  Fechamento adiado: {e}")
+        return "adiado"
+    if wt.exists() or git(cfg, "rev-parse", "--verify", "-q", branch).returncode == 0:
+        print("  Descartando resíduo de um fechamento anterior.")
+        git(cfg, "worktree", "remove", "-f", "-f", str(wt))
+        git(cfg, "worktree", "prune")
+        git(cfg, "branch", "-D", branch)
+    cmd = [exe, "-p", "-w", nome, "--model", f["model"], "--effort", f["effort"], "--max-budget-usd", str(f["budget"]),
+           "--permission-mode", cfg.d["agente"]["permissao"], "--", prompt_fechamento(cfg, ids, tarefas)]
+    try:
+        p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", cwd=cfg.raiz, timeout=f["timeout"])
+    except subprocess.TimeoutExpired:
+        print(f"  Fechamento excedeu {f['timeout']}s; veja {wt}.")
+        return "falha"
+    if p.returncode:
+        print(f"  Fechamento FALHOU (código {p.returncode}): {(p.stdout + p.stderr).strip()[:300]}")
+        return "falha"
+    est, msg = integrar(cfg, "fechamento", False, set(f["proibidas_extensoes"]))
+    print(f"  fechamento  {msg}")
+    if est not in ("ok", "vazio"):
+        return "falha"
+    cfg.pendente_fechamento.unlink(missing_ok=True)
+    git(cfg, "worktree", "remove", "-f", "-f", str(wt))
+    git(cfg, "worktree", "prune")
+    git(cfg, "branch", "-D", branch)
+    return "ok"
+
+
+def passo(cfg: Config, ambiente: str | None = None, fechamento: bool = True) -> dict:
+    """Uma volta completa: colher, fechar o lote se ele acabou, disparar o próximo.
+
+    Retorna as contagens do `colher` mais `novas` (disparadas) e `fechamento` (nada | adiado | ok | falha).
+    """
+    try:
+        r = colher(cfg)
+    except ColherErro as e:
+        print(f"Colheita adiada: {e}")
+        r = {"feitas": 0, "ocupadas": 1, "esperando": 0, "problemas": 0}
+    r["fechamento"] = "nada"
+    if fechamento and cfg.d["fechamento"]["ativo"] and not r["ocupadas"] and not r["esperando"] and not r["problemas"]:
+        r["fechamento"] = fechar(cfg)
+        if r["fechamento"] == "falha":
+            r["novas"] = 0
+            return r
+    r["novas"] = disparar(cfg, ambiente)
+    return r
+
+
+def auto(cfg: Config, ambiente: str | None, intervalo: int, max_rodadas: int, fechamento: bool = True) -> None:
     rodada = 0
     while True:
         rodada += 1
-        try:
-            r = colher(cfg)
-        except ColherErro as e:
-            print(f"Colheita adiada: {e}")
-            r = {"feitas": 0, "ocupadas": 1, "esperando": 0, "problemas": 0}
-        novas = disparar(cfg, ambiente)
-        if novas == 0 and r["ocupadas"] == 0 and r["feitas"] == 0:
+        r = passo(cfg, ambiente, fechamento)
+        if r["fechamento"] == "falha":
+            print("Parado: o fechamento de lote falhou. Corrija e rode `backlog-auto fechar` (o lote seguinte só começa depois dele).")
+            return
+        if r["novas"] == 0 and r["ocupadas"] == 0 and r["feitas"] == 0:
             if r["esperando"] or r["problemas"]:
                 print("Parado: há tarefas esperando aprovação, bloqueadas ou com conflito. Veja `backlog-auto status`.")
             elif any(t["status"] == "blocked" for t in ler(cfg)[1].values()):

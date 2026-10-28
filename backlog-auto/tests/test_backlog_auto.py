@@ -324,3 +324,95 @@ def test_disparar_adiciona_preparo_quando_ativo(projeto, capsys):
 def test_init_cria_guia_do_celular(projeto):
     txt = (projeto.raiz / "docs" / "CELULAR.md").read_text(encoding="utf-8")
     assert "Teste" in txt and "{{" not in txt and "backlog-auto auto" in txt
+
+
+def _claude_falso(monkeypatch, projeto, arquivo, texto):
+    """Troca a chamada ao `claude -p -w` por uma sessão simulada que escreve `arquivo` no worktree de fechamento."""
+    real = subprocess.run
+    chamadas = []
+
+    def falso(cmd, *a, **k):
+        if cmd[0] != "claude-falso":
+            return real(cmd, *a, **k)
+        chamadas.append(cmd)
+        nome = cmd[cmd.index("-w") + 1]
+        wt = projeto.worktrees / nome
+        sh(projeto.raiz, "worktree", "add", str(wt), "-b", f"worktree-{nome}")
+        (wt / arquivo).parent.mkdir(parents=True, exist_ok=True)
+        (wt / arquivo).write_text(texto, encoding="utf-8")
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+
+    monkeypatch.setattr(runner.subprocess, "run", falso)
+    monkeypatch.setattr(runner, "achar_claude", lambda cfg: "claude-falso")
+    monkeypatch.setattr(runner, "sessoes_ativas", lambda exe: [])
+    return chamadas
+
+
+def _lote_colhido(projeto):
+    linhas, t = ler(projeto)
+    gravar_status(projeto, linhas, t, "T01", "doing")
+    sh(projeto.raiz, "commit", "-am", "doing")
+    _simular_sessao(projeto, "T01", "src/a.py", "x = 1\n")
+    assert runner.colher(projeto)["feitas"] == 1
+
+
+def test_fechamento_do_backlog_le_o_bloco_da_secao(projeto):
+    from backlog_auto.backlog import PROMPT_FECHAMENTO_PADRAO, fechamento_do_backlog
+    assert fechamento_do_backlog(projeto).strip() != ""
+    projeto.backlog.write_text("# B\n\n## Fechamento de lote\n\n```text\natualize X\ne Y\n```\n\n## Outro\n```text\nnão\n```\n", encoding="utf-8")
+    assert fechamento_do_backlog(projeto) == "atualize X\ne Y"
+    projeto.backlog.write_text("# B\n", encoding="utf-8")
+    assert fechamento_do_backlog(projeto) == PROMPT_FECHAMENTO_PADRAO
+
+
+def test_colher_registra_lote_pendente_e_fechar_sem_pendencia_nao_faz_nada(projeto, monkeypatch):
+    monkeypatch.setattr(runner, "sessoes_ativas", lambda exe: [])
+    monkeypatch.setattr(runner, "achar_claude", lambda cfg: None)
+    assert runner.fechar(projeto) == "nada"
+    _lote_colhido(projeto)
+    assert runner._pendentes(projeto) == ["T01"]
+
+
+def test_fechar_integra_documentacao_e_limpa_pendencia(projeto, monkeypatch):
+    _lote_colhido(projeto)
+    chamadas = _claude_falso(monkeypatch, projeto, "docs/status.md", "T01 feita\n")
+    assert runner.fechar(projeto) == "ok"
+    assert (projeto.raiz / "docs" / "status.md").read_text(encoding="utf-8") == "T01 feita\n"
+    assert runner._pendentes(projeto) == []
+    assert "worktree-backlog-fechamento" not in sh(projeto.raiz, "branch")
+    assert "-p" in chamadas[0] and "T01" in chamadas[0][-1] and "SESSÃO DE FECHAMENTO" in chamadas[0][-1]
+
+
+def test_fechar_recusa_mudanca_em_codigo_e_mantem_pendencia(projeto, monkeypatch):
+    _lote_colhido(projeto)
+    _claude_falso(monkeypatch, projeto, "src/novo.py", "x = 2\n")
+    assert runner.fechar(projeto) == "falha"
+    assert not (projeto.raiz / "src" / "novo.py").exists()
+    assert runner._pendentes(projeto) == ["T01"]
+
+
+def test_fechar_adia_com_tarefa_em_andamento(projeto, monkeypatch):
+    _lote_colhido(projeto)
+    linhas, t = ler(projeto)
+    gravar_status(projeto, linhas, t, "T03", "doing")
+    assert runner.fechar(projeto) == "adiado"
+
+
+def test_passo_fecha_o_lote_antes_de_disparar_o_proximo(projeto, monkeypatch):
+    _lote_colhido(projeto)
+    ordem = []
+    monkeypatch.setattr(runner, "fechar", lambda cfg, dry=False: ordem.append("fechar") or "ok")
+    monkeypatch.setattr(runner, "disparar", lambda cfg, amb=None, *a: ordem.append("disparar") or 2)
+    monkeypatch.setattr(runner, "colher", lambda cfg: ordem.append("colher") or {"feitas": 0, "ocupadas": 0, "esperando": 0, "problemas": 0})
+    r = runner.passo(projeto)
+    assert ordem == ["colher", "fechar", "disparar"] and r["novas"] == 2
+    ordem.clear()
+    runner.passo(projeto, fechamento=False)
+    assert ordem == ["colher", "disparar"]
+
+
+def test_passo_nao_dispara_se_o_fechamento_falhou(projeto, monkeypatch):
+    monkeypatch.setattr(runner, "colher", lambda cfg: {"feitas": 0, "ocupadas": 0, "esperando": 0, "problemas": 0})
+    monkeypatch.setattr(runner, "fechar", lambda cfg, dry=False: "falha")
+    monkeypatch.setattr(runner, "disparar", lambda *a, **k: pytest.fail("não podia disparar"))
+    assert runner.passo(projeto)["fechamento"] == "falha"

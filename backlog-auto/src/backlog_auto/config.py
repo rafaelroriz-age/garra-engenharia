@@ -54,6 +54,15 @@ PADRAO = {
         "idioma": "português do Brasil",
         "objetivo": "",
     },
+    "fechamento": {
+        "ativo": True,
+        "model": "sonnet",
+        "effort": "medium",
+        "budget": 3,
+        "timeout": 1800,
+        "prompt": "",
+        "proibidas_extensoes": ["py", "ipynb", "sql", "ts", "tsx", "js", "jsx", "j2", "sh", "ps1", "toml", "yml", "yaml"],
+    },
     "lembrete": {
         "ativo": True,
         "extensoes": ["py", "ipynb", "sql"],
@@ -108,6 +117,10 @@ class Config:
     @property
     def logs(self) -> Path:
         return self.raiz / ".claude" / "logs"
+
+    @property
+    def pendente_fechamento(self) -> Path:
+        return self.logs / "fechamento_pendente.json"
 
     @property
     def ambientes(self) -> list[str]:

@@ -82,6 +82,17 @@ pasta_trabalho = "00_docs/_preparo"    # mapa, inventário, classificação e re
 idioma = "português do Brasil"
 objetivo = "Sistema web (PWA) da Garra Engenharia que automatiza a produção de relatórios técnicos de engenharia predial (RFO, LTIP e relatório fotográfico): o engenheiro registra edificações, contratos, visitas e ocorrências com fotos pelo celular e gera PDF e DOCX fiéis aos modelos do cliente, com classificação de anomalias (CMM/GUT), dashboard de saúde da edificação e portal do cliente."
 
+[fechamento]
+# Quando a última tarefa de um lote é colhida, uma sessão `claude -p` atualiza a documentação (usa o texto de
+# "## Fechamento de lote" do BACKLOG.md) antes do próximo lote. O resultado só é integrado se não tocar em código.
+ativo = true
+model = "sonnet"
+effort = "medium"
+budget = 3                        # teto de gasto em US$
+timeout = 1800                    # segundos
+# prompt = "..."                  # opcional: substitui o texto do BACKLOG.md
+proibidas_extensoes = ["py", "ipynb", "sql", "ts", "tsx", "js", "jsx", "j2", "sh", "ps1", "toml", "yml", "yaml"]
+
 [lembrete]
 ativo = true
 extensoes = ["py", "sql", "ts", "tsx", "j2"]

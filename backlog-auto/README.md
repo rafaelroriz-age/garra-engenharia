@@ -43,9 +43,15 @@ Prompts prontos para integrar o módulo a um projeto e iniciar a execução: [do
 | `run [--ambiente X] [--model M] [--dry]` | Dispara o próximo lote |
 | `colher [--dry]` | Commita (se faltar), faz merge na principal, marca `done`, remove worktree e branch |
 | `restart [Txx ...] [--dry] [--forcar] [--auto]` | Recomeça tarefas travadas: encerra a sessão, apaga worktree e branch, volta para `todo`. Sem ids, só as `doing`/`blocked` que não estão trabalhando |
-| `auto [--ambiente X] [--intervalo S] [--max-rodadas N]` | `colher` + `run` em loop; para sozinho quando acaba ou quando só restam tarefas esperando/bloqueadas |
+| `fechar [--dry]` | Fechamento de lote: sessão `claude -p` atualiza a documentação (texto de "Fechamento de lote" do `BACKLOG.md`) num worktree próprio; o merge só acontece se não houver mudança em código (`[fechamento] proibidas_extensoes`) |
+| `avancar [--ambiente X] [--sem-fechamento]` | Um passo: `colher`, `fechar` se o lote acabou, `run` do próximo lote |
+| `auto [--ambiente X] [--intervalo S] [--max-rodadas N] [--sem-fechamento]` | `avancar` em loop; para sozinho quando acaba, quando só restam tarefas esperando/bloqueadas ou quando o fechamento falha |
 | `status` | Regenera e imprime o painel de progresso |
 | `preparo [--refazer]` | Insere a fase de preparo da documentação (D01..D05); `--refazer` volta tudo para `todo` e reclassifica |
+
+## Fechamento de lote automático
+
+O lote termina quando o `colher` integra a última tarefa `doing`. Cada tarefa integrada é anotada em `.claude/logs/fechamento_pendente.json`; com `[fechamento] ativo = true`, o próximo `avancar`/`auto` (ou um `fechar` manual) roda uma sessão de documentação **antes** de disparar o lote seguinte. As tarefas de preparo (D01..D05) não geram fechamento. Se a sessão falhar ou mexer em código, nada é integrado, a pendência continua e o `auto` para; corrija e rode `backlog-auto fechar`. `--sem-fechamento` ignora a etapa.
 
 ## Preparo da documentação (antes de tudo)
 

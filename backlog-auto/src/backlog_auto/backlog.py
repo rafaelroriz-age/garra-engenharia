@@ -45,6 +45,31 @@ def ler(cfg: Config):
     return linhas, tarefas
 
 
+PROMPT_FECHAMENTO_PADRAO = (
+    "Rode `git status` e `git log` para ver o que o último lote mudou. Para cada tarefa concluída, atualize a documentação "
+    "do projeto com os fatos novos, seguindo as regras de documentação do projeto, e confira se o backlog reflete os status "
+    "reais (`backlog-auto list`). Não altere código."
+)
+
+
+def fechamento_do_backlog(cfg: Config) -> str:
+    """Primeiro bloco ```text sob '## Fechamento de lote' do backlog; sem ele, o texto padrão."""
+    dentro = fence = False
+    achado: list[str] = []
+    for linha in cfg.backlog.read_text(encoding="utf-8").splitlines():
+        if linha.startswith("## "):
+            if dentro:
+                break
+            dentro = linha[3:].strip().lower().startswith("fechamento de lote")
+        elif dentro and linha.startswith("```"):
+            if fence:
+                break
+            fence = True
+        elif dentro and fence:
+            achado.append(linha)
+    return "\n".join(achado).strip() or PROMPT_FECHAMENTO_PADRAO
+
+
 def lista(valor: str) -> list[str]:
     return [v.strip() for v in valor.split(",") if v.strip() and v.strip() != "—"]
 

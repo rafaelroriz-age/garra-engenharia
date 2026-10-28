@@ -20,6 +20,8 @@ Guia curto. O manual completo está em [BACKLOG-MANUAL.md](BACKLOG-MANUAL.md).
 | Ver como vai o lote | `claude agents` |
 | Rodar tudo sozinho | `backlog-auto auto` |
 | Integrar o que terminou | `backlog-auto colher` |
+| Um passo (colher + fechar lote + próximo lote) | `backlog-auto avancar` |
+| Só o fechamento de lote | `backlog-auto fechar` |
 | Recomeçar tarefa travada | `backlog-auto restart T07` |
 | Reavaliar a documentação | `backlog-auto preparo --refazer` e depois `backlog-auto auto` |
 | Fechar um lote | o prompt abaixo |

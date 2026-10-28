@@ -82,13 +82,24 @@ def _colher(cfg, a):
         print("\nLote concluído? Rode o 'Fechamento de lote' do backlog antes do próximo.")
 
 
+def _fechar(cfg, a):
+    return 1 if runner.fechar(cfg, a.dry) == "falha" else 0
+
+
+def _avancar(cfg, a):
+    r = runner.passo(cfg, a.ambiente, not a.sem_fechamento)
+    print(f"Colhidas {r['feitas']} · fechamento: {r['fechamento']} · disparadas {r['novas']} · em andamento {r['ocupadas']}"
+          f" · esperando {r['esperando']} · com problema {r['problemas']}")
+    return 1 if r["fechamento"] == "falha" else 0
+
+
 def _restart(cfg, a):
     try:
         runner.reiniciar(cfg, a.ids, a.forcar, a.dry)
     except ValueError as e:
         sys.exit(str(e))
     if a.auto and not a.dry:
-        runner.auto(cfg, a.ambiente, a.intervalo, a.max_rodadas)
+        runner.auto(cfg, a.ambiente, a.intervalo, a.max_rodadas, not a.sem_fechamento)
 
 
 def main(argv=None) -> int:
@@ -120,8 +131,14 @@ def main(argv=None) -> int:
     p.add_argument("--model", help="força um modelo para o lote (ignora a dificuldade)")
     p.add_argument("--dry", action="store_true")
     sub.add_parser("colher", help="integra na principal o que terminou e marca done").add_argument("--dry", action="store_true")
-    p = sub.add_parser("auto", help="colher + run em loop até acabar")
+    p = sub.add_parser("fechar", help="roda a sessão de fechamento de lote (documentação) e integra o resultado")
+    p.add_argument("--dry", action="store_true")
+    p = sub.add_parser("avancar", help="um passo: colher, fechar o lote se acabou e disparar o próximo")
     p.add_argument("--ambiente")
+    p.add_argument("--sem-fechamento", action="store_true")
+    p = sub.add_parser("auto", help="colher + fechar lote + run em loop até acabar")
+    p.add_argument("--ambiente")
+    p.add_argument("--sem-fechamento", action="store_true", help="não roda o fechamento de lote entre os lotes")
     p.add_argument("--intervalo", type=int, default=120)
     p.add_argument("--max-rodadas", type=int, default=0, help="0 = sem limite")
     p = sub.add_parser("restart", help="recomeça tarefas travadas (doing/blocked): descarta sessão, worktree e branch")
@@ -129,6 +146,7 @@ def main(argv=None) -> int:
     p.add_argument("--dry", action="store_true")
     p.add_argument("--forcar", action="store_true", help="inclui também as sessões que estão trabalhando")
     p.add_argument("--auto", action="store_true", help="depois de reiniciar, retoma o fluxo automático")
+    p.add_argument("--sem-fechamento", action="store_true")
     p.add_argument("--ambiente")
     p.add_argument("--intervalo", type=int, default=120)
     p.add_argument("--max-rodadas", type=int, default=0)
@@ -152,11 +170,12 @@ def main(argv=None) -> int:
         "list": lambda: _lista(cfg, a), "next": lambda: _proximo(cfg, a), "show": lambda: _mostrar(cfg, a),
         "set": lambda: _definir(cfg, a), "validar": lambda: _validar(cfg, a), "preparo": lambda: _preparo(cfg, a),
         "run": lambda: runner.disparar(cfg, a.ambiente, a.model, a.dry), "colher": lambda: _colher(cfg, a),
-        "auto": lambda: runner.auto(cfg, a.ambiente, a.intervalo, a.max_rodadas),
+        "auto": lambda: runner.auto(cfg, a.ambiente, a.intervalo, a.max_rodadas, not a.sem_fechamento),
+        "fechar": lambda: _fechar(cfg, a), "avancar": lambda: _avancar(cfg, a),
         "restart": lambda: _restart(cfg, a), "status": lambda: print(runner.status(cfg)),
     }
     r = acoes[a.cmd]()
-    return r if isinstance(r, int) and a.cmd == "validar" else 0
+    return r if isinstance(r, int) and a.cmd in ("validar", "fechar", "avancar") else 0
 
 
 if __name__ == "__main__":

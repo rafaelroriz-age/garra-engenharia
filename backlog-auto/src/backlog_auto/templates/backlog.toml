@@ -62,6 +62,17 @@ pasta_trabalho = "docs/_preparo"  # onde ficam mapa, inventário, classificaçã
 idioma = "português do Brasil"
 objetivo = ""                     # opcional: o objetivo do sistema, com suas palavras. Vazio = inferido do código.
 
+[fechamento]
+# Quando a última tarefa de um lote é colhida, uma sessão `claude -p` atualiza a documentação (usa o texto de
+# "## Fechamento de lote" do BACKLOG.md) antes do próximo lote. O resultado só é integrado se não tocar em código.
+ativo = true
+model = "sonnet"
+effort = "medium"
+budget = 3                        # teto de gasto em US$
+timeout = 1800                    # segundos
+# prompt = "..."                  # opcional: substitui o texto do BACKLOG.md
+proibidas_extensoes = ["py", "ipynb", "sql", "ts", "tsx", "js", "jsx", "j2", "sh", "ps1", "toml", "yml", "yaml"]
+
 [lembrete]
 ativo = {{lembrete_ativo}}
 extensoes = ["py", "ipynb", "sql"]

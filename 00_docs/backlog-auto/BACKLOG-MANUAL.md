@@ -10,7 +10,7 @@ BACKLOG.md ──► backlog-auto run ──► uma sessão `claude --bg` por ta
     ▲                                                                            ▼
     └─────── marca done ◄──── backlog-auto colher ◄── merge na principal ◄───────┘
                                      ▲
-                   `auto` = colher + run em loop até acabar
+                   `auto` = colher + fechar lote + run em loop até acabar
 ```
 
 - **Lote:** `run` pega as tarefas `todo` cujas dependências estão `done` e escolhe as que não tocam nos mesmos arquivos (`Toca`), para rodarem em paralelo sem conflito.
@@ -23,7 +23,7 @@ BACKLOG.md ──► backlog-auto run ──► uma sessão `claude --bg` por ta
 1. As sessões rodam sem aprovação manual (`bypassPermissions`) e fazem commit local. **Nunca fazem push.**
 2. **Barreira de dados (`[guard]`):** um hook bloqueia código e comandos que alterem ou apaguem dados existentes (presets `sql`, `delta`, `destrutivo` e padrões próprios). Só uma pessoa libera, definindo a variável de `variavel_liberacao` como `1`. Limite: o guard lê o texto, não pega escrita montada dinamicamente em tempo de execução.
 3. Agentes não editam o `BACKLOG.md`: o status só muda por `run`, `colher` ou `set`.
-4. A "Regra de pronto" e o "Fechamento de lote" estão no topo do `BACKLOG.md`. Rode o fechamento depois de cada lote.
+4. A "Regra de pronto" e o "Fechamento de lote" estão no topo do `BACKLOG.md`. Com `[fechamento] ativo = true` o `auto`/`avancar` roda o fechamento sozinho entre os lotes; sem isso, rode `backlog-auto fechar`.
 5. Ações visíveis a terceiros (e-mail, mensagem, PR, push) ficam para uma pessoa.
 
 ## 3. Pré-requisitos (uma vez por projeto)
@@ -43,7 +43,8 @@ Sem os dois avisos aceitos, os disparos falham e nada fica marcado como `doing`.
 ```text
 backlog-auto validar     # confere campos, dependências e ciclos
 backlog-auto run --dry   # mostra o lote, o modelo e o teto de cada tarefa; não dispara nada
-backlog-auto auto        # totalmente automático (colher + run em loop)
+backlog-auto auto        # totalmente automático (colher + fechamento de lote + run em loop)
+backlog-auto avancar     # só um passo dessa rotina
 ```
 
 Com `[preparo] ativo = true`, o primeiro `run`/`auto` começa pelo **preparo da documentação** (D01..D05: mapear o sistema, inventariar e classificar a documentação, criar ou refazer, verificar). As tarefas T só são liberadas quando ele termina; `backlog-auto preparo --refazer` reavalia depois.
@@ -95,6 +96,7 @@ O `restart` encerra a sessão, apaga o worktree e o branch, devolve a tarefa par
 | `auto` parou dizendo que há tarefas esperando/bloqueadas | Veja `backlog-auto status`; aprove a sessão `waiting` ou reinicie a `blocked`. |
 | `colher`: "terminou sem nenhuma mudança" | A sessão acabou sem commit; a tarefa vira `blocked`. Veja `claude logs`, depois reinicie. |
 | `colher`: "mudanças não commitadas" | Commite ou guarde (`git stash`) e rode de novo. |
+| `auto` parou: "fechamento de lote falhou" | A sessão falhou ou alterou código (nada foi integrado). Veja a mensagem, rode `backlog-auto fechar` de novo ou `backlog-auto auto --sem-fechamento` para seguir sem ele. |
 | `colher`: "conflito" | O merge foi cancelado e a tarefa segue `doing`. Resolva com `git merge worktree-backlog-Txx` e `backlog-auto set Txx done`. |
 | Hook bloqueou um comando | Falso positivo comum (texto de teste com SQL, por exemplo). Reescreva, ajuste `comando_gatilho`/`isentos` ou peça a uma pessoa. |
 | Hook não dispara | `python -m backlog_auto` precisa funcionar no `python` do PATH (`backlog-auto doctor` confere). |
