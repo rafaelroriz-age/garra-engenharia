@@ -27,7 +27,7 @@ Rode `git status` e `git log` para ver o que o último lote mudou. Para cada tar
 Gerado por `backlog-auto preparo`. Enquanto estas tarefas não estiverem `done`, nenhuma outra é liberada.
 
 ### D01 · Mapear o sistema e seu objetivo
-- **Status:** todo
+- **Status:** doing
 - **Fase:** preparo
 - **Papel:** analista
 - **Depende:** —
@@ -42,7 +42,7 @@ Tarefa D01. Leia o sistema deste repositório (estrutura, código-fonte, configu
 ```
 
 ### D02 · Inventariar a documentação existente
-- **Status:** todo
+- **Status:** doing
 - **Fase:** preparo
 - **Papel:** analista
 - **Depende:** —
