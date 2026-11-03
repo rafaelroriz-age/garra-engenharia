@@ -72,7 +72,7 @@ Tarefa D03. Leia 00_docs/_preparo/01_sistema.md e 00_docs/_preparo/02_inventario
 ```
 
 ### D04 · Criar e refazer a documentação
-- **Status:** todo
+- **Status:** doing
 - **Fase:** preparo
 - **Papel:** analista
 - **Depende:** D03
