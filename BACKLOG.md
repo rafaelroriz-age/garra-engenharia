@@ -57,7 +57,7 @@ Tarefa D02. Encontre toda a documentação que já existe no repositório: arqui
 ```
 
 ### D03 · Classificar a documentação: efetiva ou refazer
-- **Status:** doing
+- **Status:** done
 - **Fase:** preparo
 - **Papel:** analista
 - **Depende:** D01, D02
