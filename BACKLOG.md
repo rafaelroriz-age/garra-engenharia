@@ -375,7 +375,7 @@ Passos:
 ```
 
 ### T16 · Revisão de segurança e regras do upload de fotos (RF-05/RNF-02) com testes de lacuna
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-11
 - **Papel:** backend
 - **Depende:** —
