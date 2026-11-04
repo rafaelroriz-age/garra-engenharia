@@ -1,7 +1,7 @@
 ---
 title: Dicionário de dados — banco PostgreSQL
 type: knowledge
-status: draft
+status: ativo
 owner: Garra Engenharia
 related:
   - 04_backend/app/models/
@@ -16,7 +16,7 @@ last_updated: 2026-11-03
 System: as 18 tabelas do banco, coluna a coluna, como estão nos modelos SQLAlchemy e nas 6 migrations Alembic.
 Flow: app/models/*.py (fonte) -> alembic/versions/*.py (schema aplicado) -> este documento.
 Owner: Garra Engenharia.
-Status: draft — levantado na D04 (2026-11-03) sobre o head d3b7c9e4f1a2.
+Status: ativo (verificado na D05, 2026-11-04) — levantado na D04 (2026-11-03) sobre o head d3b7c9e4f1a2.
 -->
 
 # Dicionário de dados

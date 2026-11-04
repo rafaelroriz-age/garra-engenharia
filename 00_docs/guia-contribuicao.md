@@ -1,7 +1,7 @@
 ---
 title: Guia de contribuição
 type: gestao
-status: draft
+status: ativo
 owner: Garra Engenharia
 related:
   - 00_docs/projeto/plano-gestao-configuracao.md
@@ -17,7 +17,7 @@ last_updated: 2026-11-03
 System: regras para contribuir no monorepo, reunidas por referência às fontes oficiais.
 Flow: pastas (DEC-09) -> branch a partir de main -> Conventional Commits -> PR com checklist -> CI -> sync para main_back/main_front (DEC-22).
 Owner: Garra Engenharia.
-Status: draft — consolidado na D04 (2026-11-03); em caso de conflito, vale a fonte citada em cada item.
+Status: ativo (verificado na D05, 2026-11-04) — consolidado na D04 (2026-11-03); em caso de conflito, vale a fonte citada em cada item.
 -->
 
 # Guia de contribuição
