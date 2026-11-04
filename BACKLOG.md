@@ -401,7 +401,7 @@ Passos:
 ```
 
 ### T17 · Re-medir o benchmark de geração PDF/DOCX com os pipelines finais
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-22
 - **Papel:** arquiteto-software
 - **Depende:** —
