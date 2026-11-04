@@ -165,7 +165,7 @@ Tarefa C (DEC-31 / R-11). Contexto: 00_docs/backlog-auto/diagnostico.md §3.2: `
 ```
 
 ### T05 · Pipeline de renderização do LTIP (ltip_pipeline.py)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-17
 - **Papel:** backend
 - **Depende:** T04
@@ -180,7 +180,7 @@ Tarefa D (BL-17, pendência 'pipeline de renderização'). Contexto: BL-17 gerou
 ```
 
 ### T06 · Revisar regras de negócio e enums de Ocorrências (BL-14)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-14
 - **Papel:** backend
 - **Depende:** T04
