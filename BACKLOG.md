@@ -150,7 +150,7 @@ Tarefa B (T01 §4 item 5). Contexto: 00_docs/backlog-auto/diagnostico.md §3.3 r
 ```
 
 ### T04 · Configurar o ruff e limpar os 214 achados do backend
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-31
 - **Papel:** backend
 - **Depende:** T02
