@@ -225,7 +225,7 @@ Tarefa B (DEC-34 / risco R-13, continuação da T06). Contexto: 00_docs/projeto/
 ```
 
 ### T09 · Templates PDF/DOCX da Vistoria Cautelar de Recebimento a partir do PDF original
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-25
 - **Papel:** backend
 - **Depende:** T04
