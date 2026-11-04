@@ -325,7 +325,7 @@ Siga a 'Regra de pronto' do BACKLOG.md: registre fatos, números, comandos e sa�
 ## Bloco B — Revisão de regras e lacunas (pré-requisitos de B-04)
 
 ### T14 · Análise de lacunas do modelo de dados para o fluxo de legendas por IA (revisão de integração do BL-04)
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-04
 - **Papel:** arquiteto-software
 - **Depende:** —
