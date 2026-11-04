@@ -120,7 +120,7 @@ Tarefa T01. Leia 04_backend/README.md, 03_frontend/README.md e 05_infra/README.m
 ```
 
 ### T02 · Corrigir incompatibilidade pytest × pytest-asyncio no backend
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-31
 - **Papel:** backend
 - **Depende:** T01
