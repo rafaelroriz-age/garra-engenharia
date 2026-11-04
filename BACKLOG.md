@@ -255,7 +255,7 @@ Tarefa D (DEC-25 / ADR-13, fatia 'Vistoria Residencial' do modelo incremental; m
 ```
 
 ### T11 · Pipeline de renderização da Vistoria Cautelar (vistoria_cautelar_pipeline.py)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-35
 - **Papel:** Engenheiro Backend
 - **Depende:** —
@@ -276,7 +276,7 @@ Não altere os templates gerados (se achar defeito neles, registre no Doc como p
 ```
 
 ### T12 · Pipeline de renderização da Vistoria de Imóvel Residencial (vistoria_residencial_pipeline.py)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-35
 - **Papel:** Engenheiro Backend
 - **Depende:** —
@@ -297,7 +297,7 @@ Não altere os templates gerados (se achar defeito neles, registre no Doc como p
 ```
 
 ### T13 · Extrator e templates PDF/DOCX do RFIP (planilha de 479 MB)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-12
 - **Papel:** Engenheiro Backend
 - **Depende:** —
