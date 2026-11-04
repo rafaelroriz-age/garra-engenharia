@@ -465,7 +465,7 @@ Registre em 00_docs/backlog-auto/fotos-correcoes.md: tabela das 9 lacunas (antes
 ```
 
 ### T20 · Diagnosticar e reduzir o tempo de PDF do LTIP (RNF-06)
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-40
 - **Papel:** Engenheiro de Software
 - **Depende:** T17, T05
