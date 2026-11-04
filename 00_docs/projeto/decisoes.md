@@ -445,8 +445,6 @@ last_updated: 2026-09-17
 | **Consequências** | **B-01 encerrado.** **BL-15 desbloqueada** (🔴 → 🟢) com escopo definido: derivar a Prioridade do Grau de Risco no momento da criação da Ocorrência, permitir sobrescrita explícita e persistir a autoria do ajuste (campos novos em `ocorrencias`, migration Alembic + ajuste de `ocorrencia_service._validar_payload`, que hoje só valida o intervalo 0-5). **BL-18 e HT-01 concluídas.** Risco **R-06 encerrado**. RN-04 e RN-13 deixam de ser `[A ESCLARECER]` em `estudo-do-contexto.md`; a Seção 6 de `arquitetura.md` deixa de listar o agente desktop de monitoramento de pasta como hipótese em aberto; `escopo.md` passa a listar "Integração API com CREA" e "Monitoramento automático de pasta de fotos" como fora de escopo por decisão, não por indefinição. Permanecem abertos apenas **B-04** (provedor de LLM, lacuna #13) e o destino externo do backup (RNF-08) — nenhum dos dois faz parte de B-01. Qualquer uma destas posições pode ser revista pelo cliente; como nenhuma delas cria estrutura nova além dos campos de auditoria de BL-15, a reversão é barata. |
 | **Referência** | `00_docs/projeto/pauta-validacao-lacunas.md` (Blocos 2 e 3), `00_docs/projeto/ata-validacao-lacunas.md`, `00_docs/estudo-do-contexto.md` RN-04, RN-13, RF-03 e §9, `00_docs/projeto/riscos.md` R-06, DEC-26, DEC-27, DEC-28 |
 
----
-
 ## DEC-30 — Marca vetorizada internamente a partir do JPEG oficial: encerramento do bloqueio B-02
 
 | Campo | Valor |
@@ -528,3 +526,47 @@ last_updated: 2026-09-17
 | **Decisão proposta** | (A) O extrator usa os marcadores da coluna auxiliar para separar rótulo de valor; um texto só é rótulo fixo se repetir igual em todas as fichas amostradas, e a ausência da coluna faz a extração falhar de forma explícita. (B) A numeração de páginas começa em 1 nos dois formatos; o valor original fica em `pagina.primeira_pagina_no_original`, sem ser aplicado. (C) O quadro-resumo é opcional (`incluir_resumo`) e vem depois das fichas. (D) O `layout.json` do RFIP segue a regra de DEC-35 (só geometria e rótulos fixos, verificador fail-closed de dado pessoal). |
 | **Consequências** | Se o cliente mudar a planilha e remover a coluna auxiliar, o extrator precisa de revisão. A numeração contínua com o LTIP passa a ser decisão da montagem do pacote. |
 | **Referência** | `00_docs/backlog-auto/rfip-templates.md` |
+
+## DEC-37 — Legendas por IA: estados de validação, rastreio do prompt e independência do provedor (proposta de T14)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | RF-15, RN-16 e RN-17 já estão descritos em `arquitetura.md` §3 e na ADR-12, mas o código não tem `prompts_ia` nem as colunas de legenda IA em `fotos`. `PUT /fotos/{id}` descarta o usuário e não permite limpar a legenda. A análise mostrou que só 3 de 22 lacunas dependem do provedor de LLM (B-04). |
+| **Decisão proposta** | (1) `status_validacao_ia` com valores fechados `rascunho` e `aprovada`; `NULL` = sem sugestão; só `aprovada` entra no relatório (DP-1). (2) Versões de `prompts_ia` imutáveis e `prompt_conteudo_hash` (SHA-256) gravado na geração (DP-2). (3) `aprovado_por_id`/`aprovado_em` vêm do token, nunca do payload, e só no `PUT` que aprova (DP-3). (4) O endpoint `gerar` escreve apenas nos campos de sugestão; `legenda` só muda no `PUT` de aprovação (DP-4). (5) `PUT /fotos/{id}` passa o usuário ao serviço e distingue `legenda: null` de campo ausente por `model_fields_set` (DP-5). (6) BL-36 e BL-37 deixam de depender de B-04; só BL-34 (adapter concreto), a retenção de dados (L13) e BL-38/39 dependem (DP-6). (7) Sem áudio no storage; a transcrição fica em `legenda_bruta` (DP-7). (8) Corrigir o rótulo do ER em `arquitetura.md:288` (DP-8). |
+| **Consequências** | BL-36 e BL-37 podem começar antes da escolha do provedor, com um `FakeLegendaIAClient` nos testes. Toda migration nova precisa de `downgrade()` e de unicidade parcial de `ativo` por `nome`. A política de retenção (R-10) continua bloqueando o uso em produção. |
+| **Referência** | `00_docs/backlog-auto/modelagem-legendas-ia-lacunas.md` |
+
+## DEC-38 — Visitas: unicidade, validação de domínio e CRUD completo (proposta de T15)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | A revisão de BL-10 contra RN-01/RN-02 encontrou 18 lacunas: `seq_numero` sem UNIQUE (corrida gera duplicata), nenhuma regra de uma visita por dia, data futura aceita, visita aceita em inspeção que não é RFO, quantidades sem restrição (500 acima de int32), `PUT` que apaga `observacoes` omitida e ausência de GET/PUT/DELETE dos itens. |
+| **Decisão proposta** | (A) Visita só em inspeção `tipo == "RFO"`, com `Inspecao.tipo` como enum; outro tipo retorna 409. (B) `UNIQUE(inspecao_id, data)` e `UNIQUE(inspecao_id, seq_numero)` em migration com `downgrade()`, 409 no serviço e data de visita ≤ hoje. (C) Payloads com `extra="forbid"`; equipe com `quantidade` inteira 1..32767; medição com `quantidade ≥ 0`; textos aparados e não vazios (a unidade segue livre, DEC-29). (D) `PUT` de visita passa a ser parcial (campo omitido preserva). (E) Completar o CRUD de campo: `GET /visitas/{id}` e PUT/DELETE de mão de obra e medição. Itens (A) e a data futura são interpretações de RN-01/RF-03 e precisam de confirmação do dono antes da correção. |
+| **Consequências** | Exige migration e correção de dados duplicados existentes, se houver. O vínculo usuário↔contrato de DEC-27 (L15) continua sem imposição e depende de decisão própria. A regra de status da inspeção e a de mão de obra duplicada na mesma visita ficam em aberto. |
+| **Referência** | `00_docs/backlog-auto/revisao-regras-visitas.md`, `04_backend/tests/test_visitas_lacunas.py` |
+
+## DEC-39 — Fotos: chave de storage controlada pelo servidor, orientação EXIF e validação de domínio (proposta de T16)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | A revisão de BL-11 achou 9 lacunas. Duas são graves: o vínculo (`POST /ocorrencias|visitas/{id}/fotos`) aceita `storage_key` do cliente (`../../x`, prefixo qualquer, objeto de outro contrato) e `DELETE /fotos/{id}` apaga o objeto; e `reprocessar_imagem` descarta o EXIF sem `exif_transpose`, então foto de celular em pé sai deitada nos PDF/DOCX. Também faltam validação de `ordem`/`origem`/`legenda`, descarte de upload órfão e limite de corpo da requisição. |
+| **Decisão proposta** | (A) O vínculo aceita só `storage_key` que case `^fotos/[0-9a-f-]{36}\.(jpg|png|webp)$`, exista no bucket e ainda não esteja vinculada (`UNIQUE(storage_key)`, migration com `downgrade()`); alternativa mais forte: o upload cria uma `Foto` pendente e o vínculo informa só `foto_id`. (B) `ImageOps.exif_transpose` antes de descartar o EXIF. (C) `origem` como enum fechado, `ordem ≥ 0`, `legenda` com `max_length` (sugestão 500) e `PUT` com `model_fields_set` para poder limpar a legenda. (D) Descarte de upload órfão (endpoint ou job de limpeza de `fotos/*` sem `Foto` com mais de 24 h). (E) Leitura de fotos com URL pré-assinada na resposta, para fechar o fluxo de exibição de BL-11. (F) Limite de corpo no proxy/Uvicorn e `Image.MAX_IMAGE_PIXELS` explícito (ex.: 50 Mpx). |
+| **Consequências** | Fecha uma falha de controle de acesso a objetos (A01) e melhora a qualidade do relatório. O auxiliar continua editando fotos de qualquer contrato enquanto não houver vínculo usuário↔contrato. A URL pré-assinada usa o host interno do MinIO e precisa de endpoint público em produção (pendência de infra). |
+| **Referência** | `00_docs/backlog-auto/revisao-regras-fotos.md`, `04_backend/tests/test_fotos_lacunas.py` |
+
+## DEC-40 — RNF-06 verificado por tipo de relatório e por job completo; fotos de 1200 px na entrada dos pipelines (proposta de T17)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | A re-medição com os pipelines finais (1 execução por combinação) deu, para o job PDF+DOCX em sequência: RFO 21,1 s, Vistoria Cautelar 34,2 s, Vistoria Residencial 56,7 s e LTIP 63,2 s com apenas 137 páginas. A conclusão de 2026-08-05 (RNF-06 atingível reduzindo a foto uma vez no upload) vale para RFO e Cautelar, não vale para o LTIP e fica no limite na Residencial. O gargalo é o layout do WeasyPrint (98–99,7 % do PDF), não mais o tamanho das fotos. |
+| **Decisão proposta** | (A) RNF-06 passa a ser verificado por tipo de relatório e pelo job completo (leitura das fotos, PDF, DOCX e upload), com PDF e DOCX gerados em processos paralelos e worker com ≥ 1 GB de RAM (pico de ~500 MB). (B) Os pipelines recebem sempre a derivada de 1200 px/q72, gerada uma vez no upload (BL-11), nunca a foto de 2000 px; o limite de upload dos artefatos finais (PDF 37–38 MB, DOCX 30–31 MB nas vistorias) fica separado do limite de foto (25 MB). (C) O template do LTIP troca o container flex único por linhas explícitas de duas fichas (`<table>` ou bloco por par com `break-inside: avoid`), pelo gerador `build_ltip_templates.py`, e ganha o placeholder `{{ ocorrencia.foto }}` no DOCX. (D) A Vistoria Residencial ganha profiling do WeasyPrint antes de ser dada como atendida. |
+| **Consequências** | Enquanto o LTIP não for refeito, RNF-06 não é atendido para ele (R-03 reaberto). A medição precisa ser completada em host dedicado (3 execuções, cenário de 2000 px, LTIP com ~357 ocorrências para chegar a 200 páginas, extrapolação de ~93 s de PDF). O RFIP não foi medido (sem pipeline). |
+| **Referência** | `00_docs/backlog-auto/benchmark-pipelines-finais.md`, `00_docs/projeto/relatorio-benchmark-geracao-pdf-docx.md` |

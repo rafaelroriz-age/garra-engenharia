@@ -292,3 +292,15 @@ Os testes de `tests/test_models.py` exigem o PostgreSQL do `05_infra/docker-comp
 
 Comandos Python/uvicorn/alembic deste app são executados a partir desta pasta (`04_backend/`). O `Dockerfile` de build/runtime também vive aqui; o `docker-compose.yml` que o referencia está em [05_infra/](../05_infra/) (build context `../04_backend`).
 
+## Revisões do lote T14–T17 (2026-11-04)
+
+Sem código de produção alterado. Resultados e propostas de decisão (DEC-37 a DEC-40) nos Docs de `00_docs/backlog-auto/`:
+
+| Tema | Doc | Testes novos | Situação |
+|---|---|---|---|
+| Lacunas do modelo para legendas por IA (BL-04 → BL-36..BL-39) | `modelagem-legendas-ia-lacunas.md` | — | só análise; faltam `prompts_ia` e as colunas de legenda IA em `fotos` |
+| Regras de Visitas (BL-10, RN-01/RN-02) | `revisao-regras-visitas.md` | `tests/test_visitas_lacunas.py` | coletados, **não executados** (banco sem schema); devem falhar até a correção |
+| Upload de fotos (BL-11, RF-05) | `revisao-regras-fotos.md` | `tests/test_fotos_lacunas.py` | coletados, **não executados** (sem PostgreSQL/MinIO); a lacuna mais grave é a `storage_key` vinda do cliente |
+| Benchmark dos pipelines finais (BL-22) | `benchmark-pipelines-finais.md` | — | RFO e Cautelar atendem RNF-06; Residencial no limite; **LTIP viola** |
+
+Para rodar os testes de lacuna: `docker compose up -d` em `05_infra/`, `alembic upgrade head` e `pytest tests/test_visitas_lacunas.py tests/test_fotos_lacunas.py` em `04_backend/`.
