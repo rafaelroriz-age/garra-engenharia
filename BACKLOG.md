@@ -255,7 +255,7 @@ Tarefa D (DEC-25 / ADR-13, fatia 'Vistoria Residencial' do modelo incremental; m
 ```
 
 ### T11 · Pipeline de renderização da Vistoria Cautelar (vistoria_cautelar_pipeline.py)
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-35
 - **Papel:** Engenheiro Backend
 - **Depende:** —
