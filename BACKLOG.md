@@ -425,7 +425,7 @@ Passos:
 ```
 
 ### T18 · Pipeline de renderização do RFIP (rfip_pipeline.py)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-36
 - **Papel:** Engenheiro Backend
 - **Depende:** T13, T05
@@ -446,7 +446,7 @@ Registre em 00_docs/backlog-auto/rfip-pipeline.md: API, tabela de campos do cont
 ```
 
 ### T19 · Corrigir as lacunas do upload de fotos (storage_key, EXIF, validações)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-39
 - **Papel:** Engenheiro Backend
 - **Depende:** T16
@@ -465,7 +465,7 @@ Registre em 00_docs/backlog-auto/fotos-correcoes.md: tabela das 9 lacunas (antes
 ```
 
 ### T20 · Diagnosticar e reduzir o tempo de PDF do LTIP (RNF-06)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-40
 - **Papel:** Engenheiro de Software
 - **Depende:** T17, T05
