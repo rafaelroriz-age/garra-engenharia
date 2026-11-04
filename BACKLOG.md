@@ -165,7 +165,7 @@ Tarefa C (DEC-31 / R-11). Contexto: 00_docs/backlog-auto/diagnostico.md §3.2: `
 ```
 
 ### T05 · Pipeline de renderização do LTIP (ltip_pipeline.py)
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-17
 - **Papel:** backend
 - **Depende:** T04
