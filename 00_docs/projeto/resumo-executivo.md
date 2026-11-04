@@ -4,7 +4,7 @@ type: gestao
 status: ativo
 owner: Garra Engenharia
 audience: cliente / stakeholders não técnicos
-last_updated: 2026-07-08
+last_updated: 2026-11-03
 ---
 
 # Resumo Executivo
@@ -20,6 +20,8 @@ O processo atual envolve preencher planilhas Excel/XLSM em campo, transferir os 
 ## A Solução
 
 Um **sistema web** que automatiza a produção dos relatórios, mantendo fidelidade absoluta ao layout e terminologia dos documentos atuais do cliente. O engenheiro registra as informações diretamente pelo celular durante a vistoria e, ao final, gera o relatório completo em PDF e Word com um clique.
+
+> **Situação em novembro de 2026:** o cadastro, o registro de visitas, ocorrências e fotos, o painel de saúde e o portal do cliente já funcionam. A **geração do relatório em PDF e Word pelo próprio sistema é a principal entrega pendente**: os modelos do RFO e do LTIP já foram reproduzidos a partir dos originais do cliente, mas o botão de gerar ainda não está disponível na tela. Detalhes em [status.md](status.md).
 
 ### O que o sistema faz
 
@@ -52,38 +54,35 @@ O sistema é construído com tecnologias modernas, abertas e de baixo custo oper
 
 ---
 
-## Cronograma Estimado por Fase
+## Estado Atual
 
-| Fase | Descrição | Duração estimada |
-|---|---|---|
-| ✅ Fase 1 | Levantamento e documentação | Concluída |
-| ⏳ Fase 2 | Validação com cliente + protótipo de template | 1–2 semanas |
-| ⬜ Fase 3 | Implementação do backend (API + banco de dados) | 3–4 semanas |
-| ⬜ Fase 4 | Implementação do frontend (interface web/mobile) | 3–4 semanas |
-| ⬜ Fase 5 | Integração, testes e ajustes de layout | 2 semanas |
-| ⬜ Fase 6 | Deploy e treinamento | 1 semana |
-| **Total** | | **~10–13 semanas** |
+| Frente | Situação |
+|---|---|
+| Levantamento, documentação e validação com o cliente | Concluídos (validação encerrada em 17/09/2026) |
+| Sistema (servidor e banco de dados) | Em funcionamento: cadastros, visitas, ocorrências, fotos, classificação de risco, painel e portal |
+| Telas (web e celular) | Em funcionamento para os mesmos fluxos; a tela de relatório ainda está em construção |
+| Modelos de relatório | RFO e LTIP reproduzidos a partir dos originais do cliente; relatório fotográfico (RFIP) pendente |
+| Geração de PDF e Word pelo sistema | **Pendente** — hoje só é feita por ferramenta interna da equipe |
+| Publicação na internet | Configurada no Render |
 
-> Duração sujeita a confirmação após resolução das lacunas em aberto e validação dos templates.
-
----
-
-## Decisões Pendentes do Cliente
-
-Antes de iniciar a implementação, precisamos confirmar com o Eng. Roniel:
-
-1. O sistema precisa funcionar **sem internet** (campo sem 4G)?
-2. Haverá **outros usuários** além do engenheiro? (auxiliares, estagiários)
-3. O cliente (síndico/proprietário) precisa **acessar o sistema** para ver relatórios, ou recebe sempre por e-mail?
-4. É necessário **assinatura digital** (ICP-Brasil) nos PDFs?
-5. Qual a **preferência de hospedagem**: notebook local ou servidor na internet?
+> O cronograma e o percentual de avanço atualizados ficam em [status.md](status.md) e [cronograma.md](cronograma.md).
 
 ---
 
-## Próxima Ação Recomendada
+## Decisões do Cliente (já respondidas)
 
-**Agendar reunião de kickoff** com o Eng. Roniel para:
-- Responder as 5 perguntas acima
-- Entregar os arquivos `.docx` dos modelos atuais
-- Validar o modelo de dados e os fluxos documentados
-- Confirmar escopo e cronograma da v1.0
+As cinco perguntas feitas antes da implementação já foram respondidas (registro em [decisoes.md](decisoes.md)):
+
+1. **Sem internet?** Não: há 4G/Wi-Fi em campo; o sistema funciona online (DEC-26).
+2. **Outros usuários?** Sim: perfil de auxiliar de campo, com escrita limitada (DEC-27).
+3. **Cliente acessa o sistema?** Sim: portal do cliente, só leitura e só das próprias edificações (DEC-18).
+4. **Assinatura digital ICP-Brasil?** Não na v1.0: CREA e ART impressos no documento (DEC-28).
+5. **Hospedagem?** Servidor na internet (Render), definido em 21/07/2026.
+
+Os modelos originais do cliente também já estão com a equipe; não é preciso enviar os `.docx` (DEC-25, DEC-30).
+
+---
+
+## Próxima Ação
+
+Entregar a geração de PDF e Word pelo sistema e o relatório fotográfico (RFIP). A escolha do provedor de IA para as legendas assistidas segue pendente. Acompanhamento em [status.md](status.md).
