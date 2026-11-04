@@ -240,7 +240,7 @@ Tarefa C (DEC-25 / ADR-13, fatia 'Vistoria Cautelar' do modelo incremental; mesm
 ```
 
 ### T10 · Templates PDF/DOCX da Vistoria de Imóvel Residencial a partir do PDF original
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-25
 - **Papel:** backend
 - **Depende:** T04
