@@ -87,7 +87,7 @@ Tarefa D04. Execute o 'Plano de ação' de 00_docs/_preparo/03_classificacao.md.
 ```
 
 ### D05 · Verificar a documentação contra o código
-- **Status:** doing
+- **Status:** done
 - **Fase:** preparo
 - **Papel:** analista
 - **Depende:** D04
