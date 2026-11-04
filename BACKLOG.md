@@ -423,3 +423,102 @@ Passos:
 4. Registre em 00_docs/backlog-auto/benchmark-pipelines-finais.md: ambiente (versões, CPU/RAM), tabela de resultados, comparação com a meta e com a medição de 2026-08-05, gargalos observados e recomendações. Comandos e saída bruta devem constar. Siga a 'Regra de pronto' do BACKLOG.md. Propostas de DEC ficam só no Doc.
 5. Não leia nem altere arquivos de 01_output-context/ (use só dados sintéticos). Commit opcional: `docs(00_docs): benchmark dos pipelines finais (BL-22)` com rodapé `Refs BL-22`. Nunca faça push.
 ```
+
+### T18 · Pipeline de renderização do RFIP (rfip_pipeline.py)
+- **Status:** todo
+- **Origem:** DEC-36
+- **Papel:** Engenheiro Backend
+- **Depende:** T13, T05
+- **Ambiente:** docker
+- **Dificuldade:** media
+- **Toca:** 04_backend/app/services/report_generator/rfip_pipeline.py, 04_backend/tests/test_rfip_pipeline.py, 00_docs/backlog-auto/rfip-pipeline.md
+- **Doc:** 00_docs/backlog-auto/rfip-pipeline.md
+- **Pronto:** rfip_pipeline.py expõe normalizar_contexto, renderizar_html, gerar_pdf e gerar_docx, com a mesma convenção de ltip_pipeline.py e consumindo templates/rfip/. tests/test_rfip_pipeline.py cobre HTML, DOCX, campo vazio como '—', foto ausente (KeyError) e o quadro-resumo; o teste de PDF é pulado com motivo explícito se o WeasyPrint não carregar. pytest dos arquivos de pipeline/templates do RFIP e ruff check . passam em 04_backend. O resultado está em 00_docs/backlog-auto/rfip-pipeline.md.
+- **Prompt:**
+```text
+Contexto: a T13 entregou extrator e templates do RFIP em 04_backend/templates/rfip/ (layout.json, rfip_template.html.j2, rfip_template.docx; ver 00_docs/backlog-auto/rfip-templates.md e DEC-36 em 00_docs/projeto/decisoes.md). Falta o pipeline de renderização, que já existe para LTIP, Vistoria Cautelar e Vistoria Residencial. Modelo estrutural: 04_backend/app/services/report_generator/ltip_pipeline.py e vistoria_cautelar_pipeline.py, mais 00_docs/backlog-auto/ltip-pipeline.md e vistoria-cautelar-pipeline.md. Trabalhe a partir de 04_backend/.
+
+Tarefa: crie app/services/report_generator/rfip_pipeline.py com `normalizar_contexto`, `renderizar_html(contexto, fotos_bytes) -> str`, `gerar_pdf(contexto, fotos_bytes, destino) -> dict` e `gerar_docx(contexto, fotos_bytes, destino, *, template_path=None) -> dict`. Convenções: Jinja2/docxtpl com autoescape, fotos como data URI no HTML, o módulo não acessa o MinIO (quem chama entrega `fotos_bytes` por `storage_key`), mesmas chaves de métricas dos outros pipelines, `KeyError` para foto referenciada e ausente, campos vazios como '—' (DEC-33). Descubra as variáveis do contexto lendo rfip_template.html.j2 e layout.json (incluindo o quadro-resumo e a numeração de páginas de DEC-36); não invente campos. Reaproveite helpers dos outros pipelines por import; não edite os arquivos deles nem os templates (defeito encontrado vira proposta no Doc).
+
+Testes: crie tests/test_rfip_pipeline.py com contexto sintético, sem depender de 01_output-context/ (nunca altere nem apague esse diretório). O teste de PDF usa skip com motivo se o WeasyPrint não carregar. Rode `pytest tests/test_rfip_pipeline.py tests/test_rfip_templates.py` e `ruff check .`. A suíte completa exige o PostgreSQL de 05_infra em localhost:5433; se não estiver no ar, registre que não rodou em vez de inventar resultado.
+
+Registre em 00_docs/backlog-auto/rfip-pipeline.md: API, tabela de campos do contexto, pendências (PDF real no container/HT-09, mapeamento banco → contexto), comandos e saídas. Não edite documentos de gestão em 00_docs/projeto/ nem o BACKLOG.md. Commit: `feat(backend): pipeline de renderização do RFIP (BL-12)` com `Refs DEC-36`. Siga a "Regra de pronto" do BACKLOG.md. Não faça push.
+```
+
+### T19 · Corrigir as lacunas do upload de fotos (storage_key, EXIF, validações)
+- **Status:** todo
+- **Origem:** DEC-39
+- **Papel:** Engenheiro Backend
+- **Depende:** T16
+- **Ambiente:** docker
+- **Dificuldade:** media
+- **Toca:** 04_backend/app/api/v1/fotos.py, 04_backend/app/services/image_processing.py, 04_backend/app/schemas/foto.py, 04_backend/tests/test_fotos_lacunas.py, 00_docs/backlog-auto/fotos-correcoes.md
+- **Doc:** 00_docs/backlog-auto/fotos-correcoes.md
+- **Pronto:** Cada lacuna das 9 de 00_docs/backlog-auto/revisao-regras-fotos.md está corrigida ou explicitamente adiada no doc com motivo. Em especial: o storage_key do vínculo é gerado/validado pelo servidor (rejeita '../', prefixo fora do esperado e objeto inexistente) e reprocessar_imagem aplica exif_transpose. Os testes test_lacuna_* passam com PostgreSQL e MinIO no ar, ou o doc registra que não rodaram. ruff check . passa. Sem migration e sem alteração no frontend.
+- **Prompt:**
+```text
+Contexto: a T16 revisou o upload de fotos (BL-11) e deixou 00_docs/backlog-auto/revisao-regras-fotos.md (9 lacunas) e 04_backend/tests/test_fotos_lacunas.py (27 testes test_lacuna_*, que afirmam o comportamento correto e nunca rodaram por falta de PostgreSQL/MinIO). DEC-39 em 00_docs/projeto/decisoes.md é a proposta de correção (leia só ela). As lacunas graves: (1) `POST /ocorrencias|visitas/{id}/fotos` aceita `storage_key` do cliente sem validação (permite apontar para qualquer objeto do bucket e `DELETE /fotos/{id}` o apagaria, OWASP A01); (2) `reprocessar_imagem` descarta o EXIF sem `exif_transpose`, então foto de celular em pé sai deitada. Também faltam validação de `ordem`/`origem`/`legenda`, descarte de upload órfão e limite de corpo. Leia o doc de revisão, 04_backend/app/api/v1/fotos.py, app/services/image_processing.py, app/schemas/foto.py, app/services/storage/ e o teste.
+
+Passos: (1) A partir de 04_backend, verifique se o PostgreSQL (localhost:5433) e o MinIO (localhost:9000) de 05_infra/docker-compose.yml estão no ar (`docker compose ps` em 05_infra; não suba nem derrube serviços). Se estiverem, rode `pytest tests/test_fotos.py tests/test_fotos_lacunas.py` e registre a linha de base; se não, siga com análise estática e registre que não rodou. (2) Corrija o mínimo por lacuna, na ordem de gravidade: a chave de storage passa a ser validada contra o prefixo esperado do contrato/visita/ocorrência e checada no storage (ou gerada pelo servidor), com erro de domínio RFC 7807 (DomainError, padrão existente); aplique `ImageOps.exif_transpose` antes do reprocessamento; valide os demais campos. Se algum test_lacuna_* estiver errado em relação à regra, corrija o teste e explique no doc. (3) Não crie migration, não altere models, não toque no frontend e não resolva o vínculo usuário↔contrato (fora de escopo, DEC-27/L15). (4) O comportamento de RBAC do auxiliar (BL-42) e os testes de tests/test_fotos.py e tests/test_rbac_auxiliar.py devem continuar verdes. (5) Rode `ruff check .` e os testes citados; não relate resultado que não rodou.
+
+Registre em 00_docs/backlog-auto/fotos-correcoes.md: tabela das 9 lacunas (antes, depois, arquivo:linha, teste), o que ficou adiado, comandos e saídas. Não edite 00_docs/projeto/decisoes.md nem revisao-regras-fotos.md. Commit: `fix(backend): corrige lacunas de segurança e EXIF no upload de fotos (BL-11)` com `Refs DEC-39`. Siga a "Regra de pronto" do BACKLOG.md. Não faça push.
+```
+
+### T20 · Diagnosticar e reduzir o tempo de PDF do LTIP (RNF-06)
+- **Status:** todo
+- **Origem:** DEC-40
+- **Papel:** Engenheiro de Software
+- **Depende:** T17, T05
+- **Ambiente:** docker
+- **Dificuldade:** alta
+- **Toca:** 04_backend/app/services/report_generator/ltip_pipeline.py, 04_backend/app/scripts/build_ltip_templates.py, 04_backend/templates/ltip/, 04_backend/tests/test_ltip_pipeline.py, 04_backend/tests/test_ltip_templates.py, 00_docs/backlog-auto/ltip-desempenho.md
+- **Doc:** 00_docs/backlog-auto/ltip-desempenho.md
+- **Pronto:** 00_docs/backlog-auto/ltip-desempenho.md traz o perfil do PDF do LTIP (onde o WeasyPrint gasta o tempo), pelo menos uma otimização aplicada no pipeline ou no gerador de templates (templates/ltip/ regerado por `python -m app.scripts.build_ltip_templates`), e o antes/depois medido (mesmo cenário, ≥3 execuções, mediana) ou o registro de que o PDF não pôde ser renderizado. PDF e DOCX continuam derivando do mesmo layout.json; testes de LTIP passam; ruff check . passa.
+- **Prompt:**
+```text
+Contexto: a T17 (00_docs/backlog-auto/benchmark-pipelines-finais.md; DEC-40 em 00_docs/projeto/decisoes.md, risco R-03) mediu o LTIP em 63,2 s para PDF+DOCX com só 137 páginas e 239 fotos, violando RNF-06 (200 páginas/150+ fotos em tempo aceitável); a conversão do WeasyPrint responde por 98–99,7 % do PDF, enquanto RFO e Vistoria Cautelar atendem. O WeasyPrint não roda no Windows local: use o container Docker de 04_backend (docker compose a partir de 05_infra; não derrube serviços existentes) ou registre que não foi possível. Leia o benchmark, 04_backend/app/services/report_generator/ltip_pipeline.py, app/scripts/build_ltip_templates.py, templates/ltip/ltip_template.html.j2 e, para comparação, o template/CSS do RFO (que é rápido).
+
+Passos: (1) Reproduza a medição do LTIP com o mesmo gerador de dados sintéticos da T17 (procure o script/teste usado no doc de benchmark; se não existir como arquivo, crie dados sintéticos dentro de um teste ou script em /tmp, nunca em 01_output-context/). Meça 3 execuções e use a mediana. (2) Perfile onde o WeasyPrint gasta tempo (cProfile ou cronometragem por fase: parse HTML/CSS, layout, render) e liste hipóteses verificáveis: tabelas com `page-break-inside: avoid` aninhadas, fichas fotográficas em tabela vs. flex/grid, `position: running()` de cabeçalho/rodapé, `box-shadow`/`border-radius`, SVG da marca repetido por página, imagens data URI repetidas, CSS universal. (3) Aplique as otimizações que o perfil justificar, no gerador (build_ltip_templates.py) e/ou no pipeline (ex.: imagens decodificadas uma vez, `optimize_images`, estilo mais simples), sem mudar a aparência medida (margens, fontes, 2 fichas por página, RN-11) nem o layout.json. Regere os templates com `python -m app.scripts.build_ltip_templates` para manter PDF e DOCX derivados do mesmo layout. (4) Meça de novo no mesmo cenário e registre antes/depois. (5) Rode `pytest tests/test_ltip_pipeline.py tests/test_ltip_templates.py` e `ruff check .`; a suíte completa exige PostgreSQL em localhost:5433, e se não estiver no ar registre que não rodou. Não altere pipelines de outros tipos de relatório nem 01_output-context/.
+
+Registre em 00_docs/backlog-auto/ltip-desempenho.md: perfil, hipóteses confirmadas/descartadas, mudanças com arquivo:linha, tabela antes/depois, o que continua acima do limite, comandos e saídas. Proposta de decisão nova vai no Doc, não em decisoes.md. Commit: `perf(backend): reduz o tempo de PDF do LTIP (RNF-06)` com `Refs DEC-40`. Siga a "Regra de pronto" do BACKLOG.md. Não faça push.
+```
+
+### T21 · Corrigir as lacunas de regras de Visitas (unicidade, domínio, CRUD de itens)
+- **Status:** todo
+- **Origem:** DEC-38
+- **Papel:** Engenheiro Backend
+- **Depende:** T15, T19
+- **Ambiente:** docker
+- **Dificuldade:** alta
+- **Toca:** 04_backend/app/api/v1/visitas.py, 04_backend/app/services/, 04_backend/app/schemas/visita.py, 04_backend/app/models/visita.py, 04_backend/alembic/versions/, 04_backend/tests/test_visitas_lacunas.py, 00_docs/backlog-auto/visitas-correcoes.md
+- **Doc:** 00_docs/backlog-auto/visitas-correcoes.md
+- **Pronto:** As 18 lacunas de 00_docs/backlog-auto/revisao-regras-visitas.md estão corrigidas ou adiadas com motivo no doc. Migration Alembic nova (com downgrade(), down_revision = head atual) adiciona o UNIQUE de seq_numero por inspeção e trata duplicatas existentes sem apagar dados. test_visitas_lacunas.py e test_visitas.py passam com PostgreSQL (schema migrado) no ar, ou o doc registra que não rodaram. `alembic upgrade head` seguido de `alembic downgrade -1` funciona quando o banco está disponível. ruff check . passa.
+- **Prompt:**
+```text
+Contexto: a T15 revisou as regras de Visitas (BL-10, RN-01/RN-02) e deixou 00_docs/backlog-auto/revisao-regras-visitas.md (18 lacunas L1–L18) e 04_backend/tests/test_visitas_lacunas.py (26 funções que afirmam o comportamento correto e nunca rodaram: o banco respondia em localhost:5433 mas sem schema). DEC-38 em 00_docs/projeto/decisoes.md é a proposta de correção (leia só ela, e as seções de RN-01/RN-02 de 00_docs/estudo-do-contexto.md). Problemas: `seq_numero` sem UNIQUE (corrida gera duplicata), sem regra de uma visita por dia, data futura aceita, visita aceita em inspeção que não é RFO, quantidades sem restrição (500 acima de int32), `PUT` apaga `observacoes` omitida, e ausência de GET/PUT/DELETE dos itens (equipe, serviços, medições). Leia o doc de revisão, app/api/v1/visitas.py, app/models/visita.py, app/schemas/visita.py, tests/test_visitas.py e o teste de lacunas.
+
+Passos: (1) A partir de 04_backend, verifique o PostgreSQL de 05_infra (`docker compose ps` em 05_infra; não suba nem derrube serviços). Se estiver no ar, rode `alembic upgrade head` UMA vez para criar o schema no banco de desenvolvimento (isto não apaga dados), depois `pytest tests/test_visitas.py tests/test_visitas_lacunas.py` e registre a linha de base. Se não estiver, siga com análise estática e registre que não rodou. (2) Corrija o mínimo por lacuna, com DomainError/NotFoundError (RFC 7807, padrão existente, 422/404/409): validações de domínio no schema/service; `PUT` com semântica de atualização parcial correta; endpoints GET/PUT/DELETE dos itens; mantenha RBAC do auxiliar (BL-42). (3) Migration nova: confira `alembic heads` (hoje d3b7c9e4f1a2, salvo se outra tarefa tiver acrescentado), use esse como down_revision, inclua `downgrade()`, e antes de criar o UNIQUE renumere duplicatas existentes de forma determinística em vez de apagá-las. A migration NÃO pode alterar tabelas de fotos nem de ocorrências. (4) NÃO resolva decisões em aberto do dono: vínculo usuário↔contrato (L15, DEC-27), regra de status da inspeção e mão de obra duplicada na mesma visita; registre-as como pendentes. Não toque no frontend. Se algum teste de lacuna estiver errado em relação à regra, corrija o teste e explique. (5) Rode `ruff check .` e os testes; não relate resultado que não rodou.
+
+Registre em 00_docs/backlog-auto/visitas-correcoes.md: tabela L1–L18 (antes, depois, arquivo:linha, teste), a migration e o tratamento de duplicatas, pendências, comandos e saídas. Não edite 00_docs/projeto/decisoes.md nem revisao-regras-visitas.md. Commit: `fix(backend): corrige lacunas de regras de Visitas (BL-10)` com `Refs DEC-38`. Siga a "Regra de pronto" do BACKLOG.md. Não faça push.
+```
+
+### T22 · Extensão do modelo de dados para legendas por IA (prompts_ia e colunas em fotos)
+- **Status:** todo
+- **Origem:** DEC-37
+- **Papel:** Engenheiro Backend
+- **Depende:** T14, T19, T21
+- **Ambiente:** docker
+- **Dificuldade:** alta
+- **Toca:** 04_backend/app/models/foto.py, 04_backend/app/models/prompt_ia.py, 04_backend/app/models/__init__.py, 04_backend/app/schemas/foto.py, 04_backend/app/schemas/prompt_ia.py, 04_backend/alembic/versions/, 04_backend/tests/test_legenda_ia_modelo.py, 00_docs/backlog-auto/legenda-ia-modelo.md
+- **Doc:** 00_docs/backlog-auto/legenda-ia-modelo.md
+- **Pronto:** Existe migration Alembic nova (down_revision = head atual após a tarefa de Visitas, com downgrade()) que cria a tabela prompts_ia e as colunas de legenda IA em fotos conforme as lacunas de modelagem independentes do provedor de LLM (todas exceto L12, L13 e L22), incluindo unicidade parcial de `ativo` por `nome`. Modelos e schemas Pydantic atualizados. tests/test_legenda_ia_modelo.py cobre as constraints e passa com PostgreSQL no ar, ou o doc registra que não rodou. `alembic heads` tem uma única head. Nenhuma chamada a LLM, nenhuma dependência de provedor e nenhum endpoint de geração criados. ruff check . passa.
+- **Prompt:**
+```text
+Contexto: a T14 (00_docs/backlog-auto/modelagem-legendas-ia-lacunas.md; DEC-37 em 00_docs/projeto/decisoes.md; BL-36 em 00_docs/projeto/backlog-tarefas.md; RF-15/RN-16/RN-17 em 00_docs/estudo-do-contexto.md e arquitetura.md §3 e ADR-12 — leia só essas seções) achou 22 lacunas entre o código e o modelo de dados previsto para legendas assistidas por IA: não existe a tabela `prompts_ia` nem as colunas de legenda IA em `fotos`. Só 3 lacunas (L12, L13, L22) dependem do provedor de LLM (B-04); as outras 19 podem ser feitas agora, com o Adapter testado por fake no futuro. Esta tarefa cobre SÓ a persistência (BL-36): migration, modelos e schemas.
+
+Pré-requisito de ordem: esta tarefa roda depois da correção de Fotos e da de Visitas, que também mexem em app/api/v1/fotos.py e em migrations. Antes de começar, rode `git log --oneline -15` e `alembic heads` em 04_backend e use a head atual como down_revision; se houver mais de uma head, pare e registre no doc em vez de fazer merge de migrations.
+
+Passos: (1) Leia o doc da T14 e implemente as 19 lacunas independentes do provedor: tabela `prompts_ia` (nome, versão, texto do prompt, `ativo`, auditoria; unicidade parcial de `ativo` por `nome`) e, em `fotos`, as colunas de legenda IA (texto gerado, status de validação com os estados propostos na DEC-37, pendências/alertas, referência ao prompt/versão usados, quem aprovou e quando, e a distinção entre legenda minuta e legenda aprovada, respeitando RN-16/RN-17). Use exatamente os nomes e estados propostos no doc/DEC-37; se houver ambiguidade, escolha a opção mais simples e registre. Migration com `downgrade()` completo; colunas novas anuláveis ou com default, sem apagar nem reescrever dados existentes. (2) Atualize app/models/foto.py, crie app/models/prompt_ia.py (registre em app/models/__init__.py) e os schemas Pydantic v2 em app/schemas/foto.py e app/schemas/prompt_ia.py, sem expor ainda endpoint de geração e sem alterar a lógica de app/api/v1/fotos.py além do necessário para os schemas continuarem válidos. (3) NÃO implemente L12, L13 e L22, o Adapter `LegendaIAClient`, a chamada a qualquer LLM, endpoints `/legenda-ia/gerar` ou frontend; registre-os como pendentes. Variável de ambiente nova, se alguma for indispensável, entra no .env.example correspondente (esperado: nenhuma). (4) Testes em tests/test_legenda_ia_modelo.py: constraints (unicidade parcial, estados válidos, FK do prompt), defaults e round-trip dos schemas. Se o PostgreSQL de 05_infra (localhost:5433) estiver no ar, rode `alembic upgrade head`, `alembic downgrade -1`, `alembic upgrade head` e `pytest tests/test_legenda_ia_modelo.py tests/test_fotos.py`; se não, registre que não rodou, sem inventar resultado. Rode `ruff check .`.
+
+Registre em 00_docs/backlog-auto/legenda-ia-modelo.md: tabela das 22 lacunas (feita / pendente e por quê), DDL resultante, comandos e saídas. Não edite 00_docs/projeto/decisoes.md. Commit: `feat(backend): modelo de dados para legendas assistidas por IA (BL-36)` com `Refs DEC-37`. Siga a "Regra de pronto" do BACKLOG.md. Não faça push.
+```
