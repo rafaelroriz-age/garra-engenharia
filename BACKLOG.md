@@ -276,7 +276,7 @@ Não altere os templates gerados (se achar defeito neles, registre no Doc como p
 ```
 
 ### T12 · Pipeline de renderização da Vistoria de Imóvel Residencial (vistoria_residencial_pipeline.py)
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-35
 - **Papel:** Engenheiro Backend
 - **Depende:** —
