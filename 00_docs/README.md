@@ -1,20 +1,20 @@
 ---
 title: Índice da documentação
 type: knowledge
-status: draft
+status: ativo
 owner: Garra Engenharia
 related:
   - README.md
   - 00_docs/_preparo/03_classificacao.md
 tags: [indice, documentacao, mapa]
-last_updated: 2026-11-03
+last_updated: 2026-11-04
 ---
 
 <!-- ai-summary
 System: índice de toda a documentação do monorepo da Garra Engenharia, uma linha por documento.
 Flow: visão geral -> arquitetura e dados -> operação -> requisitos -> gestão -> cliente -> insumos -> agentes e automação.
 Owner: Garra Engenharia.
-Status: draft — criado na D04 (2026-11-03); o veredito de cada documento está em _preparo/03_classificacao.md e a verificação final é a D05.
+Status: ativo (verificado na D05, 2026-11-04) — criado na D04 (2026-11-03); o veredito de cada documento está em _preparo/03_classificacao.md e a verificação final é a D05.
 -->
 
 # Índice da documentação
@@ -124,6 +124,7 @@ Sistema web (PWA) da Garra Engenharia para automatizar a produção de relatóri
 | [_preparo/01_sistema.md](_preparo/01_sistema.md) | registro | D01: mapa do sistema, objetivo × código, componentes, fluxo, testes e riscos |
 | [_preparo/02_inventario.md](_preparo/02_inventario.md) | registro | D02: inventário da documentação existente |
 | [_preparo/03_classificacao.md](_preparo/03_classificacao.md) | registro | D03: veredito de cada documento e plano de ação |
+| [_preparo/04_relatorio.md](_preparo/04_relatorio.md) | registro | D05: verificação final da documentação contra o código, correções e pendências |
 
 ---
 

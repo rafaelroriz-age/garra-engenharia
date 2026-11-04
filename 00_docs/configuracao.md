@@ -1,7 +1,7 @@
 ---
 title: Referência de configuração — variáveis de ambiente
 type: knowledge
-status: draft
+status: ativo
 owner: Garra Engenharia
 related:
   - 04_backend/app/core/config.py
@@ -18,7 +18,7 @@ last_updated: 2026-11-03
 System: tabela única das variáveis de ambiente do backend, do frontend, do compose e dos testes E2E.
 Flow: Settings (pydantic-settings, 04_backend/app/core/config.py) lê o ambiente ou 04_backend/.env; o compose (05_infra/.env) e o Render (render.yaml) injetam as variáveis.
 Owner: Garra Engenharia.
-Status: draft — levantado do código na D04 (2026-11-03).
+Status: ativo (verificado na D05, 2026-11-04) — levantado do código na D04 (2026-11-03).
 -->
 
 # Referência de configuração

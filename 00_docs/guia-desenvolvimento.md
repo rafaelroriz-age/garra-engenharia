@@ -1,7 +1,7 @@
 ---
 title: Guia de desenvolvimento — instalar, rodar e testar
 type: knowledge
-status: draft
+status: ativo
 owner: Garra Engenharia
 related:
   - 05_infra/README.md
@@ -9,14 +9,14 @@ related:
   - 03_frontend/README.md
   - 00_docs/configuracao.md
 tags: [setup, desenvolvimento, testes, docker, onboarding]
-last_updated: 2026-11-03
+last_updated: 2026-11-04
 ---
 
 <!-- ai-summary
 System: roteiro único para subir o ambiente local e rodar os testes do monorepo.
 Flow: 05_infra (.env + docker compose) -> 04_backend (.env com porta 5433, alembic, seeds, uvicorn) -> 03_frontend (npm) -> testes.
 Owner: Garra Engenharia.
-Status: draft — escrito na D04 (2026-11-03) a partir dos READMEs de pasta e do código; a sequência não foi executada de ponta a ponta nesta tarefa (sem Docker no PATH).
+Status: ativo (verificado na D05, 2026-11-04) — escrito na D04 (2026-11-03) a partir dos READMEs de pasta e do código; a sequência não foi executada de ponta a ponta nesta tarefa (sem Docker no PATH).
 -->
 
 # Guia de desenvolvimento
@@ -83,15 +83,15 @@ A URL da API vem de `NEXT_PUBLIC_API_URL`, com padrão `http://localhost:8000/ap
 | Parte | Comando (na pasta) | Pré-condição | Fonte |
 |---|---|---|---|
 | Backend | `pytest` (`04_backend/`) | PostgreSQL e MinIO no ar, `.env` com `POSTGRES_PORT=5433`, `alembic upgrade head` aplicado | `pytest.ini`; `tests/conftest.py` usa `get_settings().database_url`; `01_sistema.md` §5.2 |
-| Backend (lint) | `ruff check .` (`04_backend/`) | `pip install ruff` (não está em `requirements.txt`) | `.github/workflows/ci.yml:77` |
+| Backend (lint) | `ruff check .` (`04_backend/`) | `pip install ruff` (não está em `requirements.txt`) | `.github/workflows/ci.yml:82` |
 | Frontend (lint) | `npm run lint` (`03_frontend/`) | `npm install` | `package.json` (`"lint": "next lint"`) |
 | Frontend (build) | `npm run build` (`03_frontend/`) | `npm install` | `package.json` |
 | E2E | `npm run test:e2e` (`03_frontend/`) | stack completa no ar (`docker compose up -d --build`), migrations, `seed_gabarito` e o admin de bootstrap; `npx playwright install --with-deps chromium` uma vez | `playwright.config.ts`; `03_frontend/README.md` "Testes E2E"; `ci.yml`, job `e2e` |
 
 Observações verificadas:
 
-- O `ruff` procura configuração nas pastas acima de `04_backend/`. Não há `pyproject.toml` nem `ruff.toml` no repositório; na D01, um `pyproject.toml` fora do repositório mudou o resultado de 47 para 201 erros (`01_sistema.md` §5.2). Para reproduzir o CI, use `ruff check . --isolated`.
-- No CI o lint do backend não bloqueia (`continue-on-error: true`, `ci.yml:81-83`), e o lint do frontend também não (`continue-on-error: true` no passo "Lint (next lint)").
+- O `ruff` procura configuração nas pastas acima de `04_backend/`. Não há `pyproject.toml` nem `ruff.toml` no repositório; na D01, um `pyproject.toml` fora do repositório mudou o resultado de 47 para 201 erros (`01_sistema.md` §5.2). Para reproduzir o CI, use `ruff check . --isolated`. Na verificação da D05 (2026-11-04, ruff 0.15.1) o resultado foi 46 erros com `--isolated` e 214 sem ele, ou seja, o lint segue vermelho (a maioria `F821`, nome indefinido) e a configuração externa continua interferindo.
+- No CI o lint do backend não bloqueia (`continue-on-error: true`, `ci.yml:80-83`), e o lint do frontend também não (`continue-on-error: true` no passo "Lint (next lint)").
 - O job `backend` do `ci.yml` roda `pytest --maxfail=1` sem `alembic upgrade head` antes. Se os testes que dependem de tabela passam no Actions assim: **não determinado** (os logs do Actions não foram consultados).
 - Os testes E2E usam `E2E_ADMIN_EMAIL`/`E2E_ADMIN_SENHA` para logar com o admin de bootstrap (`03_frontend/e2e/helpers.ts:65-66`); os padrões batem com os de `seed_admin.py`.
 
@@ -108,3 +108,4 @@ Observações verificadas:
 ## Registro
 
 - Escrito na D04 (2026-11-03). Nenhum comando desta página foi executado de ponta a ponta nesta tarefa: o Docker não está no PATH e as portas 5433 e 9000 estavam fechadas (`Test-NetConnection`). A conferência dos comandos é a D05.
+- Verificado na D05 (2026-11-04) sem Docker (ausente do PATH; portas 5433 e 9000 fechadas): `npm install`, `npm run lint` (sem avisos) e `npm run build` no frontend passaram; `alembic heads` retorna `d3b7c9e4f1a2`; `ruff check . --isolated` acusa 46 erros. `pytest` e a infraestrutura em Docker não foram executados. Detalhes em [_preparo/04_relatorio.md](_preparo/04_relatorio.md).

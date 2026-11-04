@@ -1,7 +1,7 @@
 ﻿---
 title: Arquitetura de Software — Sistema de Automação de Relatórios Prediais
 type: knowledge
-status: draft
+status: ativo
 owner: Garra Engenharia
 related:
   - 00_docs/estudo-do-contexto.md
@@ -19,7 +19,7 @@ Flow-alvo: ... -> fila Redis/Celery -> gerador de PDF/DOCX (WeasyPrint + docxtpl
 Owner: Eng. Civil Esp. Roniel Ribeiro Costa.
 Systems: Next.js, FastAPI, PostgreSQL, MinIO, WeasyPrint, docxtpl, Lightshot; Redis e Celery previstos (ADR-06), não implantados.
 Deploy real: Render (garra-backend, garra-frontend, garra-db, render.yaml); VPS com Nginx como alternativa.
-Status: draft — Seção 0 adicionada em 2026-11-03 (D04) separando implementado de planejado. Lacunas de maior impacto fechadas em 2026-09-10 (ADR-14/ADR-15). Seções 9-11 de 2026-07-17.
+Status: ativo (verificado na D05, 2026-11-04) — Seção 0 adicionada em 2026-11-03 (D04) separando implementado de planejado. Lacunas de maior impacto fechadas em 2026-09-10 (ADR-14/ADR-15). Seções 9-11 de 2026-07-17.
 -->
 
 # Arquitetura de Software — Sistema de Automação de Relatórios Prediais
