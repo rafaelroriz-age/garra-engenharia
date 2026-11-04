@@ -1,0 +1,556 @@
+{
+  "versao_schema": 1,
+  "tipo_documento": "VISTORIA_CAUTELAR",
+  "origem": {
+    "sha256": "918804e1f2e5b0b89227d874f427562a185772773d4780abe2e543b9d2249757",
+    "paginas": 148
+  },
+  "pagina": {
+    "tamanho": "A4",
+    "orientacao": "portrait",
+    "largura_pt": 595.5,
+    "altura_pt": 842.25,
+    "margens_cm": {
+      "esquerda": 3.0,
+      "direita": 2.03,
+      "superior": 2.58,
+      "inferior": 1.95
+    }
+  },
+  "tipografia": {
+    "familia": "Times New Roman",
+    "familia_postscript": "TimesNewRomanPSMT",
+    "corpo_pt": 12.0,
+    "titulo_pt": 14.0,
+    "familia_titulo": "Times New Roman"
+  },
+  "paragrafo": {
+    "entrelinha_pt": 15.0,
+    "altura_linha": 1.25,
+    "espaco_entre_paragrafos_pt": 6.0,
+    "alinhamento": "justify"
+  },
+  "titulos": [
+    {
+      "nivel": 1,
+      "fonte_pt": 14.0,
+      "negrito": true,
+      "recuo_cm": -0.5
+    },
+    {
+      "nivel": 2,
+      "fonte_pt": 14.0,
+      "negrito": true,
+      "recuo_cm": 0.0
+    },
+    {
+      "nivel": 3,
+      "fonte_pt": 14.0,
+      "negrito": true,
+      "recuo_cm": 0.0
+    }
+  ],
+  "cores": {
+    "texto": "#000000",
+    "legenda": "#44546A",
+    "rodape_contato": "#0563C1",
+    "capa_titulo": "#FFFFFF",
+    "capa_destaque": "#49567F",
+    "tabela_cabecalho_fundo": [
+      "#002060",
+      "#DEEAF6"
+    ]
+  },
+  "capa": {
+    "titulo": {
+      "linhas": [
+        "VISTORIA TÉCNICA",
+        "CAUTELAR PARA",
+        "RECEBIMENTO",
+        "DE OBRA"
+      ],
+      "fonte_pt": 34.4,
+      "familia": "Montserrat",
+      "negrito": true,
+      "cor": "#FFFFFF",
+      "x_pt": 27.0,
+      "topo_pt": 188.0,
+      "entrelinha_pt": 41.0
+    },
+    "elementos": [
+      {
+        "fonte_pt": 15.4,
+        "familia": "Montserrat",
+        "negrito": true,
+        "cor": "#FFFFFF",
+        "x_pt": 27.0,
+        "borda_direita_pt": 268.4,
+        "topo_pt": 357.0,
+        "alinhamento": "left",
+        "papel": "subtitulo",
+        "linhas": [
+          "{{ obra.descricao }}",
+          "{{ edificacao.nome }}"
+        ]
+      },
+      {
+        "fonte_pt": 15.0,
+        "familia": "Montserrat",
+        "negrito": true,
+        "cor": "#49567F",
+        "x_pt": 31.1,
+        "borda_direita_pt": 322.9,
+        "topo_pt": 751.0,
+        "alinhamento": "left",
+        "papel": "responsavel",
+        "linhas": [
+          "RESP. TÉCNICO:",
+          "{{ (responsavel.titulo_profissional ~ ' ' ~ responsavel.nome)|upper }}",
+          "CREA: {{ responsavel.crea }}"
+        ],
+        "faixa": {
+          "x_pt": 16.7,
+          "topo_pt": 676.1,
+          "largura_pt": 314.4,
+          "altura_pt": 138.1
+        }
+      },
+      {
+        "fonte_pt": 15.4,
+        "familia": "Open Sans",
+        "negrito": true,
+        "cor": "#FFFFFF",
+        "x_pt": 449.7,
+        "borda_direita_pt": 579.5,
+        "topo_pt": 804.0,
+        "alinhamento": "right",
+        "papel": "data",
+        "linhas": [
+          "{{ data_emissao_mes_ano|upper }}"
+        ]
+      }
+    ],
+    "logo": {
+      "x_pt": 160.2,
+      "topo_pt": -7.8,
+      "largura_pt": 275.4,
+      "altura_pt": 156.8
+    },
+    "imagem_de_fundo": true
+  },
+  "folha_de_rosto": {
+    "titulo": {
+      "linhas": [
+        "LAUDO TÉCNICO DE",
+        "VISTORIA",
+        "CAUTELAR PARA",
+        "RECEBIMENTO DE OBRA"
+      ],
+      "fonte_pt": 36.0,
+      "familia": "Times New Roman",
+      "negrito": true,
+      "topo_pt": 139.0,
+      "alinhamento": "center"
+    },
+    "objeto": {
+      "fonte_pt": 36.0,
+      "negrito": true,
+      "topo_pt": 401.0,
+      "alinhamento": "center",
+      "modelo": "{{ obra.descricao }}",
+      "linhas_medidas": 3
+    },
+    "data": {
+      "fonte_pt": 18.0,
+      "negrito": true,
+      "topo_pt": 658.0,
+      "alinhamento": "center",
+      "modelo": "{{ data_emissao_mes_ano }}"
+    }
+  },
+  "sumario": {
+    "titulo": "SUMÁRIO",
+    "titulo_pt": 16.0,
+    "titulo_negrito": true,
+    "entrada_pt": 11.0,
+    "entrada_negrito": true,
+    "familia_entrada": "Times New Roman",
+    "familia_pontilhado": "Calibri",
+    "recuo_por_nivel_cm": {
+      "1": 0.0,
+      "2": 0.39,
+      "3": 0.77
+    },
+    "niveis": 3
+  },
+  "cabecalho": {
+    "logo": {
+      "x_pt": 448.5,
+      "topo_pt": 12.8,
+      "largura_pt": 109.4,
+      "altura_pt": 52.3,
+      "alinhamento": "right"
+    },
+    "base_pt": 65.1,
+    "paginas_com_logo": 144
+  },
+  "rodape": {
+    "linhas": [
+      {
+        "modelo": "{{ responsavel.nome }}",
+        "topo_pt": 787.0,
+        "fonte_pt": 10.0,
+        "familia": "Times New Roman",
+        "cor": "#000000",
+        "alinhamento": "center"
+      },
+      {
+        "modelo": "{{ responsavel.titulo_profissional }} - CREA nº {{ responsavel.crea }}",
+        "topo_pt": 799.0,
+        "fonte_pt": 10.0,
+        "familia": "Times New Roman",
+        "cor": "#000000",
+        "alinhamento": "center"
+      },
+      {
+        "modelo": "{{ responsavel.email }} / {{ responsavel.telefone }}",
+        "topo_pt": 811.0,
+        "fonte_pt": 10.0,
+        "familia": "Times New Roman",
+        "cor": "#0563C1",
+        "alinhamento": "center"
+      }
+    ],
+    "numeracao_pagina": {
+      "familia": "Calibri",
+      "fonte_pt": 11.0,
+      "topo_pt": 824.0,
+      "borda_direita_pt": 518,
+      "alinhamento": "right",
+      "deslocamento": -1
+    },
+    "topo_pt": 787.0
+  },
+  "estrutura": {
+    "secoes": [
+      {
+        "numero": "1",
+        "titulo": "INTRODUÇÃO",
+        "chave": "introducao",
+        "tipo": "texto",
+        "subsecoes": [
+          {
+            "numero": "1.1",
+            "titulo": "Histórico e Contexto da Diligência",
+            "chave": "historico_e_contexto_da_diligencia"
+          }
+        ]
+      },
+      {
+        "numero": "2",
+        "titulo": "CONSIDERAÇÕES PRELIMINARES",
+        "chave": "consideracoes_preliminares",
+        "tipo": "texto",
+        "subsecoes": [
+          {
+            "numero": "2.1",
+            "titulo": "Geral",
+            "chave": "consideracoes_preliminares_geral"
+          },
+          {
+            "numero": "2.2",
+            "titulo": "Pressupostos, ressalvas e fatores limitantes",
+            "chave": "pressupostos_ressalvas_e_fatores_limitantes"
+          }
+        ]
+      },
+      {
+        "numero": "3",
+        "titulo": "OBJETIVO",
+        "chave": "objetivo",
+        "tipo": "texto",
+        "subsecoes": [
+          {
+            "numero": "3.1",
+            "titulo": "Geral",
+            "chave": "objetivo_geral"
+          },
+          {
+            "numero": "3.2",
+            "titulo": "Específico",
+            "chave": "especifico"
+          }
+        ]
+      },
+      {
+        "numero": "4",
+        "titulo": "OBJETO",
+        "chave": "objeto",
+        "tipo": "texto",
+        "subsecoes": [
+          {
+            "numero": "4.1",
+            "titulo": "Geral",
+            "chave": "objeto_geral"
+          },
+          {
+            "numero": "4.2",
+            "titulo": "Identificação",
+            "chave": "identificacao",
+            "tabelas": [
+              "identificacao"
+            ]
+          }
+        ]
+      },
+      {
+        "numero": "5",
+        "titulo": "DA REALIZAÇÃO DA INSPEÇÃO",
+        "chave": "da_realizacao_da_inspecao",
+        "tipo": "texto",
+        "subsecoes": [
+          {
+            "numero": "5.1",
+            "titulo": "Apresentação do Responsável Técnico",
+            "chave": "apresentacao_do_responsavel_tecnico"
+          },
+          {
+            "numero": "5.2",
+            "titulo": "Datas das Vistorias",
+            "chave": "datas_das_vistorias"
+          }
+        ]
+      },
+      {
+        "numero": "6",
+        "titulo": "METODOLOGIA",
+        "chave": "metodologia",
+        "tipo": "texto",
+        "subsecoes": [
+          {
+            "numero": "6.1",
+            "titulo": "Classificação da Inspeção quanto ao Nível",
+            "chave": "classificacao_da_inspecao_quanto_ao_nivel"
+          },
+          {
+            "numero": "6.2",
+            "titulo": "Critério de classificação técnica dos achados",
+            "chave": "criterio_de_classificacao_tecnica_dos_achados"
+          },
+          {
+            "numero": "6.3",
+            "titulo": "Levantamento de Dados e Documentação",
+            "chave": "levantamento_de_dados_e_documentacao"
+          },
+          {
+            "numero": "6.4",
+            "titulo": "Ensaios Técnicos Instrumentais Realizados",
+            "chave": "ensaios_tecnicos_instrumentais_realizados"
+          }
+        ]
+      },
+      {
+        "numero": "7",
+        "titulo": "DESENVOLVIMENTO DAS ATIVIDADES DA INSPEÇÃO",
+        "chave": "desenvolvimento_das_atividades_da_inspecao",
+        "tipo": "texto",
+        "subsecoes": [
+          {
+            "numero": "7.1",
+            "titulo": "Sistemas Construtivos Inspecionados",
+            "chave": "sistemas_construtivos_inspecionados"
+          },
+          {
+            "numero": "7.2",
+            "titulo": "Dinâmica de Campo e Correções em Tempo Real",
+            "chave": "dinamica_de_campo_e_correcoes_em_tempo_real"
+          }
+        ]
+      },
+      {
+        "numero": "8",
+        "titulo": "RELATÓRIO FOTOGRÁFICO",
+        "chave": "relatorio_fotografico",
+        "tipo": "relatorio_fotografico",
+        "subsecoes": []
+      },
+      {
+        "numero": "9",
+        "titulo": "ANÁLISE E CONSIDERAÇÕES TÉCNICAS",
+        "chave": "analise_e_consideracoes_tecnicas",
+        "tipo": "por_sistema",
+        "subsecoes": [
+          {
+            "numero": "9.8",
+            "titulo": "Correlação Técnica entre Origem Provável, Repercussão Funcional e Responsabilidade",
+            "chave": "correlacao_tecnica_entre_origem_provavel_repercussao_funcional_e_responsabilidade",
+            "posicao": "depois_dos_sistemas"
+          }
+        ],
+        "rotulos_por_sistema": [
+          {
+            "titulo": "Constatações",
+            "chave": "constatacoes"
+          },
+          {
+            "titulo": "Fundamentação Técnica",
+            "chave": "fundamentacao_tecnica"
+          }
+        ],
+        "sistemas_medidos": 7
+      },
+      {
+        "numero": "10",
+        "titulo": "CONCLUSÃO E CONSIDERAÇÕES FINAIS",
+        "chave": "conclusao_e_consideracoes_finais",
+        "tipo": "texto",
+        "subsecoes": [
+          {
+            "numero": "10.1",
+            "titulo": "Parecer Técnico",
+            "chave": "parecer_tecnico",
+            "complemento": {
+              "separador": "—",
+              "chave": "parecer_tecnico"
+            }
+          },
+          {
+            "numero": "10.2",
+            "titulo": "Plano de Correções Remanescentes",
+            "chave": "plano_de_correcoes_remanescentes",
+            "tabelas": [
+              "plano_de_correcoes_remanescentes"
+            ]
+          },
+          {
+            "numero": "10.3",
+            "titulo": "Prazos e Condicionantes para o Recebimento Definitivo",
+            "chave": "prazos_e_condicionantes_para_o_recebimento_definitivo"
+          }
+        ]
+      },
+      {
+        "numero": "11",
+        "titulo": "ENCERRAMENTO",
+        "chave": "encerramento",
+        "tipo": "encerramento",
+        "subsecoes": []
+      },
+      {
+        "numero": "12",
+        "titulo": "REFERÊNCIAS BIBLIOGRÁFICAS",
+        "chave": "referencias_bibliograficas",
+        "tipo": "texto",
+        "subsecoes": []
+      }
+    ]
+  },
+  "relatorio_fotografico": {
+    "fotos_por_pagina": 2,
+    "foto": {
+      "largura_pt": 454.0,
+      "altura_pt": 255.0,
+      "x_pt": 85.0,
+      "alinhamento": "center"
+    },
+    "legenda": {
+      "rotulo": "Figura",
+      "separador": "-",
+      "posicao": "abaixo",
+      "afastamento_pt": 8.0,
+      "familia": "Calibri",
+      "fonte_pt": 9.0,
+      "italico": true,
+      "cor": "#44546A",
+      "sufixo_fonte": "Fonte: Autor."
+    },
+    "paginas_medidas": 121
+  },
+  "tabelas": [
+    {
+      "secao": "4.2",
+      "chave": "identificacao",
+      "colunas": [
+        {
+          "rotulo": "ASPECTO TÉCNICO",
+          "chave": "aspecto_tecnico",
+          "largura_pct": 24.6
+        },
+        {
+          "rotulo": "DESCRIÇÃO DETALHADA",
+          "chave": "descricao_detalhada",
+          "largura_pct": 75.3
+        }
+      ],
+      "cabecalho_fundo": "#002060",
+      "cabecalho_cor_texto": "#FFFFFF",
+      "cabecalho_fonte_pt": 11.0,
+      "cabecalho_negrito": true,
+      "familia": "Times New Roman",
+      "corpo_fonte_pt": 12.0,
+      "x_pt": 85.3,
+      "largura_pt": 445.3
+    },
+    {
+      "secao": "10.2",
+      "chave": "plano_de_correcoes_remanescentes",
+      "colunas": [
+        {
+          "rotulo": "Item",
+          "chave": "item",
+          "largura_pct": 5.8
+        },
+        {
+          "rotulo": "Localização",
+          "chave": "localizacao",
+          "largura_pct": 19.2
+        },
+        {
+          "rotulo": "Descrição da Pendência",
+          "chave": "descricao_da_pendencia",
+          "largura_pct": 31.2
+        },
+        {
+          "rotulo": "Metodologia Corretiva Indicada",
+          "chave": "metodologia_corretiva_indicada",
+          "largura_pct": 43.5
+        }
+      ],
+      "cabecalho_fundo": "#DEEAF6",
+      "cabecalho_cor_texto": "#000000",
+      "cabecalho_fonte_pt": 12.0,
+      "cabecalho_negrito": true,
+      "familia": "Times New Roman",
+      "corpo_fonte_pt": 12.0,
+      "x_pt": 63.1,
+      "largura_pt": 476.3
+    }
+  ],
+  "assinatura": {
+    "alinhamento": "right",
+    "familia": "Calibri",
+    "fonte_pt": 12.0,
+    "nome_negrito": true,
+    "linha_largura_pt": 286.7,
+    "linhas": [
+      "{{ responsavel.nome }}",
+      "{{ responsavel.titulo_profissional }} - CREA nº {{ responsavel.crea }}"
+    ],
+    "qualificacoes": {
+      "modelo": "{% for linha in responsavel.qualificacoes %}",
+      "linhas_medidas": 6
+    },
+    "imagem_assinatura": {
+      "x_pt": 340.7,
+      "topo_pt": 477.8,
+      "largura_pt": 137.8,
+      "altura_pt": 79.7
+    },
+    "local_data": {
+      "modelo": "{{ local_emissao }}, {{ data_emissao_extenso }}.",
+      "afastamento_pt": 85.0,
+      "alinhamento": "right"
+    }
+  },
+  "gerado_em": "2026-11-04T16:35:49+00:00"
+}
