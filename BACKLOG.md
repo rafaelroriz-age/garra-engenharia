@@ -325,7 +325,7 @@ Siga a 'Regra de pronto' do BACKLOG.md: registre fatos, números, comandos e sa�
 ## Bloco B — Revisão de regras e lacunas (pré-requisitos de B-04)
 
 ### T14 · Análise de lacunas do modelo de dados para o fluxo de legendas por IA (revisão de integração do BL-04)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-04
 - **Papel:** arquiteto-software
 - **Depende:** —
@@ -349,7 +349,7 @@ Passos:
 ```
 
 ### T15 · Revisão das regras de negócio de Visitas (RN-01/RN-02) com testes de lacuna
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-10
 - **Papel:** backend
 - **Depende:** —
@@ -375,7 +375,7 @@ Passos:
 ```
 
 ### T16 · Revisão de segurança e regras do upload de fotos (RF-05/RNF-02) com testes de lacuna
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-11
 - **Papel:** backend
 - **Depende:** —
@@ -401,7 +401,7 @@ Passos:
 ```
 
 ### T17 · Re-medir o benchmark de geração PDF/DOCX com os pipelines finais
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-22
 - **Papel:** arquiteto-software
 - **Depende:** —
