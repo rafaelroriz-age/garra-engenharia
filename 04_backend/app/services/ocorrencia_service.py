@@ -12,6 +12,10 @@ from app.schemas.ocorrencia import OcorrenciaCreate
 # RN-04 (DEC-29): mapeamento Grau de Risco CMM → Prioridade sugerida.
 _PRIORIDADE_POR_GRAU = {"CRITICO": 5, "MEDIO": 3, "MINIMO": 1}
 
+# RN-05: valores aceitos para Situação e Classificação.
+_SITUACOES = {"CONFORME", "NAO_CONFORME"}
+_CLASSIFICACOES = {"ANOMALIA", "FALHA", "ANOMALIA_FALHA", "NAO_SE_APLICA"}
+
 
 async def obter_por_id(db: AsyncSession, ocorrencia_id: uuid.UUID) -> Ocorrencia:
     ocorrencia = await ocorrencia_repository.get_by_id(db, ocorrencia_id)
@@ -24,7 +28,7 @@ async def listar_por_inspecao(
     db: AsyncSession,
     *,
     inspecao_id: uuid.UUID,
-    sistema_id: str | None = None,
+    sistema_id: uuid.UUID | None = None,
     grau_risco: str | None = None,
 ) -> list[Ocorrencia]:
     return await ocorrencia_repository.list_by_inspecao(
@@ -47,6 +51,9 @@ async def criar(
     criado_por_id: uuid.UUID | None = None,
 ) -> Ocorrencia:
     _validar_payload(dados)
+    if not await ocorrencia_repository.inspecao_existe(db, inspecao_id):
+        raise NotFoundError(f"Inspeção '{inspecao_id}' não encontrada.", type_suffix="inspecao-nao-encontrada")
+    await _validar_referencias(db, dados)
     prioridade, prioridade_sugerida, ajustado_por_id, ajustado_em = _resolver_prioridade(dados, criado_por_id)
     return await ocorrencia_repository.create(
         db,
@@ -68,6 +75,7 @@ async def atualizar(
 ) -> Ocorrencia:
     _validar_payload(dados)
     ocorrencia = await obter_por_id(db, ocorrencia_id)
+    await _validar_referencias(db, dados)
     prioridade, prioridade_sugerida, ajustado_por_id, ajustado_em = _resolver_prioridade(dados, usuario_id)
     return await ocorrencia_repository.update(
         db,
@@ -90,8 +98,12 @@ def _validar_payload(dados: OcorrenciaCreate) -> None:
         raise DomainError("Sistema predial é obrigatório.", type_suffix="ocorrencia-sistema-obrigatorio")
     if not dados.situacao:
         raise DomainError("Situação é obrigatória.", type_suffix="ocorrencia-situacao-obrigatoria")
+    if dados.situacao not in _SITUACOES:
+        raise DomainError("Situação inválida.", type_suffix="ocorrencia-situacao-invalida")
     if not dados.classificacao:
         raise DomainError("Classificação é obrigatória.", type_suffix="ocorrencia-classificacao-obrigatoria")
+    if dados.classificacao not in _CLASSIFICACOES:
+        raise DomainError("Classificação inválida.", type_suffix="ocorrencia-classificacao-invalida")
     if dados.classificacao in {"ANOMALIA", "ANOMALIA_FALHA"} and not dados.tipo_anomalia:
         raise DomainError("Tipo de anomalia é obrigatório para esta classificação.", type_suffix="ocorrencia-tipo-anomalia-obrigatorio")
     if dados.classificacao in {"FALHA", "ANOMALIA_FALHA"} and not dados.tipo_falha:
@@ -101,6 +113,22 @@ def _validar_payload(dados: OcorrenciaCreate) -> None:
     # RN-05: Prioridade deve estar entre 0 (não aplicável) e 5.
     if dados.prioridade is not None and not (0 <= dados.prioridade <= 5):
         raise DomainError("Prioridade deve estar entre 0 e 5.", type_suffix="ocorrencia-prioridade-invalida")
+
+
+async def _validar_referencias(db: AsyncSession, dados: OcorrenciaCreate) -> None:
+    """Sistema e subsistema devem existir, e o subsistema pertencer ao sistema (RF-04)."""
+    if await ocorrencia_repository.get_sistema(db, dados.sistema_id) is None:
+        raise NotFoundError(f"Sistema '{dados.sistema_id}' não encontrado.", type_suffix="sistema-nao-encontrado")
+    if dados.subsistema_id is not None:
+        subsistema = await ocorrencia_repository.get_subsistema(db, dados.subsistema_id)
+        if subsistema is None:
+            raise NotFoundError(
+                f"Subsistema '{dados.subsistema_id}' não encontrado.", type_suffix="subsistema-nao-encontrado"
+            )
+        if subsistema.sistema_id != dados.sistema_id:
+            raise DomainError(
+                "Subsistema não pertence ao sistema informado.", type_suffix="ocorrencia-subsistema-incoerente"
+            )
 
 
 def _prioridade_sugerida(dados: OcorrenciaCreate) -> int:
