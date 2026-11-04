@@ -65,6 +65,8 @@ npm run build   # build de produção — valida todas as rotas
 npm run lint    # ESLint
 ```
 
+> **Vulnerabilidades (T03, 2026-11-04):** `npm audit` aponta 30 pacotes (2 críticos, 11 altos, 17 moderados), 13 deles em produção; o principal é `next` 14.2.35, cuja correção está só em 15.5.x/16.x. Não use `npm audit fix --force`. Análise e plano em [npm-audit.md](../00_docs/backlog-auto/npm-audit.md); ver R-12 e DEC-32 (proposta).
+
 ## Notas de implementação
 
 - **UI kit**: [shadcn/ui](https://ui.shadcn.com) (CLI clássica `2.10.0`, estilo `new-york`, Tailwind v3.4 — **não** a v4/"Nova" preset, incompatível com este projeto).

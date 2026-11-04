@@ -172,7 +172,8 @@ last_updated: 2026-09-17
 | R-08 — Escopo crescente | Média | Mitigado (congelamento v1.0) |
 | R-09 — Hospedagem indefinida | Baixa | Mitigado (Docker Compose agnóstico) |
 | R-10 — Dados enviados a IA externa (RF-15) | Média | Ação necessária (escolher provedor — lacuna #13, B-04) |
-| R-11 — Ambiente de desenvolvimento não reproduzível (pytest × pytest-asyncio, ruff, Docker, Python 3.12) | Média | Ação necessária (DEC-31 proposta; T01) |
+| R-11 — Ambiente de desenvolvimento não reproduzível (pytest × pytest-asyncio, ruff, Docker, Python 3.12) | Média → Baixa | Parcialmente mitigado (T02 e T04); restam o ruff na CI e a suíte de integração (DEC-31) |
+| R-12 — Vulnerabilidades de dependências do frontend (Next.js 14.2.35 crítico em produção) | Alta | Ação necessária (DEC-32 proposta; T03) |
 
 ### R-11 — Ambiente de desenvolvimento não reproduzível
 
@@ -181,4 +182,13 @@ last_updated: 2026-09-17
 | **Origem** | Diagnóstico T01 (2026-11-04), em [00_docs/backlog-auto/diagnostico.md](../backlog-auto/diagnostico.md) |
 | **Descrição** | `requirements.txt` aceita `pytest>=9.1.1,<10` com `pytest-asyncio>=0.23,<1.0`; a combinação resolvida (pytest 9.2.0 + pytest-asyncio 0.23.3) falha na coleta (`INTERNALERROR`, 0 testes executados — causa provável, não isolada). `ruff check .` acusa 214 achados (B008 87, F821 38, I001 36…), sem configuração de ruff encontrada; a CI instala o ruff sem fixar versão. Python 3.14 do sistema não instala as dependências (Pillow); exige 3.12. Docker ausente na máquina diagnosticada, então PostgreSQL/MinIO e a suíte de integração não rodam. |
 | **Probabilidade / Impacto** | Média / Média — a CI (`ci.yml`) pode divergir do que roda localmente |
-| **Mitigação** | DEC-31 (proposta): alinhar versões de pytest e pytest-asyncio, definir configuração do ruff e investigar F821 (possível falso positivo de `TYPE_CHECKING`), instalar Docker, usar venv Python 3.12. Corrigir exige alterar código/configuração, fora do escopo de documentação. |
+| **Mitigação** | **Feito:** T02 alinhou `pytest-asyncio>=1.4.1,<1.5` (coleta: 0 para 139 testes); T04 versionou `04_backend/ruff.toml` e zerou os 214 achados (os F821 eram falsos positivos). **Pendente:** remover `continue-on-error` do ruff e fixar a versão no `ci.yml` (arquivo `.yml`, tarefa de código); instalar Docker e rodar a suíte de integração (as 2 falhas e 85 erros das duas tarefas vinham de banco sem schema, não de código); usar venv Python 3.12. Ver DEC-31. |
+
+### R-12 — Vulnerabilidades de dependências do frontend
+
+| Campo | Valor |
+|---|---|
+| **Origem** | Tarefa T03 (2026-11-04), em [00_docs/backlog-auto/npm-audit.md](../backlog-auto/npm-audit.md) |
+| **Descrição** | `npm audit` em `03_frontend`: 30 pacotes vulneráveis (2 críticos, 11 altos, 17 moderados); 13 em produção. O crítico relevante é `next` 14.2.35 (RCE em Image Optimization, DoS em Server Components, SSRF, cache poisoning), exposto no container `node:20-alpine`; a correção está só em 15.5.x/16.x (major, possível React 19). `fabric` 6.9.1 (XSS em exportação SVG) e a cadeia `canvas`/`tar` têm exposição baixa/média. Se `/_next/image` fica acessível: não determinado sem teste. |
+| **Probabilidade / Impacto** | Média / Alta |
+| **Mitigação** | DEC-32 (proposta): `npm audit fix` sem `--force` nos 5 pacotes sem major; upgrade do Next antes do próximo deploy; fabric 7 com teste do editor (RF-14); nunca `--force`. |

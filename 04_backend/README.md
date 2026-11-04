@@ -248,7 +248,7 @@ pytest
 
 Os testes de `tests/test_models.py` exigem o PostgreSQL do `05_infra/docker-compose.yml` rodando (usam `JSONB`, específico do dialeto PostgreSQL) e a migration aplicada. Cada teste remove os registros que cria.
 
-> **Ambiente (diagnóstico T01, 2026-11-04):** use Python 3.12 (o 3.14 não instala o Pillow fixado). Com `pytest` 9.2.0 + `pytest-asyncio` 0.23.3 a coleta falha com `INTERNALERROR`; e `ruff check .` acusa 214 achados. Ver [diagnostico.md](../00_docs/backlog-auto/diagnostico.md), R-11 e DEC-31 (proposta).
+> **Ambiente (T01, T02 e T04, 2026-11-04):** use Python 3.12 (o 3.14 não instala o Pillow fixado). `requirements.txt` fixa `pytest>=9.1.1,<10.0` com `pytest-asyncio>=1.4.1,<1.5`; o 0.23.x não coleta com pytest 9, então valide qualquer troca com `python -m pytest --collect-only -q` (139 testes). Lint: `ruff check .` (configuração em [ruff.toml](ruff.toml)) retorna 0 erros; o ruff não está no `requirements.txt` (`pip install ruff` ou `uvx ruff`). A suíte de integração exige PostgreSQL com `alembic upgrade head`. Ver [pytest-compat.md](../00_docs/backlog-auto/pytest-compat.md), [ruff.md](../00_docs/backlog-auto/ruff.md), R-11 e DEC-31.
 
 ## Referências
 
