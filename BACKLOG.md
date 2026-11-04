@@ -425,7 +425,7 @@ Passos:
 ```
 
 ### T18 · Pipeline de renderização do RFIP (rfip_pipeline.py)
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-36
 - **Papel:** Engenheiro Backend
 - **Depende:** T13, T05
