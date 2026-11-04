@@ -446,7 +446,7 @@ Registre em 00_docs/backlog-auto/rfip-pipeline.md: API, tabela de campos do cont
 ```
 
 ### T19 · Corrigir as lacunas do upload de fotos (storage_key, EXIF, validações)
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-39
 - **Papel:** Engenheiro Backend
 - **Depende:** T16
