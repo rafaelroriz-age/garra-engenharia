@@ -180,7 +180,7 @@ Tarefa D (BL-17, pendência 'pipeline de renderização'). Contexto: BL-17 gerou
 ```
 
 ### T06 · Revisar regras de negócio e enums de Ocorrências (BL-14)
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-14
 - **Papel:** backend
 - **Depende:** T04
