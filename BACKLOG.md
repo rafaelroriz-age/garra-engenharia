@@ -349,7 +349,7 @@ Passos:
 ```
 
 ### T15 · Revisão das regras de negócio de Visitas (RN-01/RN-02) com testes de lacuna
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-10
 - **Papel:** backend
 - **Depende:** —
