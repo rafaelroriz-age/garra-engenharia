@@ -253,3 +253,69 @@ Tarefa C (DEC-25 / ADR-13, fatia 'Vistoria Cautelar' do modelo incremental; mesm
 ```text
 Tarefa D (DEC-25 / ADR-13, fatia 'Vistoria Residencial' do modelo incremental; mesmo método do LTIP em BL-17). Contexto: o original do cliente é o PDF `01_output-context/Laudo Técnico de Vistoria de Imóvel Residencial - Ap. 1404.pdf`. NUNCA altere nem apague nada em 01_output-context/. O layout do LTIP já foi derivado assim: 04_backend/app/scripts/ltip_layout_extractor.py (pdfplumber) → 04_backend/templates/ltip/layout.json → app/scripts/build_ltip_templates.py → ltip_template.html.j2 (WeasyPrint) + ltip_template.docx (docxtpl), com 11 testes em 04_backend/tests/test_ltip_templates.py sobre um PDF sintético. Leia esses quatro arquivos antes de escrever qualquer coisa e leia a seção de ADR-13 em 00_docs/arquitetura.md (só ela) e as seções do §2 de 00_docs/projeto/status.md que descrevem os tipos de documento. Passos: (1) Crie app/scripts/vistoria_residencial_layout_extractor.py espelhando o do LTIP: meça com pdfplumber o tamanho de página, margens, famílias e corpos tipográficos, cores dos cabeçalhos, estrutura de seções, grade de fotos, cabeçalho/rodapé e bloco de assinaturas. Reaproveite funções do extrator do LTIP por import quando possível, sem editá-lo, e não importe nada da tarefa paralela da Vistoria Cautelar (arquivos ainda inexistentes). Mapeie a ordem e os títulos das seções do laudo (só títulos fixos, não o conteúdo do caso). (2) O `layout.json` guarda APENAS geometria e rótulos fixos: descarte nomes de pessoas, CPF, CREA, e-mails, endereços, número do apartamento e telefones do exemplar antes de gravar (OWASP A02); troque-os por placeholders Jinja2 nomeados. (3) Crie app/scripts/build_vistoria_residencial_templates.py que gera, de forma determinística e só a partir do layout.json, o .html.j2 e o .docx em 04_backend/templates/vistoria_residencial/. Use a marca de 04_backend/templates/assets/ como o LTIP faz. (4) Crie tests/test_vistoria_residencial_templates.py com um PDF sintético gerado no próprio teste (não leia 01_output-context/): teste o extrator, o JSON sem dados pessoais, a presença dos placeholders nos dois templates e que PDF e DOCX derivam do mesmo layout. Testes que exigem WeasyPrint usam skip com motivo explícito, pois ele não roda no Windows local. (5) Rode `pytest tests/test_vistoria_residencial_templates.py` e `ruff check .` a partir de 04_backend. Este arquivo não exige banco; não rode a suíte completa de integração. (6) Escreva 00_docs/backlog-auto/vistoria-residencial-templates.md: medidas obtidas, seções mapeadas, lista de placeholders, comandos e saídas, pendências (conferência visual do PDF depende de HT-09; pipeline de renderização é tarefa à parte, como o ltip_pipeline.py). Não toque em outros templates nem na pasta do LTIP, do RFO e da Vistoria Cautelar. Siga a "Regra de pronto" do BACKLOG.md.
 ```
+
+### T11 · Pipeline de renderização da Vistoria Cautelar (vistoria_cautelar_pipeline.py)
+- **Status:** todo
+- **Origem:** DEC-35
+- **Papel:** Engenheiro Backend
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** media
+- **Toca:** 04_backend/app/services/report_generator/vistoria_cautelar_pipeline.py, 04_backend/tests/test_vistoria_cautelar_pipeline.py, 00_docs/backlog-auto/vistoria-cautelar-pipeline.md
+- **Doc:** 00_docs/backlog-auto/vistoria-cautelar-pipeline.md
+- **Pronto:** O módulo vistoria_cautelar_pipeline.py expõe renderizar_html, gerar_pdf e gerar_docx, no mesmo formato de ltip_pipeline.py. Cada função consome os templates de templates/vistoria_cautelar/. test_vistoria_cautelar_pipeline.py cobre HTML, DOCX, campo vazio como '—' e foto ausente. pytest e ruff check . passam em 04_backend, e o teste de PDF roda no container Docker ou é registrado como não executado. O resultado está em 00_docs/backlog-auto/vistoria-cautelar-pipeline.md.
+- **Prompt:**
+```text
+Contexto: T09 entregou o extrator, o layout.json e os templates PDF (WeasyPrint) e DOCX (docxtpl) da Vistoria Cautelar de Recebimento em 04_backend/templates/vistoria_cautelar/ (ver 00_docs/backlog-auto/vistoria-cautelar-templates.md e DEC-35). O pipeline de renderização ainda não existe. T05 fez isso para o LTIP; use 04_backend/app/services/report_generator/ltip_pipeline.py e 00_docs/backlog-auto/ltip-pipeline.md como modelo estrutural. Trabalhe em 04_backend/.
+
+Tarefa: crie 04_backend/app/services/report_generator/vistoria_cautelar_pipeline.py com `renderizar_html(contexto, fotos_bytes) -> str`, `gerar_pdf(contexto, fotos_bytes, destino) -> dict` e `gerar_docx(contexto, fotos_bytes, destino, *, template_path=None) -> dict`. Siga as mesmas convenções do ltip_pipeline: Jinja2/docxtpl com autoescape, fotos como data URI no HTML, o módulo não acessa o MinIO (quem chama entrega `fotos_bytes` por `storage_key`), mesmas chaves de métricas, `KeyError` para foto referenciada e ausente, campos vazios como '—' (DEC-33). Descubra as variáveis do contexto lendo o template .html.j2 e o layout.json, e documente a tabela de campos no Doc.
+
+Testes: crie 04_backend/tests/test_vistoria_cautelar_pipeline.py com contexto sintético, sem depender de 01_output-context/. O teste de PDF deve usar `pytest.importorskip` ou skip se o WeasyPrint não carregar no Windows. Rode no Docker quando possível (docker compose a partir de 05_infra/). Rode `pytest` e `ruff check .` em 04_backend. O PostgreSQL fica em localhost:5433. Se não estiver no ar, registre que não rodou em vez de inventar resultado.
+
+Não altere os templates gerados (se achar defeito neles, registre no Doc como proposta). Não altere nem apague 01_output-context/. Siga a 'Regra de pronto' do BACKLOG.md: registre fatos, comandos e saída dos testes em 00_docs/backlog-auto/vistoria-cautelar-pipeline.md. Não edite os documentos de gestão em 00_docs/projeto/ nem o BACKLOG.md. Commit: `feat(backend): pipeline de renderização da Vistoria Cautelar (DEC-35)` com `Refs DEC-35`. Não faça push.
+```
+
+### T12 · Pipeline de renderização da Vistoria de Imóvel Residencial (vistoria_residencial_pipeline.py)
+- **Status:** todo
+- **Origem:** DEC-35
+- **Papel:** Engenheiro Backend
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** media
+- **Toca:** 04_backend/app/services/report_generator/vistoria_residencial_pipeline.py, 04_backend/tests/test_vistoria_residencial_pipeline.py, 00_docs/backlog-auto/vistoria-residencial-pipeline.md
+- **Doc:** 00_docs/backlog-auto/vistoria-residencial-pipeline.md
+- **Pronto:** O módulo vistoria_residencial_pipeline.py expõe renderizar_html, gerar_pdf e gerar_docx, no mesmo formato de ltip_pipeline.py. Cada função consome os templates de templates/vistoria_residencial/. test_vistoria_residencial_pipeline.py cobre HTML, DOCX, campo vazio como '—' e foto ausente. pytest e ruff check . passam em 04_backend, e o teste de PDF roda no container Docker ou é registrado como não executado. O resultado está em 00_docs/backlog-auto/vistoria-residencial-pipeline.md.
+- **Prompt:**
+```text
+Contexto: T10 entregou o extrator, o layout.json e os templates PDF (WeasyPrint) e DOCX (docxtpl) da Vistoria de Imóvel Residencial em 04_backend/templates/vistoria_residencial/ (ver 00_docs/backlog-auto/vistoria-residencial-templates.md e DEC-35). O pipeline de renderização ainda não existe. T05 fez isso para o LTIP; use 04_backend/app/services/report_generator/ltip_pipeline.py e 00_docs/backlog-auto/ltip-pipeline.md como modelo estrutural. Trabalhe em 04_backend/.
+
+Tarefa: crie 04_backend/app/services/report_generator/vistoria_residencial_pipeline.py com `renderizar_html(contexto, fotos_bytes) -> str`, `gerar_pdf(contexto, fotos_bytes, destino) -> dict` e `gerar_docx(contexto, fotos_bytes, destino, *, template_path=None) -> dict`. Siga as mesmas convenções do ltip_pipeline: Jinja2/docxtpl com autoescape, fotos como data URI no HTML, o módulo não acessa o MinIO (quem chama entrega `fotos_bytes` por `storage_key`), mesmas chaves de métricas, `KeyError` para foto referenciada e ausente, campos vazios como '—' (DEC-33). Descubra as variáveis do contexto lendo o template .html.j2 e o layout.json, e documente a tabela de campos no Doc.
+
+Testes: crie 04_backend/tests/test_vistoria_residencial_pipeline.py com contexto sintético, sem depender de 01_output-context/. O teste de PDF deve usar skip se o WeasyPrint não carregar no Windows. Rode no Docker quando possível (docker compose a partir de 05_infra/). Rode `pytest` e `ruff check .` em 04_backend. O PostgreSQL fica em localhost:5433. Se não estiver no ar, registre que não rodou em vez de inventar resultado.
+
+Não altere os templates gerados (se achar defeito neles, registre no Doc como proposta). Não altere nem apague 01_output-context/. Siga a 'Regra de pronto' do BACKLOG.md: registre fatos, comandos e saída dos testes em 00_docs/backlog-auto/vistoria-residencial-pipeline.md. Não edite os documentos de gestão em 00_docs/projeto/ nem o BACKLOG.md. Commit: `feat(backend): pipeline de renderização da Vistoria Residencial (DEC-35)` com `Refs DEC-35`. Não faça push.
+```
+
+### T13 · Extrator e templates PDF/DOCX do RFIP (planilha de 479 MB)
+- **Status:** todo
+- **Origem:** BL-12
+- **Papel:** Engenheiro Backend
+- **Depende:** —
+- **Ambiente:** offline
+- **Dificuldade:** alta
+- **Toca:** 04_backend/app/scripts/rfip_layout_extractor.py, 04_backend/app/scripts/build_rfip_templates.py, 04_backend/templates/rfip/, 04_backend/tests/test_rfip_templates.py, 00_docs/backlog-auto/rfip-templates.md
+- **Doc:** 00_docs/backlog-auto/rfip-templates.md
+- **Pronto:** Existem templates/rfip/layout.json (só geometria e rótulos fixos), rfip_template.html.j2 e rfip_template.docx, todos gerados por build_rfip_templates.py a partir do mesmo layout.json. O extrator lê o xlsx em modo read_only/streaming. test_rfip_templates.py roda sobre uma planilha sintética, sem depender de 01_output-context/. pytest e ruff check . passam em 04_backend, ou o doc registra por que não rodaram. O resultado está em 00_docs/backlog-auto/rfip-templates.md.
+- **Prompt:**
+```text
+Contexto: o RFIP (Relatório Fotográfico de Inspeção Predial) é o último dos 5 modelos sem template. O original é a planilha `Relatório Fotográfico de Inspeção Predial - CORTINA D'AMPAREZZO - Versão Final.xlsx` (~479 MB) em 01_output-context/. Nunca altere nem apague nada em 01_output-context/. O método é o ADR-13/DEC-25 (00_docs/arquitetura.md): medir o layout do original, gravá-lo em layout.json e derivar dele o .html.j2 (WeasyPrint) e o .docx (docxtpl), de modo que PDF e DOCX nunca divirjam. Referências de implementação: 04_backend/app/scripts/rfo_layout_extractor.py e build_rfo_templates.py (origem planilha, openpyxl) e os scripts equivalentes da Vistoria Cautelar (origem PDF), descritos em 00_docs/backlog-auto/vistoria-cautelar-templates.md. Leia também DEC-35 em 00_docs/projeto/decisoes.md: o layout.json guarda só geometria e rótulos fixos. Descarte nomes, CPF, e-mails e outros valores preenchidos do exemplar do cliente antes de gravar qualquer coisa no Git (OWASP A02). Trabalhe em 04_backend/.
+
+Passos:
+1. Escreva app/scripts/rfip_layout_extractor.py usando openpyxl com `read_only=True` (streaming). Não carregue o arquivo inteiro na memória e não extraia as imagens embutidas. Extraia dimensões de página, margens, tipografia, cores, grade fotográfica e rótulos fixos, medidos do original. Limite o trabalho às primeiras planilhas/linhas necessárias e documente o tempo e o pico de memória observados.
+2. Grave 04_backend/templates/rfip/layout.json. Escreva build_rfip_templates.py, que gera rfip_template.html.j2 e rfip_template.docx do mesmo layout.json em um único comando (`python -m app.scripts.build_rfip_templates`).
+3. Testes em 04_backend/tests/test_rfip_templates.py usando uma planilha SINTÉTICA criada no teste (tmp_path), sem depender de 01_output-context/. Cubra: o extrator lê em read_only, o layout.json não contém dado pessoal, o HTML e o DOCX derivam do mesmo layout.json, o .j2 compila e o DOCX abre com docxtpl.
+4. Se o original não puder ser lido (arquivo ausente, memória insuficiente), registre o motivo no Doc e entregue o extrator e os testes sintéticos, sem inventar medidas.
+5. Rode `pytest` e `ruff check .` em 04_backend. O PostgreSQL fica em localhost:5433. Se não estiver no ar, registre que não rodou em vez de inventar resultado.
+
+Siga a 'Regra de pronto' do BACKLOG.md: registre fatos, números, comandos e saída dos testes em 00_docs/backlog-auto/rfip-templates.md, com decisões propostas como proposta. Não edite os documentos de gestão em 00_docs/projeto/ nem o BACKLOG.md. Commit: `feat(backend): extrator e templates do RFIP pelo método do ADR-13 (BL-12)` com `Refs BL-12`. Não faça push.
+```
