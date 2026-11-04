@@ -106,7 +106,7 @@ Tarefa D05. Confira a documentação final contra o código: abra cada caminho c
 ## Bloco A — Verificação do ambiente
 
 ### T01 · Diagnosticar o ambiente de desenvolvimento
-- **Status:** doing
+- **Status:** done
 - **Papel:** devops
 - **Depende:** —
 - **Ambiente:** docker
