@@ -482,7 +482,7 @@ last_updated: 2026-09-17
 | **Contexto** | `npm audit` em `03_frontend`: 30 pacotes (2 críticos, 11 altos, 17 moderados); em produção (`--omit=dev`), 13 pacotes. O risco real concentra-se no `next` 14.2.35 (crítico, em runtime, sem correção em 14.x); `fabric` 6.9.1 e a cadeia `canvas`/`tar` têm exposição baixa/média. Ver [npm-audit.md](../backlog-auto/npm-audit.md). |
 | **Alternativas** | (a) só `npm audit fix` sem `--force`; (b) upgrade do Next para 15.5.28+ ou 16.x (provável React 19) e do fabric para 7.4.0; (c) `npm audit fix --force` (descartada: propõe downgrades inválidos de eslint e eslint-config-next). |
 | **Decisão proposta** | (1) Rodar `npm audit fix` sem `--force` nos 5 pacotes sem major (brace-expansion, js-yaml, nanoid, postcss-selector-parser, source-map-js). (2) Tratar o upgrade do Next como prioridade antes do próximo deploy de produção, em tarefa própria. (3) Fabric 7 junto ou depois, com teste do editor de fotos (RF-14). (4) Nunca usar `--force`. (5) Opcional: gate de CI com `npm audit --omit=dev --audit-level=critical`. |
-| **Consequências** | A T03 não alterou nenhum arquivo do frontend (só análise). Os upgrades majors exigem teste de todas as rotas e do editor de anotação. Risco associado: R-12. |
+| **Consequências** | A T03 não alterou nenhum arquivo do frontend (só análise). Os upgrades majors exigem teste de todas as rotas e do editor de anotação. Risco associado: R-12. | **Atualização (T07, 2026-11-04):** o item 1 foi aplicado (`package-lock.json`, 19 pacotes, sem major): achados 30 → 26, produção 13 → 10. Exceção: a cópia `brace-expansion` 1.1.16 permanece (eslint 8 e cadeia fabric 6 → canvas) até os itens 2–4. Ver [npm-audit-fix.md](../backlog-auto/npm-audit-fix.md).
 | **Referência** | `00_docs/backlog-auto/npm-audit.md`, `03_frontend/package.json`, `03_frontend/Dockerfile.render` |
 
 ## DEC-33 — Pontuação GUT calculada no pipeline do LTIP e campos vazios como "—" (proposta de T05)
@@ -501,8 +501,19 @@ last_updated: 2026-09-17
 | Campo | Valor |
 |---|---|
 | **Data** | 2026-11-04 |
-| **Status** | Proposta (aguarda aprovação do dono; correções não aplicadas) |
+| **Status** | Proposta (aguarda aprovação do dono). Correções L1–L7 **aplicadas no código pela T08** em 2026-11-04, mas sem os testes executados (sem PostgreSQL); P1–P4 seguem sem decisão |
 | **Contexto** | A revisão de BL-14 ([revisao-regras-ocorrencias.md](revisao-regras-ocorrencias.md)) achou 7 lacunas no backend: L1/L2 situação e classificação aceitam qualquer texto; L3/L4/L5 sistema, subsistema (e coerência com o sistema) e inspeção não são verificados, e o erro vira 500; L6 `PUT` sobrescreve `inspecao_id` e `seq_numero`; L7 filtro `sistema_id` inválido vira 500. |
 | **Decisão proposta** | Aplicar a correção mínima no service, repositório e endpoint: validar enums com `DomainError`, checar existência e coerência com `NotFoundError`/`DomainError` (422), excluir `inspecao_id`/`seq_numero` do `PUT` e tipar `sistema_id` como UUID. Decidir ainda: P1 (restringir ocorrência a Inspeção LTIP/Vistoria), P2 (auxiliar pode excluir?), P3 (enums persistidos no banco exigem migration) e P4 (autoria de `prioridade_ajustada_*` regravada a cada `PUT`). |
 | **Consequências** | Os testes `test_lacuna_*` devem falhar antes e passar depois, com PostgreSQL no ar. P1 quebraria fixtures que usam Inspeção RFO. Risco associado: R-13. |
 | **Referência** | `00_docs/projeto/revisao-regras-ocorrencias.md`, `04_backend/tests/test_ocorrencias_regras.py` |
+
+## DEC-35 — `layout.json` derivado de PDF guarda só geometria e rótulos fixos (proposta de T09/T10)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | As tarefas T09 (Vistoria Cautelar) e T10 (Vistoria Residencial) estenderam o método de ADR-13/DEC-25 aos PDFs finais do cliente. O rodapé desses PDFs traz nome, CREA, e-mail e telefone do responsável. O `templates/ltip/layout.json` (BL-17) guarda hoje as linhas do rodapé do emitente. |
+| **Decisão proposta** | (A) Nos `layout.json` derivados de PDF, o rodapé e a identificação do responsável viram papéis/placeholders, nunca o texto do exemplar; o `layout.json` passa por verificador fail-closed de dado pessoal. Alinhar o LTIP em tarefa própria; se não for alinhado, registrar como resíduo de A02 em `riscos.md`. (B) O `layout.json` não grava `gerado_em`: regerar a partir do mesmo original não pode produzir diff; o sha256 do original basta para a procedência. |
+| **Consequências** | Os `layout.json` das duas vistorias já seguem a regra; o do LTIP não. O nome do arquivo original identifica unidade/obra e por isso não é versionado. |
+| **Referência** | `00_docs/backlog-auto/vistoria-cautelar-templates.md`, `00_docs/backlog-auto/vistoria-residencial-templates.md` |

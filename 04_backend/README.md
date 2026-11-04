@@ -134,6 +134,22 @@ python -m app.scripts.build_rfo_templates
 > O WeasyPrint não roda no venv local do Windows (faltam as libs GTK): a renderização
 > real do PDF só funciona dentro do container `garra-backend`.
 
+## Templates das Vistorias Cautelar e Residencial (T09/T10, ADR-13)
+
+Mesmo método do LTIP, a partir dos PDFs finais do cliente (lidos de `01_output-context/`, que não é alterado):
+PDF → `layout.json` (só geometria e rótulos fixos, sem dado do exemplar) → `.html.j2` (WeasyPrint) + `.docx` (docxtpl).
+
+| Vistoria | Extrator / gerador (`app/scripts/`) | Templates | Testes |
+|---|---|---|---|
+| Cautelar de Recebimento | `vistoria_cautelar_layout_extractor.py`, `build_vistoria_cautelar_templates.py` | `templates/vistoria_cautelar/` | `tests/test_vistoria_cautelar_templates.py` (PDF sintético) |
+| Imóvel Residencial | `vistoria_residencial_layout_extractor.py`, `build_vistoria_residencial_templates.py` | `templates/vistoria_residencial/` | `tests/test_vistoria_residencial_templates.py` (PDF sintético) |
+
+Pendente: pipeline de renderização de cada vistoria (como `ltip_pipeline.py`), conferência visual no container (HT-09) e a arte de capa do cliente, que não é versionada. Detalhes em `00_docs/backlog-auto/vistoria-*-templates.md`.
+
+## Validação de Ocorrências (BL-14, T08)
+
+`app/services/ocorrencia_service.py` valida situação e classificação contra os enums (422), verifica a existência de sistema, subsistema e inspeção (404) e a coerência subsistema/sistema (422); o `PUT` não altera `inspecao_id` nem `seq_numero` e o filtro `sistema_id` é UUID. **Os testes `test_ocorrencias_regras.py` ainda não foram executados** (exigem PostgreSQL de `05_infra`). Ver `00_docs/backlog-auto/ocorrencias-correcoes.md`, DEC-34 e R-13.
+
 ## Pipeline de renderização do LTIP (BL-17, T05)
 
 `app/services/report_generator/ltip_pipeline.py` preenche os templates de `templates/ltip/` e gera o PDF (WeasyPrint) e o DOCX (docxtpl), no mesmo desenho do `rfo_pipeline.py`. Funções: `normalizar_contexto`, `agrupar_por_sistema` (RN-11), `renderizar_html`, `gerar_pdf` e `gerar_docx`. O módulo não acessa o MinIO: quem chama entrega as fotos em bytes, indexadas por `storage_key`. O WeasyPrint é importado só dentro de `gerar_pdf`, então contexto, HTML e DOCX funcionam fora do container. Testes: `pytest tests/test_ltip_pipeline.py` (o teste de PDF é pulado onde o WeasyPrint não carrega). Pendências e campos do contexto em [ltip-pipeline.md](../00_docs/backlog-auto/ltip-pipeline.md). A revisão das regras de Ocorrências (T06, lacunas ainda não corrigidas) está em [revisao-regras-ocorrencias.md](../00_docs/projeto/revisao-regras-ocorrencias.md).
