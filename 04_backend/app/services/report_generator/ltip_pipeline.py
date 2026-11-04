@@ -75,6 +75,8 @@ VAZIO = "—"
 LARGURA_FOTO_DOCX_MM = 80
 
 _ORDEM_INDEFINIDA = 10**9
+# Esquema das fotos servidas da memória ao WeasyPrint em `gerar_pdf` (T20).
+ESQUEMA_FOTO = "garra-foto:"
 
 
 def _em_paragrafos(texto: str | None) -> list[str]:
@@ -204,8 +206,13 @@ def _bytes_da_foto(ocorrencia: dict[str, Any], fotos_bytes: dict[str, bytes]) ->
     return fotos_bytes[storage_key]
 
 
-def renderizar_html(contexto: dict[str, Any], fotos_bytes: dict[str, bytes]) -> str:
-    """Renderiza o `.html.j2` do LTIP com as fotos embutidas como data URI."""
+def _renderizar(contexto: dict[str, Any], fotos_bytes: dict[str, bytes], fotos_em_memoria: list[bytes] | None) -> str:
+    """Renderiza o `.html.j2`; cada ficha recebe `foto_src`.
+
+    Com `fotos_em_memoria=None`, `foto_src` é um data URI (HTML autocontido).
+    Com uma lista, a foto é anexada a ela e `foto_src` vira `garra-foto:<índice>`,
+    resolvido por `_FetcherDeFotos` sem passar por base64 (ver `gerar_pdf`).
+    """
     env = Environment(
         loader=FileSystemLoader(str(TEMPLATES_DIR)),
         autoescape=select_autoescape(["html", "j2"]),
@@ -215,10 +222,44 @@ def renderizar_html(contexto: dict[str, Any], fotos_bytes: dict[str, bytes]) -> 
     for sistema in contexto_html["sistemas"]:
         for ocorrencia in sistema["ocorrencias"]:
             conteudo = _bytes_da_foto(ocorrencia, fotos_bytes)
-            if conteudo is not None:
+            if conteudo is None:
+                continue
+            if fotos_em_memoria is None:
                 b64 = base64.b64encode(conteudo).decode("ascii")
-                ocorrencia["foto_data_uri"] = f"data:{_mime(conteudo)};base64,{b64}"
+                ocorrencia["foto_src"] = f"data:{_mime(conteudo)};base64,{b64}"
+            else:
+                ocorrencia["foto_src"] = f"{ESQUEMA_FOTO}{len(fotos_em_memoria)}"
+                fotos_em_memoria.append(conteudo)
     return template.render(**contexto_html)
+
+
+def renderizar_html(contexto: dict[str, Any], fotos_bytes: dict[str, bytes]) -> str:
+    """Renderiza o `.html.j2` do LTIP com as fotos embutidas como data URI."""
+    return _renderizar(contexto, fotos_bytes, None)
+
+
+def _fetcher_de_fotos(fotos_em_memoria: list[bytes]) -> Any | None:
+    """`url_fetcher` do WeasyPrint que entrega as fotos direto da memória.
+
+    Evita o base64 de ~28 MB no HTML (239 fotos): o parse do HTML cai de ~2,3 s
+    para ~0,3 s e o pico de RSS, de ~380 MB para ~290 MB (T20). Outras URLs
+    (o logo em data URI) seguem para o fetcher padrão. Em WeasyPrint sem a
+    classe `URLFetcher` (API anterior), devolve `None` e o chamador volta aos
+    data URIs.
+    """
+    try:
+        from weasyprint.urls import URLFetcher, URLFetcherResponse
+    except ImportError:  # pragma: no cover - depende da versão instalada no container
+        return None
+
+    class _FetcherDeFotos(URLFetcher):
+        def fetch(self, url: str, headers: Any = None) -> Any:
+            if url.startswith(ESQUEMA_FOTO):
+                conteudo = fotos_em_memoria[int(url[len(ESQUEMA_FOTO):])]
+                return URLFetcherResponse(url, conteudo, {"Content-Type": _mime(conteudo)})
+            return super().fetch(url, headers)
+
+    return _FetcherDeFotos()
 
 
 def gerar_pdf(contexto: dict[str, Any], fotos_bytes: dict[str, bytes], destino: Path) -> dict[str, float]:
@@ -230,10 +271,13 @@ def gerar_pdf(contexto: dict[str, Any], fotos_bytes: dict[str, bytes], destino: 
     from weasyprint import HTML  # preguiçoso: GTK/Pango só existem no container
 
     inicio_render = time.perf_counter()
-    html_renderizado = renderizar_html(contexto, fotos_bytes)
+    fotos_em_memoria: list[bytes] = []
+    fetcher = _fetcher_de_fotos(fotos_em_memoria)
+    html_renderizado = _renderizar(contexto, fotos_bytes, fotos_em_memoria if fetcher else None)
     fim_render = time.perf_counter()
 
-    documento = HTML(string=html_renderizado, base_url=str(TEMPLATES_DIR)).render()
+    opcoes = {"url_fetcher": fetcher} if fetcher else {}
+    documento = HTML(string=html_renderizado, base_url=str(TEMPLATES_DIR), **opcoes).render()
     n_paginas = len(documento.pages)
     documento.write_pdf(str(destino))
     fim_pdf = time.perf_counter()

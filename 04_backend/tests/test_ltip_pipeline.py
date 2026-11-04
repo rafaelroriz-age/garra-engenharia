@@ -189,6 +189,30 @@ def test_html_renderiza_capa_fichas_e_fotos(contexto: dict, fotos_bytes: dict[st
     assert "None" not in html
 
 
+def test_html_agrupa_fichas_em_linhas_de_duas(contexto: dict, fotos_bytes: dict[str, bytes]) -> None:
+    """T20/DEC-40: uma tabela fixa por linha de 2 fichas, não um flex único por sistema."""
+    html = ltip_pipeline.renderizar_html(contexto, fotos_bytes)
+    # Estrutura: [01, 02], [04]; Instalações Hidráulicas: [03].
+    assert html.count('<table class="fichas">') == 3
+    assert html.count('class="ficha-vazia"') == 2  # a linha incompleta mantém a largura da ficha
+    assert "display: flex" not in html
+    primeira_linha = html.split('<table class="fichas">')[1].split("</tr></table>")[0]
+    assert primeira_linha.index("Foto nº 01") < primeira_linha.index("Foto nº 02")  # RN-11
+    assert "Foto nº 04" not in primeira_linha
+
+
+def test_html_do_pdf_serve_as_fotos_da_memoria(contexto: dict, fotos_bytes: dict[str, bytes]) -> None:
+    """T20: no PDF as fotos vão por `url_fetcher`, sem base64 no HTML."""
+    fotos_em_memoria: list[bytes] = []
+    html = ltip_pipeline._renderizar(contexto, fotos_bytes, fotos_em_memoria)
+    assert "data:image/jpeg" not in html
+    assert html.count(f'src="{ltip_pipeline.ESQUEMA_FOTO}') == 3
+    assert len(fotos_em_memoria) == 3
+    ficha_01 = html[html.index("Foto nº 01"):]
+    indice = int(ficha_01.split(f'src="{ltip_pipeline.ESQUEMA_FOTO}')[1].split('"')[0])
+    assert fotos_em_memoria[indice] == fotos_bytes["fotos/1.jpg"]
+
+
 def test_foto_referenciada_sem_bytes_falha(contexto: dict, fotos_bytes: dict[str, bytes]) -> None:
     del fotos_bytes["fotos/2.jpg"]
     with pytest.raises(KeyError, match=r"fotos/2\.jpg"):
@@ -277,3 +301,24 @@ def test_pdf_gerado_com_weasyprint(contexto: dict, fotos_bytes: dict[str, bytes]
     assert metricas["tamanho_bytes"] == destino.stat().st_size
     # Capa + 6 capítulos + introdução do relatório + 2 sistemas + conclusão.
     assert metricas["n_paginas"] >= 11
+
+    import pdfplumber
+
+    with pdfplumber.open(destino) as pdf:
+        fotos = [(numero, img) for numero, pagina in enumerate(pdf.pages[1:], 2) for img in pagina.images]
+    assert len(fotos) == 3  # as 3 fotos chegaram pelo fetcher em memória; nenhuma se perdeu
+    (pagina_01, foto_01), (pagina_02, foto_02) = fotos[0], fotos[1]
+    # Fichas 01 e 02 lado a lado na mesma linha, com a mesma largura (2 por linha).
+    assert pagina_01 == pagina_02 and abs(foto_01["top"] - foto_02["top"]) < 0.5
+    assert foto_01["x0"] < foto_02["x0"] and abs(foto_01["width"] - foto_02["width"]) < 0.5
+
+
+def test_fetcher_entrega_a_foto_da_memoria() -> None:
+    _exigir_weasyprint()
+    fotos = [_jpeg((10, 20, 30))]
+    fetcher = ltip_pipeline._fetcher_de_fotos(fotos)
+    if fetcher is None:
+        pytest.skip("WeasyPrint sem a classe URLFetcher: o PDF usa data URI.")
+    resposta = fetcher.fetch(f"{ltip_pipeline.ESQUEMA_FOTO}0")
+    assert resposta.read() == fotos[0]
+    assert resposta.content_type == "image/jpeg"
