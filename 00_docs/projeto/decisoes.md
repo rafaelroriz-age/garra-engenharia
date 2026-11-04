@@ -517,3 +517,14 @@ last_updated: 2026-09-17
 | **Decisão proposta** | (A) Nos `layout.json` derivados de PDF, o rodapé e a identificação do responsável viram papéis/placeholders, nunca o texto do exemplar; o `layout.json` passa por verificador fail-closed de dado pessoal. Alinhar o LTIP em tarefa própria; se não for alinhado, registrar como resíduo de A02 em `riscos.md`. (B) O `layout.json` não grava `gerado_em`: regerar a partir do mesmo original não pode produzir diff; o sha256 do original basta para a procedência. |
 | **Consequências** | Os `layout.json` das duas vistorias já seguem a regra; o do LTIP não. O nome do arquivo original identifica unidade/obra e por isso não é versionado. |
 | **Referência** | `00_docs/backlog-auto/vistoria-cautelar-templates.md`, `00_docs/backlog-auto/vistoria-residencial-templates.md` |
+
+## DEC-36 — RFIP: coluna auxiliar oculta como mapa rótulo → valor, numeração de páginas e quadro-resumo (proposta de T13)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | O template do RFIP (BL-12, T13) nasce de uma planilha de 491 MB cujas fichas fotográficas misturam rótulos fixos e valores do exemplar. A coluna B, oculta, traz marcadores `<CAMPO> Foto nº NN`, a mesma chave dos `PROCV` da aba de resumo. O exemplar numera as páginas a partir de 30 (anexo do laudo) e tem um quadro-resumo na aba `Relatório`. |
+| **Decisão proposta** | (A) O extrator usa os marcadores da coluna auxiliar para separar rótulo de valor; um texto só é rótulo fixo se repetir igual em todas as fichas amostradas, e a ausência da coluna faz a extração falhar de forma explícita. (B) A numeração de páginas começa em 1 nos dois formatos; o valor original fica em `pagina.primeira_pagina_no_original`, sem ser aplicado. (C) O quadro-resumo é opcional (`incluir_resumo`) e vem depois das fichas. (D) O `layout.json` do RFIP segue a regra de DEC-35 (só geometria e rótulos fixos, verificador fail-closed de dado pessoal). |
+| **Consequências** | Se o cliente mudar a planilha e remover a coluna auxiliar, o extrator precisa de revisão. A numeração contínua com o LTIP passa a ser decisão da montagem do pacote. |
+| **Referência** | `00_docs/backlog-auto/rfip-templates.md` |
