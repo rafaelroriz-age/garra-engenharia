@@ -12,7 +12,7 @@ Implementado: `docker-compose.yml` com `postgres` (PostgreSQL 16) e `minio` (arm
 
 ## Pré-requisitos
 
-- Docker Desktop (ou Docker Engine + Compose plugin) instalado e em execução.
+- Docker Desktop (ou Docker Engine + Compose plugin) instalado e em execução. (O diagnóstico T01 de 2026-11-04 achou a máquina de desenvolvimento sem Docker, com as portas 5433 e 9000 fechadas — ver [diagnostico.md](../00_docs/backlog-auto/diagnostico.md).)
 - Portas `5433`, `9000` e `9001` livres em `localhost` (o Postgres do container usa `5433` no host, e não `5432`, para não colidir com uma instalação nativa de PostgreSQL — ajuste `POSTGRES_PORT` no `.env` se necessário).
 
 ## Como rodar localmente
