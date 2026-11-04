@@ -96,6 +96,17 @@ class S3StorageClient(StorageClient):
             raise
         return response["Body"].read()
 
+    def exists(self, key: str) -> bool:
+        self._validate_key(key)
+        try:
+            self._client.head_object(Bucket=self._bucket, Key=key)
+        except ClientError as exc:
+            error_code = exc.response.get("Error", {}).get("Code", "")
+            if error_code in _NOT_FOUND_ERROR_CODES:
+                return False
+            raise
+        return True
+
     def delete(self, key: str) -> None:
         self._validate_key(key)
         # `delete_object` da API S3 é idempotente por natureza: não lança erro

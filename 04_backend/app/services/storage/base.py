@@ -34,6 +34,13 @@ class StorageClient(ABC):
         """
 
     @abstractmethod
+    def exists(self, key: str) -> bool:
+        """Indica se o objeto `key` existe no armazenamento (sem baixá-lo).
+
+        Lança `ValueError` se `key` for vazia.
+        """
+
+    @abstractmethod
     def delete(self, key: str) -> None:
         """Remove o objeto `key` do armazenamento (idempotente: não lança erro
         se o objeto já não existir — mesma semântica de `DELETE` da API S3).

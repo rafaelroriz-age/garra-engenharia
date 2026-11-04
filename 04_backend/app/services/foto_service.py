@@ -6,11 +6,12 @@ reprocessamento. Uploads nunca aceitam URL fornecida pelo cliente (A10).
 """
 import base64
 import binascii
+import re
 import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.errors import DomainError, NotFoundError
+from app.core.errors import ConflictError, DomainError, NotFoundError
 from app.models import Foto, Ocorrencia, Visita
 from app.repositories import foto_repository
 from app.services import image_processing
@@ -18,6 +19,37 @@ from app.services.storage.base import StorageClient
 from app.services.storage.s3_client import MAX_UPLOAD_SIZE_BYTES
 
 _PRESIGNED_URL_EXPIRES_IN_SECONDS = 15 * 60
+
+# Chave emitida pelo servidor em `_processar_e_enviar` (DEC-39 A). `fullmatch` + UUID canônico
+# impede `../`, caminho absoluto, outro prefixo e chaves de outros objetos do bucket.
+_STORAGE_KEY_PATTERN = re.compile(
+    r"fotos/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(?:jpg|png|webp)"
+)
+
+
+def _validar_storage_key(storage_key: str) -> None:
+    """Aceita apenas chaves no formato emitido pelo upload do servidor (A01)."""
+    if not _STORAGE_KEY_PATTERN.fullmatch(storage_key):
+        raise DomainError(
+            "storage_key inválida: use a chave devolvida por /fotos/upload ou /fotos/upload-clipboard.",
+            type_suffix="storage-key-invalida",
+            title="Foto inválida",
+        )
+
+
+async def _validar_chave_para_vinculo(db: AsyncSession, storage_key: str, storage: StorageClient) -> None:
+    """Chave no padrão do servidor, existente no bucket e ainda não vinculada (DEC-39 A)."""
+    _validar_storage_key(storage_key)
+    if not storage.exists(storage_key):
+        raise DomainError(
+            "O arquivo informado não existe no storage; envie-o antes de vincular.",
+            type_suffix="storage-key-inexistente",
+            title="Foto inválida",
+        )
+    if await foto_repository.get_by_storage_key(db, storage_key) is not None:
+        raise ConflictError(
+            "Esta foto já está vinculada a outro registro.", type_suffix="storage-key-ja-vinculada"
+        )
 
 
 def _validar_tamanho(conteudo: bytes) -> None:
@@ -61,14 +93,15 @@ async def upload_clipboard(imagem_base64: str, storage: StorageClient) -> tuple[
 
 
 async def vincular_a_ocorrencia(
-    db: AsyncSession, ocorrencia_id: uuid.UUID, *, storage_key: str, legenda: str | None, ordem: int | None,
-    origem: str, criado_por_id: uuid.UUID | None = None,
+    db: AsyncSession, ocorrencia_id: uuid.UUID, storage: StorageClient, *, storage_key: str,
+    legenda: str | None, ordem: int | None, origem: str, criado_por_id: uuid.UUID | None = None,
 ) -> Foto:
     ocorrencia = await db.get(Ocorrencia, ocorrencia_id)
     if ocorrencia is None:
         raise NotFoundError(
             f"Ocorrência '{ocorrencia_id}' não encontrada.", type_suffix="ocorrencia-nao-encontrada"
         )
+    await _validar_chave_para_vinculo(db, storage_key, storage)
     return await foto_repository.create(
         db,
         storage_key=storage_key,
@@ -81,12 +114,13 @@ async def vincular_a_ocorrencia(
 
 
 async def vincular_a_visita(
-    db: AsyncSession, visita_id: uuid.UUID, *, storage_key: str, legenda: str | None, ordem: int | None,
-    origem: str, criado_por_id: uuid.UUID | None = None,
+    db: AsyncSession, visita_id: uuid.UUID, storage: StorageClient, *, storage_key: str,
+    legenda: str | None, ordem: int | None, origem: str, criado_por_id: uuid.UUID | None = None,
 ) -> Foto:
     visita = await db.get(Visita, visita_id)
     if visita is None:
         raise NotFoundError(f"Visita '{visita_id}' não encontrada.", type_suffix="visita-nao-encontrada")
+    await _validar_chave_para_vinculo(db, storage_key, storage)
     return await foto_repository.create(
         db,
         storage_key=storage_key,
@@ -98,13 +132,12 @@ async def vincular_a_visita(
     )
 
 
-async def atualizar(
-    db: AsyncSession, foto_id: uuid.UUID, *, legenda: str | None, ordem: int | None
-) -> Foto:
+async def atualizar(db: AsyncSession, foto_id: uuid.UUID, campos: dict) -> Foto:
+    """Atualiza só os campos presentes em `campos` (`legenda`/`ordem`); `legenda: None` limpa a legenda."""
     foto = await foto_repository.get_by_id(db, foto_id)
     if foto is None:
         raise NotFoundError(f"Foto '{foto_id}' não encontrada.", type_suffix="foto-nao-encontrada")
-    return await foto_repository.update(db, foto, legenda=legenda, ordem=ordem)
+    return await foto_repository.update(db, foto, campos)
 
 
 async def remover(db: AsyncSession, foto_id: uuid.UUID, storage: StorageClient) -> None:
@@ -113,3 +146,14 @@ async def remover(db: AsyncSession, foto_id: uuid.UUID, storage: StorageClient) 
         raise NotFoundError(f"Foto '{foto_id}' não encontrada.", type_suffix="foto-nao-encontrada")
     storage.delete(foto.storage_key)
     await foto_repository.delete(db, foto)
+
+
+async def descartar_upload(db: AsyncSession, storage_key: str, storage: StorageClient) -> None:
+    """Descarta um upload que nunca foi vinculado (DEC-39 D); recusa chave já vinculada a uma `Foto`."""
+    _validar_storage_key(storage_key)
+    if await foto_repository.get_by_storage_key(db, storage_key) is not None:
+        raise ConflictError(
+            "A foto já está vinculada; remova-a por DELETE /fotos/{id}.",
+            type_suffix="storage-key-ja-vinculada",
+        )
+    storage.delete(storage_key)
