@@ -6,7 +6,7 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models import Ocorrencia
+from app.models import Inspecao, Ocorrencia, SistemaPredial, Subsistema
 from app.schemas.ocorrencia import OcorrenciaCreate
 
 _DETALHE_OPTIONS = (

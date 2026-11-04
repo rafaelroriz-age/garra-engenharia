@@ -16,14 +16,14 @@ from asyncio import run as run_async
 
 import pytest
 import pytest_asyncio
-from app.core.security import create_access_token, hash_password
-from app.main import app
-from app.models import Foto, Usuario
-from app.services.storage import ObjectNotFoundError, get_storage_client
 from fastapi.testclient import TestClient
 from PIL import Image
 from sqlalchemy import delete
 
+from app.core.security import create_access_token, hash_password
+from app.main import app
+from app.models import Foto, Usuario
+from app.services.storage import ObjectNotFoundError, get_storage_client
 from tests.test_fotos import (  # noqa: F401  (fixtures reutilizadas)
     _cleanup_foto,
     _imagem_png_bytes,
