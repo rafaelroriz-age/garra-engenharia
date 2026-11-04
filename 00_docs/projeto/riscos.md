@@ -174,6 +174,7 @@ last_updated: 2026-09-17
 | R-10 — Dados enviados a IA externa (RF-15) | Média | Ação necessária (escolher provedor — lacuna #13, B-04) |
 | R-11 — Ambiente de desenvolvimento não reproduzível (pytest × pytest-asyncio, ruff, Docker, Python 3.12) | Média → Baixa | Parcialmente mitigado (T02 e T04); restam o ruff na CI e a suíte de integração (DEC-31) |
 | R-12 — Vulnerabilidades de dependências do frontend (Next.js 14.2.35 crítico em produção) | Alta | Ação necessária (DEC-32 proposta; T03) |
+| R-13 — Lacunas de validação no CRUD de Ocorrências (enums, existência, `PUT`) | Média | Ação necessária (DEC-34 proposta; T06) |
 
 ### R-11 — Ambiente de desenvolvimento não reproduzível
 
@@ -192,3 +193,12 @@ last_updated: 2026-09-17
 | **Descrição** | `npm audit` em `03_frontend`: 30 pacotes vulneráveis (2 críticos, 11 altos, 17 moderados); 13 em produção. O crítico relevante é `next` 14.2.35 (RCE em Image Optimization, DoS em Server Components, SSRF, cache poisoning), exposto no container `node:20-alpine`; a correção está só em 15.5.x/16.x (major, possível React 19). `fabric` 6.9.1 (XSS em exportação SVG) e a cadeia `canvas`/`tar` têm exposição baixa/média. Se `/_next/image` fica acessível: não determinado sem teste. |
 | **Probabilidade / Impacto** | Média / Alta |
 | **Mitigação** | DEC-32 (proposta): `npm audit fix` sem `--force` nos 5 pacotes sem major; upgrade do Next antes do próximo deploy; fabric 7 com teste do editor (RF-14); nunca `--force`. |
+
+### R-13 — Lacunas de validação no CRUD de Ocorrências
+
+| Campo | Valor |
+|---|---|
+| **Origem** | Tarefa T06 (2026-11-04), em [revisao-regras-ocorrencias.md](revisao-regras-ocorrencias.md) |
+| **Descrição** | O backend aceita situação e classificação fora do enum (RN-05), não verifica a existência de sistema, subsistema e inspeção (erro 500 em vez de 404/422), aceita subsistema de outro sistema e deixa o `PUT` mover a ocorrência para outra inspeção ou apagar o `seq_numero`. Os testes que cobrem as lacunas ainda não rodaram por falta de PostgreSQL. |
+| **Probabilidade / Impacto** | Média / Média — dados inconsistentes e relatórios (LTIP) agrupados de forma errada |
+| **Mitigação** | DEC-34 (proposta): aplicar as correções planejadas e rodar `test_ocorrencias_regras.py` no container. |

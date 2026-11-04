@@ -484,3 +484,25 @@ last_updated: 2026-09-17
 | **Decisão proposta** | (1) Rodar `npm audit fix` sem `--force` nos 5 pacotes sem major (brace-expansion, js-yaml, nanoid, postcss-selector-parser, source-map-js). (2) Tratar o upgrade do Next como prioridade antes do próximo deploy de produção, em tarefa própria. (3) Fabric 7 junto ou depois, com teste do editor de fotos (RF-14). (4) Nunca usar `--force`. (5) Opcional: gate de CI com `npm audit --omit=dev --audit-level=critical`. |
 | **Consequências** | A T03 não alterou nenhum arquivo do frontend (só análise). Os upgrades majors exigem teste de todas as rotas e do editor de anotação. Risco associado: R-12. |
 | **Referência** | `00_docs/backlog-auto/npm-audit.md`, `03_frontend/package.json`, `03_frontend/Dockerfile.render` |
+
+## DEC-33 — Pontuação GUT calculada no pipeline do LTIP e campos vazios como "—" (proposta de T05)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda confirmação do cliente) |
+| **Contexto** | O `ltip_pipeline.py` precisa imprimir a pontuação GUT na ficha da ocorrência, mas ela não é persistida e `estudo-do-contexto.md` não define a fórmula (RN-04 trata só da prioridade). O template DOCX não tem fallback e imprimiria `None` em campo vazio. |
+| **Decisão proposta** | (1) `pontuacao_gut` = G×U×T quando as três notas existem, calculada no pipeline. (2) Campo vazio ou `None` aparece como `—` no HTML e no DOCX; `prioridade = 0` (não aplicável) é preservada. |
+| **Consequências** | Se o cliente adotar outra fórmula, só o pipeline muda. |
+| **Referência** | `00_docs/backlog-auto/ltip-pipeline.md`, `04_backend/app/services/report_generator/ltip_pipeline.py` |
+
+## DEC-34 — Correção das lacunas de validação de Ocorrências (proposta de T06)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda aprovação do dono; correções não aplicadas) |
+| **Contexto** | A revisão de BL-14 ([revisao-regras-ocorrencias.md](revisao-regras-ocorrencias.md)) achou 7 lacunas no backend: L1/L2 situação e classificação aceitam qualquer texto; L3/L4/L5 sistema, subsistema (e coerência com o sistema) e inspeção não são verificados, e o erro vira 500; L6 `PUT` sobrescreve `inspecao_id` e `seq_numero`; L7 filtro `sistema_id` inválido vira 500. |
+| **Decisão proposta** | Aplicar a correção mínima no service, repositório e endpoint: validar enums com `DomainError`, checar existência e coerência com `NotFoundError`/`DomainError` (422), excluir `inspecao_id`/`seq_numero` do `PUT` e tipar `sistema_id` como UUID. Decidir ainda: P1 (restringir ocorrência a Inspeção LTIP/Vistoria), P2 (auxiliar pode excluir?), P3 (enums persistidos no banco exigem migration) e P4 (autoria de `prioridade_ajustada_*` regravada a cada `PUT`). |
+| **Consequências** | Os testes `test_lacuna_*` devem falhar antes e passar depois, com PostgreSQL no ar. P1 quebraria fixtures que usam Inspeção RFO. Risco associado: R-13. |
+| **Referência** | `00_docs/projeto/revisao-regras-ocorrencias.md`, `04_backend/tests/test_ocorrencias_regras.py` |

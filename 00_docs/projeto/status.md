@@ -3,7 +3,7 @@ title: Status do Projeto — Sistema de Automação de Relatórios Prediais
 type: gestao
 status: ativo
 owner: Garra Engenharia
-last_updated: 2026-09-20
+last_updated: 2026-11-04
 ---
 
 # Status do Projeto
@@ -72,6 +72,8 @@ last_updated: 2026-09-20
 | T02 (backlog-auto) — Corrigir incompatibilidade pytest × pytest-asyncio | [pytest-compat.md](../backlog-auto/pytest-compat.md) | 2026-11-04 | ✅ Concluída — `04_backend/requirements.txt`: `pytest-asyncio>=1.4.1,<1.5`; coleta de 0 para 139 testes; 42 testes sem banco passam. Suíte de integração não verificada (sem PostgreSQL). Ver DEC-31 |
 | T03 (backlog-auto) — Avaliar `npm audit` do frontend | [npm-audit.md](../backlog-auto/npm-audit.md) | 2026-11-04 | ✅ Concluída (só análise, nenhum arquivo alterado) — 30 pacotes (2 críticos, 11 altos, 17 moderados), 13 em produção; risco principal `next` 14.2.35. Ver R-12 e DEC-32 (proposta) |
 | T04 (backlog-auto) — Configurar o ruff e limpar o backend | [ruff.md](../backlog-auto/ruff.md) | 2026-11-04 | ✅ Concluída — `04_backend/ruff.toml` versionado; `ruff check .` de 214 para 0 erros (38 F821 eram falsos positivos). `pytest`: 52 passed, 2 failed, 85 errors por banco sem schema (integração não verificada). CI ainda com `continue-on-error` no ruff. Ver DEC-31 |
+| T05 (backlog-auto) — Pipeline de renderização do LTIP (BL-17) | [ltip-pipeline.md](../backlog-auto/ltip-pipeline.md) | 2026-11-04 | ✅ Concluída — `04_backend/app/services/report_generator/ltip_pipeline.py` (contexto, HTML, DOCX e PDF, agrupando por sistema, RN-11) e 12 testes em `tests/test_ltip_pipeline.py`; 22 passaram e 1 (PDF/WeasyPrint) foi pulado nesta máquina. **Pendente:** conferência visual do PDF (HT-09), placeholder de foto no `ltip_template.docx` e fila/endpoint/MinIO. Proposta DEC-33 |
+| T06 (backlog-auto) — Revisão das regras e enums de Ocorrências (BL-14) | [revisao-regras-ocorrencias.md](revisao-regras-ocorrencias.md) | 2026-11-04 | ✅ Revisão concluída; **correções não aplicadas.** 7 lacunas de validação (L1–L7) documentadas e cobertas por `tests/test_ocorrencias_regras.py` (`test_lacuna_*`), que **não rodou** (sem PostgreSQL/Docker). Proposta DEC-34, risco R-13 |
 | Assets oficiais de marca organizados para o frontend | `03_frontend/public/brand/logos/` | 2026-08-11 | ✅ Organizado — 4 variantes JPEG da marca foram movidas da raiz do repositório para uma pasta canônica de branding com nomes semânticos; a aplicação na interface ficou formalizada na BL-41 |
 | Pauta da sessão de validação das lacunas (entregável de agente para HT-01) | [pauta-validacao-lacunas.md](pauta-validacao-lacunas.md) | 2026-08-07 | ✅ Usada — **Bloco 1 respondido em 2026-09-10** (lacunas #2, #3 e #9), gerando DEC-26/DEC-27/DEC-28 e a tarefa BL-42. Blocos 2, 3 e 4 seguem pendentes |
 | Ata de validação das lacunas — Bloco 1 (HT-01/BL-18) | [ata-validacao-lacunas.md](ata-validacao-lacunas.md), [decisoes.md](decisoes.md) (DEC-26/27/28), [arquitetura.md](../arquitetura.md) (ADR-14/ADR-15) | 2026-09-10 | ✅ Registrada — offline fora de escopo (online-first confirmado), perfil `auxiliar` no RBAC e ausência de assinatura ICP-Brasil; RNF-02 fechado, risco R-07 encerrado, R-06 rebaixado |
