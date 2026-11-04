@@ -4,12 +4,17 @@ Ver RN-03, RN-08, RN-11 em `00_docs/estudo-do-contexto.md` Seção 5.
 """
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.ocorrencia import Ocorrencia
+    from app.models.visita import Visita
 
 
 class Foto(Base):

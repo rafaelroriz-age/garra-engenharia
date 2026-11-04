@@ -3,7 +3,7 @@
 Ver DEC-05 (`00_docs/projeto/decisoes.md`) e `app/core/config.py` para as
 variáveis `JWT_SECRET_KEY`/`JWT_ALGORITHM`/`JWT_ACCESS_TOKEN_EXPIRE_MINUTES`.
 """
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from jose import JWTError, jwt
@@ -31,7 +31,7 @@ def verify_password(senha: str, senha_hash: str) -> bool:
 
 def create_access_token(subject: str, expires_delta: timedelta | None = None) -> str:
     """Cria um token JWT assinado, com `subject` (id do usuário) como claim `sub`."""
-    expire = datetime.now(timezone.utc) + (
+    expire = datetime.now(UTC) + (
         expires_delta or timedelta(minutes=settings.jwt_access_token_expire_minutes)
     )
     payload: dict[str, Any] = {SUBJECT_CLAIM: subject, "exp": expire}

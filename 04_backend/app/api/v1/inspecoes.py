@@ -16,8 +16,7 @@ from app.core.database import get_db
 from app.models import Inspecao, Usuario, Visita
 from app.schemas.inspecao import InspecaoDetalhe
 from app.schemas.visita import VisitaComDetalhes, VisitaCreatePayload
-from app.services import visita_service
-from app.services import inspecao_service
+from app.services import inspecao_service, visita_service
 
 router = APIRouter(prefix="/api/v1/inspecoes", tags=["inspecoes"])
 

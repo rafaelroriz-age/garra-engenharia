@@ -1,5 +1,4 @@
 import uuid
-from asyncio import run as run_async
 
 import pytest_asyncio
 from fastapi.testclient import TestClient

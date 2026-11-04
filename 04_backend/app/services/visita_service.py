@@ -6,10 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.errors import NotFoundError
 from app.models import Visita, VisitaMaoObra, VisitaMedicao
 from app.repositories import visita_repository
-from app.services import inspecao_service
 from app.schemas.visita import VisitaCreatePayload, VisitaUpdatePayload
 from app.schemas.visita_mao_obra import VisitaMaoObraCreatePayload
 from app.schemas.visita_medicao import VisitaMedicaoCreatePayload
+from app.services import inspecao_service
 
 
 async def obter_por_id(db: AsyncSession, visita_id: uuid.UUID) -> Visita:

@@ -3,6 +3,8 @@
 Sem lógica de negócio (validações RN-XX) — apenas os campos dos modelos SQLAlchemy.
 Ver `00_docs/arquitetura.md` Seção 3.
 """
+from app.schemas.auth import LoginRequest, Token
+from app.schemas.common import PaginatedResponse
 from app.schemas.contrato import (
     ContratoBase,
     ContratoCreate,
@@ -19,7 +21,6 @@ from app.schemas.contrato_executor import (
     ContratoExecutorRead,
 )
 from app.schemas.contrato_nbr import ContratoNbrBase, ContratoNbrCreate, ContratoNbrRead
-from app.schemas.common import PaginatedResponse
 from app.schemas.edificacao import (
     EdificacaoBase,
     EdificacaoComContratos,
@@ -48,7 +49,6 @@ from app.schemas.sistema_predial import (
     SistemaPredialRead,
 )
 from app.schemas.subsistema import SubsistemaBase, SubsistemaCreate, SubsistemaRead
-from app.schemas.auth import LoginRequest, Token
 from app.schemas.tipo_anomalia import TipoAnomaliaBase, TipoAnomaliaCreate, TipoAnomaliaRead
 from app.schemas.tipo_falha import TipoFalhaBase, TipoFalhaCreate, TipoFalhaRead
 from app.schemas.usuario import UsuarioBase, UsuarioCreate, UsuarioRead
@@ -78,17 +78,16 @@ __all__ = [
     "ContratoCreate",
     "ContratoCreatePayload",
     "ContratoDetalhe",
-    "ContratoExecutorNested",
-    "ContratoNbrNested",
-    "ContratoRead",
-    "ContratoUpdatePayload",
     "ContratoExecutorBase",
     "ContratoExecutorCreate",
+    "ContratoExecutorNested",
     "ContratoExecutorRead",
     "ContratoNbrBase",
     "ContratoNbrCreate",
+    "ContratoNbrNested",
     "ContratoNbrRead",
-    "PaginatedResponse",
+    "ContratoRead",
+    "ContratoUpdatePayload",
     "EdificacaoBase",
     "EdificacaoComContratos",
     "EdificacaoCreate",
@@ -105,9 +104,14 @@ __all__ = [
     "InspecaoCreate",
     "InspecaoDetalhe",
     "InspecaoRead",
+    "LocalizacaoBase",
+    "LocalizacaoCreate",
+    "LocalizacaoRead",
+    "LoginRequest",
     "OcorrenciaBase",
     "OcorrenciaCreate",
     "OcorrenciaRead",
+    "PaginatedResponse",
     "RelatorioBase",
     "RelatorioCreate",
     "RelatorioRead",
@@ -127,20 +131,14 @@ __all__ = [
     "TipoFalhaBase",
     "TipoFalhaCreate",
     "TipoFalhaRead",
+    "Token",
     "UsuarioBase",
     "UsuarioCreate",
     "UsuarioRead",
-    "LoginRequest",
-    "Token",
-    "LocalizacaoBase",
-    "LocalizacaoCreate",
-    "LocalizacaoRead",
     "VisitaBase",
     "VisitaComDetalhes",
     "VisitaCreate",
     "VisitaCreatePayload",
-    "VisitaRead",
-    "VisitaUpdatePayload",
     "VisitaMaoObraBase",
     "VisitaMaoObraCreate",
     "VisitaMaoObraCreatePayload",
@@ -149,4 +147,6 @@ __all__ = [
     "VisitaMedicaoCreate",
     "VisitaMedicaoCreatePayload",
     "VisitaMedicaoRead",
+    "VisitaRead",
+    "VisitaUpdatePayload",
 ]

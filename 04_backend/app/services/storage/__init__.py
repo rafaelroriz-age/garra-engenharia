@@ -16,10 +16,10 @@ from app.services.storage.s3_client import (
 )
 
 __all__ = [
-    "StorageClient",
-    "S3StorageClient",
-    "StorageError",
-    "ObjectNotFoundError",
     "MAX_UPLOAD_SIZE_BYTES",
+    "ObjectNotFoundError",
+    "S3StorageClient",
+    "StorageClient",
+    "StorageError",
     "get_storage_client",
 ]
