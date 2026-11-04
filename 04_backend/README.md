@@ -134,6 +134,10 @@ python -m app.scripts.build_rfo_templates
 > O WeasyPrint não roda no venv local do Windows (faltam as libs GTK): a renderização
 > real do PDF só funciona dentro do container `garra-backend`.
 
+## Pipeline de renderização do LTIP (BL-17, T05)
+
+`app/services/report_generator/ltip_pipeline.py` preenche os templates de `templates/ltip/` e gera o PDF (WeasyPrint) e o DOCX (docxtpl), no mesmo desenho do `rfo_pipeline.py`. Funções: `normalizar_contexto`, `agrupar_por_sistema` (RN-11), `renderizar_html`, `gerar_pdf` e `gerar_docx`. O módulo não acessa o MinIO: quem chama entrega as fotos em bytes, indexadas por `storage_key`. O WeasyPrint é importado só dentro de `gerar_pdf`, então contexto, HTML e DOCX funcionam fora do container. Testes: `pytest tests/test_ltip_pipeline.py` (o teste de PDF é pulado onde o WeasyPrint não carrega). Pendências e campos do contexto em [ltip-pipeline.md](../00_docs/backlog-auto/ltip-pipeline.md). A revisão das regras de Ocorrências (T06, lacunas ainda não corrigidas) está em [revisao-regras-ocorrencias.md](../00_docs/projeto/revisao-regras-ocorrencias.md).
+
 ## Marca vetorizada no cabeçalho dos relatórios (DEC-30/ADR-16)
 
 A marca da Garra só existe em JPEG, com o fundo chapado embutido no arquivo. Em vez de

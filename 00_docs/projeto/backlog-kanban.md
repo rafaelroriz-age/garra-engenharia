@@ -61,7 +61,7 @@ last_updated: 2026-09-17
 |---|---|---|---|
 | BL-10 | Registro de Visitas do RFO (equipe, serviços, medições) | RF-03, RN-01, RN-02 | Engenheiro Backend + Frontend |
 | BL-11 | Upload de fotos (clipboard paste + upload manual) | RF-05, RNF-02 | Engenheiro Backend + Frontend |
-| BL-14 | CRUD de Ocorrências (sistema, subsistema, localização, classificação) | RF-04, RN-03, RN-05, RN-10 | Engenheiro Backend + Frontend |
+| BL-14 | CRUD de Ocorrências (sistema, subsistema, localização, classificação) — regras revisadas (T06); correções L1–L7 pendentes | RF-04, RN-03, RN-05, RN-10 | Engenheiro Backend + Frontend |
 | BL-16 | Dashboard de saúde por edificação/sistema predial | RF-07 | Engenheiro Backend + Frontend |
 | BL-24 | Deploy de produção (Render) — faltam `POSTGRES_PASSWORD`/`JWT_SECRET_KEY` | HT-04, DEC-22 | Engenheiro DevOps |
 
