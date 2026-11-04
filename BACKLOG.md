@@ -210,7 +210,7 @@ Tarefa A (DEC-32, item 1 da decisão proposta). Contexto: 00_docs/backlog-auto/n
 ```
 
 ### T08 · Corrigir as lacunas L1–L7 de validação de Ocorrências (DEC-34)
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-34
 - **Papel:** backend
 - **Depende:** T06
