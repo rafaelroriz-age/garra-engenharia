@@ -120,7 +120,7 @@ Tarefa T01. Leia 04_backend/README.md, 03_frontend/README.md e 05_infra/README.m
 ```
 
 ### T02 · Corrigir incompatibilidade pytest × pytest-asyncio no backend
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-31
 - **Papel:** backend
 - **Depende:** T01
@@ -135,7 +135,7 @@ Tarefa A (DEC-31 / risco R-11). Contexto: 00_docs/backlog-auto/diagnostico.md §
 ```
 
 ### T03 · Avaliar vulnerabilidades do npm audit no frontend
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-31
 - **Papel:** frontend
 - **Depende:** T01
