@@ -135,7 +135,7 @@ Tarefa A (DEC-31 / risco R-11). Contexto: 00_docs/backlog-auto/diagnostico.md §
 ```
 
 ### T03 · Avaliar vulnerabilidades do npm audit no frontend
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-31
 - **Papel:** frontend
 - **Depende:** T01
