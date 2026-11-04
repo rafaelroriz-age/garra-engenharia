@@ -195,7 +195,7 @@ Tarefa E (BL-14, pendência 'revisão das regras de negócio/enum no backend'). 
 ```
 
 ### T07 · Aplicar npm audit fix sem --force nos 5 pacotes sem major do frontend
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-32
 - **Papel:** frontend
 - **Depende:** T03
@@ -210,7 +210,7 @@ Tarefa A (DEC-32, item 1 da decisão proposta). Contexto: 00_docs/backlog-auto/n
 ```
 
 ### T08 · Corrigir as lacunas L1–L7 de validação de Ocorrências (DEC-34)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-34
 - **Papel:** backend
 - **Depende:** T06
@@ -225,7 +225,7 @@ Tarefa B (DEC-34 / risco R-13, continuação da T06). Contexto: 00_docs/projeto/
 ```
 
 ### T09 · Templates PDF/DOCX da Vistoria Cautelar de Recebimento a partir do PDF original
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-25
 - **Papel:** backend
 - **Depende:** T04
@@ -240,7 +240,7 @@ Tarefa C (DEC-25 / ADR-13, fatia 'Vistoria Cautelar' do modelo incremental; mesm
 ```
 
 ### T10 · Templates PDF/DOCX da Vistoria de Imóvel Residencial a partir do PDF original
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-25
 - **Papel:** backend
 - **Depende:** T04
