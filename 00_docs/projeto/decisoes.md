@@ -461,14 +461,26 @@ last_updated: 2026-09-17
 | **Referência** | `04_backend/app/scripts/build_brand_assets.py`, `04_backend/app/scripts/bitmap_tracer.py`, `04_backend/templates/assets/`, `04_backend/tests/test_brand_assets.py`, `00_docs/arquitetura.md` ADR-16, DEC-25/ADR-13, RN-07 |
 
 
-## DEC-31 — Ambiente de desenvolvimento reproduzível (proposta de T01)
+## DEC-31 — Ambiente de desenvolvimento reproduzível (T01, T02, T04)
 
 | Campo | Valor |
 |---|---|
 | **Data** | 2026-11-04 |
-| **Status** | Proposta (aguarda aprovação) |
-| **Contexto** | O diagnóstico T01 ([diagnostico.md](../backlog-auto/diagnostico.md)) mostrou que `pytest` não coleta com pytest 9.2.0 + pytest-asyncio 0.23.3, que `ruff check .` retorna 214 achados sem configuração versionada, e que o ambiente exige Python 3.12 e Docker. |
-| **Alternativas** | (a) fixar `pytest<9`; (b) subir `pytest-asyncio` para versão compatível com pytest 9; (c) manter como está. Para o ruff: (d) versionar configuração com as regras adotadas (B008 é padrão idiomático do FastAPI) e fixar a versão na CI; (e) corrigir tudo sem configuração. |
-| **Decisão proposta** | (a) ou (b), após teste isolado da causa; (d), com F821 investigado antes de qualquer `--fix`. |
-| **Consequências** | Altera `requirements.txt`, configuração do ruff e possivelmente `ci.yml` — tarefa de código a abrir no backlog. Risco associado: R-11. |
-| **Referência** | `00_docs/backlog-auto/diagnostico.md`, `04_backend/requirements.txt`, `.github/workflows/ci.yml` |
+| **Status** | Parcialmente implementada (T02 e T04 concluídas); aguarda aprovação formal do dono e o ajuste do `ci.yml` |
+| **Contexto** | O diagnóstico T01 ([diagnostico.md](../backlog-auto/diagnostico.md)) mostrou que `pytest` não coletava com pytest 9.2.0 + pytest-asyncio 0.23.3, que `ruff check .` retornava 214 achados sem configuração versionada (o resultado vinha de um `pyproject.toml` fora do repositório) e que o ambiente exige Python 3.12 e Docker. |
+| **Decisão** | (1) **Testes:** `04_backend/requirements.txt` fixa `pytest>=9.1.1,<10.0` e `pytest-asyncio>=1.4.1,<1.5`; o 0.23.x é incompatível com o pytest 9 (`'Package' object has no attribute 'obj'`) e não deve voltar. Ao atualizar qualquer um dos dois, validar com `python -m pytest --collect-only -q`. Resultado da T02: 139 testes coletados. (2) **Lint:** configuração versionada em `04_backend/ruff.toml` (`E, F, I, B, UP, RUF`, ignora só `E501`, linha 100, py312); B008 tratado com `extend-immutable-calls` para `fastapi.Depends/Query/...`; os 38 F821 eram falsos positivos de anotações em string do SQLAlchemy, resolvidos com `TYPE_CHECKING`. Resultado da T04: `ruff check .` de 214 para 0 erros, sem mudança em `upgrade()`/`downgrade()` das migrations. |
+| **Pendente** | Em `.github/workflows/ci.yml`: remover `continue-on-error: true` do passo "Lint (ruff)" e fixar a versão (`ruff==0.17.3`); é arquivo `.yml`, fora do escopo de um lote só de documentação, então fica para tarefa de código. Rodar a suíte de integração (`alembic upgrade head` + `pytest`) com a stack de `05_infra` no ar: nas duas tarefas ela não pôde ser verificada (sem Docker/schema). |
+| **Consequências** | Altera `requirements.txt`, `ruff.toml` e dezenas de arquivos `.py` (imports, anotações), sem mudança de comportamento declarada. Risco associado: R-11. |
+| **Referência** | `00_docs/backlog-auto/pytest-compat.md`, `00_docs/backlog-auto/ruff.md`, `00_docs/backlog-auto/diagnostico.md`, `04_backend/requirements.txt`, `04_backend/ruff.toml`, `.github/workflows/ci.yml` |
+
+## DEC-32 — Tratamento das vulnerabilidades do frontend (proposta de T03)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | `npm audit` em `03_frontend`: 30 pacotes (2 críticos, 11 altos, 17 moderados); em produção (`--omit=dev`), 13 pacotes. O risco real concentra-se no `next` 14.2.35 (crítico, em runtime, sem correção em 14.x); `fabric` 6.9.1 e a cadeia `canvas`/`tar` têm exposição baixa/média. Ver [npm-audit.md](../backlog-auto/npm-audit.md). |
+| **Alternativas** | (a) só `npm audit fix` sem `--force`; (b) upgrade do Next para 15.5.28+ ou 16.x (provável React 19) e do fabric para 7.4.0; (c) `npm audit fix --force` (descartada: propõe downgrades inválidos de eslint e eslint-config-next). |
+| **Decisão proposta** | (1) Rodar `npm audit fix` sem `--force` nos 5 pacotes sem major (brace-expansion, js-yaml, nanoid, postcss-selector-parser, source-map-js). (2) Tratar o upgrade do Next como prioridade antes do próximo deploy de produção, em tarefa própria. (3) Fabric 7 junto ou depois, com teste do editor de fotos (RF-14). (4) Nunca usar `--force`. (5) Opcional: gate de CI com `npm audit --omit=dev --audit-level=critical`. |
+| **Consequências** | A T03 não alterou nenhum arquivo do frontend (só análise). Os upgrades majors exigem teste de todas as rotas e do editor de anotação. Risco associado: R-12. |
+| **Referência** | `00_docs/backlog-auto/npm-audit.md`, `03_frontend/package.json`, `03_frontend/Dockerfile.render` |
