@@ -195,7 +195,7 @@ Tarefa E (BL-14, pendência 'revisão das regras de negócio/enum no backend'). 
 ```
 
 ### T07 · Aplicar npm audit fix sem --force nos 5 pacotes sem major do frontend
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-32
 - **Papel:** frontend
 - **Depende:** T03
