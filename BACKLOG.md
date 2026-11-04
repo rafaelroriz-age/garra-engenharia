@@ -319,3 +319,107 @@ Passos:
 
 Siga a 'Regra de pronto' do BACKLOG.md: registre fatos, números, comandos e saída dos testes em 00_docs/backlog-auto/rfip-templates.md, com decisões propostas como proposta. Não edite os documentos de gestão em 00_docs/projeto/ nem o BACKLOG.md. Commit: `feat(backend): extrator e templates do RFIP pelo método do ADR-13 (BL-12)` com `Refs BL-12`. Não faça push.
 ```
+
+---
+
+## Bloco B — Revisão de regras e lacunas (pré-requisitos de B-04)
+
+### T14 · Análise de lacunas do modelo de dados para o fluxo de legendas por IA (revisão de integração do BL-04)
+- **Status:** todo
+- **Origem:** BL-04
+- **Papel:** arquiteto-software
+- **Depende:** —
+- **Ambiente:** offline
+- **Dificuldade:** baixa
+- **Toca:** 00_docs/backlog-auto/modelagem-legendas-ia-lacunas.md
+- **Doc:** 00_docs/backlog-auto/modelagem-legendas-ia-lacunas.md
+- **Pronto:** O arquivo 00_docs/backlog-auto/modelagem-legendas-ia-lacunas.md existe e traz: (1) tabela do que já existe hoje em Foto, Anotacao e Storage (campo, tipo, arquivo de origem); (2) tabela de campos/entidades que faltam para RF-15/RN-16/RN-17/DEC-21, separando o que independe do provedor de LLM do que depende dele; (3) esboço da interface do adapter `LegendaIAClient` sem escolher fornecedor; (4) propostas de DEC (não gravadas em decisoes.md). Nenhum arquivo de código foi alterado e `git status` mostra só este arquivo novo.
+- **Prompt:**
+```text
+Você está no monorepo Garra Engenharia. Tarefa SOMENTE de análise e documentação; não altere código, migrations nem os documentos de gestão compartilhados.
+
+Contexto: BL-04 (modelagem de dados) está concluída, mas precisa de revisão de integração para o fluxo de legendas assistidas por IA (BL-34 a BL-39, bloqueadas pela escolha do provedor, B-04). Queremos deixar pronto tudo o que independe do provedor.
+
+Passos:
+1. Leia em 00_docs/estudo-do-contexto.md os requisitos RF-15, RN-16 e RN-17; em 00_docs/projeto/decisoes.md leia DEC-21 e DEC-19; em 00_docs/arquitetura.md leia a seção de modelo de dados (§3) e a do storage.
+2. Leia os modelos em 04_backend/app/models/ (Foto e entidades relacionadas), os schemas de fotos em 04_backend/app/schemas/, 04_backend/app/api/v1/fotos.py e o serviço de storage em 04_backend/app/services/. Veja também as migrations em 04_backend/alembic/versions/ apenas para ler.
+3. Escreva 00_docs/backlog-auto/modelagem-legendas-ia-lacunas.md com: (a) inventário do que existe hoje (campo, tipo, arquivo:linha); (b) lacunas para RF-15/RN-16/RN-17 (legenda gerada, status rascunho/aprovada, pendências/alertas, prompt e versão usados, quem aprovou e quando, tabela `prompts_ia`), marcando cada uma como 'independe do provedor' ou 'depende do provedor'; (c) esboço, em pseudo-código Python, da interface do adapter `LegendaIAClient` e de um cliente fake para testes; (d) ordem sugerida de implementação de BL-36, BL-37, BL-34, BL-38, BL-39, BL-35; (e) decisões propostas (texto), sem editar decisoes.md.
+4. Siga a 'Regra de pronto' do BACKLOG.md (registrar fatos, caminhos e comandos no Doc). Não há testes a rodar, pois não há código; diga isso no Doc.
+5. Commit opcional em Conventional Commits: `docs(00_docs): lacunas de modelagem para legendas por IA (BL-04)` com rodapé `Refs BL-04`. Nunca faça push.
+```
+
+### T15 · Revisão das regras de negócio de Visitas (RN-01/RN-02) com testes de lacuna
+- **Status:** todo
+- **Origem:** BL-10
+- **Papel:** backend
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** media
+- **Toca:** 04_backend/tests/test_visitas_lacunas.py, 00_docs/backlog-auto/revisao-regras-visitas.md
+- **Doc:** 00_docs/backlog-auto/revisao-regras-visitas.md
+- **Pronto:** Existe 00_docs/backlog-auto/revisao-regras-visitas.md com a matriz regra x código x teste (RF-03, RN-01, RN-02) e a lista de lacunas numeradas V1..Vn, e existe 04_backend/tests/test_visitas_lacunas.py com um teste `test_lacuna_*` por lacuna encontrada. Se o PostgreSQL (localhost:5433) estava no ar, a saída do pytest dos testes novos e da suíte test_visitas.py está colada no Doc; se não estava, o Doc diz explicitamente que os testes não rodaram. `ruff check .` em 04_backend passa. Nenhum código de produção foi alterado.
+- **Prompt:**
+```text
+Você está no monorepo Garra Engenharia e atua como engenheiro backend (siga .github/agents/ backend). Esta tarefa é uma REVISÃO: encontrar e provar lacunas com testes, sem corrigi-las (uma tarefa posterior corrige).
+
+Contexto: BL-10 (Registro de Visitas do RFO: equipe, serviços, medições) está 🟢 parcial. Já existe 04_backend/app/api/v1/visitas.py e 04_backend/tests/test_visitas.py. O mesmo método foi aplicado a Ocorrências (BL-14): veja 00_docs/backlog-auto/revisao-regras-ocorrencias.md (ou 00_docs/projeto/revisao-regras-ocorrencias.md, onde estiver) e o arquivo de testes `test_lacuna_*` correspondente em 04_backend/tests/ como modelo de formato.
+
+Passos:
+1. Em 00_docs/estudo-do-contexto.md leia RF-03, RN-01 e RN-02 (e RN-06/RN-18 se tocarem visitas); em 00_docs/projeto/decisoes.md leia DEC-27 (perfil auxiliar) e DEC-28 se relevantes.
+2. Leia visitas.py, os modelos de Visita/VisitaMedicao/equipe em 04_backend/app/models/, os schemas em 04_backend/app/schemas/ e qualquer serviço usado; leia test_visitas.py.
+3. Monte a matriz regra -> onde é imposta no código -> teste que cobre. Identifique lacunas: validação de enums, existência de FKs (inspeção, responsáveis), datas incoerentes, unidade de medição (DEC-29: livre por item), PUT sobrescrevendo campos imutáveis, permissões por papel (auxiliar x auditor x cliente), paginação/filtros sem validação.
+4. Escreva 04_backend/tests/test_visitas_lacunas.py com um teste `test_lacuna_<n>_<assunto>` por lacuna, reutilizando as fixtures de conftest.py; o teste afirma o comportamento CORRETO (então falhará hoje) e cada um leva docstring com a regra violada. Se alguma lacuna não for testável, descreva-a no Doc.
+5. Se o PostgreSQL de 05_infra/docker-compose.yml estiver no ar (localhost:5433), rode a partir de 04_backend: `pytest tests/test_visitas.py tests/test_visitas_lacunas.py` e cole a saída (falhas dos `test_lacuna_*` são esperadas; as de test_visitas.py não). Se não estiver no ar, registre que não rodou, sem inventar resultado. Rode `ruff check .`.
+6. Registre tudo em 00_docs/backlog-auto/revisao-regras-visitas.md seguindo a 'Regra de pronto' do BACKLOG.md. Propostas de DEC vão apenas nesse Doc.
+7. Commit: `test(backend): lacunas de regras de visitas (BL-10)` com rodapé `Refs BL-10`. Não altere código de produção, nem os documentos de gestão compartilhados. Nunca faça push.
+```
+
+### T16 · Revisão de segurança e regras do upload de fotos (RF-05/RNF-02) com testes de lacuna
+- **Status:** todo
+- **Origem:** BL-11
+- **Papel:** backend
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** media
+- **Toca:** 04_backend/tests/test_fotos_lacunas.py, 00_docs/backlog-auto/revisao-regras-fotos.md
+- **Doc:** 00_docs/backlog-auto/revisao-regras-fotos.md
+- **Pronto:** Existe 00_docs/backlog-auto/revisao-regras-fotos.md com a matriz requisito x código x teste (RF-05, RNF-02, OWASP A01/A03/A04 aplicáveis a upload) e lacunas F1..Fn, e existe 04_backend/tests/test_fotos_lacunas.py com um `test_lacuna_*` por lacuna testável. O Doc traz a saída do pytest se o PostgreSQL (localhost:5433) estava no ar, ou declara que não rodou. `ruff check .` em 04_backend passa. Nenhum código de produção foi alterado.
+- **Prompt:**
+```text
+Você está no monorepo Garra Engenharia e atua como engenheiro backend (siga .github/agents/ backend). Esta tarefa é uma REVISÃO com testes de lacuna, sem corrigir código de produção.
+
+Contexto: BL-11 (upload de fotos por clipboard e arquivo manual, vinculado a Visitas) está 🟢 parcial. Código: 04_backend/app/api/v1/fotos.py, serviço de storage (MinIO/S3 via boto3) em 04_backend/app/services/, testes em 04_backend/tests/test_fotos.py. Use como modelo de formato o relatório e os testes `test_lacuna_*` de Ocorrências (00_docs/backlog-auto/revisao-regras-ocorrencias.md ou 00_docs/projeto/revisao-regras-ocorrencias.md).
+
+Passos:
+1. Leia em 00_docs/estudo-do-contexto.md os requisitos RF-05, RNF-02, RN-15 e RNF-05/RNF-07; em 00_docs/projeto/revisao-seguranca-owasp.md a parte sobre upload (para não repetir achados já corrigidos); DEC-19 e DEC-29 (#4) em 00_docs/projeto/decisoes.md.
+2. Leia fotos.py, o modelo Foto, os schemas e test_fotos.py.
+3. Verifique, por leitura do código e do teste, lacunas como: validação do tipo real do arquivo (magic bytes, não só Content-Type/extensão), limite de tamanho, imagem corrompida, nome de arquivo/chave de storage controlado pelo servidor (path traversal), foto de visita inexistente ou de outro contexto, ordenação/legenda editável, permissões por papel (auxiliar pode enviar; cliente não; DEC-27), otimização de imagem no upload (RNF-02), exclusão que deixa objeto órfão no storage, e URL pré-assinada que vaza a chave.
+4. Escreva 04_backend/tests/test_fotos_lacunas.py com um `test_lacuna_<n>_<assunto>` por lacuna testável, afirmando o comportamento CORRETO, com docstring da regra violada; use fixtures de conftest.py e o mesmo mecanismo de storage falso/real dos testes existentes. Lacunas não testáveis vão só para o Doc.
+5. Se o PostgreSQL de 05_infra/docker-compose.yml estiver no ar (localhost:5433), rode a partir de 04_backend `pytest tests/test_fotos.py tests/test_fotos_lacunas.py` e cole a saída (falhas dos `test_lacuna_*` são esperadas). Se não estiver, registre que não rodou, sem inventar resultado. Rode `ruff check .`.
+6. Escreva 00_docs/backlog-auto/revisao-regras-fotos.md conforme a 'Regra de pronto' do BACKLOG.md; decisões propostas ficam só nesse Doc.
+7. Commit: `test(backend): lacunas de upload de fotos (BL-11)` com rodapé `Refs BL-11`. Não toque em app/, nos docs de gestão compartilhados nem em 01_output-context/. Nunca faça push.
+```
+
+### T17 · Re-medir o benchmark de geração PDF/DOCX com os pipelines finais
+- **Status:** todo
+- **Origem:** BL-22
+- **Papel:** arquiteto-software
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** alta
+- **Toca:** 00_docs/backlog-auto/benchmark-pipelines-finais.md
+- **Doc:** 00_docs/backlog-auto/benchmark-pipelines-finais.md
+- **Pronto:** 00_docs/backlog-auto/benchmark-pipelines-finais.md traz, para cada pipeline existente (RFO, LTIP, Vistoria Cautelar, Vistoria Residencial), tempo e memória de pico de PDF e DOCX com ao menos 150 fotos sintéticas e ~200 páginas, comparados com a meta de RNF-06 e com o resultado anterior (191 páginas/570 fotos em 44,2 s), ou declara explicitamente que o Docker/WeasyPrint não estava disponível e o que ficou sem medir. Os comandos usados e a saída bruta estão no Doc. Nenhum arquivo de código ou de dados do repositório foi alterado além do Doc.
+- **Prompt:**
+```text
+Você está no monorepo Garra Engenharia. Tarefa de MEDIÇÃO e documentação; não altere código de produção.
+
+Contexto: BL-22 mediu em 2026-08-05 a geração de 191 páginas/570 fotos em 44,2 s (ver 00_docs/projeto/relatorio-benchmark-geracao-pdf-docx.md) e dizia para re-medir quando os pipelines finais existissem. Agora existem os pipelines em 04_backend/app/services/report_generator/: rfo_pipeline.py, ltip_pipeline.py, vistoria_cautelar_pipeline.py e vistoria_residencial_pipeline.py (o do RFIP ainda não existe; não o inclua). O WeasyPrint não roda no Windows local: o PDF só pode ser gerado dentro do container do backend (docker compose, a partir de 05_infra/).
+
+Passos:
+1. Leia o relatório de benchmark anterior e o script que o gerou (procure em 04_backend/app/scripts/ e 04_backend/tests/ por 'benchmark'), a meta de RNF-06 em 00_docs/estudo-do-contexto.md e a API pública de cada pipeline (assinatura, dados de entrada, como o teste de cada um os alimenta, por exemplo tests/test_ltip_pipeline.py).
+2. Verifique se o Docker está disponível (`docker version`) e suba, a partir de 05_infra/, apenas o necessário (backend; PostgreSQL só se o pipeline exigir). Se o Docker ou o WeasyPrint não estiver disponível, NÃO invente números: faça só o DOCX (docxtpl roda no host), meça-o e declare no Doc que o PDF não foi medido e por quê.
+3. Escreva um script de medição FORA de qualquer pasta rastreada pelo Git de produção, em um diretório temporário (por exemplo o temp do sistema) ou em 00_docs/backlog-auto/ apenas se pequeno, gerando fotos sintéticas (JPEG com Pillow, tamanho realista) e entradas sintéticas para ~200 páginas e 150+ fotos. Meça tempo (perf_counter) e memória de pico (tracemalloc ou resource/psutil) por pipeline e formato, 3 execuções cada, reportando mediana.
+4. Registre em 00_docs/backlog-auto/benchmark-pipelines-finais.md: ambiente (versões, CPU/RAM), tabela de resultados, comparação com a meta e com a medição de 2026-08-05, gargalos observados e recomendações. Comandos e saída bruta devem constar. Siga a 'Regra de pronto' do BACKLOG.md. Propostas de DEC ficam só no Doc.
+5. Não leia nem altere arquivos de 01_output-context/ (use só dados sintéticos). Commit opcional: `docs(00_docs): benchmark dos pipelines finais (BL-22)` com rodapé `Refs BL-22`. Nunca faça push.
+```
