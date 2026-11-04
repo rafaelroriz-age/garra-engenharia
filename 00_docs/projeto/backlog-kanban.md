@@ -30,12 +30,10 @@ last_updated: 2026-09-17
 
 ---
 
-## 🔵 Backlog (9)
+## 🔵 Backlog (7)
 
 | ID | Tarefa | Requisitos/Decisões | Agente |
 |---|---|---|---|
-| BL-12 | Prototipagem do template HTML/CSS do RFO para PDF (WeasyPrint) | RF-06, RNF-03, DEC-01 | Prototipagem e Documentação para Cliente |
-| BL-13 | Geração de DOCX do RFO via docxtpl | RF-06, DEC-04 | Engenheiro Backend |
 | BL-19 | Confirmar versão vigente dos originais em `01_output-context/` | — | Gestor de Projeto |
 | BL-34 | Legendas assistidas por IA (backend): `prompts_ia`, campos em `Foto`, Adapter `LegendaIAClient` | RF-15, RN-16, RN-17, DEC-21 | Engenheiro Backend |
 | BL-35 | Legendas assistidas por IA (frontend): geração, revisão e aprovação da legenda sugerida | RF-15, RN-16, RN-17 | Engenheiro Frontend |
@@ -65,7 +63,7 @@ last_updated: 2026-09-17
 | BL-16 | Dashboard de saúde por edificação/sistema predial | RF-07 | Engenheiro Backend + Frontend |
 | BL-24 | Deploy de produção (Render) — faltam `POSTGRES_PASSWORD`/`JWT_SECRET_KEY` | HT-04, DEC-22 | Engenheiro DevOps |
 
-## 🟢 Done (20)
+## 🟢 Done (22)
 
 | ID | Tarefa | Requisitos/Decisões | Agente |
 |---|---|---|---|
@@ -89,6 +87,8 @@ last_updated: 2026-09-17
 | BL-30 | RBAC: `role`, `Responsavel.usuario_id`, `Contrato.contratante_id` | RF-13, RN-14, DEC-18 | Engenheiro Backend |
 | BL-31 | Editor de anotação de fotos (Fabric.js) | RF-14, RN-15, DEC-19 | Engenheiro Frontend |
 | BL-40 | Template DOCX do Contrato de Prestação de Serviços | Administrativo | Engenheiro Backend |
+| BL-12 | Prototipagem do template HTML/CSS do RFO para PDF (WeasyPrint) — template do RFIP entregue em 2026-11-04 (T13), falta o `rfip_pipeline.py` | RF-06, RNF-03, DEC-01 | Prototipagem e Documentação para Cliente |
+| BL-13 | Geração de DOCX do RFO via docxtpl | RF-06, DEC-04 | Engenheiro Backend |
 
 ---
 

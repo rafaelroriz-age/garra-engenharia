@@ -144,7 +144,18 @@ PDF → `layout.json` (só geometria e rótulos fixos, sem dado do exemplar) →
 | Cautelar de Recebimento | `vistoria_cautelar_layout_extractor.py`, `build_vistoria_cautelar_templates.py` | `templates/vistoria_cautelar/` | `tests/test_vistoria_cautelar_templates.py` (PDF sintético) |
 | Imóvel Residencial | `vistoria_residencial_layout_extractor.py`, `build_vistoria_residencial_templates.py` | `templates/vistoria_residencial/` | `tests/test_vistoria_residencial_templates.py` (PDF sintético) |
 
-Pendente: pipeline de renderização de cada vistoria (como `ltip_pipeline.py`), conferência visual no container (HT-09) e a arte de capa do cliente, que não é versionada. Detalhes em `00_docs/backlog-auto/vistoria-*-templates.md`.
+Os pipelines de renderização (T11, T12) ficam em `app/services/report_generator/vistoria_cautelar_pipeline.py` e `vistoria_residencial_pipeline.py`, com a mesma API do LTIP (`normalizar_contexto`, `renderizar_html`, `gerar_pdf`, `gerar_docx`) e testes em `tests/test_vistoria_*_pipeline.py`. O teste de PDF é pulado onde o WeasyPrint não roda (Windows). Pendente: conferência visual no container (HT-09), a arte de capa do cliente (não versionada) e a montagem do contexto a partir do banco. Detalhes em `00_docs/backlog-auto/vistoria-*-templates.md` e `vistoria-*-pipeline.md`.
+
+### RFIP (BL-12, T13)
+
+Planilha → `layout.json` → `.html.j2` + `.docx`, como no RFO, mas lendo o original de ~490 MB em streaming (`openpyxl` `read_only` e `iterparse`, sem abrir as imagens; pico de ~58 MB de memória). Extrator: `app/scripts/rfip_layout_extractor.py`; gerador: `app/scripts/build_rfip_templates.py`; saída em `templates/rfip/`; testes: `tests/test_rfip_templates.py` (planilha sintética).
+
+```text
+python -m app.scripts.build_rfip_templates --original "..\01_output-context\Relatório Fotográfico de Inspeção Predial - CORTINA D'AMPAREZZO - Versão Final.xlsx"
+python -m app.scripts.build_rfip_templates
+```
+
+Sem `--original`, o comando regera os dois templates a partir do `layout.json` versionado. Pendente: `rfip_pipeline.py` e conferência visual (HT-09). Detalhes em `00_docs/backlog-auto/rfip-templates.md`.
 
 ## Validação de Ocorrências (BL-14, T08)
 

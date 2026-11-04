@@ -175,6 +175,7 @@ last_updated: 2026-09-17
 | R-11 — Ambiente de desenvolvimento não reproduzível (pytest × pytest-asyncio, ruff, Docker, Python 3.12) | Média → Baixa | Parcialmente mitigado (T02 e T04); restam o ruff na CI e a suíte de integração (DEC-31) |
 | R-12 — Vulnerabilidades de dependências do frontend (Next.js 14.2.35 crítico em produção) | Alta | Ação necessária (DEC-32 proposta; T03) |
 | R-13 — Lacunas de validação no CRUD de Ocorrências (enums, existência, `PUT`) | Média | Em mitigação: correção aplicada na T08, testes ainda não executados (DEC-34 proposta) |
+| R-14 — PDF dos templates e pipelines nunca renderizado de verdade; suíte completa sem PostgreSQL | Média | Ação necessária (rodar no container de `05_infra/`) |
 
 ### R-11 — Ambiente de desenvolvimento não reproduzível
 
@@ -203,3 +204,12 @@ last_updated: 2026-09-17
 | **Descrição** | O backend aceita situação e classificação fora do enum (RN-05), não verifica a existência de sistema, subsistema e inspeção (erro 500 em vez de 404/422), aceita subsistema de outro sistema e deixa o `PUT` mover a ocorrência para outra inspeção ou apagar o `seq_numero`. Os testes que cobrem as lacunas ainda não rodaram por falta de PostgreSQL. |
 | **Probabilidade / Impacto** | Média / Média — dados inconsistentes e relatórios (LTIP) agrupados de forma errada |
 | **Mitigação** | DEC-34 (proposta). **Feito (T08, 2026-11-04):** correções L1–L7 no service, repositório e endpoint. **Pendente:** rodar `test_ocorrencias_regras.py` e a suíte de Ocorrências com PostgreSQL no ar (nenhum teste foi executado na T08); só então fechar o risco. |
+
+### R-14 — PDF nunca renderizado de verdade; suíte completa não executada nos lotes recentes
+
+| Campo | Valor |
+|---|---|
+| **Origem** | Lote T05–T13 (2026-11-04), em [vistoria-cautelar-pipeline.md](../backlog-auto/vistoria-cautelar-pipeline.md), [vistoria-residencial-pipeline.md](../backlog-auto/vistoria-residencial-pipeline.md) e [rfip-templates.md](../backlog-auto/rfip-templates.md) |
+| **Descrição** | Os templates e pipelines de LTIP, Vistoria Cautelar, Vistoria Residencial e RFIP foram testados só em HTML (Jinja2) e DOCX. O teste de PDF é pulado porque o WeasyPrint não roda no Windows (sem Pango/GTK) e não há Docker nem PostgreSQL (`localhost:5433`) nas máquinas dos jobs. Por isso a conferência visual (HT-09) não aconteceu e a suíte completa não foi validada: T12 relatou 6 falhas e 104 erros e T13 6 falhas e 91 erros, todos em testes que dependem de banco (e de um `greenlet` funcional no venv local); nenhum foi diagnosticado um a um. Pontos específicos do RFIP: logo reduzida para caber na margem e escala de impressão não aplicada às fontes (2,6% de diferença). |
+| **Probabilidade / Impacto** | Alta / Média — defeitos de layout só apareceriam na entrega ao cliente |
+| **Mitigação** | Subir `05_infra/docker-compose.yml`, rodar o `pytest` completo e os testes de PDF no container e fazer a conferência visual lado a lado com os originais (HT-09). Só então fechar o risco. |
