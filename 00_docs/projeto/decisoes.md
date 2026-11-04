@@ -460,3 +460,15 @@ last_updated: 2026-09-17
 | **Consequências** | **B-02 encerrado.** HT-02 fica reduzida à confirmação da versão vigente dos originais (item de gestão, sem impacto de engenharia) e BL-19 deixa de citar a logo como pendência. O cabeçalho do PDF e do DOCX passa a sair com a marca em fundo transparente — validado na amostra de HT-09 regerada nesta data. Os assets gerados são versionados; quando a marca mudar, reexecutar `python -m app.scripts.build_brand_assets` em vez de editar os arquivos à mão (os SVGs trazem cabeçalho "ARQUIVO GERADO"). O ícone da PWA (`03_frontend/public/icon.svg`, BL-41) segue sendo o símbolo simplificado, por legibilidade em 16-32 px — decisão de design mantida, não mais uma consequência da falta de vetor. |
 | **Referência** | `04_backend/app/scripts/build_brand_assets.py`, `04_backend/app/scripts/bitmap_tracer.py`, `04_backend/templates/assets/`, `04_backend/tests/test_brand_assets.py`, `00_docs/arquitetura.md` ADR-16, DEC-25/ADR-13, RN-07 |
 
+
+## DEC-31 — Ambiente de desenvolvimento reproduzível (proposta de T01)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda aprovação) |
+| **Contexto** | O diagnóstico T01 ([diagnostico.md](../backlog-auto/diagnostico.md)) mostrou que `pytest` não coleta com pytest 9.2.0 + pytest-asyncio 0.23.3, que `ruff check .` retorna 214 achados sem configuração versionada, e que o ambiente exige Python 3.12 e Docker. |
+| **Alternativas** | (a) fixar `pytest<9`; (b) subir `pytest-asyncio` para versão compatível com pytest 9; (c) manter como está. Para o ruff: (d) versionar configuração com as regras adotadas (B008 é padrão idiomático do FastAPI) e fixar a versão na CI; (e) corrigir tudo sem configuração. |
+| **Decisão proposta** | (a) ou (b), após teste isolado da causa; (d), com F821 investigado antes de qualquer `--fix`. |
+| **Consequências** | Altera `requirements.txt`, configuração do ruff e possivelmente `ci.yml` — tarefa de código a abrir no backlog. Risco associado: R-11. |
+| **Referência** | `00_docs/backlog-auto/diagnostico.md`, `04_backend/requirements.txt`, `.github/workflows/ci.yml` |

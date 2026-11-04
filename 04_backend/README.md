@@ -248,6 +248,8 @@ pytest
 
 Os testes de `tests/test_models.py` exigem o PostgreSQL do `05_infra/docker-compose.yml` rodando (usam `JSONB`, específico do dialeto PostgreSQL) e a migration aplicada. Cada teste remove os registros que cria.
 
+> **Ambiente (diagnóstico T01, 2026-11-04):** use Python 3.12 (o 3.14 não instala o Pillow fixado). Com `pytest` 9.2.0 + `pytest-asyncio` 0.23.3 a coleta falha com `INTERNALERROR`; e `ruff check .` acusa 214 achados. Ver [diagnostico.md](../00_docs/backlog-auto/diagnostico.md), R-11 e DEC-31 (proposta).
+
 ## Referências
 
 - Stack, modelo ER, contratos de API, padrões de projeto e system design: [00_docs/arquitetura.md](../00_docs/arquitetura.md) (Seções 9-11)
