@@ -65,7 +65,7 @@ npm run build   # build de produção — valida todas as rotas
 npm run lint    # ESLint
 ```
 
-> **Vulnerabilidades (T03, 2026-11-04):** `npm audit` aponta 30 pacotes (2 críticos, 11 altos, 17 moderados), 13 deles em produção; o principal é `next` 14.2.35, cuja correção está só em 15.5.x/16.x. Não use `npm audit fix --force`. Análise e plano em [npm-audit.md](../00_docs/backlog-auto/npm-audit.md); ver R-12 e DEC-32 (proposta).
+> **Vulnerabilidades (T03, 2026-11-04):** `npm audit` aponta 30 pacotes (2 críticos, 11 altos, 17 moderados), 13 deles em produção; o principal é `next` 14.2.35, cuja correção está só em 15.5.x/16.x. **Atualização (T07):** o `npm audit fix` sem `--force` já foi aplicado só ao `package-lock.json` (30 → 26 achados; produção 13 → 10); Next, fabric e `brace-expansion` 1.1.16 seguem pendentes, ver [npm-audit-fix.md](../00_docs/backlog-auto/npm-audit-fix.md). Não use `npm audit fix --force`. Análise e plano em [npm-audit.md](../00_docs/backlog-auto/npm-audit.md); ver R-12 e DEC-32 (proposta).
 
 ## Notas de implementação
 
