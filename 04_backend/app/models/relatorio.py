@@ -1,12 +1,16 @@
 """Modelo `Relatorio` — versão emitida (PDF/DOCX) de uma Inspeção (RF-06)."""
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.inspecao import Inspecao
 
 
 class Relatorio(Base):

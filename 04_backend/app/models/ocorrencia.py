@@ -8,12 +8,19 @@ CRUD (BL-14 em diante), não neste modelo de dados.
 """
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.foto import Foto
+    from app.models.inspecao import Inspecao
+    from app.models.sistema_predial import SistemaPredial
+    from app.models.subsistema import Subsistema
 
 
 class Ocorrencia(Base):

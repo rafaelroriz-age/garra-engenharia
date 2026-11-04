@@ -125,7 +125,7 @@ def simplificar(contorno: Sequence[PontoInteiro], tolerancia: float) -> list[Pon
         return list(contorno)
     inicio = min(range(len(contorno)), key=lambda i: contorno[i])
     rotacionado = list(contorno[inicio:]) + list(contorno[:inicio])
-    aberto = rotacionado + [rotacionado[0]]
+    aberto = [*rotacionado, rotacionado[0]]
     reduzido = _douglas_peucker(aberto, tolerancia)
     return reduzido[:-1]
 
@@ -153,7 +153,7 @@ def _douglas_peucker(pontos: list[PontoInteiro], tolerancia: float) -> list[Pont
             manter[indice] = True
             pilha.append((inicio, indice))
             pilha.append((indice, fim))
-    return [ponto for ponto, guardar in zip(pontos, manter) if guardar]
+    return [ponto for ponto, guardar in zip(pontos, manter, strict=True) if guardar]
 
 
 def _distancia_ao_segmento(ponto: Ponto, inicio: Ponto, fim: Ponto) -> float:

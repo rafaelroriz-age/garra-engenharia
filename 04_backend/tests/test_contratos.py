@@ -17,7 +17,15 @@ from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.security import create_access_token, hash_password
 from app.main import app
-from app.models import Contrato, ContratoExecutor, ContratoNbr, Edificacao, Inspecao, Responsavel, Usuario
+from app.models import (
+    Contrato,
+    ContratoExecutor,
+    ContratoNbr,
+    Edificacao,
+    Inspecao,
+    Responsavel,
+    Usuario,
+)
 
 _settings = get_settings()
 _test_engine = create_async_engine(_settings.database_url, poolclass=NullPool, future=True)

@@ -20,7 +20,12 @@ from app.core.database import get_db
 from app.core.errors import DomainError
 from app.models import Edificacao, Usuario
 from app.schemas.common import PaginatedResponse
-from app.schemas.edificacao import EdificacaoComContratos, EdificacaoCreate, EdificacaoRead, EdificacaoUpdate
+from app.schemas.edificacao import (
+    EdificacaoComContratos,
+    EdificacaoCreate,
+    EdificacaoRead,
+    EdificacaoUpdate,
+)
 from app.services import edificacao_service
 from app.services.storage import get_storage_client
 from app.services.storage.base import StorageClient

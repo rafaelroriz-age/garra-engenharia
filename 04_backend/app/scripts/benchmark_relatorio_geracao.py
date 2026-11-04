@@ -26,7 +26,7 @@ import asyncio
 import json
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from sqlalchemy import select
@@ -95,7 +95,7 @@ async def _carregar_contexto(inspecao_id: uuid.UUID) -> tuple[dict, list[str]]:
             "edificacao": {"nome": contrato.edificacao.nome, "endereco": contrato.edificacao.endereco},
             "fiscal": {"nome": contrato.fiscal.nome, "crea": contrato.fiscal.crea},
             "visitas": visitas_ctx,
-            "gerado_em": datetime.now(timezone.utc).isoformat(),
+            "gerado_em": datetime.now(UTC).isoformat(),
         }
         return contexto, storage_keys
 
@@ -147,7 +147,7 @@ async def _registrar_relatorio_concluido(
             status="concluido",
             pdf_key=pdf_key,
             docx_key=docx_key,
-            emitido_em=datetime.now(timezone.utc),
+            emitido_em=datetime.now(UTC),
         )
         db.add(relatorio)
         await db.commit()
@@ -217,7 +217,7 @@ async def rodar(inspecao_id: uuid.UUID) -> dict:
         relatorio_id, tempo_registro = await _registrar_relatorio_concluido(
             inspecao_id, storage, pdf_path_otimizado, docx_path_otimizado
         )
-    except Exception as exc:  # noqa: BLE001 — registrado como achado do benchmark, não deve interromper a coleta
+    except Exception as exc:
         resultados["registro_final_erro"] = str(exc)
         return resultados
     resultados["relatorio_id"] = str(relatorio_id)

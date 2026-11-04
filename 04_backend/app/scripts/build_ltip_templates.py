@@ -23,7 +23,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -341,7 +341,7 @@ def main(argv: list[str] | None = None) -> int:
 
     TEMPLATES_LTIP_DIR.mkdir(parents=True, exist_ok=True)
     if argumentos.original is not None:
-        layout["gerado_em"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        layout["gerado_em"] = datetime.now(UTC).isoformat(timespec="seconds")
         LAYOUT_JSON.write_text(json.dumps(layout, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         print(f"layout.json atualizado a partir do original informado (sha256 {layout['origem']['sha256'][:16]}…)")
 

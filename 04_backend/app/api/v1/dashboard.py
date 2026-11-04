@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import require_equipe
 from app.core.database import get_db
-from app.models import Edificacao, Usuario
+from app.models import Usuario
 from app.schemas.dashboard import DashboardEdificacaoRead
 from app.services import edificacao_service
 
