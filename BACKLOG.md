@@ -297,7 +297,7 @@ Não altere os templates gerados (se achar defeito neles, registre no Doc como p
 ```
 
 ### T13 · Extrator e templates PDF/DOCX do RFIP (planilha de 479 MB)
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-12
 - **Papel:** Engenheiro Backend
 - **Depende:** —
