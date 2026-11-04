@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+{#
+  ARQUIVO GERADO — não editar à mão. Produzido por `python -m app.scripts.build_vistoria_residencial_templates` a partir de templates/vistoria_residencial/layout.json (ADR-13/DEC-25).
+
+  Layout derivado do PDF original sha256 c1ffc311b9cc0546…
+  (91 páginas medidas). O nome do arquivo não é versionado:
+  identifica a unidade vistoriada (OWASP A02).
+#}
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>VISTORIA TÉCNICA PARA RECEBIMENTO DE IMÓVEL — {{ imovel.unidade }}</title>
+<style>
+  @page {
+    size: A4 portrait;
+    margin: 2.58cm 1.99cm 1.94cm 3.0cm;
+    @top-right { content: element(cabecalho); vertical-align: top; }
+    @bottom-center { content: element(rodape); vertical-align: top; }
+    @bottom-right {
+      content: counter(page);
+      font-family: Calibri, sans-serif;
+      font-size: 11.0pt;
+    }
+  }
+  @page capa {
+    margin: 0;
+    @top-right { content: none; }
+    @bottom-center { content: none; }
+    @bottom-right { content: none; }
+  }
+  body {
+    font-family: Times New Roman, "DejaVu Serif", serif;
+    font-size: 12.0pt;
+    color: #000000;
+    margin: 0;
+    text-align: justify;
+  }
+  .cabecalho { position: running(cabecalho); text-align: right; padding-top: 0.45cm; }
+  .cabecalho img { width: 3.86cm; }
+  .rodape {
+    position: running(rodape);
+    text-align: center;
+    font-family: Times New Roman, serif;
+    font-size: 10.0pt;
+    line-height: 1.2;
+  }
+  .rodape .contato { color: #0563C1; }
+  h1 { font-size: 14.0pt; font-weight: bold; text-transform: uppercase; margin: 0 0 0.4cm 0; }
+  h2 { font-size: 14.0pt; font-weight: bold; margin: 0.4cm 0 0.2cm 0; }
+  h3 { font-size: 12.0pt; font-weight: bold; margin: 0.3cm 0 0.15cm 0; }
+  h4 { font-size: 12.0pt; font-weight: bold; margin: 0.3cm 0 0.15cm 0; }
+  p { margin: 0 0 0.3cm 0; line-height: 1.35; }
+  .capitulo { page-break-before: always; }
+  /* Capa: foto de fundo sangrada, logo no canto e texto em #FFFFFF. */
+  .capa {
+    page: capa;
+    position: relative;
+    width: 595.5pt;
+    height: 842.25pt;
+    color: #FFFFFF;
+    background: #0c5276;
+    font-family: Montserrat, "Open Sans", sans-serif;
+    font-weight: bold;
+    overflow: hidden;
+  }
+  .capa .fundo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .capa .logo {
+    position: absolute;
+    left: 372.8pt;
+    top: 0pt;
+    width: 222.8pt;
+  }
+  .capa .titulo { position: absolute; top: 3.9cm; left: 1cm; width: 14.5cm; text-align: center; font-size: 34.4pt; line-height: 1.15; }
+  .capa .identificacao { position: absolute; top: 9.4cm; left: 1cm; width: 14.5cm; text-align: center; font-size: 15.4pt; }
+  .capa .responsavel { position: absolute; bottom: 0.9cm; left: 1cm; width: 19cm; font-size: 15.0pt; }
+  /* Folha de rosto: título em bloco, identificação do imóvel e data. */
+  .rosto { text-align: center; font-weight: bold; }
+  .rosto .titulo, .rosto .identificacao {
+    font-size: 36.0pt;
+    line-height: 1.3;
+  }
+  .rosto .titulo { margin-top: 1.5cm; }
+  .rosto .identificacao { margin-top: 2.5cm; }
+  .rosto .data { margin-top: 4.5cm; }
+  /* Relatório fotográfico: 2 figura(s) por página em 1 coluna(s). */
+  .fotos {  }
+  figure.foto { margin: 0.4cm auto; text-align: center; page-break-inside: avoid;  }
+  figure.foto img { width: 16.0cm; height: 9.0cm; object-fit: cover; }
+  figure.foto figcaption {
+    font-family: Calibri, sans-serif;
+    font-size: 9.0pt;
+    font-style: italic;
+    color: #44546A;
+    margin-top: 0.1cm;
+  }
+  /* Análise por sistema: subtítulos fixos repetidos em cada sistema. */
+  .sistema h4.subtitulo { font-size: 12.0pt; }
+  /* Bloco de assinatura do responsável técnico (RN-07). */
+  .assinatura {
+    text-align: right;
+    font-family: Calibri, sans-serif;
+    font-size: 12.0pt;
+    margin-top: 2cm;
+    page-break-inside: avoid;
+  }
+  .assinatura .rubrica { width: 137.7pt; height: 79.7pt; }
+  .assinatura .linha-assinatura { border-top: 0.75pt solid #000000; width: 10cm; margin: 0 0 0.1cm auto; }
+  .assinatura .nome { font-weight: bold; }
+  .assinatura .local-data { margin-top: 3cm; }
+</style>
+</head>
+<body>
+  <div class="cabecalho">{% if logo_data_uri %}<img src="{{ logo_data_uri }}" alt="Garra Engenharia">{% endif %}</div>
+  <div class="rodape">
+    <div>{{ fiscal.nome }}</div>
+    <div>Eng. Civil - CREA nº {{ fiscal.crea }}</div>
+    <div class="contato">{{ fiscal.email }} / {{ fiscal.telefone }}</div>
+  </div>
+
+  <section class="capa">
+    {% if capa_fundo_data_uri %}<img class="fundo" src="{{ capa_fundo_data_uri }}" alt="">{% endif %}
+    {% if logo_data_uri %}<img class="logo" src="{{ logo_data_uri }}" alt="Garra Engenharia">{% endif %}
+    <div class="titulo">VISTORIA TÉCNICA<br>PARA RECEBIMENTO<br>DE IMÓVEL</div>
+    <div class="identificacao">{{ imovel.unidade }}<br>{{ edificacao.nome }}</div>
+    <div class="responsavel">
+      RESP. TÉCNICO:<br>
+      ENG. CIVIL {{ fiscal.nome|upper }}<br>
+      {{ data_emissao|upper }} &nbsp; CREA: {{ fiscal.crea }}
+    </div>
+  </section>
+
+  <section class="rosto">
+    <div class="titulo">LAUDO TÉCNICO DE<br>CONSTATAÇÃO E<br>VISTORIA<br>PARA RECEBIMENTO DE<br>IMÓVEL</div>
+    <div class="identificacao">{{ imovel.unidade }}<br>{{ edificacao.nome }}</div>
+    <div class="data" style="font-size: 18.0pt">{{ data_emissao }}</div>
+  </section>
+
+  <section class="capitulo">
+    <h1>1. INTRODUÇÃO</h1>
+    {% for paragrafo in textos.s1 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <h2>1.1. Histórico</h2>
+    {% for paragrafo in textos.s1_1 %}<p>{{ paragrafo }}</p>{% endfor %}
+  </section>
+
+  <section class="capitulo">
+    <h1>2. CONSIDERAÇÕES PRELIMINARES</h1>
+    {% for paragrafo in textos.s2 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <h2>2.1. Geral</h2>
+    {% for paragrafo in textos.s2_1 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <h2>2.2. Pressupostos, ressalvas e fatores limitantes</h2>
+    {% for paragrafo in textos.s2_2 %}<p>{{ paragrafo }}</p>{% endfor %}
+  </section>
+
+  <section class="capitulo">
+    <h1>3. OBJETIVO</h1>
+    {% for paragrafo in textos.s3 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <h2>3.1. Geral</h2>
+    {% for paragrafo in textos.s3_1 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <h2>3.2. Específico</h2>
+    {% for paragrafo in textos.s3_2 %}<p>{{ paragrafo }}</p>{% endfor %}
+  </section>
+
+  <section class="capitulo">
+    <h1>4. OBJETO</h1>
+    {% for paragrafo in textos.s4 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <h2>4.1. Geral</h2>
+    {% for paragrafo in textos.s4_1 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <h2>4.2. Identificação</h2>
+    {% for paragrafo in textos.s4_2 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <h3>4.2.1. Tipologia</h3>
+    {% for paragrafo in textos.s4_2_1 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <h3>4.2.2. Caracterização</h3>
+    {% for paragrafo in textos.s4_2_2 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <h3>4.2.3. Localização</h3>
+    {% for paragrafo in textos.s4_2_3 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <h3>4.2.4. Descrição Qualitativa</h3>
+    {% for paragrafo in textos.s4_2_4 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <h4>4.2.4.1. Região</h4>
+    {% for paragrafo in textos.s4_2_4_1 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <h4>4.2.4.2. Valorização Imobiliária</h4>
+    {% for paragrafo in textos.s4_2_4_2 %}<p>{{ paragrafo }}</p>{% endfor %}
+  </section>
+
+  <section class="capitulo">
+    <h1>5. DA REALIZAÇÃO DA INSPEÇÃO</h1>
+    {% for paragrafo in textos.s5 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <h2>5.1. Responsável Técnico</h2>
+    {% for paragrafo in textos.s5_1 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <h2>5.2. Datas das Vistorias</h2>
+    {% for paragrafo in textos.s5_2 %}<p>{{ paragrafo }}</p>{% endfor %}
+  </section>
+
+  <section class="capitulo">
+    <h1>6. METODOLOGIA</h1>
+    {% for paragrafo in textos.s6 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <h2>6.1. Classificação da Inspeção quanto ao Nível</h2>
+    {% for paragrafo in textos.s6_1 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <h2>6.2. Critério de classificação técnica dos achados</h2>
+    {% for paragrafo in textos.s6_2 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <h2>6.3. Levantamento de Dados e Documentação</h2>
+    {% for paragrafo in textos.s6_3 %}<p>{{ paragrafo }}</p>{% endfor %}
+  </section>
+
+  <section class="capitulo">
+    <h1>7. DESENVOLVIMENTO DAS ATIVIDADES DA INSPEÇÃO</h1>
+    {% for paragrafo in textos.s7 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <h2>7.1. Sistemas Construtivos Inspecionados</h2>
+    {% for paragrafo in textos.s7_1 %}<p>{{ paragrafo }}</p>{% endfor %}
+  </section>
+
+  <section class="capitulo">
+    <h1>8. RELATÓRIO FOTOGRÁFICO</h1>
+    {% for paragrafo in textos.s8 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <div class="fotos">
+    {% for foto in fotos %}
+      <figure class="foto">
+        {% if foto.data_uri %}<img src="{{ foto.data_uri }}" alt="Figura {{ foto.numero }}">{% endif %}
+        <figcaption>Figura {{ foto.numero }} - {{ foto.legenda }}. Fonte: {{ foto.fonte or "Autor" }}.</figcaption>
+      </figure>
+    {% endfor %}
+    </div>
+  </section>
+
+  <section class="capitulo">
+    <h1>9. ANÁLISE E CONSIDERAÇÕES TÉCNICAS</h1>
+    {% for paragrafo in textos.s9 %}<p>{{ paragrafo }}</p>{% endfor %}
+    {% for sistema in sistemas %}
+    <section class="sistema">
+      <h2>9.{{ loop.index }}. {{ sistema.nome }}</h2>
+      <h4 class="subtitulo">➢ Constatações</h4>
+      <ul>{% for item in sistema.constatacoes %}<li>{{ item }}</li>{% endfor %}</ul>
+      <h4 class="subtitulo">➢ Fundamentação Técnica</h4>
+      {% for item in sistema.fundamentacao_tecnica %}<p>{{ item }}</p>{% endfor %}
+    </section>
+    {% endfor %}
+  </section>
+
+  <section class="capitulo">
+    <h1>10. CONCLUSÃO E CONSIDERAÇÕES FINAIS</h1>
+    {% for paragrafo in textos.s10 %}<p>{{ paragrafo }}</p>{% endfor %}
+  </section>
+
+  <section class="capitulo">
+    <h1>11. ENCERRAMENTO</h1>
+    {% for paragrafo in textos.s11 %}<p>{{ paragrafo }}</p>{% endfor %}
+    <div class="assinatura">
+      {% if assinatura_data_uri %}<img class="rubrica" src="{{ assinatura_data_uri }}" alt="Assinatura">{% endif %}
+      <div class="linha-assinatura"></div>
+      <div class="nome">{{ fiscal.nome }}</div>
+      <div>Eng. Civil - CREA nº {{ fiscal.crea }}</div>
+      {% for qualificacao in fiscal.qualificacoes %}<div>{{ qualificacao }}</div>{% endfor %}
+      <div class="local-data">{{ local_emissao }}, {{ data_emissao }}.</div>
+    </div>
+  </section>
+
+  <section class="capitulo">
+    <h1>12. REFERÊNCIAS BIBLIOGRÁFICAS</h1>
+    {% for paragrafo in textos.s12 %}<p>{{ paragrafo }}</p>{% endfor %}
+  </section>
+</body>
+</html>
