@@ -52,6 +52,7 @@ last_updated: 2026-09-17
 | **Descrição** | WeasyPrint pode ser lento para documentos grandes. O RNF-06 exige geração em menos de 60 segundos. |
 | **Mitigação** | Processamento assíncrono via Celery ou FastAPI BackgroundTasks (ADR-06, ainda não implementado). Compressão de imagens (Pillow) antes de inserir no PDF/DOCX. |
 | **Benchmark realizado (BL-22, 2026-08-05)** | Medição real com pipeline mínimo de fidelidade aproximada (ver [relatorio-benchmark-geracao-pdf-docx.md](relatorio-benchmark-geracao-pdf-docx.md)), 191 páginas / 570 fotos (pior caso ≥ RNF-06). Job único gerando PDF+DOCX (dual-pass, ADR-06 Seção 5): **sem otimização de imagem, 112,8s** (viola RNF-06, arquivos de 280 MB/138 MB); **otimizando a imagem a cada geração, 83,2s** (ainda viola RNF-06); **com as fotos já redimensionadas no upload (fix aplicado em BL-11, `MAX_LADO_ARMAZENADO_PX=2000`) + compressão adicional no embed do relatório, 44,2s** — dentro do limite, ~26% de margem. Risco rebaixado de "ação necessária" para **mitigado sob a condição de que BL-12/BL-13 reaproveitem o padrão de fotos já otimizadas no upload**, não a de recomprimir tudo a cada geração. |
+| **Re-medição com pipelines finais (T17, 2026-11-04)** | Job PDF+DOCX em sequência, 1 execução por combinação: RFO 21,1 s (201 p., 150 fotos) e Vistoria Cautelar 34,2 s (200 p., 350 fotos) atendem RNF-06; Vistoria Residencial 56,7 s (200 p., 358 fotos) com 5 % de margem; **LTIP 63,2 s com só 137 p. (239 fotos) viola**. Gargalo: conversão do WeasyPrint (98–99,7 % do PDF); no LTIP, o container flex único de fichas (0,455 s/página, 3 a 5 vezes os demais). Medição incompleta (sem 3 execuções, sem cenário de 2000 px, sem LTIP de ~200 páginas) e sem leitura no MinIO nem upload. Ver [benchmark-pipelines-finais.md](../backlog-auto/benchmark-pipelines-finais.md) e DEC-40. **Gatilho de escalada atingido** para o LTIP. |
 | **Risco residual** | (1) Medição feita com pipeline aproximado, síncrono, sem Celery/Redis — a versão final (BL-12/BL-13, ADR-06) precisa ser re-medida quando implementada; (2) variação observada entre execuções locais (`tempo_registro_final_storage_e_db_s` variou de 1,7s a 9,2s) por contenção de I/O no ambiente de desenvolvimento — recomenda-se nova medição em ambiente de produção/staging dedicado antes do sign-off final de RNF-06. |
 | **Gatilho de escalada** | Tempo de geração > 60s em teste de carga da implementação final (BL-12/BL-13) com laudo de 200 páginas. |
 | **Responsável** | Engenheiro Backend |
@@ -166,7 +167,7 @@ last_updated: 2026-09-17
 | R-07 — Offline descoberto tarde | — | **Encerrado (2026-09-10)** — cliente confirmou cobertura 4G/Wi-Fi (DEC-26) |
 | R-01 — Fidelidade visual PDF | Alta | Mitigado (protótipo antecipado) |
 | R-02 — Clipboard API | Média | Mitigado (fallback upload manual) |
-| R-03 — Performance PDF | Média | Mitigado sob condição — benchmark real em 2026-08-05, ver [relatorio-benchmark-geracao-pdf-docx.md](relatorio-benchmark-geracao-pdf-docx.md) |
+| R-03 — Performance PDF | Alta | **Reaberto (2026-11-04)** — re-medição T17 com os pipelines finais: LTIP viola RNF-06 (63,2 s com 137 páginas) e a Vistoria Residencial passa por 5 %; RFO e Cautelar atendem. Ver [benchmark-pipelines-finais.md](../backlog-auto/benchmark-pipelines-finais.md) e DEC-40 |
 | R-04 — Complexidade modelo | Média | Mitigado (modelo ER definido) |
 | R-05 — Original do cliente desatualizado | Baixa | Mitigado (templates e marca derivados dos originais arquivados — DEC-25/DEC-30); resta confirmar versão vigente (HT-02) |
 | R-08 — Escopo crescente | Média | Mitigado (congelamento v1.0) |
@@ -176,6 +177,7 @@ last_updated: 2026-09-17
 | R-12 — Vulnerabilidades de dependências do frontend (Next.js 14.2.35 crítico em produção) | Alta | Ação necessária (DEC-32 proposta; T03) |
 | R-13 — Lacunas de validação no CRUD de Ocorrências (enums, existência, `PUT`) | Média | Em mitigação: correção aplicada na T08, testes ainda não executados (DEC-34 proposta) |
 | R-14 — PDF dos templates e pipelines nunca renderizado de verdade; suíte completa sem PostgreSQL | Média | Ação necessária (rodar no container de `05_infra/`) |
+| R-15 — Lacunas de regra e segurança em Visitas e Fotos; testes de lacuna ainda não executados | Alta | Ação necessária (rodar `test_visitas_lacunas.py` e `test_fotos_lacunas.py` com infra no ar e corrigir; DEC-38/DEC-39) |
 
 ### R-11 — Ambiente de desenvolvimento não reproduzível
 
@@ -212,4 +214,16 @@ last_updated: 2026-09-17
 | **Origem** | Lote T05–T13 (2026-11-04), em [vistoria-cautelar-pipeline.md](../backlog-auto/vistoria-cautelar-pipeline.md), [vistoria-residencial-pipeline.md](../backlog-auto/vistoria-residencial-pipeline.md) e [rfip-templates.md](../backlog-auto/rfip-templates.md) |
 | **Descrição** | Os templates e pipelines de LTIP, Vistoria Cautelar, Vistoria Residencial e RFIP foram testados só em HTML (Jinja2) e DOCX. O teste de PDF é pulado porque o WeasyPrint não roda no Windows (sem Pango/GTK) e não há Docker nem PostgreSQL (`localhost:5433`) nas máquinas dos jobs. Por isso a conferência visual (HT-09) não aconteceu e a suíte completa não foi validada: T12 relatou 6 falhas e 104 erros e T13 6 falhas e 91 erros, todos em testes que dependem de banco (e de um `greenlet` funcional no venv local); nenhum foi diagnosticado um a um. Pontos específicos do RFIP: logo reduzida para caber na margem e escala de impressão não aplicada às fontes (2,6% de diferença). |
 | **Probabilidade / Impacto** | Alta / Média — defeitos de layout só apareceriam na entrega ao cliente |
+| **Atualização T17 (2026-11-04)** | O benchmark de T17 renderizou PDFs reais dos 4 pipelines em container Docker (WeasyPrint), o que mostra que a conversão roda e fornece tempos, mas **não houve conferência visual** contra os originais nem `pytest` completo; o risco continua aberto para fidelidade. |
 | **Mitigação** | Subir `05_infra/docker-compose.yml`, rodar o `pytest` completo e os testes de PDF no container e fazer a conferência visual lado a lado com os originais (HT-09). Só então fechar o risco. |
+
+### R-15 — Lacunas de regra e segurança em Visitas e Fotos; testes de lacuna não executados
+
+| Campo | Valor |
+|---|---|
+| **Origem** | Lote T14–T17 (2026-11-04), em [revisao-regras-visitas.md](../backlog-auto/revisao-regras-visitas.md) e [revisao-regras-fotos.md](../backlog-auto/revisao-regras-fotos.md) |
+| **Descrição** | A revisão de BL-10 achou 18 lacunas (RN-01/RN-02: sem unicidade de `seq_numero` nem de visita por dia, data futura, tipo de inspeção, quantidades) e a de BL-11 achou 9, entre elas uma de segurança: o vínculo de foto aceita `storage_key` do cliente, permitindo apontar para objeto de outro contrato e apagá-lo (A01), e a foto de celular em pé sai deitada no relatório (sem `exif_transpose`). Os testes de lacuna (`test_visitas_lacunas.py`, `test_fotos_lacunas.py`) afirmam o comportamento correto, foram só coletados e **nunca executados**: a coluna "falha hoje" dos Docs é análise estática. |
+| **Probabilidade / Impacto** | Alta / Média (Alta para a falha de segurança de fotos) |
+| **Mitigação** | Subir `05_infra/docker-compose.yml`, aplicar `alembic upgrade head`, rodar os dois arquivos e confirmar quais falham; corrigir conforme DEC-38 e DEC-39 (a falha de `storage_key` primeiro). Confirmar com o dono as interpretações de RN-01/RF-03 (data futura, só RFO) antes de corrigir. |
+| **Gatilho de escalada** | Qualquer uso de BL-10/BL-11 com dados reais antes de corrigir a validação de `storage_key`. |
+| **Responsável** | Engenheiro Backend |
