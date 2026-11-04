@@ -411,6 +411,94 @@ def test_passo_fecha_o_lote_antes_de_disparar_o_proximo(projeto, monkeypatch):
     assert ordem == ["colher", "disparar"]
 
 
+def _item(**extra):
+    base = {"bloco": "Bloco A", "titulo": "Nova tarefa", "papel": "backend", "ambiente": "offline",
+            "dificuldade": "baixa", "toca": "src/novo.py, docs/novo.md", "doc": "docs/novo.md", "pronto": "testes verdes",
+            "prompt": "Faça o novo módulo e registre em docs/novo.md."}
+    return {**base, **extra}
+
+
+def test_nova_cria_ids_em_sequencia_e_resolve_chaves(projeto):
+    from backlog_auto import novas
+    ids = novas.inserir(projeto, [
+        _item(chave="X", titulo="Primeira", origem="BL-10"),
+        _item(chave="Y", titulo="Segunda", depende="X, T01", toca="src/outro.py, docs/outro.md", doc="docs/outro.md"),
+    ])
+    assert ids == ["T04", "T05"]
+    _, t = ler(projeto)
+    assert t["T04"]["origem"] == "BL-10" and t["T04"]["status"] == "todo"
+    assert t["T05"]["depende"] == "T04, T01"
+    assert t["T04"]["bloco"] == "Bloco A" and t["T05"]["bloco"] == "Bloco A"
+    assert t["T05"]["prompt"].strip() == "Faça o novo módulo e registre em docs/novo.md."
+    assert not validar(projeto, t)
+
+
+def test_nova_rejeita_lote_invalido_sem_gravar(projeto):
+    from backlog_auto import novas
+    from backlog_auto.config import ConfigErro
+    antes = projeto.backlog.read_text(encoding="utf-8")
+    with pytest.raises(ConfigErro):
+        novas.inserir(projeto, [_item(ambiente="nuvem")])
+    with pytest.raises(ConfigErro):
+        novas.inserir(projeto, [_item(depende="T99")])
+    with pytest.raises(ConfigErro):
+        novas.inserir(projeto, [_item(prompt="")])
+    assert projeto.backlog.read_text(encoding="utf-8") == antes
+
+
+def test_nova_ignora_origem_ja_cadastrada(projeto):
+    from backlog_auto import novas
+    assert novas.inserir(projeto, [_item(origem="BL-7")]) == ["T04"]
+    assert novas.inserir(projeto, [_item(origem="BL-7", titulo="repetida")]) == []
+
+
+def test_nova_cria_bloco_que_nao_existe(projeto):
+    from backlog_auto import novas
+    novas.inserir(projeto, [_item(bloco="Bloco Z — Outro")])
+    _, t = ler(projeto)
+    assert t["T04"]["bloco"] == "Bloco Z — Outro"
+
+
+def test_planejar_grava_o_json_da_sessao_so_leitura(projeto, monkeypatch):
+    from backlog_auto import novas
+    real = subprocess.run
+    chamadas = []
+    saida = ("Aqui está:\n```json\n" + json.dumps([
+        {"chave": "A", "bloco": "Bloco A", "titulo": "Planejada", "origem": "BL-20", "papel": "backend",
+         "depende": [], "ambiente": "offline", "dificuldade": "baixa", "toca": "src/p.py, docs/p.md", "doc": "docs/p.md",
+         "pronto": "ok", "prompt": "faça p"}]) + "\n```")
+
+    def falso(cmd, *a, **k):
+        if cmd[0] != "claude-falso":
+            return real(cmd, *a, **k)
+        chamadas.append(cmd)
+        return subprocess.CompletedProcess(cmd, 0, saida, "")
+
+    monkeypatch.setattr(novas.subprocess, "run", falso)
+    monkeypatch.setattr(runner, "achar_claude", lambda cfg: "claude-falso")
+    assert novas.planejar(projeto) == 1
+    cmd = chamadas[0]
+    assert cmd[cmd.index("--allowedTools") + 1] == "Read,Grep,Glob"
+    _, t = ler(projeto)
+    assert t["T04"]["origem"] == "BL-20"
+    assert "planejamento cria T04" in sh(projeto.raiz, "log", "-1", "--format=%s")
+
+
+def test_planejar_dry_nao_chama_o_claude(projeto, monkeypatch, capsys):
+    from backlog_auto import novas
+    monkeypatch.setattr(runner, "achar_claude", lambda cfg: pytest.fail("não podia chamar o claude"))
+    assert novas.planejar(projeto, dry=True) == 0
+    assert "Responda SOMENTE com uma lista JSON" in capsys.readouterr().out
+
+
+def test_planejar_se_preciso_so_quando_o_backlog_acaba(projeto, monkeypatch):
+    from backlog_auto import novas
+    monkeypatch.setattr(novas, "planejar", lambda cfg, dry=False: pytest.fail("não era hora"))
+    assert novas.planejar_se_preciso(projeto) is None  # desligado por padrão
+    projeto.d["planejamento"]["ativo"] = True
+    assert novas.planejar_se_preciso(projeto) is None  # ainda há tarefas todo
+
+
 def test_passo_nao_dispara_se_o_fechamento_falhou(projeto, monkeypatch):
     monkeypatch.setattr(runner, "colher", lambda cfg: {"feitas": 0, "ocupadas": 0, "esperando": 0, "problemas": 0})
     monkeypatch.setattr(runner, "fechar", lambda cfg, dry=False: "falha")
