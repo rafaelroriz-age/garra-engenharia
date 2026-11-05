@@ -503,7 +503,7 @@ Registre em 00_docs/backlog-auto/visitas-correcoes.md: tabela L1–L18 (antes, d
 ```
 
 ### T22 · Extensão do modelo de dados para legendas por IA (prompts_ia e colunas em fotos)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-37
 - **Papel:** Engenheiro Backend
 - **Depende:** T14, T19, T21
