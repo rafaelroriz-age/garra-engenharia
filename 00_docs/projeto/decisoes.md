@@ -611,3 +611,14 @@ last_updated: 2026-09-17
 | **Decisão proposta** | Impor `Literal["upload_manual","lightshot","clipboard"]` no payload e, em tarefa própria com migration, normalizar dados existentes e avaliar um CHECK. |
 | **Consequências** | Registros antigos gravados com `upload` (se houver) precisam de migração de dados antes do CHECK. |
 | **Referência** | `00_docs/backlog-auto/frontend-origem-foto.md` |
+
+## DEC-44 — Política de limpeza de objetos órfãos no storage (proposta de T30)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-05 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | A T30 confirmou o storage compatível com artefatos de IA e adicionou `exists`, `list_keys` e `listar_orfaos` (só leitura). Não existe tarefa agendada de limpeza; uploads sem vínculo (`DELETE /fotos/upload` só cobre o descarte explícito) podem acumular. |
+| **Decisão proposta** | (1) Rodar `listar_orfaos` periodicamente apenas gerando relatório/log. (2) Só apagar objetos com idade > 24 h (exige expor `LastModified`, não incluído). (3) Iniciar em dry-run; apagar só com aprovação manual da lista, ou automático após N dias se o dono decidir. (4) Prefixos distintos para fotos (`fotos/`) e artefatos de IA (`ia/`). |
+| **Consequências** | Nada é apagado automaticamente até a aprovação. Fakes futuros de `StorageClient` devem implementar `exists` e `list_keys`. |
+| **Referência** | `00_docs/backlog-auto/storage-legenda-ia.md` |
