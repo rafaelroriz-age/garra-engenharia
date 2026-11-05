@@ -539,7 +539,7 @@ Tarefa (BL-37, DEC-37 DP-2 e DP-6). Contexto: a T22 já criou a tabela `prompts_
 ```
 
 ### T24 · Regra «só legenda aprovada entra no relatório» nos pipelines de PDF/DOCX (BL-38, DP-9)
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-38
 - **Papel:** Engenheiro Backend
 - **Depende:** —
