@@ -587,4 +587,27 @@ last_updated: 2026-09-17
 | **Contexto** | O LTIP levava 72,1 s (239 fotos) e 154,5 s (382 fotos) por causa do custo quadrático do WeasyPrint 70 num único `display: flex` de fichas que atravessa várias páginas. Trocando o container por linhas explícitas de duas fichas e entregando as fotos por `url_fetcher` em vez de data URI, o PDF caiu para 11,6 s e 19,3 s (−84 % e −88 %), na faixa do RFO (0,09 s/página). Implementa o item (C) de DEC-40 para o LTIP. |
 | **Decisão proposta** | (A) Nos templates WeasyPrint, conteúdo repetitivo que atravessa páginas (fichas, fotos, figuras) não fica num único container `flex`/`grid`: cada linha vira bloco pequeno (tabela fixa ou flex por linha) com `page-break-inside: avoid`. (B) Os pipelines PDF entregam as fotos ao WeasyPrint por `url_fetcher` (`URLFetcher`), mantendo `renderizar_html` autocontido para testes e pré-visualização; hoje só o LTIP faz isso, e estender aos demais (RFO, vistorias, RFIP) fica para tarefa própria (economia de ~2 s e ~100 MB por 240 fotos). (C) Fixar `weasyprint>=70` em `requirements.txt` ou manter o fallback para data URI, que não foi testado. |
 | **Consequências** | R-03 deixa de apontar o LTIP como violação de RNF-06. O DOCX do LTIP continua sem foto (lacuna de BL-17). O RFIP ainda não foi medido; o `rfip_pipeline.py` (T18) usa data URI e deve ser medido ao receber ocorrências reais. |
+| **Andamento (T28, 2026-11-05)** | O item (B) foi estendido a RFO, Vistoria Cautelar e Vistoria Residencial por `report_generator/foto_fetcher.py` (estrito: só `garra-foto:<n>` registrado e `data:`). RFIP e LTIP não mudaram (o LTIP mantém cópia local; unificar é proposta). Testes de PDF pulados sem GTK; ganho **não medido**. Ver `pipelines-url-fetcher.md`. |
 | **Referência** | `00_docs/backlog-auto/ltip-desempenho.md` |
+
+## DEC-42 — Legenda por IA: aprovação só por auditor, invalidação ao editar/regerar e teto de custo (proposta de T29)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-05 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | A revisão de segurança T29 (SEG-IA-01..09) achou: sem limite de taxa/custo em `POST /fotos/{id}/legenda-ia/gerar`; regerar legenda aprovada mantém `aprovado_por_id/em`; `PUT` que muda `legenda` aprovada mantém a aprovação (DP-10 de DEC-37); saída do LLM sem limite de tamanho; auxiliar aprova legenda embora RN-16/RN-18 reservem a aprovação ao responsável. |
+| **Decisão proposta** | (A) Aprovar legenda IA só com perfil `auditor`; o auxiliar gera e edita rascunho (muda `test_auxiliar_gera_e_aprova` e a UI da T26). (B) Regerar ou editar legenda aprovada zera `aprovado_*` e volta a `rascunho`, o que fecha DP-10. (C) Limite de taxa por usuário e por foto em `gerar`, e tamanho máximo/saneamento da saída do LLM (`legenda_ia_sugerida`, alertas, pendências), antes de BL-34 ligar o adapter real. (D) Delimitar `legenda_bruta` no adapter (injeção de prompt). |
+| **Consequências** | (C) e (D) bloqueiam produção do adapter real, junto de R-10. Decidir L15 (vínculo usuário↔contrato, DEC-27) continua pendente (SEG-IA-07). |
+| **Referência** | `00_docs/backlog-auto/seguranca-legenda-ia.md` |
+
+## DEC-43 — `origem` da foto: enum fechado no backend (proposta de T27)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-05 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | `FotoVincularPayload.origem` é `str` livre; não há CHECK no banco. O valor aceito só existe no frontend (`OrigemFoto`), e o seed usa `upload_manual`. A afirmação da T26 de que `upload` causava 422 era incorreta. |
+| **Decisão proposta** | Impor `Literal["upload_manual","lightshot","clipboard"]` no payload e, em tarefa própria com migration, normalizar dados existentes e avaliar um CHECK. |
+| **Consequências** | Registros antigos gravados com `upload` (se houver) precisam de migração de dados antes do CHECK. |
+| **Referência** | `00_docs/backlog-auto/frontend-origem-foto.md` |
