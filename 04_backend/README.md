@@ -298,7 +298,7 @@ Sem código de produção alterado. Resultados e propostas de decisão (DEC-37 a
 
 | Tema | Doc | Testes novos | Situação |
 |---|---|---|---|
-| Lacunas do modelo para legendas por IA (BL-04 → BL-36..BL-39) | `modelagem-legendas-ia-lacunas.md` | — | só análise; faltam `prompts_ia` e as colunas de legenda IA em `fotos` |
+| Lacunas do modelo para legendas por IA (BL-04 → BL-36..BL-39) | `modelagem-legendas-ia-lacunas.md` | — | só análise; resolvida em parte pela T22 (linha abaixo) |
 | Regras de Visitas (BL-10, RN-01/RN-02) | `revisao-regras-visitas.md` | `tests/test_visitas_lacunas.py` | coletados, **não executados** (banco sem schema); devem falhar até a correção |
 | Upload de fotos (BL-11, RF-05) | `revisao-regras-fotos.md` | `tests/test_fotos_lacunas.py` | coletados, **não executados** (sem PostgreSQL/MinIO); a lacuna mais grave é a `storage_key` vinda do cliente |
 | Benchmark dos pipelines finais (BL-22) | `benchmark-pipelines-finais.md` | — | RFO e Cautelar atendem RNF-06; Residencial no limite; **LTIP viola** |
@@ -313,5 +313,6 @@ Para rodar os testes de lacuna: `docker compose up -d` em `05_infra/`, `alembic 
 | Upload de fotos (BL-11) | `fotos-correcoes.md` | `storage_key` validada e conferida no bucket, 409 de chave duplicada, `exif_transpose`, validação de `origem`/`ordem`/`legenda`, `PUT` parcial, `DELETE /fotos/upload`, teto de 50 Mpx | 44 testes passaram; faltam `UNIQUE(storage_key)` e URL pré-assinada |
 | PDF do LTIP (RNF-06) | `ltip-desempenho.md` | Template com linhas de fichas no lugar do flex único e fotos por `url_fetcher` | 72,1 → 11,6 s (239 fotos); 154,5 → 19,3 s (~200 páginas) |
 | Visitas (BL-10) | `visitas-correcoes.md` | Migration `e5a1c3f7b9d2` (UNIQUE `(inspecao_id, seq_numero)` e `(inspecao_id, data)`; aborta se houver data duplicada), data ≤ hoje, só RFO, `PUT` parcial, `GET /visitas/{id}` e CRUD de mão de obra e medições | L15 em `xfail` (DEC-27); `alembic upgrade head` pendente em produção |
+| Legendas por IA, modelo de dados (BL-36) | `legenda-ia-modelo.md` | Migration `f7c2a9d4e6b1` (`prompts_ia` + 11 colunas em `fotos`, 5 CHECKs, `downgrade()`), `PromptIA`, `LegendaIARead`; sem adapter nem endpoint | 24 testes em `test_legenda_ia_modelo.py`; `alembic upgrade head` pendente nos ambientes; L12, L13, L22 aguardam o provedor (B-04) |
 
 A suíte completa do backend não foi validada numa única execução: o venv do checkout principal estava sem `greenlet` funcional, houve interrupção por falta de memória e testes assíncronos falham com `RuntimeError: There is no current event loop` quando um teste usa `asyncio.run`. `ruff check .` ainda acusa erros preexistentes fora das áreas tocadas.
