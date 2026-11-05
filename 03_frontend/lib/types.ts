@@ -182,7 +182,11 @@ export interface VisitaInput {
 // Foto (RF-05, RNF-02 parcial, BL-11)
 // ---------------------------------------------------------------------------
 
-export type OrigemFoto = "lightshot" | "upload" | "camera";
+/**
+ * Valores aceitos em `origem` ao vincular foto (`POST /visitas/{id}/fotos`, `POST /ocorrencias/{id}/fotos`).
+ * Único tipo de origem do frontend — o editor usa rótulos internos e os converte só na chamada ao backend.
+ */
+export type OrigemFoto = "upload_manual" | "lightshot" | "clipboard";
 
 export interface Foto {
   id: UUID;
