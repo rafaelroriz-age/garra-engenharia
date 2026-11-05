@@ -173,7 +173,7 @@ last_updated: 2026-09-17
 | R-05 — Original do cliente desatualizado | Baixa | Mitigado (templates e marca derivados dos originais arquivados — DEC-25/DEC-30); resta confirmar versão vigente (HT-02) |
 | R-08 — Escopo crescente | Média | Mitigado (congelamento v1.0) |
 | R-09 — Hospedagem indefinida | Baixa | Mitigado (Docker Compose agnóstico) |
-| R-10 — Dados enviados a IA externa (RF-15) | Média | Ação necessária (escolher provedor — lacuna #13, B-04) |
+| R-10 — Dados enviados a IA externa (RF-15) | Média | Ação necessária (escolher provedor — lacuna #13, B-04). Em 2026-11-04 (T23) o contrato `LegendaIAClient` e o Fake isolam o provedor, mas nenhum cliente real existe |
 | R-11 — Ambiente de desenvolvimento não reproduzível (pytest × pytest-asyncio, ruff, Docker, Python 3.12) | Média → Baixa | Parcialmente mitigado (T02 e T04); restam o ruff na CI e a suíte de integração (DEC-31) |
 | R-12 — Vulnerabilidades de dependências do frontend (Next.js 14.2.35 crítico em produção) | Alta | Ação necessária (DEC-32 proposta; T03) |
 | R-13 — Lacunas de validação no CRUD de Ocorrências (enums, existência, `PUT`) | Média | Em mitigação: correção aplicada na T08, testes ainda não executados (DEC-34 proposta) |
