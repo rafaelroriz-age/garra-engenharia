@@ -42,7 +42,8 @@ Aplicação **FastAPI (Python 3.12)** responsável pela API, regras de negócio,
 │   ├── test_models.py            # testes de integração das 14 entidades e seus relacionamentos
 │   ├── test_gabarito.py          # parser + seed + endpoints de dados mestre (BL-05)
 │   ├── test_auth.py              # registro, login (sucesso/falha) e proteção de rota (BL-06)
-│   └── test_storage.py           # upload/download/delete/URL pré-assinada contra o MinIO real (BL-07)
+│   ├── test_storage.py           # upload/download/delete/URL pré-assinada contra o MinIO real (BL-07)
+│   └── test_storage_legenda_ia.py # exists/list_keys/órfãos/presigned com S3 falso, sem MinIO (T30)
 ├── requirements.txt
 ├── Dockerfile
 ├── pytest.ini
@@ -239,6 +240,9 @@ Adapter Pattern (`00_docs/arquitetura.md` Seção 9.9): `StorageClient` (interfa
 | `download(key) -> bytes` | Retorna o conteúdo binário. Lança `ObjectNotFoundError` se a chave não existir. |
 | `delete(key) -> None` | Remove o objeto (idempotente — não lança erro se a chave já não existir). |
 | `generate_presigned_url(key, expires_in) -> str` | Gera URL de download temporária (padrão 15 minutos — RNF-07/ADR-02/Seção 10.1 A02). Nunca gera URLs públicas permanentes. |
+| `exists(key) -> bool` | Checa existência por HEAD (404/NoSuchKey → `False`). Adicionado na T30. |
+| `list_keys(prefix) -> list[str]` | Lista chaves por prefixo, com paginação. Adicionado na T30. |
+| `listar_orfaos(chaves_registradas, prefix)` | Devolve as chaves do storage sem vínculo no banco; só leitura, nada é apagado (política em DEC-44, proposta). |
 
 O bucket (`MINIO_BUCKET_NAME`) é criado automaticamente pelo próprio `S3StorageClient` na primeira instanciação, se ainda não existir (`head_bucket` + `create_bucket`, idempotente) — funciona mesmo sem o job `createbuckets` do `05_infra/docker-compose.yml`.
 
