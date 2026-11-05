@@ -113,6 +113,23 @@ class S3StorageClient(StorageClient):
         # se a chave já não existir (204 em ambos os casos).
         self._client.delete_object(Bucket=self._bucket, Key=key)
 
+    def exists(self, key: str) -> bool:
+        self._validate_key(key)
+        try:
+            self._client.head_object(Bucket=self._bucket, Key=key)
+        except ClientError as exc:
+            if exc.response.get("Error", {}).get("Code", "") in _NOT_FOUND_ERROR_CODES:
+                return False
+            raise
+        return True
+
+    def list_keys(self, prefix: str = "") -> list[str]:
+        keys: list[str] = []
+        paginator = self._client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=self._bucket, Prefix=prefix):
+            keys.extend(obj["Key"] for obj in page.get("Contents", []))
+        return keys
+
     def generate_presigned_url(
         self, key: str, expires_in: int = DEFAULT_PRESIGNED_URL_EXPIRES_IN_SECONDS
     ) -> str:
