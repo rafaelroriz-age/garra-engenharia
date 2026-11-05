@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Clipboard, GripVertical, ImageUp, Loader2, Trash2 } from "lucide-react";
+import { Clipboard, GripVertical, ImageUp, Loader2, Sparkles, Trash2 } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api-client";
 import type { Foto, FotoUploadResult } from "@/lib/types";
@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ApiErrorAlert } from "@/components/api-error-alert";
 import { PhotoAnnotationEditor } from "@/components/photo-annotation-editor";
+import { LegendaIAPainel } from "@/components/legenda-ia-painel";
+import { useUsuarioAtual } from "@/lib/use-usuario-atual";
 
 const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15MB — alinhado ao limite validado no backend (BL-11)
 const ACCEPTED_MIME_TYPES = ["image/png", "image/jpeg", "image/webp"];
@@ -58,6 +60,11 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fotosRef = useRef(fotos);
+  // Legenda por IA (BL-35, RF-15): só a equipe (auditor/auxiliar) gera e aprova, como no backend
+  // (`require_equipe`). Enquanto o perfil carrega, o painel fica oculto (ver `useUsuarioAtual`).
+  const { isAuditor, isAuxiliar } = useUsuarioAtual();
+  const podeUsarLegendaIA = isAuditor || isAuxiliar;
+  const [fotoLegendaIAId, setFotoLegendaIAId] = useState<string | null>(null);
 
   useEffect(() => {
     fotosRef.current = fotos;
@@ -183,6 +190,15 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
     [onChange]
   );
 
+  const substituirFoto = useCallback(
+    (updated: Foto) => {
+      const nextFotos = fotosRef.current.map((item) => (item.id === updated.id ? updated : item));
+      fotosRef.current = nextFotos;
+      onChange(nextFotos);
+    },
+    [onChange]
+  );
+
   const removeFoto = useCallback(
     async (foto: Foto) => {
       try {
@@ -215,6 +231,8 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
     },
     [onChange]
   );
+
+  const fotoLegendaIA = podeUsarLegendaIA ? fotos.find((item) => item.id === fotoLegendaIAId) : undefined;
 
   if (!targetId) {
     return (
@@ -323,6 +341,7 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
                   Legenda da foto
                 </label>
                 <Input
+                  key={`legenda-${foto.id}-${foto.legenda ?? ""}`}
                   id={`legenda-${foto.id}`}
                   defaultValue={foto.legenda ?? ""}
                   placeholder="Legenda técnica"
@@ -347,6 +366,20 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
                       <GripVertical className="h-3.5 w-3.5 rotate-90" aria-hidden="true" />
                     </Button>
                   </div>
+                  {podeUsarLegendaIA ? (
+                    <Button
+                      type="button"
+                      variant={fotoLegendaIAId === foto.id ? "secondary" : "ghost"}
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => setFotoLegendaIAId((atual) => (atual === foto.id ? null : foto.id))}
+                      aria-label="Legenda com IA"
+                      aria-pressed={fotoLegendaIAId === foto.id}
+                      title="Legenda com IA"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                    </Button>
+                  ) : null}
                   <Button
                     type="button"
                     variant="ghost"
@@ -364,6 +397,8 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
       ) : (
         <p className="text-xs text-muted-foreground">Nenhuma foto vinculada ainda.</p>
       )}
+
+      {fotoLegendaIA ? <LegendaIAPainel foto={fotoLegendaIA} onFotoAtualizada={substituirFoto} /> : null}
     </div>
   );
 }

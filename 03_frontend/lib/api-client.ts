@@ -10,6 +10,8 @@
  * Não contém regra de negócio — apenas transporte e parsing de erro.
  */
 
+import type { Foto, FotoUpdateInput, LegendaIAGerarInput } from "@/lib/types";
+
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
@@ -155,4 +157,20 @@ export const api = {
   put: <T>(path: string, body?: unknown, options?: ApiFetchOptions) =>
     apiFetch<T>(path, { ...options, method: "PUT", body }),
   delete: <T>(path: string, options?: ApiFetchOptions) => apiFetch<T>(path, { ...options, method: "DELETE" }),
+};
+
+/**
+ * Chamadas de legenda de foto assistida por IA (BL-34/BL-35; RF-15, RN-16, RN-17).
+ * Contrato em `00_docs/backlog-auto/legenda-ia-endpoints.md` §2. Ambas devolvem `FotoRead`.
+ *
+ * - `gerar`: grava só a sugestão (`legenda_ia_sugerida`, alertas, pendências) com
+ *   `status_validacao_ia = "rascunho"`; nunca toca na `legenda` final. Responde 503
+ *   (`legenda-ia-indisponivel`) enquanto não houver provedor de LLM configurado.
+ * - `aprovar`: `PUT /fotos/{id}` com `aprovar_legenda_ia: true`; aprovador e data vêm do token.
+ */
+export const legendaIA = {
+  gerar: (fotoId: string, input?: LegendaIAGerarInput) =>
+    api.post<Foto>(`/fotos/${fotoId}/legenda-ia/gerar`, input ?? {}),
+  aprovar: (fotoId: string, legenda: string) =>
+    api.put<Foto>(`/fotos/${fotoId}`, { legenda, aprovar_legenda_ia: true } satisfies FotoUpdateInput),
 };
