@@ -663,7 +663,7 @@ Tarefa (DEC-43, proposta da T27). Contexto: em 04_backend/app/schemas/foto.py o 
 ```
 
 ### T32 · Storage: expor `LastModified` e script de relatório de órfãos em dry-run
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-44
 - **Papel:** backend
 - **Depende:** —
