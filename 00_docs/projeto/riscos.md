@@ -178,7 +178,7 @@ last_updated: 2026-09-17
 | R-12 — Vulnerabilidades de dependências do frontend (Next.js 14.2.35 crítico em produção) | Alta | Ação necessária (DEC-32 proposta; T03) |
 | R-13 — Lacunas de validação no CRUD de Ocorrências (enums, existência, `PUT`) | Média | Em mitigação: correção aplicada na T08, testes ainda não executados (DEC-34 proposta) |
 | R-14 — PDF dos templates e pipelines nunca renderizado de verdade; suíte completa sem PostgreSQL | Média | Ação necessária (rodar no container de `05_infra/`) |
-| R-15 — Lacunas de regra e segurança em Visitas e Fotos | Média | **Reduzido (2026-11-04, T19/T21)** — correções aplicadas e testadas; abertos: L15 (vínculo usuário↔contrato), `UNIQUE(storage_key)`, URL pré-assinada, limite de corpo, suíte completa numa só execução (T22: 34 falhas anteriores, 14 delas testes de banco que falham por `asyncio.run` derrubar o event loop em 7 arquivos; proposta: helper único em `tests/conftest.py`); DEC-38/DEC-39 ainda propostas |
+| R-15 — Lacunas de regra e segurança em Visitas e Fotos | Média | **Reduzido (2026-11-04, T19/T21)** — correções aplicadas e testadas; abertos: L15 (vínculo usuário↔contrato), `UNIQUE(storage_key)`, URL pré-assinada, limite de corpo, suíte completa numa só execução (T22: 34 falhas anteriores, 14 delas testes de banco que falham por `asyncio.run` derrubar o event loop em 7 arquivos; proposta: helper único em `tests/conftest.py`); DEC-38/DEC-39 ainda propostas. T25 (2026-11-05) confirmou a falha de `asyncio.run` em `test_fotos.py` e `test_rbac_auxiliar.py` (22 falhas ao rodar junto dos testes `async`, que passam isolados) e que a suíte completa estoura a memória neste Windows |
 
 ### R-11 — Ambiente de desenvolvimento não reproduzível
 
