@@ -1,7 +1,8 @@
-"""Lacunas de regras de Visitas/Equipe/Medições (revisão de BL-10; corrigidas em tarefa posterior).
+"""Lacunas de regras de Visitas/Equipe/Medições (revisão de BL-10 em T15; corrigidas em T21).
 
-Cada `test_lacuna_*` afirma o comportamento CORRETO; portanto FALHA hoje. Ver
-`00_docs/backlog-auto/revisao-regras-visitas.md` (matriz regra -> código -> teste).
+Cada `test_lacuna_*` afirma o comportamento CORRETO (DEC-38). Ver
+`00_docs/backlog-auto/revisao-regras-visitas.md` (matriz) e `visitas-correcoes.md` (correção).
+L15 segue `xfail` estrito: depende do vínculo usuário<->contrato (DEC-27), decisão do dono.
 Regras: RF-03, RN-01, RN-02, RN-18 (`00_docs/estudo-do-contexto.md`), DEC-27, DEC-29.
 """
 import uuid
@@ -9,6 +10,12 @@ from datetime import date, timedelta
 
 import pytest
 import pytest_asyncio
+from fastapi.testclient import TestClient
+from sqlalchemy import delete, select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
+
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.security import create_access_token, hash_password
@@ -23,11 +30,6 @@ from app.models import (
     VisitaMaoObra,
     VisitaMedicao,
 )
-from fastapi.testclient import TestClient
-from sqlalchemy import delete, select
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.pool import NullPool
 
 _engine = create_async_engine(get_settings().database_url, poolclass=NullPool, future=True)
 _Session = async_sessionmaker(bind=_engine, expire_on_commit=False)
@@ -99,20 +101,23 @@ async def inspecao_factory(db_session):
         db_session.add(insp)
         await db_session.commit()
         await db_session.refresh(insp)
-        criadas.append((insp, ct, fiscal, ed))
+        # Guarda só os ids: um rollback no teste (ex.: L5, IntegrityError) expira os objetos da
+        # sessão, e ler `insp.id` expirado no teardown dispara lazy load síncrono (MissingGreenlet).
+        criadas.append((insp.id, ct.id, fiscal.id, ed.id))
         return insp
 
     yield _criar
 
-    for insp, ct, fiscal, ed in criadas:
-        ids = select(Visita.id).where(Visita.inspecao_id == insp.id)
+    await db_session.rollback()
+    for insp_id, ct_id, fiscal_id, ed_id in criadas:
+        ids = select(Visita.id).where(Visita.inspecao_id == insp_id)
         await db_session.execute(delete(VisitaMaoObra).where(VisitaMaoObra.visita_id.in_(ids)))
         await db_session.execute(delete(VisitaMedicao).where(VisitaMedicao.visita_id.in_(ids)))
-        await db_session.execute(delete(Visita).where(Visita.inspecao_id == insp.id))
-        await db_session.execute(delete(Inspecao).where(Inspecao.id == insp.id))
-        await db_session.execute(delete(Contrato).where(Contrato.id == ct.id))
-        await db_session.execute(delete(Responsavel).where(Responsavel.id == fiscal.id))
-        await db_session.execute(delete(Edificacao).where(Edificacao.id == ed.id))
+        await db_session.execute(delete(Visita).where(Visita.inspecao_id == insp_id))
+        await db_session.execute(delete(Inspecao).where(Inspecao.id == insp_id))
+        await db_session.execute(delete(Contrato).where(Contrato.id == ct_id))
+        await db_session.execute(delete(Responsavel).where(Responsavel.id == fiscal_id))
+        await db_session.execute(delete(Edificacao).where(Edificacao.id == ed_id))
     await db_session.commit()
 
 
@@ -300,6 +305,12 @@ def test_lacuna_14_sem_token_nao_escreve_em_visitas(auth_headers, inspecao):
     assert r.status_code == 401, r.text
 
 
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,  # só a asserção 403 pode "falhar esperado"; erro de infraestrutura falha de verdade
+    reason="Pendente de decisão do dono: vínculo usuário<->contrato de DEC-27 (L15). Não resolvido "
+    "em T21; quando a regra existir, remover o xfail (strict avisa se passar a funcionar).",
+)
 async def test_lacuna_15_auxiliar_nao_edita_visita_de_outro_autor(auth_headers, usuario_factory, inspecao):
     """DEC-27: auxiliar edita visitas 'dos contratos em que atua'. Não há vínculo usuário<->contrato no
     modelo; qualquer auxiliar edita visita criada pelo auditor. Esperado 403 para visita alheia."""
@@ -366,3 +377,89 @@ def test_lacuna_18_visita_consultavel_e_equipe_corrigivel(auth_headers, inspecao
     assert client.get(f"/api/v1/visitas/{v['id']}", headers=auth_headers).status_code == 200
     r = client.delete(f"/api/v1/visitas/{v['id']}/mao-obra/{mo['id']}", headers=auth_headers)
     assert r.status_code == 204, r.text
+
+
+# ---------------------------------------------------------------- Cobertura das correções (T21, DEC-38)
+
+def test_correcao_put_parcial_null_limpa_observacoes_e_rejeita_obrigatorios(auth_headers, inspecao):
+    """DEC-38 (D): `observacoes: null` explícito limpa; `data`/`servicos_executados` null -> 422;
+    PUT só com `observacoes` preserva data e serviços."""
+    v = _visita(inspecao.id, auth_headers)
+    url = f"/api/v1/visitas/{v['id']}"
+    r = client.put(url, json={"observacoes": "Chuva"}, headers=auth_headers)
+    assert r.status_code == 200, r.text
+    corpo = r.json()
+    assert (corpo["observacoes"], corpo["servicos_executados"], corpo["data"]) == ("Chuva", "Fundação", "2026-07-01")
+    r = client.put(url, json={"observacoes": None}, headers=auth_headers)
+    assert r.status_code == 200 and r.json()["observacoes"] is None, r.text
+    for invalido in ({"data": None}, {"servicos_executados": None}, {"servicos_executados": "  "}):
+        assert client.put(url, json=invalido, headers=auth_headers).status_code == 422, invalido
+    # a mesma data da própria visita não conflita consigo mesma
+    assert client.put(url, json={"data": "2026-07-01"}, headers=auth_headers).status_code == 200
+
+
+def test_correcao_crud_itens_mao_obra_e_medicao(auth_headers, inspecao):
+    """DEC-38 (E): GET/PUT/DELETE de mão de obra e medição; item de outra visita -> 404."""
+    v = _visita(inspecao.id, auth_headers, "2026-07-01")
+    outra = _visita(inspecao.id, auth_headers, "2026-07-02")
+    base = f"/api/v1/visitas/{v['id']}"
+    base_outra = f"/api/v1/visitas/{outra['id']}"
+
+    assert client.get(f"/api/v1/visitas/{uuid.uuid4()}", headers=auth_headers).status_code == 404
+
+    mo = client.post(f"{base}/mao-obra", json={"funcao": " Pedreiro ", "quantidade": 3}, headers=auth_headers)
+    assert mo.status_code == 201 and mo.json()["funcao"] == "Pedreiro", mo.text
+    mo_id = mo.json()["id"]
+    assert [i["id"] for i in client.get(f"{base}/mao-obra", headers=auth_headers).json()] == [mo_id]
+    r = client.put(f"{base}/mao-obra/{mo_id}", json={"funcao": "Servente", "quantidade": 4}, headers=auth_headers)
+    assert r.status_code == 200 and r.json()["quantidade"] == 4, r.text
+    assert client.get(f"{base}/mao-obra/{mo_id}", headers=auth_headers).json()["funcao"] == "Servente"
+    r = client.put(f"{base}/mao-obra/{mo_id}", json={"funcao": "Servente", "quantidade": 0}, headers=auth_headers)
+    assert r.status_code == 422
+    assert client.get(f"{base_outra}/mao-obra/{mo_id}", headers=auth_headers).status_code == 404
+    assert client.delete(f"{base_outra}/mao-obra/{mo_id}", headers=auth_headers).status_code == 404
+
+    med = client.post(
+        f"{base}/medicoes", json={"descricao": "Concreto", "quantidade": 0, "unidade": "m3"}, headers=auth_headers
+    )
+    assert med.status_code == 201, med.text  # quantidade 0 é válida (>= 0)
+    med_id = med.json()["id"]
+    r = client.put(
+        f"{base}/medicoes/{med_id}",
+        json={"descricao": "Concreto", "quantidade": 12.5, "unidade": " m³ "},
+        headers=auth_headers,
+    )
+    assert r.status_code == 200 and r.json()["unidade"] == "m³", r.text
+    assert client.get(f"{base}/medicoes", headers=auth_headers).json()[0]["quantidade"] == 12.5
+    r = client.put(
+        f"{base}/medicoes/{med_id}",
+        json={"descricao": "x", "quantidade": 1, "unidade": "un", "visita_id": outra["id"]},
+        headers=auth_headers,
+    )
+    assert r.status_code == 422  # extra='forbid': o item não troca de visita pelo payload
+
+    assert client.delete(f"{base}/mao-obra/{mo_id}", headers=auth_headers).status_code == 204
+    assert client.delete(f"{base}/medicoes/{med_id}", headers=auth_headers).status_code == 204
+    assert client.get(f"{base}/mao-obra/{mo_id}", headers=auth_headers).status_code == 404
+    detalhe = client.get(base, headers=auth_headers).json()
+    assert detalhe["mao_obra"] == [] and detalhe["medicoes"] == []
+
+
+async def test_correcao_rbac_endpoints_novos(auth_headers, usuario_factory, inspecao):
+    """BL-42/RN-18: auxiliar lê e corrige itens de campo; cliente recebe 403 nos endpoints novos."""
+    v = _visita(inspecao.id, auth_headers)
+    base = f"/api/v1/visitas/{v['id']}"
+    mo_id = client.post(
+        f"{base}/mao-obra", json={"funcao": "Pedreiro", "quantidade": 1}, headers=auth_headers
+    ).json()["id"]
+
+    h_cliente = await usuario_factory("cliente")
+    assert client.get(base, headers=h_cliente).status_code == 403
+    assert client.get(f"{base}/medicoes", headers=h_cliente).status_code == 403
+    assert client.delete(f"{base}/mao-obra/{mo_id}", headers=h_cliente).status_code == 403
+
+    h_aux = await usuario_factory("auxiliar")
+    assert client.get(base, headers=h_aux).status_code == 200
+    r = client.put(f"{base}/mao-obra/{mo_id}", json={"funcao": "Pedreiro", "quantidade": 2}, headers=h_aux)
+    assert r.status_code == 200, r.text
+    assert client.delete(f"{base}/mao-obra/{mo_id}", headers=h_aux).status_code == 204

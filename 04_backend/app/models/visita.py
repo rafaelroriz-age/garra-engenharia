@@ -6,7 +6,7 @@ import uuid
 from datetime import date
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, ForeignKey, Integer, Text
+from sqlalchemy import Date, ForeignKey, Integer, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -23,6 +23,11 @@ class Visita(Base):
     """Visita de acompanhamento de obra (um dia) associada a uma Inspeção do tipo RFO."""
 
     __tablename__ = "visitas"
+    # RN-01/DEC-38 (B): numeração sequencial única e uma visita por dia de obra, por inspeção.
+    __table_args__ = (
+        UniqueConstraint("inspecao_id", "seq_numero", name="uq_visitas_inspecao_id_seq_numero"),
+        UniqueConstraint("inspecao_id", "data", name="uq_visitas_inspecao_id_data"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     inspecao_id: Mapped[uuid.UUID] = mapped_column(
