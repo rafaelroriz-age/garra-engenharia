@@ -614,7 +614,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T29 · Revisão de segurança OWASP dos endpoints novos de legenda por IA, fotos e visitas
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-23
 - **Papel:** Engenheiro de Software
 - **Depende:** —
