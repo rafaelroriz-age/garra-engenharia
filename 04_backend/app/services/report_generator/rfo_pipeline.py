@@ -24,6 +24,8 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from PIL import Image
 from weasyprint import HTML
 
+from app.services.report_generator.legenda_foto import legenda_para_relatorio
+
 TEMPLATES_DIR = Path(__file__).resolve().parents[3] / "templates"
 RFO_TEMPLATES_DIR = TEMPLATES_DIR / "rfo"
 HTML_TEMPLATE_NAME = "rfo/rfo_template.html.j2"
@@ -100,6 +102,8 @@ def gerar_pdf(contexto: dict[str, Any], fotos_bytes: dict[str, bytes], destino: 
         for foto in visita["fotos"]:
             b64 = base64.b64encode(fotos_bytes[foto["storage_key"]]).decode("ascii")
             foto["data_uri"] = f"data:image/jpeg;base64,{b64}"
+            # DEC-37 DP-9: o template imprime `foto.legenda`; IA nunca entra.
+            foto["legenda"] = legenda_para_relatorio(foto)
 
     inicio_render = time.perf_counter()
     html_renderizado = template.render(**contexto_html)
@@ -135,8 +139,9 @@ def gerar_docx(contexto: dict[str, Any], fotos_bytes: dict[str, bytes], destino:
         subdoc = tpl.new_subdoc()
         for foto in visita["fotos"]:
             subdoc.add_picture(io.BytesIO(fotos_bytes[foto["storage_key"]]), width=Mm(90))
-            if foto.get("legenda"):
-                subdoc.add_paragraph(foto["legenda"])
+            legenda = legenda_para_relatorio(foto)
+            if legenda:
+                subdoc.add_paragraph(legenda)
         visitas_ctx.append({**visita, "fotos_doc": subdoc})
     fim_subdocs = time.perf_counter()
 
