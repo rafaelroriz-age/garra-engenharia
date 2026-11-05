@@ -629,7 +629,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T30 · Confirmar a compatibilidade do storage com os artefatos de legenda por IA e a limpeza de órfãos
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-07
 - **Papel:** Engenheiro Backend
 - **Depende:** T28
