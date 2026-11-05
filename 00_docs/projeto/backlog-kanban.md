@@ -37,7 +37,7 @@ last_updated: 2026-09-17
 | BL-19 | Confirmar versão vigente dos originais em `01_output-context/` | — | Gestor de Projeto |
 | BL-34 | Legendas assistidas por IA (backend): `prompts_ia`, campos em `Foto`, Adapter `LegendaIAClient` | RF-15, RN-16, RN-17, DEC-21 | Engenheiro Backend |
 | BL-35 | Legendas assistidas por IA (frontend): geração, revisão e aprovação da legenda sugerida | RF-15, RN-16, RN-17 | Engenheiro Frontend |
-| BL-36 | Extensão da modelagem de dados para legendas assistidas por IA | RF-15, RN-16, RN-17, DEC-21 | Engenheiro Backend |
+| BL-36 | Extensão da modelagem de dados para legendas assistidas por IA — ✅ T22 (migration `f7c2a9d4e6b1`) | RF-15, RN-16, RN-17, DEC-21 | Engenheiro Backend |
 | BL-37 | Storage/metadata do fluxo de legendas assistidas por IA | RF-15, RN-16, RN-17 | Engenheiro Backend |
 | BL-38 | Integração do upload/edição de fotos com a geração de legendas por IA | RF-15, RN-16, RN-17, BL-11 | Engenheiro Backend + Frontend |
 | BL-39 | Integração do editor de anotação com o fluxo de aprovação de legendas por IA | RF-15, RN-16, RN-17, BL-31 | Engenheiro Frontend |
