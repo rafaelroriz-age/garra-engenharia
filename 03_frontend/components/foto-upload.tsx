@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Clipboard, GripVertical, ImageUp, Loader2, Trash2 } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api-client";
-import type { Foto, FotoUploadResult } from "@/lib/types";
+import type { Foto, FotoUploadResult, OrigemFoto } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ApiErrorAlert } from "@/components/api-error-alert";
@@ -67,7 +67,7 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
   const linkEndpoint = ocorrenciaId ? `/ocorrencias/${ocorrenciaId}/fotos` : `/visitas/${visitaId}/fotos`;
 
   const linkFoto = useCallback(
-    async (upload: FotoUploadResult, origem: string) => {
+    async (upload: FotoUploadResult, origem: OrigemFoto) => {
       const foto = await api.post<Foto>(linkEndpoint, {
         storage_key: upload.storage_key,
         url_publica: upload.url,
@@ -89,7 +89,9 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
         const formData = new FormData();
         formData.append("arquivo", file);
         const upload = await api.post<FotoUploadResult>("/fotos/upload", formData, { raw: true });
-        await linkFoto(upload, origin === "clipboard" ? "lightshot" : "upload");
+        // Origem do editor → valor aceito pelo backend. Clipboard = captura Lightshot (integração da Opção A).
+        const origemBackend: OrigemFoto = origin === "clipboard" ? "lightshot" : "upload_manual";
+        await linkFoto(upload, origemBackend);
       } catch (err) {
         setError(err instanceof Error ? err : new Error("Falha ao enviar arquivo."));
       } finally {
