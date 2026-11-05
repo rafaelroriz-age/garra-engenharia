@@ -3,6 +3,8 @@ import hashlib
 from dataclasses import dataclass, field
 from typing import Protocol, runtime_checkable
 
+from app.core.errors import DomainError
+
 
 @dataclass(frozen=True)
 class LegendaIAResultado:
@@ -35,3 +37,18 @@ class FakeLegendaIAClient:
             alertas=[],
             pendencias=[] if legenda_bruta else ["legenda bruta ausente"],
         )
+
+
+def get_legenda_ia_client() -> LegendaIAClient:
+    """Dependência FastAPI do cliente de IA (DEC-37 DP-6).
+
+    Enquanto o provedor de LLM não for escolhido (B-04) não há adapter concreto: a rota
+    responde 503 (RFC 7807). Os testes sobrescrevem esta dependência com `FakeLegendaIAClient`;
+    o adapter real (BL-34) passará a ser devolvido aqui.
+    """
+    raise DomainError(
+        "Nenhum provedor de IA está configurado para gerar legendas (decisão B-04 pendente).",
+        type_suffix="legenda-ia-indisponivel",
+        title="Legenda por IA indisponível",
+        status_code=503,
+    )

@@ -8,6 +8,8 @@ from pydantic import BaseModel, ConfigDict, Field
 # DEC-39 (C): domínio fechado de `origem` e tetos de `ordem`/`legenda`.
 OrigemFoto = Literal["upload_manual", "lightshot", "clipboard"]
 LEGENDA_MAX_LENGTH = 500
+# Anotação/transcrição do auditor enviada à IA (BL-34); teto defensivo, a coluna é TEXT.
+LEGENDA_BRUTA_MAX_LENGTH = 5000
 # Base64 de MAX_UPLOAD_SIZE_BYTES (25 MB) = ceil(25 MiB / 3) * 4 = 34_952_536 caracteres.
 IMAGEM_BASE64_MAX_LENGTH = 34_952_536
 # DEC-37 (DP-1) / RF-15: espelham os CHECKs de `fotos` (app/models/foto.py).
@@ -97,7 +99,23 @@ class FotoDescartarUploadPayload(BaseModel):
 
 
 class FotoUpdatePayload(BaseModel):
-    """Payload de `PUT /fotos/{id}` — atualiza apenas legenda e/ou ordem."""
+    """Payload de `PUT /fotos/{id}` — atualiza legenda e/ou ordem e, opcionalmente, aprova a
+    sugestão de IA (DEC-37 DP-3). Campo ausente preserva; `legenda: null` limpa (DP-5).
+
+    `aprovado_por_id`, `aprovado_em` e `status_validacao_ia` não fazem parte do payload: se
+    enviados, são ignorados; o servidor os grava a partir do token na aprovação.
+    """
 
     legenda: str | None = Field(default=None, max_length=LEGENDA_MAX_LENGTH)
     ordem: int | None = Field(default=None, ge=0)
+    # True aprova a sugestão: grava `legenda` (enviada ou, se ausente, a própria sugestão).
+    aprovar_legenda_ia: bool = False
+
+
+class LegendaIAGerarPayload(BaseModel):
+    """Payload de `POST /fotos/{id}/legenda-ia/gerar` (BL-34, DEC-37 DP-4).
+
+    `legenda_bruta` ausente reaproveita a já gravada na foto; enviada, substitui a gravada.
+    """
+
+    legenda_bruta: str | None = Field(default=None, max_length=LEGENDA_BRUTA_MAX_LENGTH)

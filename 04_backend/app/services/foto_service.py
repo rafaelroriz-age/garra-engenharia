@@ -8,17 +8,24 @@ import base64
 import binascii
 import re
 import uuid
+from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import ConflictError, DomainError, NotFoundError
-from app.models import Foto, Ocorrencia, Visita
+from app.models import Foto, Ocorrencia, Usuario, Visita
 from app.repositories import foto_repository
-from app.services import image_processing
+from app.services import image_processing, prompt_ia_service
+from app.services.legenda_ia import LegendaIAClient
 from app.services.storage.base import StorageClient
-from app.services.storage.s3_client import MAX_UPLOAD_SIZE_BYTES
+from app.services.storage.s3_client import MAX_UPLOAD_SIZE_BYTES, ObjectNotFoundError
 
 _PRESIGNED_URL_EXPIRES_IN_SECONDS = 15 * 60
+
+# Nome do prompt-sistema de legenda em `prompts_ia` (BL-34); a versão ativa é a usada (DP-2).
+PROMPT_LEGENDA_IA_NOME = "legenda_foto"
+STATUS_RASCUNHO = "rascunho"
+STATUS_APROVADA = "aprovada"
 
 # Chave emitida pelo servidor em `_processar_e_enviar` (DEC-39 A). `fullmatch` + UUID canônico
 # impede `../`, caminho absoluto, outro prefixo e chaves de outros objetos do bucket.
@@ -132,12 +139,76 @@ async def vincular_a_visita(
     )
 
 
-async def atualizar(db: AsyncSession, foto_id: uuid.UUID, campos: dict) -> Foto:
-    """Atualiza só os campos presentes em `campos` (`legenda`/`ordem`); `legenda: None` limpa a legenda."""
+async def atualizar(
+    db: AsyncSession, foto_id: uuid.UUID, campos: dict, *, usuario: Usuario | None = None
+) -> Foto:
+    """Atualiza só os campos presentes em `campos` (`legenda`/`ordem`); `legenda: None` limpa (DP-5).
+
+    Com `aprovar_legenda_ia=True`, aprova a sugestão de IA (DEC-37 DP-3): `legenda` recebe o
+    texto enviado ou, se ausente, a própria sugestão; `aprovado_por_id`/`aprovado_em` vêm de
+    `usuario` (token), nunca do payload. Sem aprovação, os campos de IA não mudam.
+    """
     foto = await foto_repository.get_by_id(db, foto_id)
     if foto is None:
         raise NotFoundError(f"Foto '{foto_id}' não encontrada.", type_suffix="foto-nao-encontrada")
+    campos = dict(campos)
+    if campos.pop("aprovar_legenda_ia", False):
+        if usuario is None:
+            raise ValueError("A aprovação exige o usuário autenticado.")
+        if foto.status_validacao_ia is None:
+            raise DomainError(
+                "A foto não tem sugestão de legenda por IA para aprovar.",
+                type_suffix="legenda-ia-sem-sugestao", title="Aprovação inválida",
+            )
+        legenda = campos["legenda"] if "legenda" in campos else foto.legenda_ia_sugerida
+        if not (legenda or "").strip():
+            raise DomainError(
+                "A legenda aprovada não pode ser vazia.",
+                type_suffix="legenda-aprovada-vazia", title="Aprovação inválida",
+            )
+        campos["legenda"] = legenda
+        foto.status_validacao_ia = STATUS_APROVADA
+        foto.aprovado_por_id = usuario.id
+        foto.aprovado_em = datetime.now(UTC)
     return await foto_repository.update(db, foto, campos)
+
+
+async def gerar_legenda_ia(
+    db: AsyncSession, foto_id: uuid.UUID, storage: StorageClient, cliente: LegendaIAClient,
+    campos: dict,
+) -> Foto:
+    """Gera a sugestão de legenda por IA (BL-34; DEC-37 DP-2, DP-4; RN-16, RN-17).
+
+    Escreve apenas os campos de sugestão (`legenda_ia_sugerida`, `legenda_bruta` se enviada em
+    `campos`, alertas/pendências, prompt e hash, instante) e põe `status_validacao_ia` em
+    `rascunho`. Nunca altera `legenda` nem os campos de aprovação.
+    """
+    foto = await foto_repository.get_by_id(db, foto_id)
+    if foto is None:
+        raise NotFoundError(f"Foto '{foto_id}' não encontrada.", type_suffix="foto-nao-encontrada")
+    prompt = await prompt_ia_service.obter_ativo(db, PROMPT_LEGENDA_IA_NOME)
+    try:
+        imagem = storage.download(foto.storage_key)
+    except ObjectNotFoundError as exc:
+        raise DomainError(
+            "O arquivo da foto não existe no storage.", type_suffix="storage-key-inexistente",
+            title="Foto inválida",
+        ) from exc
+    legenda_bruta = campos["legenda_bruta"] if "legenda_bruta" in campos else foto.legenda_bruta
+    resultado = await cliente.gerar_legenda(imagem, prompt.conteudo, legenda_bruta)
+
+    if "legenda_bruta" in campos:
+        foto.legenda_bruta = legenda_bruta
+    foto.legenda_ia_sugerida = resultado.legenda_sugerida
+    foto.alertas_ia = list(resultado.alertas)
+    foto.pendencias_ia = list(resultado.pendencias)
+    foto.prompt_ia_id = prompt.id
+    foto.prompt_conteudo_hash = prompt_ia_service.calcular_hash(prompt.conteudo)
+    foto.legenda_ia_gerada_em = datetime.now(UTC)
+    foto.status_validacao_ia = STATUS_RASCUNHO
+    await db.commit()
+    await db.refresh(foto)
+    return foto
 
 
 async def remover(db: AsyncSession, foto_id: uuid.UUID, storage: StorageClient) -> None:
