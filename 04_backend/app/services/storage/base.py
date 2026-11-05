@@ -7,6 +7,7 @@ diretamente de `boto3` — para permitir trocar o provedor de armazenamento
 """
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
+from datetime import datetime
 
 
 class StorageClient(ABC):
@@ -50,16 +51,15 @@ class StorageClient(ABC):
         """
 
     @abstractmethod
-    def exists(self, key: str) -> bool:
-        """Indica se o objeto `key` existe no bucket (HEAD, sem baixar o conteúdo).
-
-        Lança `ValueError` se `key` for vazia.
-        """
-
-    @abstractmethod
     def list_keys(self, prefix: str = "") -> list[str]:
         """Lista as chaves de todos os objetos cujo nome começa com `prefix`
         (paginado internamente; `prefix` vazio lista o bucket inteiro)."""
+
+    def list_objects(self, prefix: str = "") -> list[tuple[str, datetime]]:
+        """Pares `(chave, LastModified)` dos objetos sob `prefix` (DEC-44).
+
+        Não abstrato para não quebrar fakes existentes de `StorageClient`."""
+        raise NotImplementedError
 
     def listar_orfaos(self, chaves_registradas: Iterable[str], prefix: str = "") -> list[str]:
         """Chaves presentes no bucket (sob `prefix`) que NÃO constam em
