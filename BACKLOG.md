@@ -484,7 +484,7 @@ Registre em 00_docs/backlog-auto/ltip-desempenho.md: perfil, hipóteses confirma
 ```
 
 ### T21 · Corrigir as lacunas de regras de Visitas (unicidade, domínio, CRUD de itens)
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-38
 - **Papel:** Engenheiro Backend
 - **Depende:** T15, T19
