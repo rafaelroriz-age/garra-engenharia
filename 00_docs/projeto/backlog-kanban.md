@@ -47,7 +47,7 @@ last_updated: 2026-09-17
 | ID | Tarefa | Requisitos/Decisões | Agente |
 |---|---|---|---|
 | BL-15 | Prioridade da Ocorrência: sugestão pelo Grau de Risco + sobrescrita rastreável (desbloqueada por DEC-29) | RN-04, RN-05, DEC-29 | Engenheiro Backend |
-| BL-23 | Revisão de segurança OWASP Top 10 | RNF-05 | Engenheiro de Software |
+| BL-23 | Revisão de segurança OWASP Top 10 — ✅ (2ª passada T29, 2026-11-05: 9 achados SEG-IA abertos nos endpoints de legenda IA) | RNF-05 | Engenheiro de Software |
 | BL-27 | `docker-compose.prod.yml` + `nginx/nginx.conf` | DEC-14 | Engenheiro DevOps |
 | BL-29 | `backup-db.sh` / `restore-db.sh` + agendamento | DEC-14, RNF-08 | Engenheiro DevOps |
 | BL-32 | Portal do Cliente — dashboard e acompanhamento da auditoria | RF-13, RN-14 | Engenheiro Backend + Frontend |
