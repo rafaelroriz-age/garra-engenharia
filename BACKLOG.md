@@ -599,7 +599,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T28 · Estender a entrega de fotos por url_fetcher ao RFO, Vistoria Cautelar e Vistoria Residencial
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-41
 - **Papel:** Engenheiro Backend
 - **Depende:** —
