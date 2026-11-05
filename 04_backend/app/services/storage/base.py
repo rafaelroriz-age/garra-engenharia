@@ -6,6 +6,7 @@ diretamente de `boto3` — para permitir trocar o provedor de armazenamento
 (MinIO -> AWS S3 -> outro compatível com S3) sem alterar quem a consome.
 """
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 
 
 class StorageClient(ABC):
@@ -40,6 +41,25 @@ class StorageClient(ABC):
 
         Lança `ValueError` se `key` for vazia.
         """
+
+    @abstractmethod
+    def exists(self, key: str) -> bool:
+        """Indica se o objeto `key` existe no bucket (HEAD, sem baixar o conteúdo).
+
+        Lança `ValueError` se `key` for vazia.
+        """
+
+    @abstractmethod
+    def list_keys(self, prefix: str = "") -> list[str]:
+        """Lista as chaves de todos os objetos cujo nome começa com `prefix`
+        (paginado internamente; `prefix` vazio lista o bucket inteiro)."""
+
+    def listar_orfaos(self, chaves_registradas: Iterable[str], prefix: str = "") -> list[str]:
+        """Chaves presentes no bucket (sob `prefix`) que NÃO constam em
+        `chaves_registradas` (ex.: `Foto.storage_key` do banco). Somente leitura:
+        nunca apaga nada — a exclusão automática depende de decisão do dono."""
+        registradas = set(chaves_registradas)
+        return sorted(k for k in self.list_keys(prefix) if k not in registradas)
 
     @abstractmethod
     def generate_presigned_url(self, key: str, expires_in: int) -> str:
