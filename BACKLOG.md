@@ -584,7 +584,7 @@ Tarefa (BL-35, RF-15, RN-16, RN-17, DEC-21). Contexto: a tarefa C (BL-34) criou 
 ```
 
 ### T27 · Frontend: corrigir a origem 'upload' enviada ao vincular foto (backend aceita 'upload_manual')
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-31
 - **Papel:** Engenheiro Frontend
 - **Depende:** —
