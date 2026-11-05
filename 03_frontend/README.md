@@ -27,6 +27,7 @@ Aplicação **Next.js 14 (App Router) PWA** que funciona como interface web/mobi
 │   ├── layout/
 │   │   ├── nav-items.ts          # itens de navegação principal
 │   │   └── app-shell.tsx         # sidebar desktop + menu mobile (Sheet), a11y
+│   ├── legenda-ia-painel.tsx     # painel «Gerar legenda com IA»: rascunho editável, alertas, pendências e aprovação (BL-35)
 │   ├── page-header.tsx           # cabeçalho padrão de tela
 │   └── under-construction.tsx    # placeholder padrão para telas ainda não implementadas
 ├── public/
