@@ -484,6 +484,49 @@ def test_planejar_grava_o_json_da_sessao_so_leitura(projeto, monkeypatch):
     assert "planejamento cria T04" in sh(projeto.raiz, "log", "-1", "--format=%s")
 
 
+def _planejar_com(projeto, monkeypatch, itens):
+    from backlog_auto import novas
+    real = subprocess.run
+    saida = "```json\n" + json.dumps(itens) + "\n```"
+
+    def falso(cmd, *a, **k):
+        if cmd[0] != "claude-falso":
+            return real(cmd, *a, **k)
+        return subprocess.CompletedProcess(cmd, 0, saida, "")
+
+    monkeypatch.setattr(novas.subprocess, "run", falso)
+    monkeypatch.setattr(runner, "achar_claude", lambda cfg: "claude-falso")
+    return novas.planejar(projeto)
+
+
+def _plan_item(chave, depende=(), n=0):
+    return {"chave": chave, "bloco": "Bloco A", "titulo": f"Plan {chave}", "origem": f"BL-9{n}", "papel": "backend",
+            "depende": list(depende), "ambiente": "offline", "dificuldade": "baixa", "toca": f"src/{chave}.py",
+            "pronto": "ok", "prompt": "faça"}
+
+
+def test_planejar_descarta_dependencia_desconhecida(projeto, monkeypatch, capsys):
+    assert _planejar_com(projeto, monkeypatch, [_plan_item("A", ["B"])]) == 1
+    _, t = ler(projeto)
+    assert t["T04"]["depende"] in ([], "—")
+    assert "dependência 'B' descartada" in capsys.readouterr().err
+
+
+def test_planejar_corte_nao_deixa_dependencia_orfa(projeto, monkeypatch):
+    projeto.d["planejamento"]["max_tarefas"] = 2
+    itens = [_plan_item("A", ["F"], 1), _plan_item("B", [], 2), _plan_item("C", [], 3), _plan_item("F", [], 6)]
+    assert _planejar_com(projeto, monkeypatch, itens) == 2
+    _, t = ler(projeto)
+    assert {t["T04"]["origem"], t["T05"]["origem"]} == {"BL-91", "BL-96"}
+
+
+def test_nova_manual_continua_estrita_com_dependencia_inexistente(projeto):
+    from backlog_auto import novas
+    from backlog_auto.config import ConfigErro
+    with pytest.raises(ConfigErro):
+        novas.inserir(projeto, [_item(depende=["B"])])
+
+
 def test_planejar_dry_nao_chama_o_claude(projeto, monkeypatch, capsys):
     from backlog_auto import novas
     monkeypatch.setattr(runner, "achar_claude", lambda cfg: pytest.fail("não podia chamar o claude"))
