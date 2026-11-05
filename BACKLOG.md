@@ -569,7 +569,7 @@ Tarefa (BL-34 sem o adapter concreto; DEC-37 DP-3, DP-4, DP-5, DP-6). Contexto: 
 ```
 
 ### T26 · Frontend: botão «Gerar legenda com IA» e aprovação no upload/edição de foto (BL-35)
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-35
 - **Papel:** Engenheiro Frontend
 - **Depende:** T25
