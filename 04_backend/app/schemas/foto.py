@@ -1,8 +1,13 @@
 """Schemas Pydantic v2 de `Foto` (request/response), sem lógica de negócio."""
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
+
+# DEC-43: contrato fechado de origem para o payload de vínculo (entrada).
+# A leitura (`FotoRead`) segue aceitando `str` livre, pois há registros antigos gravados.
+OrigemFoto = Literal["upload_manual", "lightshot", "clipboard"]
 
 
 class FotoBase(BaseModel):
@@ -56,7 +61,7 @@ class FotoVincularPayload(BaseModel):
     storage_key: str
     legenda: str | None = None
     ordem: int | None = None
-    origem: str
+    origem: OrigemFoto
 
 
 class FotoUpdatePayload(BaseModel):
