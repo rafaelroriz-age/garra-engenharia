@@ -584,7 +584,7 @@ Tarefa (BL-35, RF-15, RN-16, RN-17, DEC-21). Contexto: a tarefa C (BL-34) criou 
 ```
 
 ### T27 · Frontend: corrigir a origem 'upload' enviada ao vincular foto (backend aceita 'upload_manual')
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-31
 - **Papel:** Engenheiro Frontend
 - **Depende:** —
@@ -599,7 +599,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T28 · Estender a entrega de fotos por url_fetcher ao RFO, Vistoria Cautelar e Vistoria Residencial
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-41
 - **Papel:** Engenheiro Backend
 - **Depende:** —
@@ -614,7 +614,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T29 · Revisão de segurança OWASP dos endpoints novos de legenda por IA, fotos e visitas
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-23
 - **Papel:** Engenheiro de Software
 - **Depende:** —
