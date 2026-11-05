@@ -648,7 +648,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ## Bloco C — Endurecimento de legendas por IA e storage (DEC-42/43/44)
 
 ### T31 · Impor enum fechado de `origem` da foto no payload de vínculo (backend)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-43
 - **Papel:** backend
 - **Depende:** —
@@ -663,7 +663,7 @@ Tarefa (DEC-43, proposta da T27). Contexto: em 04_backend/app/schemas/foto.py o 
 ```
 
 ### T32 · Storage: expor `LastModified` e script de relatório de órfãos em dry-run
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-44
 - **Papel:** backend
 - **Depende:** —
