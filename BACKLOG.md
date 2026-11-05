@@ -554,7 +554,7 @@ Tarefa (BL-38, parte backend de relatório; DEC-37 DP-9, proposta ainda não apr
 ```
 
 ### T25 · Endpoints de geração e aprovação de legenda por IA com cliente Fake (BL-34)
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-34
 - **Papel:** Engenheiro Backend
 - **Depende:** T23
