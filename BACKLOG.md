@@ -524,7 +524,7 @@ Registre em 00_docs/backlog-auto/legenda-ia-modelo.md: tabela das 22 lacunas (fe
 ```
 
 ### T23 · Serviço de versões de prompt de IA e contrato LegendaIAClient com Fake (BL-37)
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-37
 - **Papel:** Engenheiro Backend
 - **Depende:** —
