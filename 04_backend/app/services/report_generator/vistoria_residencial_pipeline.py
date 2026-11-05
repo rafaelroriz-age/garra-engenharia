@@ -35,6 +35,8 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from app.services.report_generator.foto_fetcher import RegistroDeFotos, criar_url_fetcher
+
 TEMPLATES_DIR = Path(__file__).resolve().parents[3] / "templates"
 HTML_TEMPLATE_NAME = "vistoria_residencial/vistoria_residencial_template.html.j2"
 DOCX_TEMPLATE_NAME = "vistoria_residencial/vistoria_residencial_template.docx"
@@ -142,8 +144,9 @@ def _bytes_da_foto(foto: dict[str, Any], fotos_bytes: dict[str, bytes]) -> bytes
     return fotos_bytes[storage_key]
 
 
-def renderizar_html(contexto: dict[str, Any], fotos_bytes: dict[str, bytes]) -> str:
-    """Renderiza o `.html.j2` da Vistoria Residencial com as fotos como data URI."""
+def _renderizar(contexto: dict[str, Any], fotos_bytes: dict[str, bytes], registro: RegistroDeFotos | None) -> str:
+    """Renderiza o `.html.j2`. Com `registro`, cada foto vira `garra-foto:<n>`
+    (resolvida por `url_fetcher`, DEC-41); sem ele, data URI autocontido."""
     env = Environment(
         loader=FileSystemLoader(str(TEMPLATES_DIR)),
         autoescape=select_autoescape(["html", "j2"]),
@@ -153,9 +156,17 @@ def renderizar_html(contexto: dict[str, Any], fotos_bytes: dict[str, bytes]) -> 
     for foto in contexto_html["fotos"]:
         conteudo = _bytes_da_foto(foto, fotos_bytes)
         if conteudo is not None:
-            b64 = base64.b64encode(conteudo).decode("ascii")
-            foto["data_uri"] = f"data:{_mime(conteudo)};base64,{b64}"
+            if registro is not None:
+                foto["data_uri"] = registro.registrar(conteudo)
+            else:
+                b64 = base64.b64encode(conteudo).decode("ascii")
+                foto["data_uri"] = f"data:{_mime(conteudo)};base64,{b64}"
     return template.render(**contexto_html)
+
+
+def renderizar_html(contexto: dict[str, Any], fotos_bytes: dict[str, bytes]) -> str:
+    """Renderiza o `.html.j2` da Vistoria Residencial com as fotos como data URI."""
+    return _renderizar(contexto, fotos_bytes, None)
 
 
 def gerar_pdf(contexto: dict[str, Any], fotos_bytes: dict[str, bytes], destino: Path) -> dict[str, float]:
@@ -167,10 +178,13 @@ def gerar_pdf(contexto: dict[str, Any], fotos_bytes: dict[str, bytes], destino: 
     from weasyprint import HTML  # preguiçoso: GTK/Pango só existem no container
 
     inicio_render = time.perf_counter()
-    html_renderizado = renderizar_html(contexto, fotos_bytes)
+    registro = RegistroDeFotos()
+    fetcher = criar_url_fetcher(registro)
+    html_renderizado = _renderizar(contexto, fotos_bytes, registro if fetcher else None)
     fim_render = time.perf_counter()
 
-    documento = HTML(string=html_renderizado, base_url=str(TEMPLATES_DIR)).render()
+    opcoes = {"url_fetcher": fetcher} if fetcher else {}
+    documento = HTML(string=html_renderizado, base_url=str(TEMPLATES_DIR), **opcoes).render()
     n_paginas = len(documento.pages)
     documento.write_pdf(str(destino))
     fim_pdf = time.perf_counter()
