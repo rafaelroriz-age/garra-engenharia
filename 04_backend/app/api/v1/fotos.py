@@ -4,7 +4,8 @@
 - `POST /fotos/upload-clipboard` — upload via clipboard paste em base64 (Opção A).
 - `POST /ocorrencias/{id}/fotos` — vincula foto (já enviada ao storage) a uma Ocorrência.
 - `POST /visitas/{id}/fotos` — vincula foto a uma Visita.
-- `PUT /fotos/{id}` — atualiza legenda/ordem.
+- `PUT /fotos/{id}` — atualiza legenda/ordem e aprova a sugestão de IA (DEC-37 DP-3/DP-5).
+- `POST /fotos/{id}/legenda-ia/gerar` — sugestão de legenda por IA em rascunho (BL-34, DP-4).
 - `DELETE /fotos/{id}` — remove vínculo e objeto do storage.
 - `DELETE /fotos/upload` — descarta upload nunca vinculado (DEC-39 D).
 
@@ -29,8 +30,10 @@ from app.schemas.foto import (
     FotoUploadClipboardPayload,
     FotoUploadResponse,
     FotoVincularPayload,
+    LegendaIAGerarPayload,
 )
 from app.services import foto_service
+from app.services.legenda_ia import LegendaIAClient, get_legenda_ia_client
 from app.services.storage import get_storage_client
 from app.services.storage.base import StorageClient
 from app.services.storage.s3_client import MAX_UPLOAD_SIZE_BYTES
@@ -113,11 +116,29 @@ async def atualizar_foto(
     foto_id: uuid.UUID,
     dados: FotoUpdatePayload,
     db: AsyncSession = Depends(get_db),
-    _usuario: Usuario = Depends(require_equipe),
+    usuario: Usuario = Depends(require_equipe),
 ) -> Foto:
-    """Atualiza a legenda e/ou a ordem de uma foto."""
-    # Só os campos enviados no corpo: `legenda: null` explícito limpa a legenda (DEC-39 C).
-    return await foto_service.atualizar(db, foto_id, dados.model_dump(exclude_unset=True))
+    """Atualiza a legenda e/ou a ordem de uma foto; com `aprovar_legenda_ia`, aprova a sugestão de IA."""
+    # Só os campos enviados no corpo: `legenda: null` explícito limpa a legenda (DEC-39 C, DEC-37 DP-5).
+    campos = {nome: getattr(dados, nome) for nome in dados.model_fields_set}
+    return await foto_service.atualizar(db, foto_id, campos, usuario=usuario)
+
+
+@router.post("/fotos/{foto_id}/legenda-ia/gerar", response_model=FotoRead)
+async def gerar_legenda_ia(
+    foto_id: uuid.UUID,
+    dados: LegendaIAGerarPayload | None = None,
+    usuario: Usuario = Depends(require_equipe),
+    db: AsyncSession = Depends(get_db),
+    storage: StorageClient = Depends(get_storage_client),
+    cliente: LegendaIAClient = Depends(get_legenda_ia_client),
+) -> Foto:
+    """Gera a sugestão de legenda por IA em `rascunho`, sem alterar `legenda` (BL-34, DEC-37 DP-4).
+
+    `usuario` é declarado antes de `cliente` para que 401/403 venham antes do 503 sem provedor.
+    """
+    campos = {nome: getattr(dados, nome) for nome in dados.model_fields_set} if dados else {}
+    return await foto_service.gerar_legenda_ia(db, foto_id, storage, cliente, campos)
 
 
 @router.delete("/fotos/upload", status_code=status.HTTP_204_NO_CONTENT)
