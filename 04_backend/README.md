@@ -155,7 +155,7 @@ python -m app.scripts.build_rfip_templates --original "..\01_output-context\Rela
 python -m app.scripts.build_rfip_templates
 ```
 
-Sem `--original`, o comando regera os dois templates a partir do `layout.json` versionado. Pendente: `rfip_pipeline.py` e conferência visual (HT-09). Detalhes em `00_docs/backlog-auto/rfip-templates.md`.
+Sem `--original`, o comando regera os dois templates a partir do `layout.json` versionado. Pipeline: `app/services/report_generator/rfip_pipeline.py` (T18). Pendente: conferência visual do PDF (HT-09) e o mapeamento banco → contexto. Detalhes em `00_docs/backlog-auto/rfip-templates.md`.
 
 ## Validação de Ocorrências (BL-14, T08)
 
@@ -304,3 +304,14 @@ Sem código de produção alterado. Resultados e propostas de decisão (DEC-37 a
 | Benchmark dos pipelines finais (BL-22) | `benchmark-pipelines-finais.md` | — | RFO e Cautelar atendem RNF-06; Residencial no limite; **LTIP viola** |
 
 Para rodar os testes de lacuna: `docker compose up -d` em `05_infra/`, `alembic upgrade head` e `pytest tests/test_visitas_lacunas.py tests/test_fotos_lacunas.py` em `04_backend/`.
+
+## Correções do lote T18–T21 (2026-11-04)
+
+| Tema | Doc | O que mudou | Situação |
+|---|---|---|---|
+| Pipeline do RFIP (BL-12) | `rfip-pipeline.md` | `app/services/report_generator/rfip_pipeline.py` (`normalizar_contexto`, `renderizar_html`, `gerar_pdf`, `gerar_docx`), `tests/test_rfip_pipeline.py` | 12 testes; PDF pulado sem WeasyPrint; falta mapeamento banco → contexto |
+| Upload de fotos (BL-11) | `fotos-correcoes.md` | `storage_key` validada e conferida no bucket, 409 de chave duplicada, `exif_transpose`, validação de `origem`/`ordem`/`legenda`, `PUT` parcial, `DELETE /fotos/upload`, teto de 50 Mpx | 44 testes passaram; faltam `UNIQUE(storage_key)` e URL pré-assinada |
+| PDF do LTIP (RNF-06) | `ltip-desempenho.md` | Template com linhas de fichas no lugar do flex único e fotos por `url_fetcher` | 72,1 → 11,6 s (239 fotos); 154,5 → 19,3 s (~200 páginas) |
+| Visitas (BL-10) | `visitas-correcoes.md` | Migration `e5a1c3f7b9d2` (UNIQUE `(inspecao_id, seq_numero)` e `(inspecao_id, data)`; aborta se houver data duplicada), data ≤ hoje, só RFO, `PUT` parcial, `GET /visitas/{id}` e CRUD de mão de obra e medições | L15 em `xfail` (DEC-27); `alembic upgrade head` pendente em produção |
+
+A suíte completa do backend não foi validada numa única execução: o venv do checkout principal estava sem `greenlet` funcional, houve interrupção por falta de memória e testes assíncronos falham com `RuntimeError: There is no current event loop` quando um teste usa `asyncio.run`. `ruff check .` ainda acusa erros preexistentes fora das áreas tocadas.
