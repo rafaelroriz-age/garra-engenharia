@@ -524,7 +524,7 @@ Registre em 00_docs/backlog-auto/legenda-ia-modelo.md: tabela das 22 lacunas (fe
 ```
 
 ### T23 · Serviço de versões de prompt de IA e contrato LegendaIAClient com Fake (BL-37)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-37
 - **Papel:** Engenheiro Backend
 - **Depende:** —
@@ -539,7 +539,7 @@ Tarefa (BL-37, DEC-37 DP-2 e DP-6). Contexto: a T22 já criou a tabela `prompts_
 ```
 
 ### T24 · Regra «só legenda aprovada entra no relatório» nos pipelines de PDF/DOCX (BL-38, DP-9)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-38
 - **Papel:** Engenheiro Backend
 - **Depende:** —
