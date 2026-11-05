@@ -41,6 +41,7 @@ Fonte: os modelos em `04_backend/app/models/*.py` e as migrations em `04_backend
 | `5f9f3cb4d87f` | `rbac_role_contratante_bl_30.py` | `usuarios.role`, `responsaveis.usuario_id` (único), `contratos.contratante_id` (BL-30) |
 | `7c1a4e0b93d5` | `autoria_criado_por_perfil_auxiliar_bl_42.py` | `criado_por_id` em `visitas`, `ocorrencias` e `fotos` (BL-42, DEC-27) |
 | `d3b7c9e4f1a2` | `prioridade_sugerida_sobrescrita_bl_15.py` | `ocorrencias.prioridade_sugerida`, `prioridade_ajustada_por_id`, `prioridade_ajustada_em` (BL-15, RN-04, DEC-29) |
+| `f7c2a9d4e6b1` | `legendas_ia_prompts_ia_bl_36.py` | cria `prompts_ia` e as colunas de legenda IA em `fotos` (BL-36, DEC-37); revisa `e5a1c3f7b9d2` |
 
 ## Cadastros
 
@@ -207,6 +208,29 @@ Não há `created_at` em `ocorrencias`, `visitas`, `relatorios` nem nas tabelas 
 | `ordem` | INTEGER | sim | |
 | `created_at` | TIMESTAMPTZ | não | |
 | `criado_por_id` | UUID | sim | FK `usuarios.id` (DEC-27) |
+| `legenda_bruta` | TEXT | sim | anotação/transcrição do auditor enviada à IA (RN-17) |
+| `legenda_ia_sugerida` | TEXT | sim | minuta da IA; nunca copiada automaticamente para `legenda` (RF-15) |
+| `nivel_certeza_ia` | VARCHAR(30) | sim | CHECK: `constatacao_direta`, `indicio_tecnico`, `hipotese_tecnica`, `causa_comprovada` |
+| `status_validacao_ia` | VARCHAR(20) | sim | CHECK: `rascunho`, `aprovada`; NULL = sem sugestão (DEC-37); exige `legenda_ia_sugerida` |
+| `alertas_ia` | JSONB | sim | lista retornada pelo prompt |
+| `pendencias_ia` | JSONB | sim | lista retornada pelo prompt |
+| `prompt_ia_id` | UUID | sim | FK `prompts_ia.id` ON DELETE RESTRICT; índice `ix_fotos_prompt_ia_id` |
+| `prompt_conteudo_hash` | VARCHAR(64) | sim | SHA-256 hex do prompt enviado (CHECK `^[0-9a-f]{64}$`) |
+| `legenda_ia_gerada_em` | TIMESTAMPTZ | sim | |
+| `aprovado_por_id` | UUID | sim | FK `usuarios.id`; obrigatório quando `status_validacao_ia = 'aprovada'` |
+| `aprovado_em` | TIMESTAMPTZ | sim | obrigatório quando `status_validacao_ia = 'aprovada'` |
+
+### `prompts_ia` (`models/prompt_ia.py`)
+
+| Coluna | Tipo | Nulo | Observação |
+|---|---|---|---|
+| `id` | UUID | não | PK |
+| `nome` | VARCHAR(100) | não | `UNIQUE(nome, versao)`; índice único parcial `(nome) WHERE ativo` |
+| `versao` | VARCHAR(50) | não | |
+| `conteudo` | TEXT | não | versão imutável (DEC-37 DP-2) |
+| `ativo` | BOOLEAN | não | default `false`; no máximo uma versão ativa por nome |
+| `created_at` | TIMESTAMPTZ | não | |
+| `criado_por_id` | UUID | sim | FK `usuarios.id` |
 
 ### `relatorios` (`models/relatorio.py`)
 
@@ -250,8 +274,8 @@ sistemas_prediais 1──N subsistemas · 1──N ocorrencias ; subsistemas 1�
 
 ## Previsto e não implementado
 
-Aparecem em [arquitetura.md](arquitetura.md) (ER e contratos de API), mas não existem nos modelos nem nas migrations (`grep -n "prompt_ia\|aprovado_por_id" 04_backend/app/models/*.py` → vazio):
+Aparecem em [arquitetura.md](arquitetura.md) (ER e contratos de API), mas não existem nos modelos nem nas migrations:
 
-- tabela `prompts_ia` (`PROMPT_IA`) e, em `fotos`, os campos `legenda_bruta`, `legenda_ia_sugerida`, `nivel_certeza_ia`, `status_validacao_ia`, `alertas_ia`, `pendencias_ia`, `prompt_ia_id`, `aprovado_por_id`, `aprovado_em` (ADR-12, RF-15; provedor de IA pendente, B-04 em `00_docs/projeto/status.md`);
+- colunas de provedor/modelo de IA em `fotos` (L12) e o endpoint `POST /fotos/{id}/legenda-ia/gerar` (L22): dependem do provedor (B-04); `prompts_ia` e as demais colunas de legenda IA já existem (BL-36);
 - lista de funções de mão de obra (`/gabarito/funcoes-mao-obra`): não há tabela; `visita_mao_obras.funcao` é texto livre;
 - campos de auditoria `updated_at` (citados em `arquitetura.md` §10.1, A09): nenhuma tabela tem.
