@@ -10,6 +10,9 @@ OrigemFoto = Literal["upload_manual", "lightshot", "clipboard"]
 LEGENDA_MAX_LENGTH = 500
 # Base64 de MAX_UPLOAD_SIZE_BYTES (25 MB) = ceil(25 MiB / 3) * 4 = 34_952_536 caracteres.
 IMAGEM_BASE64_MAX_LENGTH = 34_952_536
+# DEC-37 (DP-1) / RF-15: espelham os CHECKs de `fotos` (app/models/foto.py).
+StatusValidacaoIA = Literal["rascunho", "aprovada"]
+NivelCertezaIA = Literal["constatacao_direta", "indicio_tecnico", "hipotese_tecnica", "causa_comprovada"]
 
 
 class FotoBase(BaseModel):
@@ -26,7 +29,28 @@ class FotoCreate(FotoBase):
     pass
 
 
-class FotoRead(FotoBase):
+class LegendaIARead(BaseModel):
+    """Campos de legenda assistida por IA (BL-36; RF-15, RN-16, RN-17; DEC-37).
+
+    Somente leitura: são gravados pelo servidor (geração e aprovação), nunca pelo payload.
+    `legenda_ia_sugerida` é a minuta da IA; a legenda final continua em `FotoBase.legenda`.
+    Todos `None` = foto sem sugestão de IA.
+    """
+
+    legenda_bruta: str | None = None
+    legenda_ia_sugerida: str | None = None
+    nivel_certeza_ia: NivelCertezaIA | None = None
+    status_validacao_ia: StatusValidacaoIA | None = None
+    alertas_ia: list[str] | None = None
+    pendencias_ia: list[str] | None = None
+    prompt_ia_id: uuid.UUID | None = None
+    prompt_conteudo_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    legenda_ia_gerada_em: datetime | None = None
+    aprovado_por_id: uuid.UUID | None = None
+    aprovado_em: datetime | None = None
+
+
+class FotoRead(LegendaIARead, FotoBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID

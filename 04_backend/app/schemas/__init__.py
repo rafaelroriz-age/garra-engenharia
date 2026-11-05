@@ -36,10 +36,12 @@ from app.schemas.foto import (
     FotoUploadClipboardPayload,
     FotoUploadResponse,
     FotoVincularPayload,
+    LegendaIARead,
 )
 from app.schemas.inspecao import InspecaoBase, InspecaoCreate, InspecaoDetalhe, InspecaoRead
 from app.schemas.localizacao import LocalizacaoBase, LocalizacaoCreate, LocalizacaoRead
 from app.schemas.ocorrencia import OcorrenciaBase, OcorrenciaCreate, OcorrenciaRead
+from app.schemas.prompt_ia import PromptIABase, PromptIACreate, PromptIARead
 from app.schemas.relatorio import RelatorioBase, RelatorioCreate, RelatorioRead
 from app.schemas.responsavel import ResponsavelBase, ResponsavelCreate, ResponsavelRead
 from app.schemas.sistema_predial import (
@@ -104,6 +106,7 @@ __all__ = [
     "InspecaoCreate",
     "InspecaoDetalhe",
     "InspecaoRead",
+    "LegendaIARead",
     "LocalizacaoBase",
     "LocalizacaoCreate",
     "LocalizacaoRead",
@@ -112,6 +115,9 @@ __all__ = [
     "OcorrenciaCreate",
     "OcorrenciaRead",
     "PaginatedResponse",
+    "PromptIABase",
+    "PromptIACreate",
+    "PromptIARead",
     "RelatorioBase",
     "RelatorioCreate",
     "RelatorioRead",

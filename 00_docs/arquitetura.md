@@ -44,7 +44,7 @@ Este documento mistura a arquitetura implementada e a arquitetura-alvo. A tabela
 | Pipeline do LTIP; templates de RFIP e vistorias | **Planejado** | `report_generator/` só tem `rfo_pipeline.py` |
 | Strategy/Factory de relatórios (`report_generator/strategies/`) | **Planejado** (Seção 9) | `ls 04_backend/app/services/report_generator` |
 | Fila Celery + Redis (ADR-06) e cache Redis (Seção 10.4) | **Planejado** | ausentes de `requirements.txt` e de `05_infra/docker-compose.yml` (comentário na linha 32) |
-| Legendas por IA (ADR-12, RF-15), tabela `prompts_ia` | **Planejado**; provedor não escolhido (B-04) | sem SDK de LLM em `requirements.txt`; `00_docs/projeto/status.md` |
+| Legendas por IA (ADR-12, RF-15), tabela `prompts_ia` | **Parcial**: modelo de dados implementado (BL-36, migration `f7c2a9d4e6b1`); adapter, endpoint de geração e provedor planejados (B-04) | `04_backend/app/models/prompt_ia.py`, `app/models/foto.py`; sem SDK de LLM em `requirements.txt` |
 | Observabilidade | **Parcial**: `GET /health` (com estado do banco) e `X-Request-ID`; não há `GET /health/ready` nem log em JSON | `app/main.py:32` (`logging.basicConfig`), `:85`; `app/core/middleware.py` |
 | Produção | **Render**: `garra-backend` (branch `main_back`), `garra-frontend` (`main_front`), `garra-db` | `render.yaml` |
 | VPS com Nginx (alternativa) | **Implementado como alternativa**, sem uso em produção | `05_infra/docker-compose.prod.yml`, `05_infra/nginx/nginx.conf`, `.github/workflows/cd-*.yml` |
@@ -149,7 +149,7 @@ graph TB
 
 ## 3. Modelo de Dados (Diagrama ER)
 
-> Referência coluna a coluna, com tipos, nulabilidade e regras: [dicionario-de-dados.md](dicionario-de-dados.md). No diagrama, os atributos com o comentário `"planejado"` e a entidade `PROMPT_IA` **não existem** nos modelos nem nas migrations (ADR-12; `grep -n "prompt_ia\|aprovado_por_id" 04_backend/app/models/*.py` → vazio). As tabelas de gabarito `tipos_anomalia`, `tipos_falha` e `localizacoes` existem (migration `8e2467ad6a92`) e não aparecem no diagrama.
+> Referência coluna a coluna, com tipos, nulabilidade e regras: [dicionario-de-dados.md](dicionario-de-dados.md). A entidade `PROMPT_IA` e os campos de legenda IA de `FOTO` existem desde a migration `f7c2a9d4e6b1` (BL-36, DEC-37); o adapter `LegendaIAClient` e o endpoint de geração continuam planejados (ADR-12, B-04). As tabelas de gabarito `tipos_anomalia`, `tipos_falha` e `localizacoes` existem (migration `8e2467ad6a92`) e não aparecem no diagrama.
 
 ```mermaid
 erDiagram
@@ -296,15 +296,17 @@ erDiagram
         string storage_key
         string url_publica
         text legenda
-        text legenda_bruta "planejado"
-        text legenda_ia_sugerida "planejado"
-        string nivel_certeza_ia "planejado"
-        string status_validacao_ia "planejado"
-        jsonb alertas_ia "planejado"
-        jsonb pendencias_ia "planejado"
-        uuid prompt_ia_id FK "planejado"
-        uuid aprovado_por_id FK "planejado"
-        timestamp aprovado_em "planejado"
+        text legenda_bruta
+        text legenda_ia_sugerida
+        string nivel_certeza_ia
+        string status_validacao_ia
+        jsonb alertas_ia
+        jsonb pendencias_ia
+        uuid prompt_ia_id FK
+        string prompt_conteudo_hash
+        timestamp legenda_ia_gerada_em
+        uuid aprovado_por_id FK
+        timestamp aprovado_em
         string origem
         int ordem
         timestamp created_at
@@ -312,12 +314,13 @@ erDiagram
     }
 
     PROMPT_IA {
-        uuid id PK "planejado"
-        string nome "planejado"
-        string versao "planejado"
-        text conteudo "planejado"
-        boolean ativo "planejado"
-        timestamp created_at "planejado"
+        uuid id PK
+        string nome
+        string versao
+        text conteudo
+        boolean ativo
+        timestamp created_at
+        uuid criado_por_id FK
     }
 
     RELATORIO {
@@ -347,8 +350,8 @@ erDiagram
     SUBSISTEMA ||--o{ OCORRENCIA : "subsistema"
     OCORRENCIA ||--o{ FOTO : "fotos"
     VISITA ||--o{ FOTO : "fotos do dia"
-    PROMPT_IA ||--o{ FOTO : "planejado: gerou sugestão"
-    USUARIO ||--o{ FOTO : "planejado: aprovou legenda"
+    PROMPT_IA ||--o{ FOTO : "versão usada na geração (opcional)"
+    USUARIO ||--o{ FOTO : "aprovou legenda IA"
     USUARIO ||--o{ VISITA : "criado_por"
     USUARIO ||--o{ OCORRENCIA : "criado_por / prioridade_ajustada_por"
     USUARIO ||--o{ FOTO : "criado_por"
