@@ -723,7 +723,7 @@ Tarefa (DEC-42 itens C e D, proposta da T29; SEG-IA-01, SEG-IA-02, SEG-IA-06 de 
 ```
 
 ### T36 · LTIP e RFIP: só legenda aprovada entra no relatório (helper legenda_para_relatorio)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-36
 - **Papel:** Engenheiro Backend
 - **Depende:** T24
@@ -738,7 +738,7 @@ Tarefa: estender aos pipelines do LTIP e do RFIP a regra «só legenda aprovada 
 ```
 
 ### T37 · Vistoria Cautelar e Residencial: só legenda aprovada entra no relatório
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-36
 - **Papel:** Engenheiro Backend
 - **Depende:** T24, T28
@@ -753,7 +753,7 @@ Tarefa: aplicar aos pipelines da Vistoria Cautelar e da Vistoria Residencial a r
 ```
 
 ### T38 · Frontend: editor de anotação de fotos integrado ao fluxo de aprovação de legenda IA
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-39
 - **Papel:** Engenheiro Frontend
 - **Depende:** T26, T34
