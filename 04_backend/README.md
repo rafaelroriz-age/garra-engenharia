@@ -43,7 +43,9 @@ Aplicação **FastAPI (Python 3.12)** responsável pela API, regras de negócio,
 │   ├── test_gabarito.py          # parser + seed + endpoints de dados mestre (BL-05)
 │   ├── test_auth.py              # registro, login (sucesso/falha) e proteção de rota (BL-06)
 │   ├── test_storage.py           # upload/download/delete/URL pré-assinada contra o MinIO real (BL-07)
-│   └── test_storage_legenda_ia.py # exists/list_keys/órfãos/presigned com S3 falso, sem MinIO (T30)
+│   ├── test_storage_legenda_ia.py # exists/list_keys/órfãos/presigned com S3 falso, sem MinIO (T30)
+│   ├── test_relatorio_orfaos.py  # relatório de órfãos em dry-run com S3 falso e vínculos injetados (T32)
+│   └── test_foto_origem_enum.py  # enum fechado de `origem` no vínculo de foto (T31)
 ├── requirements.txt
 ├── Dockerfile
 ├── pytest.ini
@@ -242,7 +244,18 @@ Adapter Pattern (`00_docs/arquitetura.md` Seção 9.9): `StorageClient` (interfa
 | `generate_presigned_url(key, expires_in) -> str` | Gera URL de download temporária (padrão 15 minutos — RNF-07/ADR-02/Seção 10.1 A02). Nunca gera URLs públicas permanentes. |
 | `exists(key) -> bool` | Checa existência por HEAD (404/NoSuchKey → `False`). Adicionado na T30. |
 | `list_keys(prefix) -> list[str]` | Lista chaves por prefixo, com paginação. Adicionado na T30. |
+| `list_objects(prefix) -> list[tuple[str, datetime]]` | Lista `(chave, LastModified)` com paginação; método não abstrato em `StorageClient` (levanta `NotImplementedError` em fakes que não o implementam). Adicionado na T32. |
 | `listar_orfaos(chaves_registradas, prefix)` | Devolve as chaves do storage sem vínculo no banco; só leitura, nada é apagado (política em DEC-44, proposta). |
+
+**Relatório de órfãos (T32, DEC-44 proposta)** — somente leitura, não apaga nada:
+
+```bash
+python -m app.scripts.relatorio_orfaos [--idade-minima-horas 24] [--prefixo fotos/]
+```
+
+Compara as `storage_key` vinculadas em `fotos` com os objetos do bucket e lista os sem vínculo com idade acima do limite (tabela com chave, `LastModified` UTC e idade em horas, mais a contagem). Exige PostgreSQL e MinIO no ar; nenhuma variável de ambiente nova. Detalhes: [storage-orfaos-relatorio.md](../00_docs/backlog-auto/storage-orfaos-relatorio.md).
+
+**`origem` da foto (T31, DEC-43 proposta):** o payload de vínculo (`FotoVincularPayload`) aceita só `upload_manual`, `lightshot` ou `clipboard`; outro valor retorna 422. A leitura (`FotoRead`) não valida, então dados antigos continuam legíveis; sem CHECK no banco. Detalhes: [dec-43-origem-foto.md](../00_docs/backlog-auto/dec-43-origem-foto.md).
 
 O bucket (`MINIO_BUCKET_NAME`) é criado automaticamente pelo próprio `S3StorageClient` na primeira instanciação, se ainda não existir (`head_bucket` + `create_bucket`, idempotente) — funciona mesmo sem o job `createbuckets` do `05_infra/docker-compose.yml`.
 
