@@ -693,7 +693,7 @@ Tarefa (DEC-42 itens A e B, proposta da T29; SEG-IA-03, SEG-IA-04, SEG-IA-05 de 
 ```
 
 ### T34 · Frontend: ocultar «Aprovar» legenda IA para auxiliar e refletir invalidação ao editar
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-42
 - **Papel:** frontend
 - **Depende:** T33
