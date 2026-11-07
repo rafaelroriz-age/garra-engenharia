@@ -36,6 +36,7 @@ from typing import Any
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from app.services.report_generator.foto_fetcher import RegistroDeFotos, criar_url_fetcher
+from app.services.report_generator.legenda_foto import legenda_para_relatorio
 
 TEMPLATES_DIR = Path(__file__).resolve().parents[3] / "templates"
 HTML_TEMPLATE_NAME = "vistoria_residencial/vistoria_residencial_template.html.j2"
@@ -125,6 +126,8 @@ def normalizar_contexto(contexto: dict[str, Any]) -> dict[str, Any]:
     c["fotos"] = c.get("fotos") or []
     for indice, foto in enumerate(c["fotos"], start=1):
         foto.setdefault("numero", indice)
+        # DEC-37 DP-9 (RN-16/RN-17): só `legenda` entra; sugestão de IA nunca.
+        foto["legenda"] = legenda_para_relatorio(foto)
         _preencher(foto, ("legenda",))
 
     c["sistemas"] = c.get("sistemas") or []
