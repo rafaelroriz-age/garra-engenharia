@@ -723,7 +723,7 @@ Tarefa (DEC-42 itens C e D, proposta da T29; SEG-IA-01, SEG-IA-02, SEG-IA-06 de 
 ```
 
 ### T36 · LTIP e RFIP: só legenda aprovada entra no relatório (helper legenda_para_relatorio)
-- **Status:** doing
+- **Status:** blocked
 - **Origem:** BL-36
 - **Papel:** Engenheiro Backend
 - **Depende:** T24
