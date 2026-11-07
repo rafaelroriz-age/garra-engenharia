@@ -91,6 +91,27 @@ require_auditor = require_role("auditor")
 require_equipe = require_role("auditor", "auxiliar")
 
 
+async def get_limitador_legenda_ia():
+    """Limitador de geração de legenda por IA (DEC-42 C), sobrescrevível em testes."""
+    # Import tardio: `app.services.legenda_ia` importa este módulo no carregamento.
+    from app.services.legenda_ia.limites import get_limitador_padrao
+
+    return get_limitador_padrao()
+
+
+async def limitar_geracao_legenda_ia(
+    foto_id: uuid.UUID,
+    usuario: Usuario = Depends(require_equipe),
+    limitador=Depends(get_limitador_legenda_ia),
+) -> None:
+    """Consome a cota de geração do usuário e da foto, ou lança 429 RFC 7807.
+
+    Roda antes de baixar a imagem e conta a tentativa, não o sucesso: o que falhar depois
+    (foto inexistente, sem prompt ativo, erro do provedor) também gasta cota.
+    """
+    limitador.consumir(usuario.id, foto_id)
+
+
 async def get_current_cliente_responsavel(
     current_user: Usuario = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
