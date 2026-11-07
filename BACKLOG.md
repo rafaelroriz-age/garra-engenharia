@@ -338,7 +338,7 @@ Passos: (1) Leia `00_docs/backlog-auto/ruff.md` e `.github/workflows/ci.yml` int
 ```
 
 ### T41 · Testes E2E (API mockada) do Portal do Cliente
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-32
 - **Papel:** frontend
 - **Depende:** —
