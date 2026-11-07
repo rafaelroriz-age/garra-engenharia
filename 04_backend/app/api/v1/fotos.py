@@ -22,6 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import require_equipe
 from app.core.database import get_db
+from app.core.errors import DomainError
 from app.models import Foto, Usuario
 from app.schemas.foto import (
     FotoDescartarUploadPayload,
@@ -120,6 +121,14 @@ async def atualizar_foto(
 ) -> Foto:
     """Atualiza a legenda e/ou a ordem de uma foto; com `aprovar_legenda_ia`, aprova a sugestão de IA."""
     # Só os campos enviados no corpo: `legenda: null` explícito limpa a legenda (DEC-39 C, DEC-37 DP-5).
+    # Aprovar legenda de IA é do responsável técnico (RN-16, RN-18, DEC-42 A): o auxiliar recebe 403.
+    if dados.aprovar_legenda_ia and usuario.role != "auditor":
+        raise DomainError(
+            detail="Somente o auditor pode aprovar a legenda gerada por IA.",
+            type_suffix="acesso-negado",
+            title="Acesso negado",
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
     campos = {nome: getattr(dados, nome) for nome in dados.model_fields_set}
     return await foto_service.atualizar(db, foto_id, campos, usuario=usuario)
 
