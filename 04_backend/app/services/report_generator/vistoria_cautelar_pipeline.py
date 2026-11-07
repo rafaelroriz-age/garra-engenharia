@@ -33,6 +33,7 @@ from typing import Any
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from app.services.report_generator.foto_fetcher import RegistroDeFotos, criar_url_fetcher
+from app.services.report_generator.legenda_foto import legenda_para_relatorio
 
 TEMPLATES_DIR = Path(__file__).resolve().parents[3] / "templates"
 VISTORIA_TEMPLATES_DIR = TEMPLATES_DIR / "vistoria_cautelar"
@@ -160,7 +161,8 @@ def normalizar_contexto(contexto: dict[str, Any]) -> dict[str, Any]:
     figuras = ctx.get("figuras") or []
     for indice, figura in enumerate(figuras, start=1):
         figura["numero"] = figura.get("numero") or indice
-        figura["legenda"] = _ou_traco(figura.get("legenda"))
+        # DEC-37 DP-9 (RN-16/RN-17): só `legenda` entra; sugestão de IA nunca.
+        figura["legenda"] = _ou_traco(legenda_para_relatorio(figura))
     ctx["figuras"] = figuras
     return ctx
 
