@@ -3,14 +3,32 @@
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import { ArrowRight, Circle, Eraser, Image as ImageIcon, Pencil, RectangleHorizontal, Save, SquarePen, Type, X } from "lucide-react";
 
+import { useUsuarioAtual } from "@/lib/use-usuario-atual";
+import { LEGENDA_MAX_LENGTH, type StatusValidacaoIA } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+/**
+ * Contexto de legenda de uma foto já existente (BL-39; RF-15, RN-16, RN-17). Quando presente, o
+ * editor mostra o estado da legenda e permite ajustar o texto, mas NUNCA aprova: a aprovação é
+ * exclusiva do auditor e acontece no painel «Legenda com IA» (DEC-42).
+ */
+export interface LegendaContextoEditor {
+  legenda: string;
+  status: StatusValidacaoIA | null | undefined;
+  temSugestaoIA: boolean;
+}
 
 interface PhotoAnnotationEditorProps {
   isOpen: boolean;
   imageSource: Blob | File | string | null;
-  onSave: (file: File) => void;
+  /** `legenda` só é informada quando há `legendaContexto` (foto existente). */
+  onSave: (file: File, legenda?: string) => void;
   onCancel: () => void;
+  legendaContexto?: LegendaContextoEditor;
 }
 
 type AnnotationTool = "arrow" | "rectangle" | "ellipse" | "text" | "pencil";
@@ -73,7 +91,19 @@ function createImageFileFromBlob(blob: Blob, defaultName: string): File {
   return new File([blob], defaultName, { type: blob.type || "image/png" });
 }
 
-export function PhotoAnnotationEditor({ isOpen, imageSource, onSave, onCancel }: PhotoAnnotationEditorProps) {
+export function PhotoAnnotationEditor({ isOpen, imageSource, onSave, onCancel, legendaContexto }: PhotoAnnotationEditorProps) {
+  const { isAuditor, isLoading: carregandoPerfil } = useUsuarioAtual();
+  const [legendaTexto, setLegendaTexto] = useState(legendaContexto?.legenda ?? "");
+  const legendaOriginal = legendaContexto?.legenda ?? "";
+  const aprovada = legendaContexto?.status === "aprovada";
+  const legendaAlterada = legendaTexto.trim() !== legendaOriginal.trim();
+
+  useEffect(() => {
+    if (isOpen) {
+      setLegendaTexto(legendaOriginal);
+    }
+  }, [isOpen, legendaOriginal]);
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fabricCanvasRef = useRef<FabricCanvasLike | null>(null);
   const drawingStateRef = useRef<{ object: FabricObjectLike; start: { x: number; y: number } } | null>(null);
@@ -355,7 +385,7 @@ export function PhotoAnnotationEditor({ isOpen, imageSource, onSave, onCancel }:
       const response = await fetch(dataUrl);
       const blob = await response.blob();
       const annotatedFile = createImageFileFromBlob(blob, "foto-anotada.png");
-      onSave(annotatedFile);
+      onSave(annotatedFile, legendaContexto ? legendaTexto.trim() : undefined);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Falha ao salvar a imagem anotada.");
     } finally {
@@ -446,6 +476,39 @@ export function PhotoAnnotationEditor({ isOpen, imageSource, onSave, onCancel }:
             </div>
             {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
           </div>
+
+          {legendaContexto ? (
+            <section aria-label="Legenda da foto" className="space-y-2 rounded-md border bg-muted/30 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Label htmlFor="anotacao-legenda">Legenda da foto</Label>
+                {legendaContexto.status === "aprovada" ? (
+                  <Badge>Legenda IA aprovada</Badge>
+                ) : legendaContexto.status === "rascunho" ? (
+                  <Badge variant="secondary">Legenda IA pendente de aprovação</Badge>
+                ) : null}
+              </div>
+              <Textarea
+                id="anotacao-legenda"
+                value={legendaTexto}
+                onChange={(event) => setLegendaTexto(event.target.value)}
+                maxLength={LEGENDA_MAX_LENGTH}
+                className="min-h-[60px] text-sm"
+              />
+              {aprovada && legendaAlterada ? (
+                <p role="status" className="text-xs text-destructive">
+                  Alterar a legenda aprovada desfaz a aprovação: ela voltará a pendente e só entra no
+                  relatório depois de nova aprovação do auditor.
+                </p>
+              ) : null}
+              {legendaContexto.temSugestaoIA ? (
+                <p className="text-xs text-muted-foreground">
+                  {!isAuditor && !carregandoPerfil
+                    ? "A aprovação da legenda é feita pelo auditor responsável, no painel «Legenda com IA»."
+                    : "Para aprovar a legenda, use o painel «Legenda com IA» da foto."}
+                </p>
+              ) : null}
+            </section>
+          ) : null}
 
           <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end">
             <Button type="button" variant="outline" onClick={onCancel}>
