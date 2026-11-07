@@ -753,7 +753,7 @@ Tarefa: aplicar aos pipelines da Vistoria Cautelar e da Vistoria Residencial a r
 ```
 
 ### T38 · Frontend: editor de anotação de fotos integrado ao fluxo de aprovação de legenda IA
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-39
 - **Papel:** Engenheiro Frontend
 - **Depende:** T26, T34
