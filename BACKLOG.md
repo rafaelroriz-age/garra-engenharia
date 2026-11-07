@@ -738,7 +738,7 @@ Tarefa: estender aos pipelines do LTIP e do RFIP a regra «só legenda aprovada 
 ```
 
 ### T37 · Vistoria Cautelar e Residencial: só legenda aprovada entra no relatório
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-36
 - **Papel:** Engenheiro Backend
 - **Depende:** T24, T28
