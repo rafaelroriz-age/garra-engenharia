@@ -708,7 +708,7 @@ Tarefa (DEC-42 itens A e B, lado frontend; depende da tarefa C do lote, que imp�
 ```
 
 ### T35 · Legenda por IA: limite de taxa em `gerar`, teto e saneamento da saída do LLM
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-42
 - **Papel:** backend
 - **Depende:** T33
