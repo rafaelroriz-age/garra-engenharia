@@ -320,6 +320,57 @@ Passos:
 Siga a 'Regra de pronto' do BACKLOG.md: registre fatos, números, comandos e saída dos testes em 00_docs/backlog-auto/rfip-templates.md, com decisões propostas como proposta. Não edite os documentos de gestão em 00_docs/projeto/ nem o BACKLOG.md. Commit: `feat(backend): extrator e templates do RFIP pelo método do ADR-13 (BL-12)` com `Refs BL-12`. Não faça push.
 ```
 
+### T39 · Tornar o lint (ruff) bloqueante no CI
+- **Status:** todo
+- **Origem:** BL-26
+- **Papel:** devops
+- **Depende:** —
+- **Ambiente:** offline
+- **Dificuldade:** baixa
+- **Toca:** .github/workflows/ci.yml, 00_docs/backlog-auto/ci-lint-bloqueante.md
+- **Doc:** 00_docs/backlog-auto/ci-lint-bloqueante.md
+- **Pronto:** No passo «Lint (ruff)» de `.github/workflows/ci.yml` não há mais `continue-on-error: true` nem o comentário «Lint ainda não é bloqueante». A versão do ruff está fixada com a mesma versão registrada em `04_backend/ruff.toml` ou no doc `00_docs/backlog-auto/ruff.md`. `ruff check .` em `04_backend` sai com exit 0, e o YAML é válido (`python -c "import yaml; yaml.safe_load(open('.github/workflows/ci.yml'))"`). O doc registra o antes e o depois do trecho alterado, e diz explicitamente que o CI real não foi executado aqui.
+- **Prompt:**
+```text
+Tarefa (BL-26, proposta da T04). Contexto: `00_docs/backlog-auto/ruff.md` (seção de propostas, perto da linha 95) propõe, para `.github/workflows/ci.yml`, remover `continue-on-error: true` do passo «Lint (ruff)» e o comentário «Lint ainda não é bloqueante», e fixar a versão do ruff para o resultado ser reprodutível. A T04 deixou `ruff check .` limpo em `04_backend` com a configuração versionada em `04_backend/ruff.toml`. Hoje o `ci.yml` tem `pip install ruff` (sem versão) perto da linha 77 e `continue-on-error: true` nas linhas ~83 e ~109.
+
+Passos: (1) Leia `00_docs/backlog-auto/ruff.md` e `.github/workflows/ci.yml` inteiro, e `.github/pull_request_template.md`. (2) Descubra a versão de ruff usada na T04 (consulte o ruff.md; confirme com `ruff --version` a partir de `04_backend`, usando `04_backend/.venv` se existir). Fixe essa versão exata no `pip install` do passo de lint. (3) No passo «Lint (ruff)» remova `continue-on-error: true` e o comentário que diz que o lint não é bloqueante. Altere SÓ esse passo. O `continue-on-error: true` da linha ~109 pertence a outro passo: leia-o, explique no doc do que se trata e deixe como está, a menos que seja evidentemente o mesmo lint do backend duplicado. (4) Rode `ruff check .` a partir de `04_backend` e confirme exit 0. Se acusar erros, NÃO corrija código nesta tarefa: registre os erros no doc e mantenha o passo bloqueante apenas se o resultado for limpo; caso contrário, reverta a edição do CI e registre o motivo. (5) Valide o YAML com `python -c "import yaml; yaml.safe_load(open('.github/workflows/ci.yml'))"` (a partir da raiz do repositório). (6) Registre em `00_docs/backlog-auto/ci-lint-bloqueante.md`: trecho antes/depois, versão fixada, comandos e saídas, e a observação de que o workflow não foi executado no GitHub. Não altere `04_backend/requirements.txt` nem nenhum outro workflow. Não edite `00_docs/projeto/*`. Commit: `ci: torna o lint do backend bloqueante (BL-26)` com rodapé `Refs BL-26`. Não faça push. Siga a «Regra de pronto» do BACKLOG.md.
+```
+
+### T41 · Testes E2E (API mockada) do Portal do Cliente
+- **Status:** todo
+- **Origem:** BL-32
+- **Papel:** frontend
+- **Depende:** —
+- **Ambiente:** offline
+- **Dificuldade:** media
+- **Toca:** 03_frontend/e2e/portal.spec.ts, 00_docs/backlog-auto/portal-e2e.md
+- **Doc:** 00_docs/backlog-auto/portal-e2e.md
+- **Pronto:** Existe `03_frontend/e2e/portal.spec.ts` com testes Playwright e API mockada cobrindo: listagem de edificações do portal, dashboard/acompanhamento de uma edificação, listagem de documentos e download por URL pré-assinada (nunca a chave do storage), e redirecionamento/ocultação para perfil que não é `cliente`. Os testes passam com `npx playwright test e2e/portal.spec.ts`, e `npm run lint` e `npm run build` em `03_frontend` passam. O doc registra comandos, saídas e o que não foi coberto.
+- **Prompt:**
+```text
+Tarefa (BL-32/BL-33 — o Portal do Cliente não tem teste E2E). Contexto: o Portal do Cliente está implementado em `03_frontend/app/portal/page.tsx` e `03_frontend/app/portal/documentos/page.tsx`, com navegação em `03_frontend/components/layout/nav-items.ts`; o backend correspondente é `04_backend/app/api/v1/portal.py` (`GET /portal/edificacoes`, `/portal/edificacoes/{id}/dashboard`, `/acompanhamento`, `GET /portal/relatorios`, `GET /portal/relatorios/{id}/download/{formato}`, que devolve URL pré-assinada). Já existem specs com API mockada que servem de modelo de estilo: `03_frontend/e2e/legenda-ia.spec.ts`, `foto-origem.spec.ts`, `anotacao-legenda-ia.spec.ts` e o auxiliar `03_frontend/e2e/helpers.ts`; leia-os primeiro, e `03_frontend/playwright.config.ts`.
+
+Passos: (1) Leia as duas páginas do portal, `lib/api-client.ts` (funções do portal), `lib/types.ts` e `lib/use-usuario-atual.ts` para descobrir os formatos exatos das respostas e como o perfil é obtido. Não invente campos: use os que o código consome. (2) Crie `03_frontend/e2e/portal.spec.ts` com API mockada via `page.route` (como nos specs existentes; nenhum backend real): (a) cliente vê a lista de edificações do portal; (b) abre o dashboard/acompanhamento de uma edificação e vê os números mockados; (c) a página de documentos lista relatórios e o clique em baixar chama o endpoint de download e usa a URL pré-assinada devolvida (assert que a chave do storage não aparece na interface); (d) estados vazio e de erro (404/403 do mock) mostram a mensagem esperada; (e) perfil `auditor` ou `auxiliar` não vê o item de navegação do portal, ou é redirecionado, conforme o código atual fizer (descreva o comportamento real; se o código não faz nada, registre como lacuna no doc em vez de alterar a UI). (3) Não altere código de produção; se um teste revelar defeito, marque o teste com `test.fixme` e descreva no doc. Não adicione dependências nem variáveis de ambiente. (4) Rode a partir de `03_frontend`: `npx playwright test e2e/portal.spec.ts`, `npm run lint` e `npm run build`. Se o navegador do Playwright não estiver instalado, rode `npx playwright install chromium` e registre. Não relate resultado que não rodou. (5) Registre em `00_docs/backlog-auto/portal-e2e.md`: cenários, comandos, saídas, lacunas. Não edite `00_docs/projeto/*`. Commit: `test(frontend): E2E do Portal do Cliente com API mockada (BL-32)` com `Refs BL-32`. Não faça push. Siga a «Regra de pronto» do BACKLOG.md.
+```
+
+### T42 · Verificar os scripts de backup e restore com comandos simulados
+- **Status:** todo
+- **Origem:** BL-29
+- **Papel:** devops
+- **Depende:** —
+- **Ambiente:** offline
+- **Dificuldade:** media
+- **Toca:** 05_infra/backup, 00_docs/backlog-auto/backup-verificacao.md
+- **Doc:** 00_docs/backlog-auto/backup-verificacao.md
+- **Pronto:** Existe um teste de shell em `05_infra/backup/tests/` que roda `backup-db.sh` e `restore-db.sh` com `pg_dump`, `pg_restore`/`psql` e o cliente do MinIO substituídos por stubs no PATH, sem tocar em banco ou bucket reais, e verifica: dump válido antes da retenção apagar backups antigos, retenção preservada quando o dump falha, e o restore pedir confirmação explícita e gerar o dump `pre-restore`. `bash -n` passa nos dois scripts (e `shellcheck`, se instalado). O doc registra os comandos, saídas e qualquer defeito encontrado e corrigido.
+- **Prompt:**
+```text
+Tarefa (BL-29 — scripts de backup nunca foram exercitados por teste automatizado). Contexto: `05_infra/backup/backup-db.sh` faz dump `pg_dump --format=custom` + espelho do bucket MinIO e só aplica retenção depois de um dump válido; `05_infra/backup/restore-db.sh` exige confirmação explícita e faz um dump `pre-restore` antes de restaurar. O cron sugerido está em `05_infra/README.md`. Esta tarefa NÃO usa banco nem MinIO reais e nunca deve rodar o restore contra dados existentes.
+
+Passos: (1) Leia os dois scripts por inteiro, a seção de backup de `05_infra/README.md` e RNF-08 em `00_docs/estudo-do-contexto.md` (só essa seção). Anote quais comandos externos cada script chama (pg_dump, pg_restore, psql, mc/aws/rclone, docker exec etc.). (2) Rode `bash -n` em cada script e `shellcheck` se estiver instalado (registre se não estiver). (3) Crie `05_infra/backup/tests/test_backup_scripts.sh` (shell puro, sem dependência nova; pode usar um diretório temporário de `mktemp -d`) que coloca stubs dos comandos externos num diretório no início do PATH e variáveis de ambiente fictícias, e verifica: (a) backup feliz cria o arquivo de dump e executa a retenção só depois; (b) quando o stub de `pg_dump` falha ou produz arquivo vazio, o script sai com código ≠ 0 e NÃO apaga backups antigos (crie arquivos antigos falsos no diretório temporário); (c) restore sem a confirmação explícita aborta sem chamar `pg_restore`/`psql`; (d) restore com confirmação chama primeiro o dump `pre-restore`. Adapte-se ao que os scripts realmente fazem (nomes de variáveis, flags, formato da confirmação); não suponha. Use sempre diretórios temporários. (4) Se o teste revelar defeito real nos scripts, corrija o mínimo neles, mantendo o comportamento documentado, e descreva no doc. Se a correção mudar comportamento visível, registre-a como proposta em vez de aplicá-la. (5) Execute o teste (`bash 05_infra/backup/tests/test_backup_scripts.sh`) e registre a saída; no Windows use Git Bash. Não relate resultado que não rodou. (6) Registre em `00_docs/backlog-auto/backup-verificacao.md`: comandos externos mapeados, cenários, comandos, saídas, defeitos e propostas; destino externo do backup segue `[A ESCLARECER]` e fica fora. Não altere `.env`, nem crie pastas fora de `05_infra/backup/`. Não edite `00_docs/projeto/*`. Commit: `test(infra): verifica scripts de backup e restore com stubs (BL-29)` com `Refs BL-29`. Não faça push. Siga a «Regra de pronto» do BACKLOG.md.
+```
+
 ---
 
 ## Bloco B — Revisão de regras e lacunas (pré-requisitos de B-04)
@@ -765,4 +816,21 @@ Tarefa: aplicar aos pipelines da Vistoria Cautelar e da Vistoria Residencial a r
 - **Prompt:**
 ```text
 Tarefa (BL-39, RF-15, RN-16, RN-17): integrar o editor de anotação de fotos ao fluxo de aprovação de legendas assistidas por IA, no frontend. Leia primeiro .github/prompts/39-integracao-anotacao-legendas-ia.prompt.md (escopo original), 03_frontend/components/photo-annotation-editor.tsx, 03_frontend/components/legenda-ia-painel.tsx (somente leitura: o T26/T34 já tratam aprovação, ocultar «Aprovar» para auxiliar e invalidação ao editar) e 00_docs/backlog-auto/legenda-ia-frontend-aprovacao.md. Regras a respeitar: a legenda IA só entra no relatório depois de aprovada por auditor; ao salvar uma anotação que altera a imagem/legenda de uma foto com legenda IA, o estado de aprovação deve refletir a invalidação já implementada no backend (T33), mostrando ao usuário que a legenda voltou a pendente; o editor não pode aprovar legenda nem expor ação de aprovar a auxiliar (use o hook de usuário atual, 03_frontend/lib/use-usuario-atual.ts). Reaproveite 03_frontend/lib/api-client.ts e 03_frontend/lib/types.ts apenas por leitura; se faltar um tipo ou chamada, registre a lacuna no Doc em vez de editar esses arquivos (eles pertencem a outras tarefas). Crie o spec 03_frontend/e2e/anotacao-legenda-ia.spec.ts seguindo o padrão de 03_frontend/e2e/legenda-ia-aprovacao.spec.ts e helpers.ts. A partir de 03_frontend rode `npm run lint` e `npm run build`; rode o Playwright só se o ambiente permitir e, se não rodar, diga isso explicitamente. Registre fatos, comandos e saída em 00_docs/backlog-auto/anotacao-legenda-ia-frontend.md; decisões novas como proposta no Doc, sem editar 00_docs/projeto/*. Siga a «Regra de pronto» do BACKLOG.md; commit `feat(frontend): ... (BL-39)` com `Refs BL-39`, sem push.
+```
+
+### T40 · Repassar as variáveis LEGENDA_IA_* ao compose e ao render.yaml
+- **Status:** todo
+- **Origem:** BL-24
+- **Papel:** devops
+- **Depende:** —
+- **Ambiente:** offline
+- **Dificuldade:** baixa
+- **Toca:** 05_infra/docker-compose.yml, 05_infra/docker-compose.prod.yml, render.yaml, 00_docs/backlog-auto/legenda-ia-env-deploy.md
+- **Doc:** 00_docs/backlog-auto/legenda-ia-env-deploy.md
+- **Pronto:** As variáveis `LEGENDA_IA_*` presentes em `05_infra/.env.example` e `04_backend/.env.example` chegam ao serviço do backend em `05_infra/docker-compose.yml`, `05_infra/docker-compose.prod.yml` e `render.yaml`, com valores padrão iguais aos do `.env.example`. Nenhum valor secreto foi escrito. `docker compose -f <arquivo> config` valida os dois compose (ou o doc registra que o Docker não estava disponível) e `render.yaml` carrega como YAML válido. O doc traz uma tabela variável × arquivo × padrão.
+- **Prompt:**
+```text
+Tarefa (BL-24 / pendência da T35, DEC-42). Contexto: a T35 criou variáveis de limite do fluxo de legenda por IA, lidas pelo backend em `04_backend/app/core/config.py` (procure `LEGENDA_IA_`) e documentadas em `04_backend/.env.example` e `05_infra/.env.example` (LEGENDA_IA_LIMITE_POR_USUARIO, LEGENDA_IA_JANELA_USUARIO_SEGUNDOS, LEGENDA_IA_LIMITE_DIARIO_POR_USUARIO, LEGENDA_IA_LIMITE_POR_FOTO, LEGENDA_IA_JANELA_FOTO_SEGUNDOS, LEGENDA_IA_SAIDA_MAX_CARACTERES, LEGENDA_IA_SAIDA_MAX_ITENS, LEGENDA_IA_SAIDA_MAX_CARACTERES_ITEM). A pendência registrada é que elas não são repassadas ao container do backend em `05_infra/docker-compose.yml`, `05_infra/docker-compose.prod.yml` nem em `render.yaml` (arquivo que já existe na raiz; não crie outros arquivos na raiz).
+
+Passos: (1) Leia `04_backend/app/core/config.py` e confirme a lista COMPLETA e os tipos/padrões das variáveis `LEGENDA_IA_*` (a lista acima pode estar incompleta ou desatualizada; vale o código). Leia os dois `.env.example` e `00_docs/backlog-auto/` docs da T35 (procure por `limite` e `legenda` com Grep). (2) Em cada um dos três arquivos, localize o serviço do backend e o bloco `environment`; siga o estilo já usado para as demais variáveis (por ex. `${VAR:-padrao}` nos compose; `value:` ou `sync: false` no render.yaml conforme o padrão de variáveis não secretas). Use como padrão o mesmo valor do `.env.example`. Não coloque segredos. (3) Se alguma variável nova estiver no código mas faltar em algum `.env.example`, acrescente-a (`.env.example` só em `04_backend` e `05_infra`; se faltar, tocar neles é permitido nesta tarefa e deve ser listado no doc). (4) Valide: `docker compose -f docker-compose.yml config` e `docker compose -f docker-compose.prod.yml config` a partir de `05_infra` (o prod pode exigir variáveis obrigatórias: passe valores fictícios via ambiente só para a validação, sem gravar arquivo `.env`); se o Docker não existir, registre isso. Valide `render.yaml` com `python -c "import yaml; yaml.safe_load(open('render.yaml'))"` a partir da raiz. (5) Registre em `00_docs/backlog-auto/legenda-ia-env-deploy.md` uma tabela variável × arquivo × padrão, os comandos e as saídas. Não toque em código Python nem nos testes. Não edite `00_docs/projeto/*`. Commit: `chore(infra): repassa LEGENDA_IA_* ao compose e ao render.yaml (BL-24)` com `Refs BL-24`. Não faça push. Siga a «Regra de pronto» do BACKLOG.md.
 ```
