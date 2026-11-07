@@ -1,50 +1,38 @@
-"""Contrato do cliente de legenda por IA (BL-37, DEC-37 DP-6), independente do provedor (B-04)."""
-import hashlib
-from dataclasses import dataclass, field
-from typing import Protocol, runtime_checkable
+"""Cliente de legenda por IA: contrato, proteções e dependência FastAPI (BL-37, DEC-37, DEC-42).
 
+Não há provedor escolhido (B-04): `obter_cliente_provedor` responde 503. O adapter real entra
+nela, e não em `get_legenda_ia_client`, que é o ponto que aplica o limite de taxa e o saneamento.
+"""
+from fastapi import Depends
+
+from app.api.deps import limitar_geracao_legenda_ia
+from app.core.config import get_settings
 from app.core.errors import DomainError
+from app.services.legenda_ia.contrato import (
+    FakeLegendaIAClient,
+    LegendaIAClient,
+    LegendaIAResultado,
+)
+from app.services.legenda_ia.saneamento import (
+    ClienteLegendaIAProtegido,
+    construir_limites_saida,
+)
+
+__all__ = [
+    "ClienteLegendaIAProtegido",
+    "FakeLegendaIAClient",
+    "LegendaIAClient",
+    "LegendaIAResultado",
+    "get_legenda_ia_client",
+    "obter_cliente_provedor",
+]
 
 
-@dataclass(frozen=True)
-class LegendaIAResultado:
-    legenda_sugerida: str
-    alertas: list[str] = field(default_factory=list)
-    pendencias: list[str] = field(default_factory=list)
+def obter_cliente_provedor() -> LegendaIAClient:
+    """Cliente do provedor de LLM (DEC-37 DP-6).
 
-
-@runtime_checkable
-class LegendaIAClient(Protocol):
-    async def gerar_legenda(
-        self, imagem: bytes, prompt: str, legenda_bruta: str | None = None
-    ) -> LegendaIAResultado: ...
-
-
-class FakeLegendaIAClient:
-    """Cliente determinístico para testes: a saída depende só das entradas."""
-
-    def __init__(self) -> None:
-        self.chamadas = 0
-
-    async def gerar_legenda(
-        self, imagem: bytes, prompt: str, legenda_bruta: str | None = None
-    ) -> LegendaIAResultado:
-        self.chamadas += 1
-        digest = hashlib.sha256(imagem + prompt.encode()).hexdigest()[:8]
-        base = legenda_bruta.strip() if legenda_bruta else "Imagem sem descrição"
-        return LegendaIAResultado(
-            legenda_sugerida=f"{base} [{digest}]",
-            alertas=[],
-            pendencias=[] if legenda_bruta else ["legenda bruta ausente"],
-        )
-
-
-def get_legenda_ia_client() -> LegendaIAClient:
-    """Dependência FastAPI do cliente de IA (DEC-37 DP-6).
-
-    Enquanto o provedor de LLM não for escolhido (B-04) não há adapter concreto: a rota
-    responde 503 (RFC 7807). Os testes sobrescrevem esta dependência com `FakeLegendaIAClient`;
-    o adapter real (BL-34) passará a ser devolvido aqui.
+    Enquanto o provedor não for escolhido (B-04) não há adapter concreto: a rota responde 503
+    (RFC 7807). O adapter real (BL-34) passará a ser devolvido aqui.
     """
     raise DomainError(
         "Nenhum provedor de IA está configurado para gerar legendas (decisão B-04 pendente).",
@@ -52,3 +40,16 @@ def get_legenda_ia_client() -> LegendaIAClient:
         title="Legenda por IA indisponível",
         status_code=503,
     )
+
+
+async def get_legenda_ia_client(
+    provedor: LegendaIAClient = Depends(obter_cliente_provedor),
+    _limite: None = Depends(limitar_geracao_legenda_ia),
+) -> LegendaIAClient:
+    """Dependência da rota `gerar`: limite de taxa + cliente que delimita e saneia (DEC-42 C e D).
+
+    `provedor` vem antes de `_limite` para o 503 sem provedor não gastar cota. Sobrescrever esta
+    função em testes deixa as proteções de fora; para mantê-las, sobrescreva
+    `obter_cliente_provedor`.
+    """
+    return ClienteLegendaIAProtegido(provedor, construir_limites_saida(get_settings()))

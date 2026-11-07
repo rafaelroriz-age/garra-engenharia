@@ -7,7 +7,7 @@ injetadas diretamente pelo serviço `backend` e este arquivo `.env` não é nece
 """
 from functools import lru_cache
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -43,6 +43,17 @@ class Settings(BaseSettings):
     jwt_secret_key: str = "changeme"
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 60
+
+    # --- Legenda por IA: limites de geração e da saída do LLM (DEC-42 C) ----------
+    legenda_ia_limite_por_usuario: int = Field(default=10, ge=1)
+    legenda_ia_janela_usuario_segundos: int = Field(default=60, ge=1)
+    legenda_ia_limite_diario_por_usuario: int = Field(default=200, ge=1)
+    legenda_ia_limite_por_foto: int = Field(default=5, ge=1)
+    legenda_ia_janela_foto_segundos: int = Field(default=3600, ge=1)
+    # Até 500: a sugestão aprovada vira `legenda`, cujo teto é LEGENDA_MAX_LENGTH (schemas/foto.py).
+    legenda_ia_saida_max_caracteres: int = Field(default=500, ge=1, le=500)
+    legenda_ia_saida_max_itens: int = Field(default=20, ge=1)
+    legenda_ia_saida_max_caracteres_item: int = Field(default=300, ge=1)
 
     @property
     def database_url(self) -> str:
