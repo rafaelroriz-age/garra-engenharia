@@ -678,7 +678,7 @@ Tarefa (DEC-44, proposta da T30, itens 1-3). Contexto: a T30 adicionou `exists`,
 ```
 
 ### T33 · Legenda por IA: aprovação só por auditor e invalidação ao editar ou regerar (backend)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-42
 - **Papel:** backend
 - **Depende:** T31
