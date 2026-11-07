@@ -321,7 +321,7 @@ Siga a 'Regra de pronto' do BACKLOG.md: registre fatos, números, comandos e sa�
 ```
 
 ### T39 · Tornar o lint (ruff) bloqueante no CI
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-26
 - **Papel:** devops
 - **Depende:** —
@@ -338,7 +338,7 @@ Passos: (1) Leia `00_docs/backlog-auto/ruff.md` e `.github/workflows/ci.yml` int
 ```
 
 ### T41 · Testes E2E (API mockada) do Portal do Cliente
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-32
 - **Papel:** frontend
 - **Depende:** —
@@ -355,7 +355,7 @@ Passos: (1) Leia as duas páginas do portal, `lib/api-client.ts` (funções do p
 ```
 
 ### T42 · Verificar os scripts de backup e restore com comandos simulados
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-29
 - **Papel:** devops
 - **Depende:** —
@@ -819,7 +819,7 @@ Tarefa (BL-39, RF-15, RN-16, RN-17): integrar o editor de anotação de fotos ao
 ```
 
 ### T40 · Repassar as variáveis LEGENDA_IA_* ao compose e ao render.yaml
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-24
 - **Papel:** devops
 - **Depende:** —
