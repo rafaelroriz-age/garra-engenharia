@@ -36,6 +36,8 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from app.services.report_generator.legenda_foto import legenda_para_relatorio
+
 TEMPLATES_DIR = Path(__file__).resolve().parents[3] / "templates"
 LTIP_TEMPLATES_DIR = TEMPLATES_DIR / "ltip"
 HTML_TEMPLATE_NAME = "ltip/ltip_template.html.j2"
@@ -130,6 +132,10 @@ def _storage_key_da_foto(ocorrencia: dict[str, Any]) -> str | None:
 
 
 def _normalizar_ocorrencia(ocorrencia: dict[str, Any]) -> None:
+    # RN-16/RN-17, DEC-37 DP-9: só `legenda` entra no relatório; a sugestão de IA
+    # (`legenda_ia_sugerida`) nunca. Vale para PDF e DOCX (LTIP e RFIP).
+    for foto in ocorrencia.get("fotos") or []:
+        foto["legenda"] = legenda_para_relatorio(foto)
     for chave in ("gut_gravidade", "gut_urgencia", "gut_tendencia"):
         ocorrencia[chave] = _numero(ocorrencia.get(chave))
     if ocorrencia.get("pontuacao_gut") is None:
