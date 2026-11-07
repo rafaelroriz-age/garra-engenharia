@@ -58,7 +58,7 @@ last_updated: 2026-09-17
 | ID | Tarefa | Requisitos/Decisões | Agente |
 |---|---|---|---|
 | BL-10 | Registro de Visitas do RFO (equipe, serviços, medições) — T15: 18 lacunas; T21 corrigiu (L15 aberta, migration `e5a1c3f7b9d2`) | RF-03, RN-01, RN-02 | Engenheiro Backend + Frontend |
-| BL-11 | Upload de fotos (clipboard paste + upload manual) — T16: 9 lacunas; T19 corrigiu 8 (faltam `UNIQUE(storage_key)` e URL pré-assinada) | RF-05, RNF-02 | Engenheiro Backend + Frontend |
+| BL-11 | Upload de fotos (clipboard paste + upload manual) — T16: 9 lacunas; T19 corrigiu 8 (faltam `UNIQUE(storage_key)` e URL pré-assinada; T31: `origem` do vínculo em enum fechado) | RF-05, RNF-02 | Engenheiro Backend + Frontend |
 | BL-14 | CRUD de Ocorrências (sistema, subsistema, localização, classificação) — regras revisadas (T06); correções L1–L7 aplicadas (T08), testes ainda não rodados (sem PostgreSQL) | RF-04, RN-03, RN-05, RN-10 | Engenheiro Backend + Frontend |
 | BL-16 | Dashboard de saúde por edificação/sistema predial | RF-07 | Engenheiro Backend + Frontend |
 | BL-24 | Deploy de produção (Render) — faltam `POSTGRES_PASSWORD`/`JWT_SECRET_KEY` | HT-04, DEC-22 | Engenheiro DevOps |
@@ -74,7 +74,7 @@ last_updated: 2026-09-17
 | BL-04 | Modelagem de dados: SQLAlchemy 2 + migrations Alembic — revisão de integração p/ legendas IA feita (T14) | DEC-07 | Engenheiro Backend |
 | BL-05 | Seed do gabarito de sistemas prediais/subsistemas/anomalias | RF-10 | Engenheiro Backend |
 | BL-06 | Autenticação JWT + bcrypt | RNF-05, DEC-05 | Engenheiro Backend |
-| BL-07 | Storage service: MinIO/S3 (boto3) | RNF-07, DEC-02 | Engenheiro Backend |
+| BL-07 | Storage service: MinIO/S3 (boto3) — T32: relatório de órfãos em dry-run | RNF-07, DEC-02 | Engenheiro Backend |
 | BL-08 | CRUD de Edificações | RF-01 | Engenheiro Backend + Frontend |
 | BL-09 | CRUD de Contratos | RF-02, RF-12, RN-06, RN-09 | Engenheiro Backend + Frontend |
 | BL-42 | RBAC — perfil `auxiliar` (escrita limitada de dados de campo + autoria `criado_por_id`) | RN-18, DEC-27 | Engenheiro Backend + Frontend |

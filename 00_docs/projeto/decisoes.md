@@ -610,7 +610,8 @@ last_updated: 2026-09-17
 | **Contexto** | `FotoVincularPayload.origem` é `str` livre; não há CHECK no banco. O valor aceito só existe no frontend (`OrigemFoto`), e o seed usa `upload_manual`. A afirmação da T26 de que `upload` causava 422 era incorreta. |
 | **Decisão proposta** | Impor `Literal["upload_manual","lightshot","clipboard"]` no payload e, em tarefa própria com migration, normalizar dados existentes e avaliar um CHECK. |
 | **Consequências** | Registros antigos gravados com `upload` (se houver) precisam de migração de dados antes do CHECK. |
-| **Referência** | `00_docs/backlog-auto/frontend-origem-foto.md` |
+| **Andamento (T31, 2026-11-06)** | A parte do payload foi concluída: `FotoVincularPayload.origem` é `OrigemFoto = Literal["upload_manual","lightshot","clipboard"]` em `04_backend/app/schemas/foto.py` (422 para outro valor; `FotoBase`/`FotoRead` seguem `str`, então dados antigos continuam legíveis). Testes em `tests/test_foto_origem_enum.py` (schema sem banco: passam; endpoint: pulam sem PostgreSQL). O enum já havia sido esboçado na T19 (DEC-39 C). **Seguem abertos:** migration de normalização de dados antigos (ex.: `upload`) e CHECK no banco; a decisão continua proposta. |
+| **Referência** | `00_docs/backlog-auto/frontend-origem-foto.md`, `00_docs/backlog-auto/dec-43-origem-foto.md` |
 
 ## DEC-44 — Política de limpeza de objetos órfãos no storage (proposta de T30)
 
@@ -621,4 +622,5 @@ last_updated: 2026-09-17
 | **Contexto** | A T30 confirmou o storage compatível com artefatos de IA e adicionou `exists`, `list_keys` e `listar_orfaos` (só leitura). Não existe tarefa agendada de limpeza; uploads sem vínculo (`DELETE /fotos/upload` só cobre o descarte explícito) podem acumular. |
 | **Decisão proposta** | (1) Rodar `listar_orfaos` periodicamente apenas gerando relatório/log. (2) Só apagar objetos com idade > 24 h (exige expor `LastModified`, não incluído). (3) Iniciar em dry-run; apagar só com aprovação manual da lista, ou automático após N dias se o dono decidir. (4) Prefixos distintos para fotos (`fotos/`) e artefatos de IA (`ia/`). |
 | **Consequências** | Nada é apagado automaticamente até a aprovação. Fakes futuros de `StorageClient` devem implementar `exists` e `list_keys`. |
-| **Referência** | `00_docs/backlog-auto/storage-legenda-ia.md` |
+| **Andamento (T32, 2026-11-06)** | Itens 1–3 em parte: `StorageClient.list_objects(prefix)` devolve `(chave, LastModified)` (`list_keys`/`listar_orfaos` inalterados) e `python -m app.scripts.relatorio_orfaos [--idade-minima-horas 24] [--prefixo fotos/]` gera o relatório **só em dry-run** (sem chamada de exclusão; há teste que garante isso). Testes com S3 falso: 9 passando junto com `test_storage_legenda_ia.py`. **Abertos:** exclusão (exige aprovação manual da lista), agendamento periódico e o item 4 (prefixos `fotos/` x `ia/`); script não executado contra PostgreSQL/MinIO reais. A decisão continua proposta. |
+| **Referência** | `00_docs/backlog-auto/storage-legenda-ia.md`, `00_docs/backlog-auto/storage-orfaos-relatorio.md` |
