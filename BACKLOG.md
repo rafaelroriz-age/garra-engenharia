@@ -819,7 +819,7 @@ Tarefa (BL-39, RF-15, RN-16, RN-17): integrar o editor de anotação de fotos ao
 ```
 
 ### T40 · Repassar as variáveis LEGENDA_IA_* ao compose e ao render.yaml
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-24
 - **Papel:** devops
 - **Depende:** —
