@@ -95,6 +95,24 @@ services:
         value: HS256
       - key: JWT_ACCESS_TOKEN_EXPIRE_MINUTES
         value: "60"
+      # Legenda por IA (DEC-42 C): limites de geração e teto da saída. Não são segredos,
+      # então valor fixo igual ao default de config.py e de 04_backend/.env.example.
+      - key: LEGENDA_IA_LIMITE_POR_USUARIO
+        value: "10"
+      - key: LEGENDA_IA_JANELA_USUARIO_SEGUNDOS
+        value: "60"
+      - key: LEGENDA_IA_LIMITE_DIARIO_POR_USUARIO
+        value: "200"
+      - key: LEGENDA_IA_LIMITE_POR_FOTO
+        value: "5"
+      - key: LEGENDA_IA_JANELA_FOTO_SEGUNDOS
+        value: "3600"
+      - key: LEGENDA_IA_SAIDA_MAX_CARACTERES
+        value: "500"
+      - key: LEGENDA_IA_SAIDA_MAX_ITENS
+        value: "20"
+      - key: LEGENDA_IA_SAIDA_MAX_CARACTERES_ITEM
+        value: "300"
       # Armazenamento de fotos/documentos (MinIO/S3, DEC-02) FICOU FORA do
       # escopo deste Blueprint (só backend+frontend+banco foram pedidos).
       # Sem estas variáveis, a API sobe normalmente, mas os endpoints de
