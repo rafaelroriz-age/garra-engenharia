@@ -54,3 +54,10 @@ Não há achado em visitas/mão de obra/medições além de SEG-IA-07: RBAC por 
 
 - Subir MinIO e PostgreSQL de `05_infra` e rodar `pytest tests/test_seguranca_legenda_ia.py` (esperado: 11 passam, 6 xfail). Se algum `xfail` passar sem correção, `strict` falha e o diagnóstico acima estava errado.
 - Ao corrigir cada achado, remover a marca `xfail` do teste correspondente.
+
+## Andamento (fechamento do lote T33–T35, 2026-11-06)
+
+- **Corrigidos no código:** SEG-IA-02, SEG-IA-03 e SEG-IA-05 (T33, backend; T34, painel); SEG-IA-01 e SEG-IA-04 (T35, por usuário e por foto; sem orçamento global, e o contador é por processo).
+- **Mitigado:** SEG-IA-08 só no contrato (delimitação de `legenda_bruta`); a revisão do adapter real continua necessária.
+- **Abertos:** SEG-IA-06, SEG-IA-07 (L15/DEC-27) e SEG-IA-09.
+- As marcas `xfail` de `test_seguranca_legenda_ia.py` estão desatualizadas e precisam sair (ver `legenda-ia-limites.md` §6, pendência 5).
