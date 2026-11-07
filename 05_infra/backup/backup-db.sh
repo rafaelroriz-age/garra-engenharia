@@ -49,7 +49,11 @@ echo "[backup] Iniciando backup ($CARIMBO) com $COMPOSE_FILE"
 ARQUIVO_DUMP="$DUMP_DIR/garra-db-$CARIMBO.dump"
 docker compose -f "$COMPOSE_FILE" exec -T postgres \
   pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=custom --no-owner \
-  > "$ARQUIVO_DUMP"
+  > "$ARQUIVO_DUMP" || {
+  echo "[backup] ERRO: pg_dump falhou — removendo dump parcial e abortando sem aplicar retenção." >&2
+  rm -f "$ARQUIVO_DUMP"
+  exit 1
+}
 
 if [[ ! -s "$ARQUIVO_DUMP" ]]; then
   echo "[backup] ERRO: dump vazio — abortando sem aplicar retenção." >&2
