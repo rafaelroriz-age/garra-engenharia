@@ -39,8 +39,8 @@ last_updated: 2026-09-17
 | BL-35 | Legendas assistidas por IA (frontend): geração, revisão e aprovação da legenda sugerida — 🟡 T26 (painel pronto, testado com API mockada; falta backend real, B-04); T34 (sem «Aprovar» para o auxiliar e aviso de invalidação) | RF-15, RN-16, RN-17 | Engenheiro Frontend |
 | BL-36 | Extensão da modelagem de dados para legendas assistidas por IA — ✅ T22 (migration `f7c2a9d4e6b1`) | RF-15, RN-16, RN-17, DEC-21 | Engenheiro Backend |
 | BL-37 | Storage/metadata do fluxo de legendas assistidas por IA — ✅ T23 (`prompt_ia_service.py`, `LegendaIAClient` + Fake) | RF-15, RN-16, RN-17 | Engenheiro Backend |
-| BL-38 | Integração do upload/edição de fotos com a geração de legendas por IA — 🟡 T24 (regra de relatório só no RFO) | RF-15, RN-16, RN-17, BL-11 | Engenheiro Backend + Frontend |
-| BL-39 | Integração do editor de anotação com o fluxo de aprovação de legendas por IA | RF-15, RN-16, RN-17, BL-31 | Engenheiro Frontend |
+| BL-38 | Integração do upload/edição de fotos com a geração de legendas por IA — 🟡 T24 (RFO) e T37 (Cautelar e Residencial); faltam LTIP/RFIP (T36) | RF-15, RN-16, RN-17, BL-11 | Engenheiro Backend + Frontend |
+| BL-39 | Integração do editor de anotação com o fluxo de aprovação de legendas por IA — 🟡 T38 (botão «Anotar foto»; anotação gera foto nova) | RF-15, RN-16, RN-17, BL-31 | Engenheiro Frontend |
 
 ## 🟡 To do (6)
 
