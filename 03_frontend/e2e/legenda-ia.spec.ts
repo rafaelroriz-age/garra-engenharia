@@ -111,7 +111,8 @@ test.describe("Legenda por IA (BL-35)", () => {
   });
 
   test("gera rascunho, exige texto e confirmação, e aprova o texto revisado", async ({ page }) => {
-    await prepararPagina(page, "auxiliar");
+    // DEC-42: só o auditor aprova (o auxiliar gera e edita o rascunho; ver legenda-ia-aprovacao.spec.ts).
+    await prepararPagina(page, "auditor");
     let corpoGerar: unknown = null;
     let corpoAprovar: Record<string, unknown> | null = null;
 

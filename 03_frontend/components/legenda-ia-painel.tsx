@@ -3,11 +3,13 @@
 import { useEffect, useId, useState } from "react";
 import { CheckCircle2, Info, Loader2, Sparkles, TriangleAlert } from "lucide-react";
 
-import { ApiError, legendaIA } from "@/lib/api-client";
+import { ApiError, api, legendaIA } from "@/lib/api-client";
+import { useUsuarioAtual } from "@/lib/use-usuario-atual";
 import {
   LEGENDA_BRUTA_MAX_LENGTH,
   LEGENDA_MAX_LENGTH,
   type Foto,
+  type FotoUpdateInput,
   type NivelCertezaIA,
 } from "@/lib/types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -73,10 +75,13 @@ function formatarDataHora(iso: string | null | undefined): string | null {
  */
 export function LegendaIAPainel({ foto, onFotoAtualizada }: LegendaIAPainelProps) {
   const idBase = useId();
+  // Só o auditor aprova (DEC-42 A). Esconder o botão é usabilidade; o backend recusa com 403.
+  const { isAuditor, isLoading: carregandoPerfil } = useUsuarioAtual();
   const [legendaBruta, setLegendaBruta] = useState(foto.legenda_bruta ?? "");
   const [texto, setTexto] = useState(() => textoInicial(foto));
   const [isGerando, setIsGerando] = useState(false);
   const [isAprovando, setIsAprovando] = useState(false);
+  const [isSalvando, setIsSalvando] = useState(false);
   const [confirmando, setConfirmando] = useState(false);
   const [erro, setErro] = useState<ApiError | Error | null>(null);
   const [mensagemSucesso, setMensagemSucesso] = useState<string | null>(null);
@@ -93,8 +98,11 @@ export function LegendaIAPainel({ foto, onFotoAtualizada }: LegendaIAPainelProps
 
   const temSugestao = foto.status_validacao_ia != null && Boolean(foto.legenda_ia_sugerida);
   const textoLimpo = texto.trim();
-  const ocupado = isGerando || isAprovando;
-  const podeAprovar = temSugestao && textoLimpo.length > 0 && !ocupado;
+  const ocupado = isGerando || isAprovando || isSalvando;
+  const podeAprovar = isAuditor && temSugestao && textoLimpo.length > 0 && !ocupado;
+  const estaAprovada = foto.status_validacao_ia === "aprovada";
+  // Texto aprovado diferente do que está no campo: salvar desfaz a aprovação (DEC-42 B).
+  const editadaDesdeAprovacao = estaAprovada && textoLimpo !== (foto.legenda ?? "").trim();
   const alertas = foto.alertas_ia ?? [];
   const pendencias = foto.pendencias_ia ?? [];
   const geradaEm = formatarDataHora(foto.legenda_ia_gerada_em);
@@ -110,7 +118,12 @@ export function LegendaIAPainel({ foto, onFotoAtualizada }: LegendaIAPainelProps
       const atualizada = await legendaIA.gerar(foto.id, { legenda_bruta: bruta.length > 0 ? bruta : null });
       setTexto(atualizada.legenda_ia_sugerida ?? "");
       onFotoAtualizada(atualizada);
-      setMensagemSucesso("Sugestão gerada. Revise o texto antes de aprovar.");
+      // Mensagem segue a resposta do backend, não o estado local.
+      setMensagemSucesso(
+        estaAprovada && atualizada.status_validacao_ia === "rascunho"
+          ? "Nova sugestão gerada. A aprovação anterior foi desfeita: revise o texto e aprove de novo."
+          : "Sugestão gerada. Revise o texto antes de aprovar."
+      );
     } catch (err) {
       setErro(normalizarErroGeracao(err));
     } finally {
@@ -133,6 +146,33 @@ export function LegendaIAPainel({ foto, onFotoAtualizada }: LegendaIAPainelProps
       setErro(err instanceof Error ? err : new Error("Falha ao aprovar a legenda."));
     } finally {
       setIsAprovando(false);
+    }
+  };
+
+  /**
+   * Salva a edição de uma legenda aprovada (`PUT` só com `legenda`). O backend zera a aprovação
+   * e devolve `status_validacao_ia = "rascunho"`; o selo e o aviso vêm dessa resposta.
+   */
+  const salvarEdicao = async () => {
+    if (!editadaDesdeAprovacao || textoLimpo.length === 0) return;
+    setErro(null);
+    setMensagemSucesso(null);
+    setIsSalvando(true);
+    try {
+      const atualizada = await api.put<Foto>(`/fotos/${foto.id}`, {
+        legenda: textoLimpo,
+      } satisfies FotoUpdateInput);
+      setTexto(atualizada.legenda ?? textoLimpo);
+      onFotoAtualizada(atualizada);
+      setMensagemSucesso(
+        atualizada.status_validacao_ia === "rascunho"
+          ? "Edição salva. A aprovação foi desfeita: a legenda voltou a rascunho e precisa de nova aprovação."
+          : "Edição salva."
+      );
+    } catch (err) {
+      setErro(err instanceof Error ? err : new Error("Falha ao salvar a edição da legenda."));
+    } finally {
+      setIsSalvando(false);
     }
   };
 
@@ -191,6 +231,16 @@ export function LegendaIAPainel({ foto, onFotoAtualizada }: LegendaIAPainelProps
 
       {temSugestao ? (
         <div className="space-y-3">
+          {estaAprovada ? (
+            <Alert>
+              <TriangleAlert aria-hidden="true" />
+              <AlertTitle>Esta legenda já está aprovada</AlertTitle>
+              <AlertDescription>
+                Editar o texto ou gerar nova sugestão desfaz a aprovação: a legenda volta a rascunho e só
+                entra no relatório depois de aprovada de novo.
+              </AlertDescription>
+            </Alert>
+          ) : null}
           <div className="space-y-1.5">
             <Label htmlFor={`${idBase}-texto`}>Legenda sugerida (editável)</Label>
             <Textarea
@@ -238,7 +288,25 @@ export function LegendaIAPainel({ foto, onFotoAtualizada }: LegendaIAPainelProps
             </div>
           ) : null}
 
-          {confirmando ? (
+          {editadaDesdeAprovacao ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => void salvarEdicao()}
+              disabled={ocupado || textoLimpo.length === 0}
+              className="gap-1.5"
+            >
+              {isSalvando ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+              {isSalvando ? "Salvando..." : "Salvar edição (desfaz a aprovação)"}
+            </Button>
+          ) : null}
+
+          {!isAuditor ? (
+            carregandoPerfil ? null : (
+              <p className="text-xs text-muted-foreground">A aprovação é feita pelo auditor responsável.</p>
+            )
+          ) : confirmando ? (
             <Alert>
               <CheckCircle2 aria-hidden="true" />
               <AlertTitle>Confirmar aprovação</AlertTitle>
