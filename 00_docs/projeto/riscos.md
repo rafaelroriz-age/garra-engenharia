@@ -235,3 +235,14 @@ last_updated: 2026-09-17
 | **Atualização (T37/T38, 2026-11-07)** | Cautelar e Residencial não imprimem mais sugestão de IA (T37). **Riscos que ficam:** (1) LTIP e RFIP ainda sem a regra (T36 bloqueada); (2) nenhum pipeline avisa ao gerar relatório com fotos IA em rascunho; (3) o caminho PDF dos testes novos não rodou (sem WeasyPrint/GTK no Windows); (4) a anotação cria foto nova e a invalidação da aprovação só reage a mudança de `legenda`, não de imagem; (5) CORS do bucket para `toDataURL` não verificado em MinIO real. |
 | **Gatilho de escalada** | Qualquer uso de BL-10/BL-11 com dados reais antes de aplicar a migration e conferir os dados duplicados de produção. |
 | **Responsável** | Engenheiro Backend |
+
+### R-16 — Deploy por VPS e rotina de backup com falhas conhecidas
+
+| Campo | Valor |
+|---|---|
+| **Origem** | Lote T39–T42 (2026-11-07), em [legenda-ia-env-deploy.md](../backlog-auto/legenda-ia-env-deploy.md), [backup-verificacao.md](../backlog-auto/backup-verificacao.md) e [ci-lint-bloqueante.md](../backlog-auto/ci-lint-bloqueante.md) |
+| **Descrição** | (1) `05_infra/docker-compose.prod.yml` linha 89 (`image:` do backend, `${IMAGE_TAG:?… ex.: …}`) não é YAML válido; o compose de produção por VPS não sobe até corrigir (o Render não é afetado). (2) O script de restore segue para o `pg_restore --clean` mesmo se o dump `pre-restore` falhar (DEC-45). (3) O lint do backend não bloqueia o CI e há 11 erros abertos (DEC-46). (4) `docker compose config` e `shellcheck` não rodaram por falta de Docker/ferramenta; as 8 variáveis `LEGENDA_IA_*` talvez precisem ser definidas à mão no serviço real do Render. |
+| **Probabilidade / Impacto** | Média / Alta (restore sem rede de segurança); Média / Média (demais) |
+| **Mitigação** | Pôr a `image:` entre aspas e validar com `docker compose config`; aprovar DEC-45 antes de qualquer uso real do restore; tarefa de limpeza do ruff e DEC-46; conferir as variáveis no Dashboard do Render. |
+| **Gatilho de escalada** | Primeiro restore em produção, ou primeiro deploy por VPS, sem as correções acima. |
+| **Responsável** | Engenheiro DevOps |
