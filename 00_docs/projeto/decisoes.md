@@ -625,3 +625,26 @@ last_updated: 2026-09-17
 | **Consequências** | Nada é apagado automaticamente até a aprovação. Fakes futuros de `StorageClient` devem implementar `exists` e `list_keys`. |
 | **Andamento (T32, 2026-11-06)** | Itens 1–3 em parte: `StorageClient.list_objects(prefix)` devolve `(chave, LastModified)` (`list_keys`/`listar_orfaos` inalterados) e `python -m app.scripts.relatorio_orfaos [--idade-minima-horas 24] [--prefixo fotos/]` gera o relatório **só em dry-run** (sem chamada de exclusão; há teste que garante isso). Testes com S3 falso: 9 passando junto com `test_storage_legenda_ia.py`. **Abertos:** exclusão (exige aprovação manual da lista), agendamento periódico e o item 4 (prefixos `fotos/` x `ia/`); script não executado contra PostgreSQL/MinIO reais. A decisão continua proposta. |
 | **Referência** | `00_docs/backlog-auto/storage-legenda-ia.md`, `00_docs/backlog-auto/storage-orfaos-relatorio.md` |
+
+## DEC-45 — Restore: dump `pre-restore` obrigatório e retenção dos `pre-restore-*` (proposta de T42)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-07 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | O teste com stubs mostrou que o script de restore termina o dump `pre-restore` com `|| true`: se ele falhar ou sair vazio, o script avisa «Estado anterior salvo» e executa `pg_restore --clean`, destruindo o banco sem rede de segurança. Os `pre-restore-*.dump` também nunca expiram. |
+| **Decisão proposta** | (1) Abortar com exit ≠ 0 quando o `pre-restore` falhar ou estiver vazio, com `FORCAR_SEM_PRE_RESTORE=1` para ignorar de forma explícita. (2) Incluir os `pre-restore-*.dump` na retenção por `-mtime`. |
+| **Consequências** | Muda o comportamento visível do script; o bloco INFO do teste vira asserção quando aprovada. Não aplicada nesta etapa. |
+| **Referência** | `00_docs/backlog-auto/backup-verificacao.md` §4 |
+
+## DEC-46 — Lint do backend bloqueante no CI só após limpeza, com ruff fixado (proposta de T39)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-07 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | `ruff check .` (ruff 0.17.3, `04_backend/ruff.toml`) acusa 11 erros em arquivos adicionados depois da T04 (2 RUF001, 4 I001, 2 RUF043, 3 RUF005). O CI instala `ruff` sem versão e mantém o passo com `continue-on-error: true`. |
+| **Decisão proposta** | (1) Corrigir os 11 erros numa tarefa própria (4 com `--fix` seguro; RUF005/RUF043 à mão). (2) Trocar `pip install ruff` por `pip install "ruff==0.17.3"` em `ci.yml`. (3) Remover `continue-on-error` do passo. (4) Marcar o `ci.yml` como status check obrigatório (já pendente em BL-26). |
+| **Consequências** | Sem a limpeza, novos erros de lint continuam entrando sem barrar o merge. Alterar `ci.yml` é mudança de YAML, fora do escopo de documentação. |
+| **Referência** | `00_docs/backlog-auto/ci-lint-bloqueante.md`, `00_docs/backlog-auto/ruff.md` |
+

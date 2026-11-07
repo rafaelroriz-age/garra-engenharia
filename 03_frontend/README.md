@@ -89,6 +89,8 @@ npm run lint    # ESLint
 
 Testes de ponta a ponta dos Fluxos 1 (RFO) e 2 (LTIP) de [00_docs/estudo-do-contexto.md](../00_docs/estudo-do-contexto.md#8-fluxos-principais), em `e2e/rfo.spec.ts` e `e2e/ltip.spec.ts`. Rodam contra uma instância local **já em execução** via `05_infra/docker-compose.yml` — não sobem a stack sozinhos.
 
+O Portal do Cliente tem E2E com API mockada em `e2e/portal.spec.ts` (T41, 8 testes via `page.route`; precisa do frontend em `localhost:3000`, sem backend). Lacuna conhecida: o portal não controla perfil na UI (ver [portal-e2e.md](../00_docs/backlog-auto/portal-e2e.md)).
+
 ### Pré-requisitos (stack local rodando e com dados mestre)
 
 ```powershell

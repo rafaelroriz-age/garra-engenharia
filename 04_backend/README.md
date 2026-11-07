@@ -341,3 +341,5 @@ Para rodar os testes de lacuna: `docker compose up -d` em `05_infra/`, `alembic 
 | Legenda aprovada no LTIP e no RFIP (BL-38, T36) | `legenda-relatorio-ltip-rfip.md` | `_normalizar_ocorrencia` do `ltip_pipeline.py` passa cada foto por `legenda_para_relatorio`; o `rfip_pipeline.py` herda, sem edição. Hoje nenhum template imprime legenda de foto | `test_legenda_relatorio_ltip_rfip.py`: 42 passed, 5 skipped (sem WeasyPrint/GTK) com os testes de pipeline; PDF não executado |
 
 A suíte completa do backend não foi validada numa única execução: o venv do checkout principal estava sem `greenlet` funcional, houve interrupção por falta de memória e testes assíncronos falham com `RuntimeError: There is no current event loop` quando um teste usa `asyncio.run`. `ruff check .` ainda acusa erros preexistentes fora das áreas tocadas.
+
+> **Lint (T39, 2026-11-07):** `ruff check .` (ruff 0.17.3) acusa hoje 11 erros em arquivos novos (vistorias e testes), então o passo de lint do CI segue não bloqueante. Plano em DEC-46 e em [ci-lint-bloqueante.md](../00_docs/backlog-auto/ci-lint-bloqueante.md).
