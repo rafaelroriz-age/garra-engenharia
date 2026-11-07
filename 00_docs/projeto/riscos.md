@@ -52,6 +52,8 @@ last_updated: 2026-09-17
 | **Descrição** | WeasyPrint pode ser lento para documentos grandes. O RNF-06 exige geração em menos de 60 segundos. |
 | **Mitigação** | Processamento assíncrono via Celery ou FastAPI BackgroundTasks (ADR-06, ainda não implementado). Compressão de imagens (Pillow) antes de inserir no PDF/DOCX. |
 | **Benchmark realizado (BL-22, 2026-08-05)** | Medição real com pipeline mínimo de fidelidade aproximada (ver [relatorio-benchmark-geracao-pdf-docx.md](relatorio-benchmark-geracao-pdf-docx.md)), 191 páginas / 570 fotos (pior caso ≥ RNF-06). Job único gerando PDF+DOCX (dual-pass, ADR-06 Seção 5): **sem otimização de imagem, 112,8s** (viola RNF-06, arquivos de 280 MB/138 MB); **otimizando a imagem a cada geração, 83,2s** (ainda viola RNF-06); **com as fotos já redimensionadas no upload (fix aplicado em BL-11, `MAX_LADO_ARMAZENADO_PX=2000`) + compressão adicional no embed do relatório, 44,2s** — dentro do limite, ~26% de margem. Risco rebaixado de "ação necessária" para **mitigado sob a condição de que BL-12/BL-13 reaproveitem o padrão de fotos já otimizadas no upload**, não a de recomprimir tudo a cada geração. |
+| **Re-medição com pipelines finais (T17, 2026-11-04)** | Job PDF+DOCX em sequência, 1 execução por combinação: RFO 21,1 s (201 p., 150 fotos) e Vistoria Cautelar 34,2 s (200 p., 350 fotos) atendem RNF-06; Vistoria Residencial 56,7 s (200 p., 358 fotos) com 5 % de margem; **LTIP 63,2 s com só 137 p. (239 fotos) viola**. Gargalo: conversão do WeasyPrint (98–99,7 % do PDF); no LTIP, o container flex único de fichas (0,455 s/página, 3 a 5 vezes os demais). Medição incompleta (sem 3 execuções, sem cenário de 2000 px, sem LTIP de ~200 páginas) e sem leitura no MinIO nem upload. Ver [benchmark-pipelines-finais.md](../backlog-auto/benchmark-pipelines-finais.md) e DEC-40. **Gatilho de escalada atingido** para o LTIP. |
+| **Otimização do LTIP (T20, 2026-11-04)** | Causa: o container `display: flex` único que atravessava as páginas tinha custo quadrático no WeasyPrint 70. Com linhas de fichas e fotos entregues por `url_fetcher`: 239 fotos 72,1 → **11,6 s** (129 p., 286 MB); 382 fotos (~200 p.) 154,5 → **19,3 s** (201 p., 411 MB). Mediana de 3 execuções, só PDF. **O LTIP passa a atender RNF-06 com folga**; o gatilho de escalada fica desarmado para ele. Falta o DOCX com foto (lacuna de BL-17) e a Vistoria Residencial (5 % de margem) seguem. Ver [ltip-desempenho.md](../backlog-auto/ltip-desempenho.md) e DEC-41 (proposta). |
 | **Risco residual** | (1) Medição feita com pipeline aproximado, síncrono, sem Celery/Redis — a versão final (BL-12/BL-13, ADR-06) precisa ser re-medida quando implementada; (2) variação observada entre execuções locais (`tempo_registro_final_storage_e_db_s` variou de 1,7s a 9,2s) por contenção de I/O no ambiente de desenvolvimento — recomenda-se nova medição em ambiente de produção/staging dedicado antes do sign-off final de RNF-06. |
 | **Gatilho de escalada** | Tempo de geração > 60s em teste de carga da implementação final (BL-12/BL-13) com laudo de 200 páginas. |
 | **Responsável** | Engenheiro Backend |
@@ -166,9 +168,67 @@ last_updated: 2026-09-17
 | R-07 — Offline descoberto tarde | — | **Encerrado (2026-09-10)** — cliente confirmou cobertura 4G/Wi-Fi (DEC-26) |
 | R-01 — Fidelidade visual PDF | Alta | Mitigado (protótipo antecipado) |
 | R-02 — Clipboard API | Média | Mitigado (fallback upload manual) |
-| R-03 — Performance PDF | Média | Mitigado sob condição — benchmark real em 2026-08-05, ver [relatorio-benchmark-geracao-pdf-docx.md](relatorio-benchmark-geracao-pdf-docx.md) |
+| R-03 — Performance PDF | Alta | **Reduzido (2026-11-04, T20)** — o LTIP caiu para 11,6 s (239 fotos) e 19,3 s (~200 páginas); resta a Vistoria Residencial com 5 % de margem (T28, 2026-11-05, estendeu o `url_fetcher` a RFO/Cautelar/Residencial sem medir), o DOCX do LTIP sem foto e a medição em host dedicado. Histórico: **reaberto** pela re-medição T17 com os pipelines finais: LTIP viola RNF-06 (63,2 s com 137 páginas) e a Vistoria Residencial passa por 5 %; RFO e Cautelar atendem. Ver [benchmark-pipelines-finais.md](../backlog-auto/benchmark-pipelines-finais.md) e DEC-40 |
 | R-04 — Complexidade modelo | Média | Mitigado (modelo ER definido) |
 | R-05 — Original do cliente desatualizado | Baixa | Mitigado (templates e marca derivados dos originais arquivados — DEC-25/DEC-30); resta confirmar versão vigente (HT-02) |
 | R-08 — Escopo crescente | Média | Mitigado (congelamento v1.0) |
 | R-09 — Hospedagem indefinida | Baixa | Mitigado (Docker Compose agnóstico) |
-| R-10 — Dados enviados a IA externa (RF-15) | Média | Ação necessária (escolher provedor — lacuna #13, B-04) |
+| R-10 — Dados enviados a IA externa (RF-15) | Média | Ação necessária (escolher provedor — lacuna #13, B-04; T29 (2026-11-05) soma como bloqueio de produção: sem limite de taxa/custo e sem limite da saída do LLM, DEC-42). Em 2026-11-04 (T23) o contrato `LegendaIAClient` e o Fake isolam o provedor, mas nenhum cliente real existe |
+| R-11 — Ambiente de desenvolvimento não reproduzível (pytest × pytest-asyncio, ruff, Docker, Python 3.12) | Média → Baixa | Parcialmente mitigado (T02 e T04); restam o ruff na CI e a suíte de integração (DEC-31) |
+| R-12 — Vulnerabilidades de dependências do frontend (Next.js 14.2.35 crítico em produção) | Alta | Ação necessária (DEC-32 proposta; T03) |
+| R-13 — Lacunas de validação no CRUD de Ocorrências (enums, existência, `PUT`) | Média | Em mitigação: correção aplicada na T08, testes ainda não executados (DEC-34 proposta) |
+| R-14 — PDF dos templates e pipelines nunca renderizado de verdade; suíte completa sem PostgreSQL | Média | Ação necessária (rodar no container de `05_infra/`) |
+| R-15 — Lacunas de regra e segurança em Visitas e Fotos | Média | **Reduzido (2026-11-04, T19/T21)** — correções aplicadas e testadas; abertos: L15 (vínculo usuário↔contrato), `UNIQUE(storage_key)`, URL pré-assinada, limite de corpo, suíte completa numa só execução (T22: 34 falhas anteriores, 14 delas testes de banco que falham por `asyncio.run` derrubar o event loop em 7 arquivos; proposta: helper único em `tests/conftest.py`); DEC-38/DEC-39 ainda propostas. T25 (2026-11-05) confirmou a falha de `asyncio.run` em `test_fotos.py` e `test_rbac_auxiliar.py` (22 falhas ao rodar junto dos testes `async`, que passam isolados) e que a suíte completa estoura a memória neste Windows |
+
+### R-11 — Ambiente de desenvolvimento não reproduzível
+
+| Campo | Valor |
+|---|---|
+| **Origem** | Diagnóstico T01 (2026-11-04), em [00_docs/backlog-auto/diagnostico.md](../backlog-auto/diagnostico.md) |
+| **Descrição** | `requirements.txt` aceita `pytest>=9.1.1,<10` com `pytest-asyncio>=0.23,<1.0`; a combinação resolvida (pytest 9.2.0 + pytest-asyncio 0.23.3) falha na coleta (`INTERNALERROR`, 0 testes executados — causa provável, não isolada). `ruff check .` acusa 214 achados (B008 87, F821 38, I001 36…), sem configuração de ruff encontrada; a CI instala o ruff sem fixar versão. Python 3.14 do sistema não instala as dependências (Pillow); exige 3.12. Docker ausente na máquina diagnosticada, então PostgreSQL/MinIO e a suíte de integração não rodam. |
+| **Probabilidade / Impacto** | Média / Média — a CI (`ci.yml`) pode divergir do que roda localmente |
+| **Mitigação** | **Feito:** T02 alinhou `pytest-asyncio>=1.4.1,<1.5` (coleta: 0 para 139 testes); T04 versionou `04_backend/ruff.toml` e zerou os 214 achados (os F821 eram falsos positivos). **Pendente:** remover `continue-on-error` do ruff e fixar a versão no `ci.yml` (arquivo `.yml`, tarefa de código); instalar Docker e rodar a suíte de integração (as 2 falhas e 85 erros das duas tarefas vinham de banco sem schema, não de código); usar venv Python 3.12. Ver DEC-31. |
+
+### R-12 — Vulnerabilidades de dependências do frontend
+
+| Campo | Valor |
+|---|---|
+| **Origem** | Tarefa T03 (2026-11-04), em [00_docs/backlog-auto/npm-audit.md](../backlog-auto/npm-audit.md) |
+| **Descrição** | `npm audit` em `03_frontend`: 30 pacotes vulneráveis (2 críticos, 11 altos, 17 moderados); 13 em produção. O crítico relevante é `next` 14.2.35 (RCE em Image Optimization, DoS em Server Components, SSRF, cache poisoning), exposto no container `node:20-alpine`; a correção está só em 15.5.x/16.x (major, possível React 19). `fabric` 6.9.1 (XSS em exportação SVG) e a cadeia `canvas`/`tar` têm exposição baixa/média. Se `/_next/image` fica acessível: não determinado sem teste. |
+| **Probabilidade / Impacto** | Média / Alta |
+| **Atualização (T07, 2026-11-04)** | Item 1 da DEC-32 aplicado: achados 30 → 26 (produção 13 → 10), mas Next 14.2.35 crítico, fabric e `brace-expansion` 1.1.16 permanecem. Risco continua aberto. |
+| **Mitigação** | DEC-32 (proposta): `npm audit fix` sem `--force` nos 5 pacotes sem major; upgrade do Next antes do próximo deploy; fabric 7 com teste do editor (RF-14); nunca `--force`. |
+
+### R-13 — Lacunas de validação no CRUD de Ocorrências
+
+| Campo | Valor |
+|---|---|
+| **Origem** | Tarefa T06 (2026-11-04), em [revisao-regras-ocorrencias.md](revisao-regras-ocorrencias.md) |
+| **Descrição** | O backend aceita situação e classificação fora do enum (RN-05), não verifica a existência de sistema, subsistema e inspeção (erro 500 em vez de 404/422), aceita subsistema de outro sistema e deixa o `PUT` mover a ocorrência para outra inspeção ou apagar o `seq_numero`. Os testes que cobrem as lacunas ainda não rodaram por falta de PostgreSQL. |
+| **Probabilidade / Impacto** | Média / Média — dados inconsistentes e relatórios (LTIP) agrupados de forma errada |
+| **Mitigação** | DEC-34 (proposta). **Feito (T08, 2026-11-04):** correções L1–L7 no service, repositório e endpoint. **Pendente:** rodar `test_ocorrencias_regras.py` e a suíte de Ocorrências com PostgreSQL no ar (nenhum teste foi executado na T08); só então fechar o risco. |
+
+### R-14 — PDF nunca renderizado de verdade; suíte completa não executada nos lotes recentes
+
+| Campo | Valor |
+|---|---|
+| **Origem** | Lote T05–T13 (2026-11-04), em [vistoria-cautelar-pipeline.md](../backlog-auto/vistoria-cautelar-pipeline.md), [vistoria-residencial-pipeline.md](../backlog-auto/vistoria-residencial-pipeline.md) e [rfip-templates.md](../backlog-auto/rfip-templates.md) |
+| **Descrição** | Os templates e pipelines de LTIP, Vistoria Cautelar, Vistoria Residencial e RFIP foram testados só em HTML (Jinja2) e DOCX. O teste de PDF é pulado porque o WeasyPrint não roda no Windows (sem Pango/GTK) e não há Docker nem PostgreSQL (`localhost:5433`) nas máquinas dos jobs. Por isso a conferência visual (HT-09) não aconteceu e a suíte completa não foi validada: T12 relatou 6 falhas e 104 erros e T13 6 falhas e 91 erros, todos em testes que dependem de banco (e de um `greenlet` funcional no venv local); nenhum foi diagnosticado um a um. Pontos específicos do RFIP: logo reduzida para caber na margem e escala de impressão não aplicada às fontes (2,6% de diferença). |
+| **Probabilidade / Impacto** | Alta / Média — defeitos de layout só apareceriam na entrega ao cliente |
+| **Atualização T17 (2026-11-04)** | O benchmark de T17 renderizou PDFs reais dos 4 pipelines em container Docker (WeasyPrint), o que mostra que a conversão roda e fornece tempos, mas **não houve conferência visual** contra os originais nem `pytest` completo; o risco continua aberto para fidelidade. |
+| **Mitigação** | Subir `05_infra/docker-compose.yml`, rodar o `pytest` completo e os testes de PDF no container e fazer a conferência visual lado a lado com os originais (HT-09). Só então fechar o risco. |
+
+### R-15 — Lacunas de regra e segurança em Visitas e Fotos; testes de lacuna não executados
+
+| Campo | Valor |
+|---|---|
+| **Origem** | Lote T14–T17 (2026-11-04), em [revisao-regras-visitas.md](../backlog-auto/revisao-regras-visitas.md) e [revisao-regras-fotos.md](../backlog-auto/revisao-regras-fotos.md) |
+| **Descrição** | A revisão de BL-10 achou 18 lacunas (RN-01/RN-02: sem unicidade de `seq_numero` nem de visita por dia, data futura, tipo de inspeção, quantidades) e a de BL-11 achou 9, entre elas uma de segurança: o vínculo de foto aceita `storage_key` do cliente, permitindo apontar para objeto de outro contrato e apagá-lo (A01), e a foto de celular em pé sai deitada no relatório (sem `exif_transpose`). Os testes de lacuna (`test_visitas_lacunas.py`, `test_fotos_lacunas.py`) afirmam o comportamento correto, foram só coletados e **nunca executados**: a coluna "falha hoje" dos Docs é análise estática. |
+| **Probabilidade / Impacto** | Alta / Média (Alta para a falha de segurança de fotos) |
+| **Mitigação** | Subir `05_infra/docker-compose.yml`, aplicar `alembic upgrade head`, rodar os dois arquivos e confirmar quais falham; corrigir conforme DEC-38 e DEC-39 (a falha de `storage_key` primeiro). Confirmar com o dono as interpretações de RN-01/RF-03 (data futura, só RFO) antes de corrigir. |
+| **Atualização (T19/T21, 2026-11-04)** | T19 corrigiu 8 das 9 lacunas de fotos, inclusive a de segurança: `storage_key` só no padrão `fotos/<uuid>.<ext>`, existente no bucket e ainda não vinculada (422/409), mais `exif_transpose` e `DELETE /fotos/upload`; testes `test_fotos*`/`test_rbac_auxiliar`: 44 passed, 1 skipped. T21 corrigiu as 18 lacunas de Visitas exceto L15 (`xfail`), com migration `e5a1c3f7b9d2` (aborta se houver data duplicada, renumera `seq_numero` duplicado). **Resta:** `UNIQUE(storage_key)` (hoje só na aplicação, com janela de corrida), vínculo usuário↔contrato (DEC-27, qualquer membro da equipe ainda edita foto/visita de qualquer contrato), URL pré-assinada, limite de corpo no proxy, teste do teto de 50 Mpx, aplicar a migration em produção e rodar a suíte completa (36 falhas/18 erros reportados pela T19 vêm de event loop e dependências ausentes, sem relação com fotos, mas sem linha de base). Docs: [fotos-correcoes.md](../backlog-auto/fotos-correcoes.md), [visitas-correcoes.md](../backlog-auto/visitas-correcoes.md). |
+| **Atualização (T26, 2026-11-05)** | O frontend (`foto-upload.tsx`, `OrigemFoto` em `lib/types.ts`) vincula upload manual com `origem: "upload"`, mas o backend aceita só `upload_manual`, `lightshot` e `clipboard` (DEC-39 C). Pela leitura do código, o vínculo de upload por arquivo recebe 422; não testado contra a API. Corrigir no frontend e cobrir com o spec de stack real |
+| **Atualização (T27/T29, 2026-11-05)** | T27 corrigiu o frontend para `upload_manual` e constatou que o backend **não valida** `origem` (sem 422; a leitura da T26 estava errada; DEC-43). T29 confirmou L15 como IDOR entre contratos (SEG-IA-07): qualquer membro da equipe lê, edita, aprova e remove fotos de qualquer contrato, e agora também dispara IA paga. 9 achados novos de segurança em legenda IA (DEC-42), nenhum corrigido; 9 testes da T29 não rodaram sem MinIO |
+| **Atualização (T30, 2026-11-05)** | O storage foi confirmado compatível com artefatos de IA e ganhou `exists`/`list_keys`/`listar_orfaos` (só leitura). Uploads sem vínculo ainda se acumulam: não há job de limpeza (política proposta em DEC-44). Testes de integração com MinIO não foram executados. |
+| **Gatilho de escalada** | Qualquer uso de BL-10/BL-11 com dados reais antes de aplicar a migration e conferir os dados duplicados de produção. |
+| **Responsável** | Engenheiro Backend |

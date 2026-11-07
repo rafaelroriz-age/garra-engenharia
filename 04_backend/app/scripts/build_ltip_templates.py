@@ -23,7 +23,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -55,6 +55,9 @@ SECOES_CORPO = (
     ("documentacao_analisada", "6. DOCUMENTAÇÃO ANALISADA"),
 )
 
+#: Espaço entre duas fichas lado a lado e entre linhas de fichas (o `gap` do flex anterior).
+VAO_FICHAS_CM = 0.4
+
 
 def _fonte_do_nivel(layout: dict[str, Any], nivel: int, padrao: float) -> float:
     for titulo in layout.get("titulos", []):
@@ -76,7 +79,8 @@ def gerar_html(layout: dict[str, Any]) -> str:
     fonte_h1 = _fonte_do_nivel(layout, 1, tipografia["titulo_pt"])
     fonte_h2 = _fonte_do_nivel(layout, 2, tipografia["titulo_pt"])
     fonte_h3 = _fonte_do_nivel(layout, 3, tipografia["titulo_pt"])
-    largura_ficha = round(100 / max(ficha["fichas_por_pagina"], 1) - 2, 2)
+    por_linha = max(ficha["fichas_por_pagina"], 1)
+    largura_ficha = round(100 / por_linha - 2, 2)
     linhas_rodape = "\\A ".join(rodape["linhas"])
     secoes_html = "\n".join(
         f'  <section class="capitulo">\n'
@@ -140,10 +144,17 @@ def gerar_html(layout: dict[str, Any]) -> str:
   figure.figura {{ margin: 0.3cm 0; text-align: center; }}
   figure.figura img {{ max-width: 100%; }}
   figure.figura figcaption {{ font-size: {tipografia['legenda_pt']}pt; font-style: italic; }}
-  /* Relatório fotográfico por sistema (RN-11): uma ficha por ocorrência. */
+  /* Relatório fotográfico por sistema (RN-11): uma ficha por ocorrência, {por_linha} por linha.
+     Cada linha é uma tabela fixa própria (e não um flex único por sistema): no WeasyPrint,
+     o flex que atravessa páginas refaz o layout de todas as fichas restantes a cada página
+     (custo quadrático, T20/DEC-40). A célula é a própria ficha, então as fichas de uma
+     linha ficam com a mesma altura, como no `align-items: stretch` anterior. */
   .sistema {{ page-break-before: always; }}
-  .fichas {{ display: flex; flex-wrap: wrap; gap: 0.4cm; }}
-  .ficha {{ width: {largura_ficha}%; page-break-inside: avoid; border: 0.5pt solid #999; }}
+  table.fichas {{ width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; margin-bottom: {VAO_FICHAS_CM}cm; page-break-inside: avoid; }}
+  td.vao {{ width: {VAO_FICHAS_CM}cm; padding: 0; }}
+  td.ficha-vazia {{ width: {largura_ficha}%; padding: 0; }}
+  td.resto {{ padding: 0; }}
+  .ficha {{ padding: 0; vertical-align: top; width: {largura_ficha}%; page-break-inside: avoid; border: 0.5pt solid #999; }}
   .ficha .rotulo-foto {{
     background: {cores['cabecalho_secao_fundo']};
     font-weight: bold;
@@ -182,11 +193,13 @@ def gerar_html(layout: dict[str, Any]) -> str:
   {{% for sistema in sistemas %}}
   <section class="sistema">
     <h2>7.{{{{ loop.index }}}}. {{{{ sistema.nome }}}}</h2>
-    <div class="fichas">
-      {{% for ocorrencia in sistema.ocorrencias %}}
-      <div class="ficha">
+    {{% for linha in sistema.ocorrencias|batch({por_linha}) %}}
+    <table class="fichas"><tr>
+      {{% for ocorrencia in linha %}}
+      {{% if not loop.first %}}<td class="vao"></td>{{% endif %}}
+      <td class="ficha">
         <div class="rotulo-foto">{ficha['rotulo_foto']} {{{{ "%02d"|format(ocorrencia.seq_numero) }}}}</div>
-        {{% if ocorrencia.foto_data_uri %}}<img src="{{{{ ocorrencia.foto_data_uri }}}}" alt="{ficha['rotulo_foto']} {{{{ ocorrencia.seq_numero }}}}">{{% endif %}}
+        {{% if ocorrencia.foto_src %}}<img src="{{{{ ocorrencia.foto_src }}}}" alt="{ficha['rotulo_foto']} {{{{ ocorrencia.seq_numero }}}}">{{% endif %}}
         <table>
           <tr><th>SITUAÇÃO</th><td>{{{{ ocorrencia.situacao }}}}</td></tr>
           <tr><th>PRIORIDADE</th><td>{{{{ ocorrencia.prioridade if ocorrencia.prioridade is not none else "—" }}}}</td></tr>
@@ -201,9 +214,12 @@ def gerar_html(layout: dict[str, Any]) -> str:
           <tr><th>LOCALIZAÇÃO</th><td>{{{{ ocorrencia.localizacao or "—" }}}}</td></tr>
           <tr><th>OBSERVAÇÕES TÉCNICAS</th><td>{{{{ ocorrencia.descricao or "—" }}}}</td></tr>
         </table>
-      </div>
+      </td>
       {{% endfor %}}
-    </div>
+      {{% for _ in range({por_linha} - linha|length) %}}<td class="vao"></td><td class="ficha-vazia"></td>{{% endfor %}}
+      <td class="resto"></td>
+    </tr></table>
+    {{% endfor %}}
   </section>
   {{% endfor %}}
 
@@ -341,7 +357,7 @@ def main(argv: list[str] | None = None) -> int:
 
     TEMPLATES_LTIP_DIR.mkdir(parents=True, exist_ok=True)
     if argumentos.original is not None:
-        layout["gerado_em"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        layout["gerado_em"] = datetime.now(UTC).isoformat(timespec="seconds")
         LAYOUT_JSON.write_text(json.dumps(layout, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         print(f"layout.json atualizado a partir do original informado (sha256 {layout['origem']['sha256'][:16]}…)")
 

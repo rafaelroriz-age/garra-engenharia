@@ -10,9 +10,9 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from . import preparo
+from . import novas, preparo
 from .backlog import fechamento_do_backlog, gravar_status, ler, lote, prontas
-from .config import Config
+from .config import Config, ConfigErro
 
 ICONE = {"todo": "⬜", "doing": "🔄", "done": "✅", "blocked": "⛔"}
 
@@ -327,6 +327,17 @@ def auto(cfg: Config, ambiente: str | None, intervalo: int, max_rodadas: int, fe
             print("Parado: o fechamento de lote falhou. Corrija e rode `backlog-auto fechar` (o lote seguinte só começa depois dele).")
             return
         if r["novas"] == 0 and r["ocupadas"] == 0 and r["feitas"] == 0:
+            try:
+                criadas = novas.planejar_se_preciso(cfg)
+            except (novas.PlanejarErro, ConfigErro) as e:
+                print(f"Parado: planejamento não concluído: {e}")
+                return
+            if criadas:
+                print(f"Planejamento criou {criadas} tarefa(s) novas; seguindo.")
+                continue
+            if criadas == 0:
+                print("Backlog esgotado e o planejamento não encontrou nada novo. Fim.")
+                return
             if r["esperando"] or r["problemas"]:
                 print("Parado: há tarefas esperando aprovação, bloqueadas ou com conflito. Veja `backlog-auto status`.")
             elif any(t["status"] == "blocked" for t in ler(cfg)[1].values()):

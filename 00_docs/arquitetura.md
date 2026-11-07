@@ -1,25 +1,53 @@
 ﻿---
 title: Arquitetura de Software — Sistema de Automação de Relatórios Prediais
 type: knowledge
-status: draft
+status: ativo
 owner: Garra Engenharia
 related:
   - 00_docs/estudo-do-contexto.md
   - 00_docs/convertidos/RFO_INSPECAO.md
   - 00_docs/projeto/decisoes.md
+  - 00_docs/dicionario-de-dados.md
 tags: [arquitetura, stack, modelo-de-dados, api, pdf, lightshot, padroes-de-projeto, system-design, seguranca, rbac, portal-cliente, mcp, notion, ia-legendas]
-last_updated: 2026-09-17
+last_updated: 2026-11-03
 ---
 
 <!-- ai-summary
-System: blueprint técnico do sistema de automação de relatórios prediais da Garra Engenharia.
-Flow: Next.js (PWA) -> FastAPI -> PostgreSQL + MinIO -> fila Redis/Celery -> gerador de PDF/DOCX (WeasyPrint + docxtpl).
+System: blueprint técnico do sistema de automação de relatórios prediais da Garra Engenharia, com o estado real da implementação na Seção 0.
+Flow implementado: Next.js (PWA) -> FastAPI -> PostgreSQL + MinIO; templates RFO/LTIP derivados por script; PDF/DOCX do RFO só por script (sem rota na API).
+Flow-alvo: ... -> fila Redis/Celery -> gerador de PDF/DOCX (WeasyPrint + docxtpl) exposto por API.
 Owner: Eng. Civil Esp. Roniel Ribeiro Costa.
-Systems: Next.js, FastAPI, PostgreSQL, MinIO, Redis, Celery, WeasyPrint, docxtpl, Lightshot.
-Status: draft — as lacunas de maior impacto arquitetural foram fechadas em 2026-09-10 (offline, perfis de acesso e assinatura digital — ADR-14/ADR-15). Seções 9-11 (padrões de projeto, system design, RNF) adicionadas em 2026-07-17.
+Systems: Next.js, FastAPI, PostgreSQL, MinIO, WeasyPrint, docxtpl, Lightshot; Redis e Celery previstos (ADR-06), não implantados.
+Deploy real: Render (garra-backend, garra-frontend, garra-db, render.yaml); VPS com Nginx como alternativa.
+Status: ativo (verificado na D05, 2026-11-04) — Seção 0 adicionada em 2026-11-03 (D04) separando implementado de planejado. Lacunas de maior impacto fechadas em 2026-09-10 (ADR-14/ADR-15). Seções 9-11 de 2026-07-17.
 -->
 
 # Arquitetura de Software — Sistema de Automação de Relatórios Prediais
+
+## 0. Estado da implementação (2026-11-03)
+
+Este documento mistura a arquitetura implementada e a arquitetura-alvo. A tabela abaixo diz o que existe no código; as seções seguintes marcam como **planejado** o que ainda não existe. A referência coluna a coluna do banco está em [dicionario-de-dados.md](dicionario-de-dados.md).
+
+| Componente | Estado | Evidência |
+|---|---|---|
+| Frontend Next.js 14 (App Router), instalável como PWA | **Implementado**, sem service worker (online-first, ADR-15) | `03_frontend/app/layout.tsx` (`manifest`), `03_frontend/public/manifest.json` |
+| API REST FastAPI, 11 routers em `/api/v1` | **Implementado** | `04_backend/app/main.py` (11 `include_router`), `app/api/v1/*.py` |
+| JWT + bcrypt; RBAC `auditor`/`auxiliar`/`cliente` | **Implementado** | `app/core/security.py`, `app/api/deps.py` (`require_auditor`, `require_equipe`, `get_current_cliente_responsavel`) |
+| PostgreSQL 16 + Alembic | **Implementado**: 18 tabelas, 6 migrations | `app/models/`, `alembic/versions/` |
+| Storage MinIO/S3 (fotos, URLs pré-assinadas de 15 min) | **Implementado** no compose local. No `render.yaml` as variáveis `MINIO_*` estão comentadas | `app/services/storage/s3_client.py`, `app/services/foto_service.py`, `render.yaml` |
+| Upload de foto (multipart e clipboard) e anotação com Fabric.js | **Implementado** | `app/api/v1/fotos.py`, `03_frontend/components/photo-annotation-editor.tsx` |
+| Dashboard da edificação e portal do cliente | **Implementado**. A lista de relatórios do portal fica vazia porque nenhuma rota cria `relatorios` | `app/api/v1/dashboard.py`, `app/api/v1/portal.py`, `app/services/portal_service.py` |
+| RN-04: prioridade sugerida pelo grau de risco, com registro da sobrescrita | **Implementado** | `app/services/ocorrencia_service.py:12-133`, migration `d3b7c9e4f1a2` |
+| Templates RFO e LTIP derivados dos originais (`layout.json` → `.html.j2` + `.docx`) | **Implementado** (scripts) | `templates/rfo/`, `templates/ltip/`, `app/scripts/build_rfo_templates.py`, `build_ltip_templates.py` (ADR-13) |
+| Pipeline de renderização do RFO (`gerar_pdf`, `gerar_docx`) | **Implementado**, mas só chamado por script | `app/services/report_generator/rfo_pipeline.py`; chamado por `app/scripts/benchmark_relatorio_geracao.py` |
+| Rotas de geração e download de relatório (`/inspecoes/{id}/relatorios/gerar`, `/relatorios/job/{id}`) | **Planejado** | nenhuma rota em `app/api/v1/`; tela `03_frontend/app/inspecoes/[id]/relatorio/page.tsx` usa `UnderConstruction` |
+| Pipeline do LTIP; templates de RFIP e vistorias | **Planejado** | `report_generator/` só tem `rfo_pipeline.py` |
+| Strategy/Factory de relatórios (`report_generator/strategies/`) | **Planejado** (Seção 9) | `ls 04_backend/app/services/report_generator` |
+| Fila Celery + Redis (ADR-06) e cache Redis (Seção 10.4) | **Planejado** | ausentes de `requirements.txt` e de `05_infra/docker-compose.yml` (comentário na linha 32) |
+| Legendas por IA (ADR-12, RF-15), tabela `prompts_ia` | **Parcial**: modelo de dados implementado (BL-36, migration `f7c2a9d4e6b1`); adapter, endpoint de geração e provedor planejados (B-04) | `04_backend/app/models/prompt_ia.py`, `app/models/foto.py`; sem SDK de LLM em `requirements.txt` |
+| Observabilidade | **Parcial**: `GET /health` (com estado do banco) e `X-Request-ID`; não há `GET /health/ready` nem log em JSON | `app/main.py:32` (`logging.basicConfig`), `:85`; `app/core/middleware.py` |
+| Produção | **Render**: `garra-backend` (branch `main_back`), `garra-frontend` (`main_front`), `garra-db` | `render.yaml` |
+| VPS com Nginx (alternativa) | **Implementado como alternativa**, sem uso em produção | `05_infra/docker-compose.prod.yml`, `05_infra/nginx/nginx.conf`, `.github/workflows/cd-*.yml` |
 
 ## 1. Stack Tecnológica
 
@@ -39,14 +67,40 @@ Status: draft — as lacunas de maior impacto arquitetural foram fechadas em 202
 | **Autorização (RBAC)** | Papéis `auditor` / `auxiliar` / `cliente` em `Usuario.role` + dependency `require_role()` no FastAPI | Três perfis de acesso: auditor (engenheiro responsável técnico, acesso total de escrita e emissão), auxiliar (escrita apenas de dados de campo — visitas, ocorrências e fotos — sem emitir relatório nem cadastrar usuários, ver ADR-14/DEC-27) e cliente (contratante/síndico, somente leitura e escopado às próprias Edificações/Contratos via Portal do Cliente — ver DEC-18, RF-13). |
 | **Anotação de Imagens** | Fabric.js (canvas client-side) no frontend | Permite ao auditor desenhar setas, formas, texto e traço livre diretamente sobre a foto no browser antes de salvar — reproduz dentro do sistema a função de marcação hoje feita externamente no Lightshot (ver DEC-19, RF-14). Não exige nenhum endpoint novo de backend: a imagem já achatada (canvas → blob) é enviada aos endpoints de upload existentes (BL-11). |
 | **Geração de Legendas por IA** | LLM externo via Adapter `LegendaIAClient` — provedor a definir | Transforma anotação de campo/transcrição de áudio fornecida pelo auditor em legenda técnica estruturada, usando um prompt-sistema versionado (tabela `prompts_ia`) fornecido pelo cliente. Sempre gera uma minuta editável — nunca substitui a legenda automaticamente — sujeita a aprovação do profissional habilitado (ver ADR-12, RF-15, RN-16, RN-17). |
-| **Fila / Cache** | Redis 7 | Broker de tarefas assíncronas (Celery) e cache de curto prazo para gabarito de sistemas prediais e agregados do dashboard (ver ADR-06 e Seção 10.4). |
-| **Processamento assíncrono** | Celery (worker dedicado) | Geração de PDF/DOCX de até 200 páginas roda fora do ciclo de requisição HTTP, cumprindo RNF-06 sem bloquear a API (ver ADR-06). |
+| **Fila / Cache** (planejado) | Redis 7 | Broker de tarefas assíncronas (Celery) e cache de curto prazo para gabarito de sistemas prediais e agregados do dashboard (ver ADR-06 e Seção 10.4). |
+| **Processamento assíncrono** (planejado) | Celery (worker dedicado) | Geração de PDF/DOCX de até 200 páginas roda fora do ciclo de requisição HTTP, cumprindo RNF-06 sem bloquear a API (ver ADR-06). |
 | **Integração Lightshot** | Upload via clipboard paste (browser API) + upload manual | Ver seção 6. |
 | **Deploy** | Docker Compose (local) ou Render (nuvem) | Hospedagem definida como Render em 2026-07-21 (B-03 resolvido). |
 
 ---
 
 ## 2. Diagrama de Arquitetura
+
+### 2.1 Como está implementado (2026-11-03)
+
+```mermaid
+graph TB
+    UI["Next.js 14 (PWA)\n03_frontend"]
+    GW["FastAPI /api/v1\n04_backend/app"]
+    DB[("PostgreSQL 16")]
+    FS["MinIO / S3\nfotos/"]
+    SCRIPT["Scripts (fora da API)\nbuild_*_templates\nbenchmark_relatorio_geracao"]
+    TMPL["templates/rfo, templates/ltip\nlayout.json + .html.j2 + .docx"]
+    PIPE["rfo_pipeline\nWeasyPrint (PDF) + docxtpl (DOCX)"]
+
+    UI -->|"REST + JWT"| GW
+    GW --> DB
+    GW -->|"PUT/GET objeto, URL pré-assinada"| FS
+    SCRIPT --> TMPL
+    SCRIPT --> PIPE
+    PIPE --> TMPL
+```
+
+Não há fila, worker nem rota de geração: o pipeline do RFO só é chamado por script (Seção 0).
+
+### 2.2 Arquitetura-alvo
+
+Redis, Celery e as rotas `/relatorios` abaixo são **planejados** (ADR-06).
 
 ```mermaid
 graph TB
@@ -94,6 +148,8 @@ graph TB
 ---
 
 ## 3. Modelo de Dados (Diagrama ER)
+
+> Referência coluna a coluna, com tipos, nulabilidade e regras: [dicionario-de-dados.md](dicionario-de-dados.md). A entidade `PROMPT_IA` e os campos de legenda IA de `FOTO` existem desde a migration `f7c2a9d4e6b1` (BL-36, DEC-37); o adapter `LegendaIAClient` e o endpoint de geração continuam planejados (ADR-12, B-04). As tabelas de gabarito `tipos_anomalia`, `tipos_falha` e `localizacoes` existem (migration `8e2467ad6a92`) e não aparecem no diagrama.
 
 ```mermaid
 erDiagram
@@ -179,6 +235,7 @@ erDiagram
         text servicos_executados
         text observacoes
         int seq_numero
+        uuid criado_por_id FK
     }
 
     VISITA_MAO_OBRA {
@@ -221,11 +278,15 @@ erDiagram
         string tipo_falha
         string grau_risco
         int prioridade
+        int prioridade_sugerida
+        uuid prioridade_ajustada_por_id FK
+        timestamp prioridade_ajustada_em
         text descricao
         float gut_gravidade
         float gut_urgencia
         float gut_tendencia
         int seq_numero
+        uuid criado_por_id FK
     }
 
     FOTO {
@@ -242,11 +303,14 @@ erDiagram
         jsonb alertas_ia
         jsonb pendencias_ia
         uuid prompt_ia_id FK
+        string prompt_conteudo_hash
+        timestamp legenda_ia_gerada_em
         uuid aprovado_por_id FK
         timestamp aprovado_em
         string origem
         int ordem
         timestamp created_at
+        uuid criado_por_id FK
     }
 
     PROMPT_IA {
@@ -256,6 +320,7 @@ erDiagram
         text conteudo
         boolean ativo
         timestamp created_at
+        uuid criado_por_id FK
     }
 
     RELATORIO {
@@ -285,8 +350,11 @@ erDiagram
     SUBSISTEMA ||--o{ OCORRENCIA : "subsistema"
     OCORRENCIA ||--o{ FOTO : "fotos"
     VISITA ||--o{ FOTO : "fotos do dia"
-    PROMPT_IA ||--o{ FOTO : "gerou sugestão (opcional)"
-    USUARIO ||--o{ FOTO : "aprovou legenda (opcional)"
+    PROMPT_IA ||--o{ FOTO : "versão usada na geração (opcional)"
+    USUARIO ||--o{ FOTO : "aprovou legenda IA"
+    USUARIO ||--o{ VISITA : "criado_por"
+    USUARIO ||--o{ OCORRENCIA : "criado_por / prioridade_ajustada_por"
+    USUARIO ||--o{ FOTO : "criado_por"
     INSPECAO ||--o{ RELATORIO : "relatorios"
 ```
 
@@ -294,7 +362,15 @@ erDiagram
 
 ## 4. Contratos de API
 
-Base URL: `/api/v1`
+Base URL: `/api/v1`. Fonte das rotas implementadas: `grep -nE '@router\.(get|post|put|patch|delete)\(' 04_backend/app/api/v1/*.py`. Rotas marcadas **(planejado)** não existem no código. Fora de `/api/v1` existe `GET /health` (`app/main.py`).
+
+### Autenticação
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `POST` | `/auth/register` | Cria usuário. Exige auditor autenticado, exceto enquanto não houver nenhum usuário (bootstrap, DEC-24; `app/api/v1/auth.py:38-43`) |
+| `POST` | `/auth/login` | Retorna o token JWT (com rate limit, `app/core/rate_limit.py`) |
+| `GET` | `/auth/me` | Dados do usuário autenticado |
 
 ### Edificações
 
@@ -304,7 +380,8 @@ Base URL: `/api/v1`
 | `POST` | `/edificacoes` | Cria edificação |
 | `GET` | `/edificacoes/{id}` | Detalhe da edificação com histórico de contratos |
 | `PUT` | `/edificacoes/{id}` | Atualiza edificação |
-| `GET` | `/edificacoes/{id}/dashboard` | Indicadores de saúde por sistema predial |
+| `POST` | `/edificacoes/{id}/documentos` | Envia um documento técnico (projeto, ART) e o anexa a `documentos_tecnicos` (DEC-16; `edificacoes.py:80`) |
+| `GET` | `/edificacoes/{id}/dashboard` | Indicadores de saúde por sistema predial (`app/api/v1/dashboard.py`) |
 
 ### Contratos
 
@@ -339,6 +416,7 @@ Base URL: `/api/v1`
 |---|---|---|
 | `GET` | `/inspecoes/{id}/ocorrencias` | Lista ocorrências da inspeção (filtro por sistema, grau de risco) |
 | `POST` | `/inspecoes/{id}/ocorrencias` | Cria ocorrência com classificação completa |
+| `GET` | `/ocorrencias/{id}` | Detalhe de uma ocorrência (`ocorrencias.py:58`) |
 | `PUT` | `/ocorrencias/{id}` | Atualiza ocorrência |
 | `DELETE` | `/ocorrencias/{id}` | Remove ocorrência |
 
@@ -350,11 +428,13 @@ Base URL: `/api/v1`
 | `POST` | `/fotos/upload-clipboard` | Recebe imagem em base64 do clipboard paste — retorna `storage_key` e URL |
 | `POST` | `/ocorrencias/{id}/fotos` | Vincula foto a ocorrência com legenda |
 | `POST` | `/visitas/{id}/fotos` | Vincula foto a visita de fiscalização |
-| `POST` | `/fotos/{id}/legenda-ia/gerar` | Envia descrição bruta/transcrição + dados da ocorrência ao provedor de IA (prompt-sistema versionado); retorna legenda sugerida estruturada, sem persistir como definitiva (ADR-12, RF-15) |
-| `PUT` | `/fotos/{id}` | Atualiza legenda (manual ou aprovação da sugestão de IA, gravando `aprovado_por_id`/`aprovado_em`/`prompt_ia_id`) ou ordem |
+| `POST` | `/fotos/{id}/legenda-ia/gerar` **(planejado)** | Envia descrição bruta/transcrição + dados da ocorrência ao provedor de IA (prompt-sistema versionado); retorna legenda sugerida estruturada, sem persistir como definitiva (ADR-12, RF-15) |
+| `PUT` | `/fotos/{id}` | Atualiza legenda ou ordem. A gravação de `aprovado_por_id`/`aprovado_em`/`prompt_ia_id` na aprovação da sugestão de IA é **planejada** (os campos não existem) |
 | `DELETE` | `/fotos/{id}` | Remove vínculo e objeto do storage |
 
-### Relatórios
+### Relatórios **(planejado)**
+
+Nenhuma das rotas abaixo existe no código (Seção 0). O download para o cliente já existe no portal (`/portal/relatorios/{id}/download/{formato}`), mas depende de registros em `relatorios` que hoje só o script de benchmark cria.
 
 | Método | Endpoint | Descrição |
 |---|---|---|
@@ -372,7 +452,7 @@ Base URL: `/api/v1`
 | `GET` | `/gabarito/tipos-anomalia` | Lista tipos de anomalia |
 | `GET` | `/gabarito/tipos-falha` | Lista tipos de falha |
 | `GET` | `/gabarito/localizacoes` | Lista localizações padrão |
-| `GET` | `/gabarito/funcoes-mao-obra` | Lista funções de mão de obra |
+| `GET` | `/gabarito/funcoes-mao-obra` **(planejado)** | Lista funções de mão de obra (não há tabela; `visita_mao_obras.funcao` é texto livre) |
 
 ### Portal do Cliente (somente leitura, RBAC — DEC-18)
 
@@ -384,8 +464,7 @@ Todos os endpoints abaixo exigem `role=cliente` (via `require_role("cliente")`) 
 | `GET` | `/portal/edificacoes/{id}/dashboard` | Reaproveita a agregação de `/edificacoes/{id}/dashboard` (RF-07), validando antes que a edificação pertence ao escopo do cliente |
 | `GET` | `/portal/edificacoes/{id}/acompanhamento` | Linha do tempo de visitas/ocorrências da inspeção em andamento (status, datas, contagem por grau de risco) — acompanhamento da auditoria em tempo real |
 | `GET` | `/portal/relatorios` | Lista os relatórios/laudos já emitidos (RF-11) das Edificações/Contratos do cliente |
-| `GET` | `/portal/relatorios/{id}/download/pdf` | Download do PDF, validando escopo antes de delegar ao storage |
-| `GET` | `/portal/relatorios/{id}/download/docx` | Download do DOCX, mesma validação de escopo |
+| `GET` | `/portal/relatorios/{id}/download/{formato}` | Retorna a URL pré-assinada do PDF ou do DOCX (`formato` = `pdf` ou `docx`), validando o escopo antes de delegar ao storage (`portal.py:80-84`) |
 
 ---
 
@@ -420,6 +499,8 @@ O sistema usa **two-pass rendering**: primeiro gera um DOCX editável (para o en
 ```
 
 ### Templates
+
+> **Estado em 2026-11-03:** a lista abaixo é a planejada. No código existem `templates/rfo/` e `templates/ltip/` (cada um com `layout.json`, `<tipo>_template.html.j2` e `<tipo>_template.docx`, gerados por script, ADR-13), `templates/contracts/`, `templates/assets/` (marca, DEC-30) e, soltos na raiz, `rfo_template.html.j2` (sem referência no código) e `rfo_benchmark_template.docx` (do benchmark BL-22). Não há templates de vistoria nem de RFIP. Ver Seção 7.
 
 Os templates são arquivos versionados no repositório em `04_backend/templates/`:
 - `rfo_template.html.j2` — Relatório de Fiscalização
@@ -460,69 +541,74 @@ Um cliente desktop leve poderia monitorar uma pasta local e fazer upload automá
 
 Convenção adotada: prefixo numérico de duas casas no diretório de topo, indicando a ordem lógica de leitura/consumo pelas equipes e agentes (docs → material de origem → protótipos → código → infraestrutura). `.github/` permanece sem prefixo por ser pasta de tooling com caminho fixo exigido pelo GitHub/VS Code.
 
+Estrutura real em 2026-11-03 (`ls` das pastas citadas; arquivos de configuração menores omitidos):
+
 ```
 garra-engenharia/
-├── 00_docs/                       # documentação do projeto
-│   ├── convertidos/               # documentos de referência convertidos (fonte: 01_output-context/)
-│   ├── cliente/                   # documentos voltados ao cliente (proposta, apresentação)
-│   ├── projeto/                   # gestão: escopo, backlog, cronograma, decisões, riscos, status
-│   ├── estudo-do-contexto.md
-│   └── arquitetura.md
+├── README.md                       # visão geral e início rápido
+├── BACKLOG.md, backlog.toml        # backlog executável do backlog-auto
+├── backlog-auto/                   # ferramenta de automação do backlog (código próprio)
+├── render.yaml                     # Blueprint de produção no Render
 │
-├── 01_output-context/             # documentos originais do cliente (xlsm, pdf, docx, pbix) + .md convertidos
+├── 00_docs/                        # documentação — índice em 00_docs/README.md
+│   ├── _preparo/                   # mapeamento e classificação da documentação (D01-D05)
+│   ├── backlog-auto/               # manual do backlog-auto
+│   ├── cliente/                    # material voltado ao cliente
+│   ├── convertidos/                # originais do cliente convertidos para Markdown
+│   └── projeto/                    # gestão: escopo, backlog, cronograma, decisões, riscos, status
 │
-├── 02_prototipos/                  # wireframes HTML/CSS estático navegável (referência visual para o frontend)
+├── 01_output-context/              # originais do cliente (binários fora do git) + .md
+├── 02_prototipos/                  # protótipos HTML estáticos (index.html, 01-...06-*.html)
 │
-├── 03_frontend/                    # Next.js 14 (PWA) — a implementar
+├── 03_frontend/                    # Next.js 14 (PWA)
+│   ├── app/                        # (auth)/login, dashboard, edificacoes[/id], contratos[/id],
+│   │                               # inspecoes/[id]/{visitas,ocorrencias,relatorio}, portal[/documentos]
+│   ├── components/                 # ui/ (shadcn), brand/, layout/, foto-upload, photo-annotation-editor,
+│   │                               # ocorrencia-form-dialog, api-error-alert, pagination-bar, page-header, under-construction
+│   ├── lib/                        # api-client.ts, types.ts, ocorrencia-enums.ts, use-usuario-atual.ts, utils.ts
+│   ├── e2e/                        # helpers.ts, rfo.spec.ts, ltip.spec.ts (Playwright)
+│   ├── public/                     # manifest.json, icon.svg, brand/
+│   └── Dockerfile, Dockerfile.render, playwright.config.ts
+│
+├── 04_backend/                     # FastAPI
 │   ├── app/
-│   │   ├── (auth)/                # login
-│   │   ├── edificacoes/           # CRUD edificações
-│   │   ├── contratos/             # CRUD contratos
-│   │   ├── inspecoes/
-│   │   │   └── [id]/
-│   │   │       ├── visitas/       # RFO: visitas diárias
-│   │   │       ├── ocorrencias/   # LTIP: ocorrências por sistema
-│   │   │       └── relatorio/     # geração e download
-│   │   ├── portal/                # Portal do Cliente (role=cliente): dashboard, acompanhamento, documentos
-│   │   └── dashboard/             # indicadores por edificação
-│   ├── components/                # componentes reutilizáveis
-│   └── public/                    # manifest.json, ícones PWA
-│
-├── 04_backend/                     # FastAPI — a implementar
-│   ├── app/
-│   │   ├── api/v1/                # routers (edificacoes, contratos, fotos, portal, etc.) — camada fina, sem regra de negócio
-│   │   ├── models/                # SQLAlchemy models (ORM)
-│   │   ├── schemas/               # Pydantic schemas (DTOs de request/response, ver Seção 9.4)
-│   │   ├── repositories/          # Repository Pattern: acesso a dados por agregado (Seção 9.2)
-│   │   ├── services/              # Service Layer: regras de negócio (RN-01 a RN-13), transações
-│   │   │   ├── report_generator/  # Facade + Strategy + Template Method (Seção 9.6-9.8)
-│   │   │   │   └── strategies/    # rfo_strategy.py, ltip_strategy.py, vistoria_cautelar_strategy.py, ...
-│   │   │   ├── storage/           # Adapter para MinIO/S3 (Seção 9.9)
-│   │   │   └── ia_legenda/        # Adapter para provedor de LLM (LegendaIAClient, ADR-12)
-│   │   ├── workers/               # tasks Celery (geração de relatório, ver ADR-06)
-│   │   ├── core/                  # config, auth, deps, exception handlers (Seção 10.7)
+│   │   ├── api/v1/                 # 11 routers: auth, dados_mestre, edificacoes, contratos, responsaveis,
+│   │   │                           # inspecoes, visitas, ocorrencias, fotos, dashboard, portal
+│   │   ├── api/deps.py             # autenticação e RBAC
+│   │   ├── core/                   # config, database, security, errors, exception_handlers, middleware,
+│   │   │                           # rate_limit, migrations
+│   │   ├── models/                 # 18 modelos SQLAlchemy (ver dicionario-de-dados.md)
+│   │   ├── schemas/                # Pydantic v2
+│   │   ├── repositories/           # contrato, edificacao, foto, inspecao, ocorrencia, visita
+│   │   ├── services/               # *_service.py, image_processing.py
+│   │   │   ├── report_generator/   # __init__.py, rfo_pipeline.py
+│   │   │   └── storage/            # base.py (StorageClient), s3_client.py
+│   │   ├── scripts/                # seeds, extratores de layout, builders de template e de marca, benchmark
 │   │   └── main.py
 │   ├── templates/
-│   │   ├── rfo_template.html.j2
-│   │   ├── ltip_template.html.j2
-│   │   ├── vistoria_cautelar_template.html.j2
-│   │   ├── rfip_template.html.j2
-│   │   ├── rfo_template.docx
-│   │   └── assets/                # logo, CSS compartilhado
-│   ├── prompts/                    # prompt-sistema versionado (ex.: legenda_tecnica_v1.md), espelhado na tabela prompts_ia (ADR-12)
-│   └── alembic/                   # migrations
+│   │   ├── rfo/, ltip/             # layout.json + <tipo>_template.html.j2 + <tipo>_template.docx (gerados)
+│   │   ├── contracts/              # contrato_revisado_template.docx + .placeholders.md
+│   │   ├── assets/                 # logo-garra.svg/.png, logo-garra-negativa.svg, logo-garra-simbolo.svg, marca.json
+│   │   └── rfo_template.html.j2, rfo_benchmark_template.docx   # soltos (ver Seção 5, "Templates")
+│   ├── alembic/versions/           # 6 migrations
+│   ├── tests/                      # 19 módulos test_*.py
+│   └── Dockerfile, Dockerfile.render, requirements.txt, pytest.ini
 │
-├── 05_infra/                       # infraestrutura — a implementar (ver ADR-05)
-│   ├── docker-compose.yml         # PostgreSQL + Redis + MinIO + backend + celery-worker + frontend (dev)
-│   ├── docker-compose.prod.yml
-│   ├── .env.example
+├── 05_infra/
+│   ├── docker-compose.yml          # postgres, minio, createbuckets, backend, frontend (sem redis/celery)
+│   ├── docker-compose.prod.yml     # VPS (alternativa ao Render)
+│   ├── .env.example, .env.render.example
 │   ├── nginx/nginx.conf
-│   └── backup/
+│   └── backup/                     # backup-db.sh, restore-db.sh
 │
 └── .github/
-    ├── agents/
-    └── prompts/
+    ├── agents/, prompts/
+    ├── workflows/                  # ci.yml, sync-deploy-branches.yml, cd-staging.yml, cd-production.yml
+    ├── dependabot.yml
+    └── pull_request_template.md
 ```
+
+**Previsto e ainda não criado** (arquitetura-alvo das Seções 5, 9 e ADR-06/ADR-12): `services/report_generator/strategies/` (`rfo_strategy.py`, `ltip_strategy.py`, ...), `services/ia_legenda/` (Adapter `LegendaIAClient`), `app/workers/` (tasks Celery), `04_backend/prompts/` (prompt-sistema versionado), templates de vistoria cautelar e de RFIP, e os serviços `redis` e `celery-worker` no compose. O nome da pasta de IA diverge entre este documento (`ia_legenda/`) e `.github/agents/engenheiro-ia.agent.md` (`services/ai/`): decisão pendente.
 
 ---
 
@@ -907,6 +993,24 @@ classDiagram
 - **Agregados do dashboard** (RF-07): cache curto (ex.: 60s) por edificação, evitando recomputar contagens/proporções a cada carregamento de tela; invalidado ao criar/editar Ocorrência daquela edificação.
 
 ### 10.5 Topologia de Deploy
+
+**Produção real (Render, `render.yaml`).** Dois serviços web Docker e um banco gerenciado, sem Redis, Celery nem Nginx. O deploy é disparado por commit nas branches `main_back` e `main_front`, que recebem `main` por `.github/workflows/sync-deploy-branches.yml` (DEC-22). O storage S3 não está configurado no Blueprint (variáveis `MINIO_*` comentadas).
+
+```mermaid
+graph TB
+    Browser["Browser / PWA"]
+    FE["garra-frontend\nNext.js (Dockerfile.render)\nbranch main_front"]
+    BE["garra-backend\nFastAPI (Dockerfile.render)\nbranch main_back\npreDeployCommand: alembic upgrade head"]
+    PG[("garra-db\nPostgreSQL gerenciado")]
+    S3["Storage S3\n(não configurado no Blueprint)"]
+
+    Browser -->|HTTPS| FE
+    Browser -->|"HTTPS /api/v1 (NEXT_PUBLIC_API_URL)"| BE
+    BE --> PG
+    BE -.-> S3
+```
+
+**Topologia-alvo / VPS própria** (`05_infra/docker-compose.prod.yml`, `nginx/nginx.conf`; alternativa sem uso em produção). `celery-worker` e `Redis` são **planejados** (ADR-06): não estão em nenhum compose.
 
 ```mermaid
 graph TB

@@ -42,7 +42,8 @@ Aplicação **FastAPI (Python 3.12)** responsável pela API, regras de negócio,
 │   ├── test_models.py            # testes de integração das 14 entidades e seus relacionamentos
 │   ├── test_gabarito.py          # parser + seed + endpoints de dados mestre (BL-05)
 │   ├── test_auth.py              # registro, login (sucesso/falha) e proteção de rota (BL-06)
-│   └── test_storage.py           # upload/download/delete/URL pré-assinada contra o MinIO real (BL-07)
+│   ├── test_storage.py           # upload/download/delete/URL pré-assinada contra o MinIO real (BL-07)
+│   └── test_storage_legenda_ia.py # exists/list_keys/órfãos/presigned com S3 falso, sem MinIO (T30)
 ├── requirements.txt
 ├── Dockerfile
 ├── pytest.ini
@@ -134,6 +135,37 @@ python -m app.scripts.build_rfo_templates
 > O WeasyPrint não roda no venv local do Windows (faltam as libs GTK): a renderização
 > real do PDF só funciona dentro do container `garra-backend`.
 
+## Templates das Vistorias Cautelar e Residencial (T09/T10, ADR-13)
+
+Mesmo método do LTIP, a partir dos PDFs finais do cliente (lidos de `01_output-context/`, que não é alterado):
+PDF → `layout.json` (só geometria e rótulos fixos, sem dado do exemplar) → `.html.j2` (WeasyPrint) + `.docx` (docxtpl).
+
+| Vistoria | Extrator / gerador (`app/scripts/`) | Templates | Testes |
+|---|---|---|---|
+| Cautelar de Recebimento | `vistoria_cautelar_layout_extractor.py`, `build_vistoria_cautelar_templates.py` | `templates/vistoria_cautelar/` | `tests/test_vistoria_cautelar_templates.py` (PDF sintético) |
+| Imóvel Residencial | `vistoria_residencial_layout_extractor.py`, `build_vistoria_residencial_templates.py` | `templates/vistoria_residencial/` | `tests/test_vistoria_residencial_templates.py` (PDF sintético) |
+
+Os pipelines de renderização (T11, T12) ficam em `app/services/report_generator/vistoria_cautelar_pipeline.py` e `vistoria_residencial_pipeline.py`, com a mesma API do LTIP (`normalizar_contexto`, `renderizar_html`, `gerar_pdf`, `gerar_docx`) e testes em `tests/test_vistoria_*_pipeline.py`. O teste de PDF é pulado onde o WeasyPrint não roda (Windows). Pendente: conferência visual no container (HT-09), a arte de capa do cliente (não versionada) e a montagem do contexto a partir do banco. Detalhes em `00_docs/backlog-auto/vistoria-*-templates.md` e `vistoria-*-pipeline.md`.
+
+### RFIP (BL-12, T13)
+
+Planilha → `layout.json` → `.html.j2` + `.docx`, como no RFO, mas lendo o original de ~490 MB em streaming (`openpyxl` `read_only` e `iterparse`, sem abrir as imagens; pico de ~58 MB de memória). Extrator: `app/scripts/rfip_layout_extractor.py`; gerador: `app/scripts/build_rfip_templates.py`; saída em `templates/rfip/`; testes: `tests/test_rfip_templates.py` (planilha sintética).
+
+```text
+python -m app.scripts.build_rfip_templates --original "..\01_output-context\Relatório Fotográfico de Inspeção Predial - CORTINA D'AMPAREZZO - Versão Final.xlsx"
+python -m app.scripts.build_rfip_templates
+```
+
+Sem `--original`, o comando regera os dois templates a partir do `layout.json` versionado. Pipeline: `app/services/report_generator/rfip_pipeline.py` (T18). Pendente: conferência visual do PDF (HT-09) e o mapeamento banco → contexto. Detalhes em `00_docs/backlog-auto/rfip-templates.md`.
+
+## Validação de Ocorrências (BL-14, T08)
+
+`app/services/ocorrencia_service.py` valida situação e classificação contra os enums (422), verifica a existência de sistema, subsistema e inspeção (404) e a coerência subsistema/sistema (422); o `PUT` não altera `inspecao_id` nem `seq_numero` e o filtro `sistema_id` é UUID. **Os testes `test_ocorrencias_regras.py` ainda não foram executados** (exigem PostgreSQL de `05_infra`). Ver `00_docs/backlog-auto/ocorrencias-correcoes.md`, DEC-34 e R-13.
+
+## Pipeline de renderização do LTIP (BL-17, T05)
+
+`app/services/report_generator/ltip_pipeline.py` preenche os templates de `templates/ltip/` e gera o PDF (WeasyPrint) e o DOCX (docxtpl), no mesmo desenho do `rfo_pipeline.py`. Funções: `normalizar_contexto`, `agrupar_por_sistema` (RN-11), `renderizar_html`, `gerar_pdf` e `gerar_docx`. O módulo não acessa o MinIO: quem chama entrega as fotos em bytes, indexadas por `storage_key`. O WeasyPrint é importado só dentro de `gerar_pdf`, então contexto, HTML e DOCX funcionam fora do container. Testes: `pytest tests/test_ltip_pipeline.py` (o teste de PDF é pulado onde o WeasyPrint não carrega). Pendências e campos do contexto em [ltip-pipeline.md](../00_docs/backlog-auto/ltip-pipeline.md). A revisão das regras de Ocorrências (T06, lacunas ainda não corrigidas) está em [revisao-regras-ocorrencias.md](../00_docs/projeto/revisao-regras-ocorrencias.md).
+
 ## Marca vetorizada no cabeçalho dos relatórios (DEC-30/ADR-16)
 
 A marca da Garra só existe em JPEG, com o fundo chapado embutido no arquivo. Em vez de
@@ -208,6 +240,9 @@ Adapter Pattern (`00_docs/arquitetura.md` Seção 9.9): `StorageClient` (interfa
 | `download(key) -> bytes` | Retorna o conteúdo binário. Lança `ObjectNotFoundError` se a chave não existir. |
 | `delete(key) -> None` | Remove o objeto (idempotente — não lança erro se a chave já não existir). |
 | `generate_presigned_url(key, expires_in) -> str` | Gera URL de download temporária (padrão 15 minutos — RNF-07/ADR-02/Seção 10.1 A02). Nunca gera URLs públicas permanentes. |
+| `exists(key) -> bool` | Checa existência por HEAD (404/NoSuchKey → `False`). Adicionado na T30. |
+| `list_keys(prefix) -> list[str]` | Lista chaves por prefixo, com paginação. Adicionado na T30. |
+| `listar_orfaos(chaves_registradas, prefix)` | Devolve as chaves do storage sem vínculo no banco; só leitura, nada é apagado (política em DEC-44, proposta). |
 
 O bucket (`MINIO_BUCKET_NAME`) é criado automaticamente pelo próprio `S3StorageClient` na primeira instanciação, se ainda não existir (`head_bucket` + `create_bucket`, idempotente) — funciona mesmo sem o job `createbuckets` do `05_infra/docker-compose.yml`.
 
@@ -248,6 +283,8 @@ pytest
 
 Os testes de `tests/test_models.py` exigem o PostgreSQL do `05_infra/docker-compose.yml` rodando (usam `JSONB`, específico do dialeto PostgreSQL) e a migration aplicada. Cada teste remove os registros que cria.
 
+> **Ambiente (T01, T02 e T04, 2026-11-04):** use Python 3.12 (o 3.14 não instala o Pillow fixado). `requirements.txt` fixa `pytest>=9.1.1,<10.0` com `pytest-asyncio>=1.4.1,<1.5`; o 0.23.x não coleta com pytest 9, então valide qualquer troca com `python -m pytest --collect-only -q` (139 testes). Lint: `ruff check .` (configuração em [ruff.toml](ruff.toml)) retorna 0 erros; o ruff não está no `requirements.txt` (`pip install ruff` ou `uvx ruff`). A suíte de integração exige PostgreSQL com `alembic upgrade head`. Ver [pytest-compat.md](../00_docs/backlog-auto/pytest-compat.md), [ruff.md](../00_docs/backlog-auto/ruff.md), R-11 e DEC-31.
+
 ## Referências
 
 - Stack, modelo ER, contratos de API, padrões de projeto e system design: [00_docs/arquitetura.md](../00_docs/arquitetura.md) (Seções 9-11)
@@ -259,3 +296,32 @@ Os testes de `tests/test_models.py` exigem o PostgreSQL do `05_infra/docker-comp
 
 Comandos Python/uvicorn/alembic deste app são executados a partir desta pasta (`04_backend/`). O `Dockerfile` de build/runtime também vive aqui; o `docker-compose.yml` que o referencia está em [05_infra/](../05_infra/) (build context `../04_backend`).
 
+## Revisões do lote T14–T17 (2026-11-04)
+
+Sem código de produção alterado. Resultados e propostas de decisão (DEC-37 a DEC-40) nos Docs de `00_docs/backlog-auto/`:
+
+| Tema | Doc | Testes novos | Situação |
+|---|---|---|---|
+| Lacunas do modelo para legendas por IA (BL-04 → BL-36..BL-39) | `modelagem-legendas-ia-lacunas.md` | — | só análise; resolvida em parte pela T22 (linha abaixo) |
+| Regras de Visitas (BL-10, RN-01/RN-02) | `revisao-regras-visitas.md` | `tests/test_visitas_lacunas.py` | coletados, **não executados** (banco sem schema); devem falhar até a correção |
+| Upload de fotos (BL-11, RF-05) | `revisao-regras-fotos.md` | `tests/test_fotos_lacunas.py` | coletados, **não executados** (sem PostgreSQL/MinIO); a lacuna mais grave é a `storage_key` vinda do cliente |
+| Benchmark dos pipelines finais (BL-22) | `benchmark-pipelines-finais.md` | — | RFO e Cautelar atendem RNF-06; Residencial no limite; **LTIP viola** |
+
+Para rodar os testes de lacuna: `docker compose up -d` em `05_infra/`, `alembic upgrade head` e `pytest tests/test_visitas_lacunas.py tests/test_fotos_lacunas.py` em `04_backend/`.
+
+## Correções do lote T18–T21 (2026-11-04)
+
+| Tema | Doc | O que mudou | Situação |
+|---|---|---|---|
+| Pipeline do RFIP (BL-12) | `rfip-pipeline.md` | `app/services/report_generator/rfip_pipeline.py` (`normalizar_contexto`, `renderizar_html`, `gerar_pdf`, `gerar_docx`), `tests/test_rfip_pipeline.py` | 12 testes; PDF pulado sem WeasyPrint; falta mapeamento banco → contexto |
+| Upload de fotos (BL-11) | `fotos-correcoes.md` | `storage_key` validada e conferida no bucket, 409 de chave duplicada, `exif_transpose`, validação de `origem`/`ordem`/`legenda`, `PUT` parcial, `DELETE /fotos/upload`, teto de 50 Mpx | 44 testes passaram; faltam `UNIQUE(storage_key)` e URL pré-assinada |
+| PDF do LTIP (RNF-06) | `ltip-desempenho.md` | Template com linhas de fichas no lugar do flex único e fotos por `url_fetcher` | 72,1 → 11,6 s (239 fotos); 154,5 → 19,3 s (~200 páginas) |
+| Visitas (BL-10) | `visitas-correcoes.md` | Migration `e5a1c3f7b9d2` (UNIQUE `(inspecao_id, seq_numero)` e `(inspecao_id, data)`; aborta se houver data duplicada), data ≤ hoje, só RFO, `PUT` parcial, `GET /visitas/{id}` e CRUD de mão de obra e medições | L15 em `xfail` (DEC-27); `alembic upgrade head` pendente em produção |
+| Legendas por IA, modelo de dados (BL-36) | `legenda-ia-modelo.md` | Migration `f7c2a9d4e6b1` (`prompts_ia` + 11 colunas em `fotos`, 5 CHECKs, `downgrade()`), `PromptIA`, `LegendaIARead`; sem adapter nem endpoint | 24 testes em `test_legenda_ia_modelo.py`; `alembic upgrade head` pendente nos ambientes; L12, L13, L22 aguardam o provedor (B-04) |
+| Legendas por IA, serviço de prompts e contrato do cliente (BL-37) | `legenda-ia-servico.md` | `app/services/prompt_ia_service.py` (versões imutáveis, hash, ativação única) e `app/services/legenda_ia/` (`LegendaIAClient`, `FakeLegendaIAClient`) | 8 testes em `test_prompt_ia_service.py`; sem cliente de provedor real (B-04) |
+| Legenda aprovada no relatório (BL-38, DP-9) | `legenda-relatorio.md` | `report_generator/legenda_foto.py`, aplicado só ao `rfo_pipeline.py` (PDF e DOCX) | 8 testes em `test_legenda_relatorio.py`; `ltip`, `rfip` e as duas vistorias ainda não usam o helper |
+| Legendas por IA, endpoints (BL-34) | `legenda-ia-endpoints.md` | `POST /api/v1/fotos/{id}/legenda-ia/gerar` e `PUT /api/v1/fotos/{id}` com `aprovar_legenda_ia`; dependência `get_legenda_ia_client` (503 até haver adapter, B-04) | 14 testes em `test_legenda_ia_endpoints.py`; adapter concreto pendente |
+| `url_fetcher` de fotos em RFO, Cautelar e Residencial (DEC-41 B) | `pipelines-url-fetcher.md` | `report_generator/foto_fetcher.py` (só `garra-foto:<n>` registrado e `data:`); `renderizar_html` segue com data URI | 18 passed, 2 pulados (sem GTK); PDF real e medição não executados |
+| Revisão de segurança de legenda IA, fotos e visitas (BL-23, T29) | `seguranca-legenda-ia.md` | só revisão e `tests/test_seguranca_legenda_ia.py`; 9 achados SEG-IA abertos (sem limite de taxa/custo em `gerar`, aprovação mantida ao regerar/editar, IDOR entre contratos) | 8 passaram, 9 não rodaram (MinIO indisponível) |
+
+A suíte completa do backend não foi validada numa única execução: o venv do checkout principal estava sem `greenlet` funcional, houve interrupção por falta de memória e testes assíncronos falham com `RuntimeError: There is no current event loop` quando um teste usa `asyncio.run`. `ruff check .` ainda acusa erros preexistentes fora das áreas tocadas.

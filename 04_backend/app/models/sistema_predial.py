@@ -1,11 +1,16 @@
 """Modelo `SistemaPredial` — gabarito de sistemas prediais inspecionados (RF-10)."""
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.ocorrencia import Ocorrencia
+    from app.models.subsistema import Subsistema
 
 
 class SistemaPredial(Base):

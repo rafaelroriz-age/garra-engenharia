@@ -5,7 +5,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import preparo, runner
+from . import novas, preparo, runner
 from .backlog import gravar_status, ler, lote, prontas, validar
 from .config import ConfigErro, carregar
 from .scaffold import doctor, init
@@ -93,6 +93,29 @@ def _avancar(cfg, a):
     return 1 if r["fechamento"] == "falha" else 0
 
 
+def _nova(cfg, a):
+    texto = sys.stdin.read() if a.arquivo == "-" else Path(a.arquivo).read_text(encoding="utf-8")
+    try:
+        ids = novas.inserir(cfg, novas.ler_itens(texto))
+    except ConfigErro as e:
+        sys.exit(f"Não criei nenhuma tarefa: {e}")
+    if not ids:
+        print("Nada novo: todas as origens já estão no backlog.")
+        return
+    print("Criadas: " + ", ".join(ids))
+    if a.commit:
+        runner.commitar_controle(cfg, "backlog: cria " + ", ".join(ids))
+
+
+def _planejar(cfg, a):
+    try:
+        n = novas.planejar(cfg, a.dry)
+    except (novas.PlanejarErro, ConfigErro) as e:
+        sys.exit(f"Planejamento não concluído: {e}")
+    if not a.dry:
+        print(f"{n} tarefa(s) criada(s) pelo planejamento." if n else "Nada novo a planejar.")
+
+
 def _restart(cfg, a):
     try:
         runner.reiniciar(cfg, a.ids, a.forcar, a.dry)
@@ -151,6 +174,11 @@ def main(argv=None) -> int:
     p.add_argument("--intervalo", type=int, default=120)
     p.add_argument("--max-rodadas", type=int, default=0)
     sub.add_parser("status", help="regenera e imprime o painel de progresso")
+    p = sub.add_parser("nova", help="cria tarefas no backlog a partir de um JSON (objeto ou lista); valida antes de gravar")
+    p.add_argument("arquivo", help="arquivo JSON, ou '-' para ler da entrada padrão")
+    p.add_argument("--commit", action="store_true", help="commita o backlog depois de criar")
+    p = sub.add_parser("planejar", help="sessão só de leitura que cria as próximas tarefas a partir das fontes de produto")
+    p.add_argument("--dry", action="store_true", help="mostra o prompt sem chamar o claude")
     a = ap.parse_args(argv)
 
     if sys.platform.startswith("win"):
@@ -173,6 +201,7 @@ def main(argv=None) -> int:
         "auto": lambda: runner.auto(cfg, a.ambiente, a.intervalo, a.max_rodadas, not a.sem_fechamento),
         "fechar": lambda: _fechar(cfg, a), "avancar": lambda: _avancar(cfg, a),
         "restart": lambda: _restart(cfg, a), "status": lambda: print(runner.status(cfg)),
+        "nova": lambda: _nova(cfg, a), "planejar": lambda: _planejar(cfg, a),
     }
     r = acoes[a.cmd]()
     return r if isinstance(r, int) and a.cmd in ("validar", "fechar", "avancar") else 0

@@ -1,6 +1,5 @@
 """Testes de integração para ocorrências e dashboard (BL-14, BL-16)."""
 import uuid
-from datetime import date
 
 import pytest_asyncio
 from fastapi.testclient import TestClient
@@ -12,7 +11,16 @@ from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.security import create_access_token, hash_password
 from app.main import app
-from app.models import Contrato, Edificacao, Inspecao, Ocorrencia, Responsavel, Subsistema, SistemaPredial, Usuario
+from app.models import (
+    Contrato,
+    Edificacao,
+    Inspecao,
+    Ocorrencia,
+    Responsavel,
+    SistemaPredial,
+    Subsistema,
+    Usuario,
+)
 
 _settings = get_settings()
 _test_engine = create_async_engine(_settings.database_url, poolclass=NullPool, future=True)

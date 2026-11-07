@@ -22,7 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -388,7 +388,7 @@ def main(argv: list[str] | None = None) -> int:
         except LayoutExtractionError as erro:
             print(f"ERRO: {erro}", file=sys.stderr)
             return 1
-        layout["extraido_em"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        layout["extraido_em"] = datetime.now(UTC).isoformat(timespec="seconds")
         LAYOUT_JSON.parent.mkdir(parents=True, exist_ok=True)
         LAYOUT_JSON.write_text(json.dumps(layout, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"layout.json escrito em {LAYOUT_JSON}")

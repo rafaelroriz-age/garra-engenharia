@@ -15,9 +15,9 @@ from sqlalchemy import text
 from app.api.v1.auth import router as auth_router
 from app.api.v1.contratos import router as contratos_router
 from app.api.v1.dados_mestre import router as dados_mestre_router
+from app.api.v1.dashboard import router as dashboard_router
 from app.api.v1.edificacoes import router as edificacoes_router
 from app.api.v1.fotos import router as fotos_router
-from app.api.v1.dashboard import router as dashboard_router
 from app.api.v1.inspecoes import router as inspecoes_router
 from app.api.v1.ocorrencias import router as ocorrencias_router
 from app.api.v1.portal import router as portal_router
@@ -93,7 +93,7 @@ async def health() -> dict:
     try:
         async with engine.connect() as connection:
             await connection.execute(text("SELECT 1"))
-    except Exception:  # noqa: BLE001 - qualquer falha de conectividade deve virar "unavailable"
+    except Exception:
         logger.exception("Healthcheck: falha ao conectar ao PostgreSQL")
         database_status = "unavailable"
 

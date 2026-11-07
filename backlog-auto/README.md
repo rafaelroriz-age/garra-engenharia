@@ -47,6 +47,8 @@ Prompts prontos para integrar o módulo a um projeto e iniciar a execução: [do
 | `avancar [--ambiente X] [--sem-fechamento]` | Um passo: `colher`, `fechar` se o lote acabou, `run` do próximo lote |
 | `auto [--ambiente X] [--intervalo S] [--max-rodadas N] [--sem-fechamento]` | `avancar` em loop; para sozinho quando acaba, quando só restam tarefas esperando/bloqueadas ou quando o fechamento falha |
 | `status` | Regenera e imprime o painel de progresso |
+| `nova ARQUIVO.json \| -` | Cria tarefas a partir de um JSON (objeto ou lista): atribui ids novos, resolve `depende` por chave e só grava se o backlog inteiro validar |
+| `planejar [--dry]` | Sessão `claude -p` só de leitura: lê as `fontes` do `[planejamento]` e cria até `max_tarefas` tarefas novas via `nova`. Com `[planejamento] ativo = true`, o `auto` a roda sozinho quando o backlog acaba |
 | `preparo [--refazer]` | Insere a fase de preparo da documentação (D01..D05); `--refazer` volta tudo para `todo` e reclassifica |
 
 ## Fechamento de lote automático

@@ -5,6 +5,7 @@ AWS S3 (produção, se adotado) — basta trocar as variáveis de ambiente
 `MINIO_*` (DEC-02, ADR-02 em `00_docs/arquitetura.md`).
 """
 import logging
+from datetime import datetime
 from functools import lru_cache
 
 import boto3
@@ -96,11 +97,37 @@ class S3StorageClient(StorageClient):
             raise
         return response["Body"].read()
 
+    def exists(self, key: str) -> bool:
+        self._validate_key(key)
+        try:
+            self._client.head_object(Bucket=self._bucket, Key=key)
+        except ClientError as exc:
+            error_code = exc.response.get("Error", {}).get("Code", "")
+            if error_code in _NOT_FOUND_ERROR_CODES:
+                return False
+            raise
+        return True
+
     def delete(self, key: str) -> None:
         self._validate_key(key)
         # `delete_object` da API S3 é idempotente por natureza: não lança erro
         # se a chave já não existir (204 em ambos os casos).
         self._client.delete_object(Bucket=self._bucket, Key=key)
+
+    def list_keys(self, prefix: str = "") -> list[str]:
+        keys: list[str] = []
+        paginator = self._client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=self._bucket, Prefix=prefix):
+            keys.extend(obj["Key"] for obj in page.get("Contents", []))
+        return keys
+
+    def list_objects(self, prefix: str = "") -> list[tuple[str, datetime]]:
+        """Pares `(chave, LastModified)` dos objetos sob `prefix` (só leitura; DEC-44)."""
+        objetos: list[tuple[str, datetime]] = []
+        paginator = self._client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=self._bucket, Prefix=prefix):
+            objetos.extend((obj["Key"], obj["LastModified"]) for obj in page.get("Contents", []))
+        return objetos
 
     def generate_presigned_url(
         self, key: str, expires_in: int = DEFAULT_PRESIGNED_URL_EXPIRES_IN_SECONDS

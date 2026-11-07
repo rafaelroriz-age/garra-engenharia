@@ -1,0 +1,368 @@
+{
+  "versao_schema": 1,
+  "tipo_documento": "VISTORIA_RESIDENCIAL",
+  "origem": {
+    "sha256": "c1ffc311b9cc054675f9a6e0c186bbeefefc1976761ce502d486e6f4f79fb8e8",
+    "paginas": 91,
+    "paginas_fora_do_a4": 4
+  },
+  "pagina": {
+    "tamanho": "A4",
+    "orientacao": "portrait",
+    "largura_pt": 595.5,
+    "altura_pt": 842.25,
+    "margens_cm": {
+      "esquerda": 3.0,
+      "direita": 1.99,
+      "superior": 2.58,
+      "inferior": 1.94
+    }
+  },
+  "tipografia": {
+    "familia": "Times New Roman",
+    "familia_postscript": "TimesNewRomanPSMT",
+    "corpo_pt": 12.0,
+    "titulo_pt": 14.0,
+    "legenda_pt": 9.0
+  },
+  "titulos": [
+    {
+      "nivel": 1,
+      "fonte_pt": 14.0,
+      "negrito": true
+    },
+    {
+      "nivel": 2,
+      "fonte_pt": 14.0,
+      "negrito": true
+    },
+    {
+      "nivel": 3,
+      "fonte_pt": 12.0,
+      "negrito": true
+    },
+    {
+      "nivel": 4,
+      "fonte_pt": 12.0,
+      "negrito": true
+    }
+  ],
+  "cores": {
+    "texto": "#000000",
+    "legenda": "#44546A",
+    "link": "#0563C1",
+    "capa_texto": "#FFFFFF"
+  },
+  "capa": {
+    "titulo": {
+      "texto": "VISTORIA TÉCNICA PARA RECEBIMENTO DE IMÓVEL",
+      "fonte_pt": 34.4,
+      "familia": "Montserrat",
+      "linhas": [
+        "VISTORIA TÉCNICA",
+        "PARA RECEBIMENTO",
+        "DE IMÓVEL"
+      ]
+    },
+    "logo": {
+      "x_pt": 372.8,
+      "topo_pt": -11.8,
+      "largura_pt": 222.8,
+      "altura_pt": 126.8,
+      "alinhamento": "direita"
+    },
+    "imagem_de_fundo": true,
+    "cor_texto": "#FFFFFF",
+    "corpos_secundarios_pt": [
+      15.4,
+      15.0
+    ],
+    "rotulo_responsavel": "RESP. TÉCNICO:"
+  },
+  "folha_de_rosto": {
+    "titulo": {
+      "texto": "LAUDO TÉCNICO DE CONSTATAÇÃO E VISTORIA PARA RECEBIMENTO DE IMÓVEL",
+      "linhas": [
+        "LAUDO TÉCNICO DE",
+        "CONSTATAÇÃO E",
+        "VISTORIA",
+        "PARA RECEBIMENTO DE",
+        "IMÓVEL"
+      ],
+      "fonte_pt": 36.0,
+      "familia": "Times New Roman"
+    },
+    "identificacao": {
+      "linhas_no_exemplar": 3,
+      "fonte_pt": 36.0
+    },
+    "data": {
+      "fonte_pt": 18.0
+    }
+  },
+  "cabecalho": {
+    "logo": {
+      "x_pt": 448.5,
+      "topo_pt": 12.8,
+      "largura_pt": 109.4,
+      "altura_pt": 52.3,
+      "alinhamento": "direita"
+    },
+    "paginas_com_logo": 83
+  },
+  "rodape": {
+    "papeis": [
+      "nome",
+      "registro",
+      "contato"
+    ],
+    "linhas": [
+      "{{ fiscal.nome }}",
+      "Eng. Civil - CREA nº {{ fiscal.crea }}",
+      "{{ fiscal.email }} / {{ fiscal.telefone }}"
+    ],
+    "familia": "Times New Roman",
+    "fonte_pt": 10.0,
+    "alinhamento": "centro",
+    "cor_link": "#0563C1",
+    "topo_pt": 787.0,
+    "numeracao_pagina": {
+      "alinhamento": "direita",
+      "familia": "Calibri",
+      "fonte_pt": 11.0
+    }
+  },
+  "secoes": [
+    {
+      "numero": "1.",
+      "nivel": 1,
+      "titulo": "INTRODUÇÃO",
+      "tipo": "texto"
+    },
+    {
+      "numero": "1.1.",
+      "nivel": 2,
+      "titulo": "Histórico",
+      "tipo": "texto"
+    },
+    {
+      "numero": "2.",
+      "nivel": 1,
+      "titulo": "CONSIDERAÇÕES PRELIMINARES",
+      "tipo": "texto"
+    },
+    {
+      "numero": "2.1.",
+      "nivel": 2,
+      "titulo": "Geral",
+      "tipo": "texto"
+    },
+    {
+      "numero": "2.2.",
+      "nivel": 2,
+      "titulo": "Pressupostos, ressalvas e fatores limitantes",
+      "tipo": "texto"
+    },
+    {
+      "numero": "3.",
+      "nivel": 1,
+      "titulo": "OBJETIVO",
+      "tipo": "texto"
+    },
+    {
+      "numero": "3.1.",
+      "nivel": 2,
+      "titulo": "Geral",
+      "tipo": "texto"
+    },
+    {
+      "numero": "3.2.",
+      "nivel": 2,
+      "titulo": "Específico",
+      "tipo": "texto"
+    },
+    {
+      "numero": "4.",
+      "nivel": 1,
+      "titulo": "OBJETO",
+      "tipo": "texto"
+    },
+    {
+      "numero": "4.1.",
+      "nivel": 2,
+      "titulo": "Geral",
+      "tipo": "texto"
+    },
+    {
+      "numero": "4.2.",
+      "nivel": 2,
+      "titulo": "Identificação",
+      "tipo": "texto"
+    },
+    {
+      "numero": "4.2.1.",
+      "nivel": 3,
+      "titulo": "Tipologia",
+      "tipo": "texto"
+    },
+    {
+      "numero": "4.2.2.",
+      "nivel": 3,
+      "titulo": "Caracterização",
+      "tipo": "texto"
+    },
+    {
+      "numero": "4.2.3.",
+      "nivel": 3,
+      "titulo": "Localização",
+      "tipo": "texto"
+    },
+    {
+      "numero": "4.2.4.",
+      "nivel": 3,
+      "titulo": "Descrição Qualitativa",
+      "tipo": "texto"
+    },
+    {
+      "numero": "4.2.4.1.",
+      "nivel": 4,
+      "titulo": "Região",
+      "tipo": "texto"
+    },
+    {
+      "numero": "4.2.4.2.",
+      "nivel": 4,
+      "titulo": "Valorização Imobiliária",
+      "tipo": "texto"
+    },
+    {
+      "numero": "5.",
+      "nivel": 1,
+      "titulo": "DA REALIZAÇÃO DA INSPEÇÃO",
+      "tipo": "texto"
+    },
+    {
+      "numero": "5.1.",
+      "nivel": 2,
+      "titulo": "Responsável Técnico",
+      "tipo": "texto"
+    },
+    {
+      "numero": "5.2.",
+      "nivel": 2,
+      "titulo": "Datas das Vistorias",
+      "tipo": "texto"
+    },
+    {
+      "numero": "6.",
+      "nivel": 1,
+      "titulo": "METODOLOGIA",
+      "tipo": "texto"
+    },
+    {
+      "numero": "6.1.",
+      "nivel": 2,
+      "titulo": "Classificação da Inspeção quanto ao Nível",
+      "tipo": "texto"
+    },
+    {
+      "numero": "6.2.",
+      "nivel": 2,
+      "titulo": "Critério de classificação técnica dos achados",
+      "tipo": "texto"
+    },
+    {
+      "numero": "6.3.",
+      "nivel": 2,
+      "titulo": "Levantamento de Dados e Documentação",
+      "tipo": "texto"
+    },
+    {
+      "numero": "7.",
+      "nivel": 1,
+      "titulo": "DESENVOLVIMENTO DAS ATIVIDADES DA INSPEÇÃO",
+      "tipo": "texto"
+    },
+    {
+      "numero": "7.1.",
+      "nivel": 2,
+      "titulo": "Sistemas Construtivos Inspecionados",
+      "tipo": "texto"
+    },
+    {
+      "numero": "8.",
+      "nivel": 1,
+      "titulo": "RELATÓRIO FOTOGRÁFICO",
+      "tipo": "fotografico"
+    },
+    {
+      "numero": "9.",
+      "nivel": 1,
+      "titulo": "ANÁLISE E CONSIDERAÇÕES TÉCNICAS",
+      "tipo": "por_sistema"
+    },
+    {
+      "numero": "10.",
+      "nivel": 1,
+      "titulo": "CONCLUSÃO E CONSIDERAÇÕES FINAIS",
+      "tipo": "texto"
+    },
+    {
+      "numero": "11.",
+      "nivel": 1,
+      "titulo": "ENCERRAMENTO",
+      "tipo": "texto"
+    },
+    {
+      "numero": "12.",
+      "nivel": 1,
+      "titulo": "REFERÊNCIAS BIBLIOGRÁFICAS",
+      "tipo": "texto"
+    }
+  ],
+  "relatorio_fotografico": {
+    "fotos_por_pagina": 2,
+    "colunas": 1,
+    "foto_largura_cm": 16.0,
+    "foto_altura_cm": 9.0,
+    "legenda": {
+      "rotulo": "Figura",
+      "separador": "-",
+      "fonte_padrao": "Autor",
+      "familia": "Calibri",
+      "fonte_pt": 9.0,
+      "italico": true,
+      "cor": "#44546A",
+      "posicao": "abaixo"
+    }
+  },
+  "analise_por_sistema": {
+    "subtitulos": [
+      {
+        "rotulo": "Constatações",
+        "chave": "constatacoes",
+        "lista": true
+      },
+      {
+        "rotulo": "Fundamentação Técnica",
+        "chave": "fundamentacao_tecnica",
+        "lista": false
+      }
+    ],
+    "marcador": "➢",
+    "fonte_pt": 12.0
+  },
+  "assinatura": {
+    "secao": "11.",
+    "alinhamento": "direita",
+    "familia": "Calibri",
+    "fonte_pt": 12.0,
+    "nome_negrito": true,
+    "linhas_qualificacao_no_exemplar": 7,
+    "rubrica": {
+      "largura_pt": 137.7,
+      "altura_pt": 79.7
+    },
+    "local_data": true
+  }
+}

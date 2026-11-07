@@ -16,7 +16,7 @@ from pathlib import Path
 
 import openpyxl
 import pytest
-from jinja2 import Environment, DictLoader, select_autoescape
+from jinja2 import DictLoader, Environment, select_autoescape
 from openpyxl.styles import Alignment, Font, PatternFill
 
 from app.scripts.build_rfo_templates import gerar_docx, gerar_html
