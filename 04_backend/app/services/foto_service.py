@@ -139,6 +139,12 @@ async def vincular_a_visita(
     )
 
 
+def _invalidar_aprovacao(foto: Foto) -> None:
+    foto.status_validacao_ia = STATUS_RASCUNHO
+    foto.aprovado_por_id = None
+    foto.aprovado_em = None
+
+
 async def atualizar(
     db: AsyncSession, foto_id: uuid.UUID, campos: dict, *, usuario: Usuario | None = None
 ) -> Foto:
@@ -170,6 +176,13 @@ async def atualizar(
         foto.status_validacao_ia = STATUS_APROVADA
         foto.aprovado_por_id = usuario.id
         foto.aprovado_em = datetime.now(UTC)
+    elif (
+        "legenda" in campos
+        and foto.status_validacao_ia == STATUS_APROVADA
+        and campos["legenda"] != foto.legenda
+    ):
+        # DEC-42 B: mudar a legenda aprovada invalida a aprovação (fecha DP-10 de DEC-37).
+        _invalidar_aprovacao(foto)
     return await foto_repository.update(db, foto, campos)
 
 
@@ -205,7 +218,7 @@ async def gerar_legenda_ia(
     foto.prompt_ia_id = prompt.id
     foto.prompt_conteudo_hash = prompt_ia_service.calcular_hash(prompt.conteudo)
     foto.legenda_ia_gerada_em = datetime.now(UTC)
-    foto.status_validacao_ia = STATUS_RASCUNHO
+    _invalidar_aprovacao(foto)  # DEC-42 B: regerar volta a rascunho e zera a aprovação
     await db.commit()
     await db.refresh(foto)
     return foto

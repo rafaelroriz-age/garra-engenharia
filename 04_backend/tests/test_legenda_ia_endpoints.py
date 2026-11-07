@@ -340,16 +340,20 @@ def test_edicao_manual_sem_sugestao_mantem_campos_de_ia_nulos(usuarios, criar_fo
 
 
 @pytest.mark.parametrize("vinculo", ["visita", "ocorrencia"])
-def test_auxiliar_gera_e_aprova(vinculo, usuarios, prompt_ativo, fake_ia, criar_foto):
+def test_auxiliar_gera_mas_nao_aprova(vinculo, usuarios, prompt_ativo, fake_ia, criar_foto):
+    """DEC-42 A: o auxiliar gera/edita rascunho; só o auditor aprova (RN-16, RN-18)."""
     foto_id = _nova_foto(criar_foto, vinculo=vinculo)
 
     gerada = _gerar(foto_id, usuarios["auxiliar"], {"legenda_bruta": "desplacamento de reboco"})
     assert gerada.status_code == 200, gerada.text
 
-    aprovada = _put(foto_id, usuarios["auxiliar"], {"aprovar_legenda_ia": True})
+    recusada = _put(foto_id, usuarios["auxiliar"], {"aprovar_legenda_ia": True})
+    assert recusada.status_code == 403, recusada.text
+    assert recusada.json()["type"].endswith("/acesso-negado")
+
+    aprovada = _put(foto_id, usuarios["auditor"], {"aprovar_legenda_ia": True})
     assert aprovada.status_code == 200, aprovada.text
-    assert aprovada.json()["status_validacao_ia"] == "aprovada"
-    assert aprovada.json()["aprovado_por_id"] == str(usuarios["auxiliar"])
+    assert aprovada.json()["aprovado_por_id"] == str(usuarios["auditor"])
 
 
 def test_usuario_sem_permissao_recebe_403(usuarios, prompt_ativo, fake_ia, criar_foto):
