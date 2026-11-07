@@ -321,7 +321,7 @@ Siga a 'Regra de pronto' do BACKLOG.md: registre fatos, números, comandos e sa�
 ```
 
 ### T39 · Tornar o lint (ruff) bloqueante no CI
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-26
 - **Papel:** devops
 - **Depende:** —
