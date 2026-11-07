@@ -648,7 +648,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ## Bloco C — Endurecimento de legendas por IA e storage (DEC-42/43/44)
 
 ### T31 · Impor enum fechado de `origem` da foto no payload de vínculo (backend)
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-43
 - **Papel:** backend
 - **Depende:** —
