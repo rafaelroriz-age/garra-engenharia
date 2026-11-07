@@ -693,7 +693,7 @@ Tarefa (DEC-42 itens A e B, proposta da T29; SEG-IA-03, SEG-IA-04, SEG-IA-05 de 
 ```
 
 ### T34 · Frontend: ocultar «Aprovar» legenda IA para auxiliar e refletir invalidação ao editar
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-42
 - **Papel:** frontend
 - **Depende:** T33
@@ -708,7 +708,7 @@ Tarefa (DEC-42 itens A e B, lado frontend; depende da tarefa C do lote, que imp�
 ```
 
 ### T35 · Legenda por IA: limite de taxa em `gerar`, teto e saneamento da saída do LLM
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-42
 - **Papel:** backend
 - **Depende:** T33
