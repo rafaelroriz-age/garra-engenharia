@@ -355,7 +355,7 @@ Passos: (1) Leia as duas páginas do portal, `lib/api-client.ts` (funções do p
 ```
 
 ### T42 · Verificar os scripts de backup e restore com comandos simulados
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-29
 - **Papel:** devops
 - **Depende:** —
