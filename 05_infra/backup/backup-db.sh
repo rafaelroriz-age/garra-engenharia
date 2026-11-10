@@ -79,7 +79,8 @@ fi
 # 3) Retenção — só executa depois de um dump válido, para nunca apagar o
 #    último backup bom por causa de uma execução que falhou.
 # ---------------------------------------------------------------------------
-find "$DUMP_DIR" -name 'garra-db-*.dump' -type f -mtime "+$RETENCAO_DIAS" -print -delete
+# Inclui os pre-restore-*.dump criados por restore-db.sh (DEC-45): mesma janela.
+find "$DUMP_DIR" \( -name 'garra-db-*.dump' -o -name 'pre-restore-*.dump' \) -type f -mtime "+$RETENCAO_DIAS" -print -delete
 
 echo "[backup] Concluído. Retenção: $RETENCAO_DIAS dias."
 echo "[backup] LEMBRETE: copie $DUMP_DIR e $OBJETOS_DIR para fora do host (RNF-08)."

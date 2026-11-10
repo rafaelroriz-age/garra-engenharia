@@ -50,12 +50,29 @@ if [[ "$confirmacao" != "RESTAURAR" ]]; then
   exit 1
 fi
 
-# Backup de segurança do estado atual antes de sobrescrever.
+# Backup de segurança do estado atual antes de sobrescrever (DEC-45).
+# Sem um pre-restore válido o restore NÃO prossegue: é a única rede de segurança.
+# FORCAR_SEM_PRE_RESTORE=1 é o override explícito (ex.: banco vazio recém-criado).
 PRE_RESTORE="$SCRIPT_DIR/dumps/pre-restore-$(date +%Y%m%d-%H%M%S).dump"
 mkdir -p "$SCRIPT_DIR/dumps"
-docker compose -f "$COMPOSE_FILE" exec -T postgres \
-  pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=custom --no-owner > "$PRE_RESTORE" || true
-echo "[restore] Estado anterior salvo em $PRE_RESTORE"
+if [[ "${FORCAR_SEM_PRE_RESTORE:-0}" == "1" ]]; then
+  echo "[restore] AVISO: FORCAR_SEM_PRE_RESTORE=1 — pulando o dump pre-restore. NÃO há cópia do estado anterior." >&2
+else
+  if ! docker compose -f "$COMPOSE_FILE" exec -T postgres \
+    pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=custom --no-owner > "$PRE_RESTORE"; then
+    rm -f "$PRE_RESTORE"
+    echo "[restore] ERRO: pg_dump pre-restore falhou — restore ABORTADO, nada foi alterado no banco." >&2
+    echo "[restore] Para restaurar mesmo assim, sem cópia do estado atual: FORCAR_SEM_PRE_RESTORE=1 $0 <dump>" >&2
+    exit 1
+  fi
+  if [[ ! -s "$PRE_RESTORE" ]]; then
+    rm -f "$PRE_RESTORE"
+    echo "[restore] ERRO: dump pre-restore vazio — restore ABORTADO, nada foi alterado no banco." >&2
+    echo "[restore] Para restaurar mesmo assim, sem cópia do estado atual: FORCAR_SEM_PRE_RESTORE=1 $0 <dump>" >&2
+    exit 1
+  fi
+  echo "[restore] Estado anterior salvo em $PRE_RESTORE"
+fi
 
 # Derruba a aplicação para não haver escrita concorrente durante o restore.
 docker compose -f "$COMPOSE_FILE" stop backend frontend >/dev/null 2>&1 || true
