@@ -125,7 +125,7 @@ def simplificar(contorno: Sequence[PontoInteiro], tolerancia: float) -> list[Pon
         return list(contorno)
     inicio = min(range(len(contorno)), key=lambda i: contorno[i])
     rotacionado = list(contorno[inicio:]) + list(contorno[:inicio])
-    aberto = rotacionado + [rotacionado[0]]
+    aberto = [*rotacionado, rotacionado[0]]
     reduzido = _douglas_peucker(aberto, tolerancia)
     return reduzido[:-1]
 

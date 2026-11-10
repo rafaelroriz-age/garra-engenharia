@@ -6,10 +6,9 @@ uma conexão física própria, evitando problemas de reuso de conexão do
 (`QueuePool`) é compartilhado entre fixtures/testes.
 """
 import pytest_asyncio
+from app.core.config import get_settings
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
-
-from app.core.config import get_settings
 
 settings = get_settings()
 

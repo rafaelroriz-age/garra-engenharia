@@ -14,8 +14,6 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
-from PIL import Image
-
 from app.scripts.bitmap_tracer import (
     area,
     caminho_svg,
@@ -32,6 +30,7 @@ from app.scripts.build_brand_assets import (
     montar_svg,
     recortar_conteudo,
 )
+from PIL import Image
 
 ASSETS = Path(__file__).resolve().parents[1] / "templates" / "assets"
 SVG_NS = "{http://www.w3.org/2000/svg}"

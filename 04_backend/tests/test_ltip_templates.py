@@ -12,7 +12,6 @@ import re
 from pathlib import Path
 
 import pytest
-
 from app.scripts.build_ltip_templates import LAYOUT_JSON, gerar_docx, gerar_html
 from app.scripts.ltip_layout_extractor import LayoutExtractionError, extrair_layout
 
@@ -210,7 +209,7 @@ def test_pdf_sem_ficha_fotografica_falha(tmp_path: Path) -> None:
 def test_html_gerado_respeita_as_medidas_e_itera_por_sistema(layout: dict) -> None:
     html = gerar_html(layout)
     margens = layout["pagina"]["margens_cm"]
-    assert f"size: A4 portrait" in html
+    assert "size: A4 portrait" in html
     assert f"margin: {margens['superior']}cm" in html
     assert f"font-size: {layout['tipografia']['corpo_pt']}pt" in html
     # RN-11: fotos organizadas por Sistema e, dentro dele, por ocorrência.

@@ -9,7 +9,6 @@ from sqlalchemy.orm import selectinload
 from app.models import Foto, Inspecao, Ocorrencia, SistemaPredial, Subsistema
 from app.schemas.ocorrencia import OcorrenciaCreate
 
-
 _DETALHE_OPTIONS = (
     selectinload(Ocorrencia.fotos),
     selectinload(Ocorrencia.sistema),

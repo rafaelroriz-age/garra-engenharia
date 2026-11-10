@@ -10,7 +10,6 @@ import uuid
 
 import httpx
 import pytest
-
 from app.services.storage.s3_client import (
     MAX_UPLOAD_SIZE_BYTES,
     ObjectNotFoundError,

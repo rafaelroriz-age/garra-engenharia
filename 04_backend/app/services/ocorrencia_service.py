@@ -1,6 +1,6 @@
 """Service Layer de `Ocorrencia` (BL-14/BL-15, RF-04, RN-03, RN-04, RN-05, RN-10)."""
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -129,5 +129,5 @@ def _resolver_prioridade(
     sugerida = _prioridade_sugerida(dados)
     efetiva = dados.prioridade if dados.prioridade is not None else sugerida
     if efetiva != sugerida:
-        return efetiva, sugerida, usuario_id, datetime.now(timezone.utc)
+        return efetiva, sugerida, usuario_id, datetime.now(UTC)
     return efetiva, sugerida, None, None

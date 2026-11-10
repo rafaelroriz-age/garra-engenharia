@@ -28,7 +28,7 @@ import hashlib
 import json
 import sys
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -259,7 +259,7 @@ def gerar(origem: Path, tolerancia: float) -> dict[str, Any]:
           f"({(DESTINO_BACKEND / 'logo-garra.png').stat().st_size / 1024:.1f} KB)")
 
     return {
-        "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "gerado_em": datetime.now(UTC).isoformat(timespec="seconds"),
         "gerado_por": "app.scripts.build_brand_assets",
         "origem": {
             # Sem o nome/caminho do arquivo: o hash basta para provar a procedência.

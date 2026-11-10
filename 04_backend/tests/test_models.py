@@ -9,8 +9,6 @@ específico do dialeto PostgreSQL. Cada teste remove os registros que criou.
 from datetime import date
 
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.models import (
     Contrato,
     ContratoExecutor,
@@ -27,6 +25,7 @@ from app.models import (
     VisitaMaoObra,
     VisitaMedicao,
 )
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest_asyncio.fixture

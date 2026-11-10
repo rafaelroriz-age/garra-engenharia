@@ -6,11 +6,10 @@ Usage (from 04_backend/):
 
 from __future__ import annotations
 
-from pathlib import Path
 import re
+from pathlib import Path
 
 from docx import Document
-
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE_MD = ROOT.parent / "01_output-context" / "Contrato_Revisado_Garra_Software.md"

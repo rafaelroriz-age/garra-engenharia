@@ -7,11 +7,10 @@ registro protegido (A01) e fail-closed de configuração de produção (A05).
 import uuid
 
 import pytest
-from fastapi.testclient import TestClient
-
 from app.core import rate_limit
 from app.core.config import Settings
 from app.main import app
+from fastapi.testclient import TestClient
 
 client = TestClient(app)
 
