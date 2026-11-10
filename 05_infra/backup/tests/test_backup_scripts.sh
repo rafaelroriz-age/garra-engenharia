@@ -220,15 +220,52 @@ check "pg_restore usa --clean --if-exists" tem_log "pg_restore -U usuario_teste 
 check "nenhum comando externo direto" sem_chamadas_diretas
 
 # ---------------------------------------------------------------------------
-echo "== (INFO) caracterização: pre-restore falha (não conta como falha de teste)"
+echo "== (e1) pre-restore falha: aborta ANTES de qualquer pg_restore (DEC-45)"
 prepara_restore; export STUB_DUMP=fail
 roda_restore "$T/entrada.dump" <<< "RESTAURAR"
-if tem_log "exec -T postgres pg_restore"; then
-  echo "  info  - pre-restore falhou (pg_dump rc=1) e o script AINDA ASSIM chamou pg_restore (rc final=$RC)."
-  echo "          Causa: '|| true' na linha do pg_dump pre-restore. Ver proposta em backup-verificacao.md."
-else
-  echo "  info  - pre-restore falhou e o script abortou antes do pg_restore (rc final=$RC)."
-fi
+check "sai com código ≠ 0" nao_zero "$RC"
+check "mensagem clara de pre-restore falhou em stderr" grep -q "pg_dump pre-restore falhou" "$T/err.txt"
+check "nenhum pg_restore executado" nao_tem_log "exec -T postgres pg_restore"
+check "nenhum stop/start de backend/frontend (abortou antes)" nao_tem_log "docker .* stop "
+check "nenhum pre-restore vazio/parcial deixado no disco" sem_pre_restore
+check "não anuncia 'Estado anterior salvo'" test "$(grep -c 'Estado anterior salvo' "$T/out.txt")" -eq 0
+
+echo "== (e2) pre-restore produz arquivo vazio: aborta ANTES de qualquer pg_restore (DEC-45)"
+prepara_restore; export STUB_DUMP=vazio
+roda_restore "$T/entrada.dump" <<< "RESTAURAR"
+check "sai com código ≠ 0" nao_zero "$RC"
+check "mensagem clara de dump pre-restore vazio em stderr" grep -q "pre-restore vazio" "$T/err.txt"
+check "nenhum pg_restore executado" nao_tem_log "exec -T postgres pg_restore"
+check "nenhum pre-restore vazio deixado no disco" sem_pre_restore
+
+echo "== (e3) FORCAR_SEM_PRE_RESTORE=1 com pre-restore falhando: override explícito"
+prepara_restore; export STUB_DUMP=fail FORCAR_SEM_PRE_RESTORE=1
+roda_restore "$T/entrada.dump" <<< "RESTAURAR"
+unset FORCAR_SEM_PRE_RESTORE
+check "sai com código 0" test "$RC" -eq 0
+check "aviso explícito de override em stderr" grep -q "FORCAR_SEM_PRE_RESTORE=1" "$T/err.txt"
+check "pg_dump pre-restore NÃO foi chamado" nao_tem_log "exec -T postgres pg_dump"
+check "pg_restore executado mesmo sem pre-restore" tem_log "exec -T postgres pg_restore"
+check "nenhum pre-restore criado" sem_pre_restore
+
+echo "== (e4) FORCAR_SEM_PRE_RESTORE=0 não é override: checagem continua valendo"
+prepara_restore; export STUB_DUMP=fail FORCAR_SEM_PRE_RESTORE=0
+roda_restore "$T/entrada.dump" <<< "RESTAURAR"
+unset FORCAR_SEM_PRE_RESTORE
+check "sai com código ≠ 0" nao_zero "$RC"
+check "nenhum pg_restore executado" nao_tem_log "exec -T postgres pg_restore"
+
+echo "== (f) retenção: pre-restore-* antigos expiram com RETENCAO_DIAS; recentes ficam"
+novo_ambiente; cria_antigos
+PR_OLD="$DUMPS/pre-restore-19990101-000000.dump"
+PR_RECENTE="$DUMPS/pre-restore-19990102-000000.dump"
+echo "velho" > "$PR_OLD";     touch -d '60 days ago' "$PR_OLD"
+echo "recente" > "$PR_RECENTE"; touch -d '1 day ago' "$PR_RECENTE"
+roda_backup
+check "backup sai com código 0" test "$RC" -eq 0
+check "pre-restore antigo (60 dias) removido" test ! -e "$PR_OLD"
+check "pre-restore recente (1 dia) preservado" test -e "$PR_RECENTE"
+check "garra-db antigo continua expirando junto" test ! -e "$OLD"
 
 # ---------------------------------------------------------------------------
 echo

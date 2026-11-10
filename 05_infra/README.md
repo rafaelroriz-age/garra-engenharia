@@ -98,7 +98,8 @@ COMPOSE_FILE=docker-compose.yml ./backup/backup-db.sh   # ambiente de desenvolvi
 ```
 
 - `backup-db.sh` gera dump lógico (`pg_dump --format=custom`) em `backup/dumps/` e espelha o bucket MinIO em `backup/objetos/`. A retenção (`RETENCAO_DIAS`, default 30) só é aplicada **depois** de um dump válido, para nunca apagar o último backup bom por causa de uma execução que falhou.
-- `restore-db.sh` é destrutivo: exige digitar `RESTAURAR`, salva um dump `pre-restore-*` do estado atual e para `backend`/`frontend` durante a operação.
+- `restore-db.sh` é destrutivo: exige digitar `RESTAURAR`, salva um dump `pre-restore-*` do estado atual e para `backend`/`frontend` durante a operação. Se o dump `pre-restore` falhar ou sair vazio, o restore **aborta antes de qualquer `pg_restore`** (DEC-45, proposta). Os `pre-restore-*` expiram pela mesma `RETENCAO_DIAS` dos dumps normais (aplicada pelo `backup-db.sh`).
+- Override explícito, só para banco recém-criado/vazio sem cópia a preservar: `FORCAR_SEM_PRE_RESTORE=1 ./backup/restore-db.sh <dump>` (emite aviso e pula o pre-restore). Não é definido no `.env`, de propósito, para não ficar ativo por acidente.
 - `backup/dumps/` e `backup/objetos/` contêm dados reais de clientes e **nunca** são versionados (`backup/.gitignore`). Copie-os para fora do host — o destino externo definitivo continua `[A ESCLARECER]` (RNF-08).
 
 Agendamento sugerido no host (diário às 02:00):
