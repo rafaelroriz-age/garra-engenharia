@@ -387,7 +387,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T44 · Restore: abortar quando o dump pre-restore falhar e aplicar retenção aos pre-restore-*
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-45
 - **Papel:** Engenheiro DevOps
 - **Depende:** —
