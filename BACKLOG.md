@@ -372,7 +372,7 @@ Passos: (1) Leia os dois scripts por inteiro, a seção de backup de `05_infra/R
 ```
 
 ### T43 · Zerar os 11 erros do ruff no backend e fixar a versão do ruff no CI
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-46
 - **Papel:** Engenheiro Backend
 - **Depende:** —
@@ -387,7 +387,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T44 · Restore: abortar quando o dump pre-restore falhar e aplicar retenção aos pre-restore-*
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-45
 - **Papel:** Engenheiro DevOps
 - **Depende:** —
