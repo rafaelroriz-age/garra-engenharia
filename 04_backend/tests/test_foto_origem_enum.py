@@ -9,9 +9,9 @@ import socket
 import uuid
 
 import pytest
-from app.schemas.foto import FotoRead, FotoVincularPayload
 from pydantic import ValidationError
 
+from app.schemas.foto import FotoRead, FotoVincularPayload
 from tests.test_fotos import auth_headers, client  # noqa: F401  (fixture e cliente de teste)
 
 VALORES_VALIDOS = ["upload_manual", "lightshot", "clipboard"]

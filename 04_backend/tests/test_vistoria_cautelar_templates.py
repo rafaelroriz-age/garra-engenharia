@@ -17,6 +17,7 @@ import zipfile
 from pathlib import Path
 
 import pytest
+
 from app.scripts.build_vistoria_cautelar_templates import (
     DOCX_TEMPLATE,
     HTML_TEMPLATE,
@@ -216,7 +217,8 @@ def pdf_vistoria(tmp_path_factory: pytest.TempPathFactory) -> Path:
         _texto(31, 786, "F4", 15, "CREA: 1234567890-D/XX", AZUL_CAPA),
         _texto(450, 804, "F4", 15.4, "JUNHO DE 2026", BRANCO),
     ]
-    folha_de_rosto = _moldura(1) + [
+    folha_de_rosto = [
+        *_moldura(1),
         _texto(129, 139, "F2", 36, "LAUDO TÉCNICO DE"),
         _texto(223, 187, "F2", 36, "VISTORIA"),
         _texto(156, 242, "F2", 36, "CAUTELAR PARA"),
@@ -225,7 +227,7 @@ def pdf_vistoria(tmp_path_factory: pytest.TempPathFactory) -> Path:
         _texto(130, 442, "F2", 36, "Condomínio Fictício"),
         _texto(256, 658, "F2", 18, "Junho de 2026"),
     ]
-    sumario = _moldura(2) + [_texto(85, 118, "F2", 16, "SUMÁRIO")]
+    sumario = [*_moldura(2), _texto(85, 118, "F2", 16, "SUMÁRIO")]
     for indice, (numero, texto, x) in enumerate(
         [("1.", "INTRODUÇÃO", 85), ("1.1.", "Histórico", 96), ("2.", "CONSIDERAÇÕES", 85), ("5.1.1.", "Constatações", 107)]
     ):
@@ -287,7 +289,7 @@ def pdf_vistoria(tmp_path_factory: pytest.TempPathFactory) -> Path:
         _texto(335, 590, "F1", 12, "Isolar e proteger"),
     ]
     paginas.append(conclusao)
-    encerramento = _pagina_de_texto(12, [("7.", "ENCERRAMENTO")]) + [
+    encerramento = [*_pagina_de_texto(12, [("7.", "ENCERRAMENTO")]),
         _imagem(341, 478, 138, 80),
         _texto(251, 518, "F1", 12, "_" * 48),
         _texto(440, 535, "F2", 12, "Fulano de Tal"),

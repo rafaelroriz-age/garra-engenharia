@@ -78,12 +78,12 @@ RE_DATA_EXTENSO = re.compile(rf"\b({MESES})\s+de\s+\d{{4}}\b", re.IGNORECASE)
 RE_PONTILHADO = re.compile(r"\.{5,}")
 RE_SUMARIO = re.compile(r"^\s*sum[áa]rio\s*$", re.IGNORECASE)
 RE_LINHA_ASSINATURA = re.compile(r"^_{10,}$")
-RE_SEPARADOR_LEGENDA = re.compile(r"^figura\s+\d+\s*([-–—])", re.IGNORECASE)
+RE_SEPARADOR_LEGENDA = re.compile(r"^figura\s+\d+\s*([-–—])", re.IGNORECASE)  # noqa: RUF001 - travessão real do texto do laudo
 RE_FONTE_LEGENDA = re.compile(r"(Fonte:\s*[^.]{1,40}\.)\s*$")
 RE_SECAO_FOTOGRAFICA = re.compile(r"fotogr[áa]fico", re.IGNORECASE)
 #: "10.1. Parecer Técnico — Recebimento Parcial com Ressalvas": o que vem depois do
 #: travessão é o resultado do caso, não rótulo fixo.
-RE_COMPLEMENTO_TITULO = re.compile(r"\s+([—–])\s+")
+RE_COMPLEMENTO_TITULO = re.compile(r"\s+([—–])\s+")  # noqa: RUF001 - travessão real do título do laudo
 
 # --- Placeholders Jinja2 que substituem dado pessoal/do caso ----------------------------
 PH_NOME = "{{ responsavel.nome }}"

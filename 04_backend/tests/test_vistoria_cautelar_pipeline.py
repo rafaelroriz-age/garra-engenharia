@@ -130,7 +130,7 @@ def test_html_renderiza_contexto_com_autoescape_e_fotos(contexto, fotos_bytes):
 
 def test_html_foto_ausente_levanta_keyerror(contexto, fotos_bytes):
     del fotos_bytes["fotos/2.jpg"]
-    with pytest.raises(KeyError, match="fotos/2.jpg"):
+    with pytest.raises(KeyError, match=r"fotos/2.jpg"):
         pipeline.renderizar_html(contexto, fotos_bytes)
 
 
@@ -160,7 +160,7 @@ def test_docx_gera_arquivo_com_texto_e_metricas(contexto, fotos_bytes, tmp_path)
 
 def test_docx_foto_ausente_levanta_keyerror(contexto, fotos_bytes, tmp_path):
     del fotos_bytes["fotos/1.jpg"]
-    with pytest.raises(KeyError, match="fotos/1.jpg"):
+    with pytest.raises(KeyError, match=r"fotos/1.jpg"):
         pipeline.gerar_docx(contexto, fotos_bytes, tmp_path / "x.docx")
 
 

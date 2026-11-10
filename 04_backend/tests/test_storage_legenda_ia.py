@@ -1,8 +1,9 @@
 """Testes do `S3StorageClient` com cliente S3 falso (BL-07, fluxo de legendas/
 artefatos de IA). Não exigem MinIO nem PostgreSQL."""
 import pytest
-from app.services.storage.s3_client import S3StorageClient
 from botocore.exceptions import ClientError
+
+from app.services.storage.s3_client import S3StorageClient
 
 
 class _FakePaginator:
