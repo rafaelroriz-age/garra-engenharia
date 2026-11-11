@@ -134,11 +134,20 @@ async def cenario():
             prazo_dias=60,
             art_fiscalizacao="ART-BL13",
         )
-        s.add(contrato)
+        # `inspecoes.contrato_id` é UNIQUE (contrato 1:1 inspeção): uma inspeção por contrato.
+        contrato_ltip = Contrato(
+            edificacao_id=edificacao.id,
+            fiscal_id=fiscal.id,
+            contratante_id=contratante.id,
+            numero=f"CT-BL13-LTIP-{sufixo}",
+            tipo_servico="Inspeção predial",
+            status="em_andamento",
+        )
+        s.add_all([contrato, contrato_ltip])
         await s.commit()
 
         rfo = Inspecao(contrato_id=contrato.id, tipo="RFO", status="em_andamento")
-        ltip = Inspecao(contrato_id=contrato.id, tipo="LTIP", status="em_andamento")
+        ltip = Inspecao(contrato_id=contrato_ltip.id, tipo="LTIP", status="em_andamento")
         s.add_all([rfo, ltip])
         await s.commit()
 
@@ -155,7 +164,7 @@ async def cenario():
         await s.execute(delete(Foto).where(Foto.visita_id == visita.id))
         await s.execute(delete(Visita).where(Visita.id == visita.id))
         await s.execute(delete(Inspecao).where(Inspecao.id.in_(inspecoes)))
-        await s.execute(delete(Contrato).where(Contrato.id == contrato.id))
+        await s.execute(delete(Contrato).where(Contrato.id.in_([contrato.id, contrato_ltip.id])))
         await s.execute(delete(Edificacao).where(Edificacao.id == edificacao.id))
         await s.execute(delete(Responsavel).where(Responsavel.id.in_([contratante.id, fiscal.id])))
         await s.execute(delete(Usuario).where(Usuario.id.in_([u.id for u in usuarios.values()])))

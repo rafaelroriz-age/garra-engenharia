@@ -4,6 +4,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
+from app.schemas.portal import PortalDownloadRead
+
 
 class RelatorioBase(BaseModel):
     inspecao_id: uuid.UUID
@@ -46,3 +48,19 @@ class RelatorioEmitidoRead(BaseModel):
     tem_pdf: bool
     tem_docx: bool
     criado_em: datetime | None = None
+
+
+class RelatorioVersaoRead(BaseModel):
+    """Item de `GET /inspecoes/{id}/relatorios` (V1-02): versão emitida, sem as chaves do storage."""
+
+    id: uuid.UUID
+    tipo: str
+    versao: str
+    status: str
+    emitido_em: datetime | None = None
+    tem_pdf: bool
+    tem_docx: bool
+
+
+class RelatorioDownloadRead(PortalDownloadRead):
+    """URL pré-assinada de download para a equipe interna (V1-02); mesmo formato do portal."""
