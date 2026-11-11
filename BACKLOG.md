@@ -1080,7 +1080,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T59 · LTIP e RFIP: contexto a partir do banco e registro na emissão
-- **Status:** todo
+- **Status:** doing
 - **Origem:** V1-03
 - **Papel:** Engenheiro Backend
 - **Depende:** T57, T58
@@ -1125,7 +1125,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T62 · Frontend: tela de relatório (textos, emissão, versões e download)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** V1-06
 - **Papel:** Engenheiro Frontend
 - **Depende:** T57, T58
@@ -1219,7 +1219,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T68 · Legenda IA: telemetria de custo (`chamadas_ia`), cache local de resposta e resumo de uso
-- **Status:** todo
+- **Status:** doing
 - **Origem:** IA-04
 - **Papel:** Engenheiro Backend
 - **Depende:** T65, T57, T58
