@@ -1001,7 +1001,7 @@ Siga o agente backend de .github/agents/ e a 'Regra de pronto' do BACKLOG.md. Co
 ```
 
 ### T54 · Portal do Cliente: tratar o perfil na interface (redirecionar quem não é cliente)
-- **Status:** doing
+- **Status:** done
 - **Origem:** T41
 - **Papel:** Engenheiro Frontend
 - **Depende:** —
