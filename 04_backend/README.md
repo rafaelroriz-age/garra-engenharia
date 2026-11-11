@@ -342,4 +342,4 @@ Para rodar os testes de lacuna: `docker compose up -d` em `05_infra/`, `alembic 
 
 A suíte completa do backend não foi validada numa única execução: o venv do checkout principal estava sem `greenlet` funcional, houve interrupção por falta de memória e testes assíncronos falham com `RuntimeError: There is no current event loop` quando um teste usa `asyncio.run`. `ruff check .` ainda acusa erros preexistentes fora das áreas tocadas.
 
-> **Lint (T39, 2026-11-07):** `ruff check .` (ruff 0.17.3) acusa hoje 11 erros em arquivos novos (vistorias e testes), então o passo de lint do CI segue não bloqueante. Plano em DEC-46 e em [ci-lint-bloqueante.md](../00_docs/backlog-auto/ci-lint-bloqueante.md).
+> **Lint (T39, 2026-11-07; T43, 2026-11-10):** `ruff check .` (ruff 0.15.1, com `ruff.toml`) sai com 0 achados e o CI fixa `ruff==0.15.1`; o passo segue não bloqueante até a aprovação da DEC-46. Plano em DEC-46 e em [ci-lint-bloqueante.md](../00_docs/backlog-auto/ci-lint-bloqueante.md).

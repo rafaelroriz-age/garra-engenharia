@@ -1,4 +1,6 @@
-# Limpeza de lint do backend (DEC-46 / T39)
+# Limpeza de lint do backend (DEC-46 / T43)
+
+> **Nota do fechamento (2026-11-10):** as medições abaixo (214 → 152) foram feitas num worktree sem `04_backend/ruff.toml`. Depois da integração com a `main`, que traz o `ruff.toml` da T04, `ruff check 04_backend` (ruff 0.15.1) sai com **0 achados**. As pendências 2 a 6 abaixo dizem respeito àquele estado intermediário e ficam como histórico; permanecem válidos o pin `ruff==0.15.1` e o `continue-on-error` mantido (DEC-46).
 
 Tarefa de lote: reduzir os achados de `ruff check .` em `04_backend` e fixar a versão do ruff no CI.
 Status ao final desta execução: **parcial**. Os achados listados na DEC-46 foram zerados, mas o `ruff check .` ainda reporta achados de outras regras (ver "Pendências"). Testes **não rodaram** (PostgreSQL de `localhost:5433` estava fechado).

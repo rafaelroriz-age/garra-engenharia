@@ -80,7 +80,7 @@ last_updated: 2026-09-17
 | BL-42 | RBAC — perfil `auxiliar` (escrita limitada de dados de campo + autoria `criado_por_id`) | RN-18, DEC-27 | Engenheiro Backend + Frontend |
 | BL-20 | Definir preferência de hospedagem (Render) | — | Gestor de Projeto |
 | BL-25 | Repositório Git remoto no GitHub | DEC-14 | Engenheiro DevOps |
-| BL-26 | `ci.yml` (lint, testes, build, scan Trivy) (lint ainda não bloqueante: 11 erros, T39) | DEC-14 | Engenheiro DevOps |
+| BL-26 | `ci.yml` (lint, testes, build, scan Trivy) (ruff zerado e fixado em 0.15.1, T43; lint ainda não bloqueante, DEC-46) | DEC-14 | Engenheiro DevOps |
 | BL-28 | `cd-staging.yml`/`cd-production.yml` (reavaliados) | DEC-14, DEC-17 | Engenheiro DevOps |
 | BL-21 | Testes E2E dos fluxos RFO e LTIP (Playwright) | RNF-06, DEC-23 | Engenheiro de Software |
 | BL-22 | Benchmark de geração de PDF/DOCX (191 páginas, 570 fotos) — re-medido (T17): LTIP violava RNF-06; T20 reduziu para 11,6 s (239 fotos) e 19,3 s (~200 páginas) | RNF-06, R-03 | Engenheiro de Software |
