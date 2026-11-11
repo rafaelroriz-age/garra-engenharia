@@ -1065,7 +1065,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T58 · Emissão genérica por tipo: registro de emissores, rota por tipo, listagem de versões e download interno
-- **Status:** doing
+- **Status:** done
 - **Origem:** V1-02
 - **Papel:** Engenheiro Backend
 - **Depende:** —
