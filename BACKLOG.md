@@ -1031,7 +1031,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T56 · Fotos no DOCX do LTIP
-- **Status:** doing
+- **Status:** done
 - **Origem:** T20
 - **Papel:** Engenheiro Backend
 - **Depende:** —
