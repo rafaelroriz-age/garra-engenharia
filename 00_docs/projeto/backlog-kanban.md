@@ -88,7 +88,7 @@ last_updated: 2026-09-17
 | BL-31 | Editor de anotação de fotos (Fabric.js) | RF-14, RN-15, DEC-19 | Engenheiro Frontend |
 | BL-40 | Template DOCX do Contrato de Prestação de Serviços | Administrativo | Engenheiro Backend |
 | BL-12 | Prototipagem do template HTML/CSS do RFO para PDF (WeasyPrint) — template do RFIP entregue em 2026-11-04 (T13), `rfip_pipeline.py` entregue (T18); faltam mapeamento banco → contexto e conferência visual (HT-09) | RF-06, RNF-03, DEC-01 | Prototipagem e Documentação para Cliente |
-| BL-13 | Geração de DOCX do RFO via docxtpl (contexto a partir do banco pronto, T45; endpoint de emissão na T46) | RF-06, DEC-04 | Engenheiro Backend |
+| BL-13 | Geração de DOCX do RFO via docxtpl (contexto a partir do banco pronto, T45; endpoint de emissão do RFO feito na T46, testes de integração ainda não executados) | RF-06, DEC-04 | Engenheiro Backend |
 
 ---
 
