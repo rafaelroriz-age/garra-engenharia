@@ -67,13 +67,20 @@ def _fotos_ordenadas(fotos: list[Foto]) -> list[dict[str, Any]]:
     return [_foto_ctx(f) for f in ordenadas]
 
 
+def _texto_ou_traco(valor: str | None) -> str:
+    """DEC-33: campo vazio (None, '' ou só espaços) vira '—'; demais valores seguem inalterados."""
+    if valor is None or not valor.strip():
+        return "—"
+    return valor
+
+
 def _executor_ctx(executor: ContratoExecutor) -> dict[str, Any]:
     legal, rte = executor.responsavel_legal, executor.rte
     return {
         "razao_social": executor.razao_social,
         "cnpj": executor.cnpj,
         "endereco": executor.endereco,
-        "art_execucao": executor.art_execucao,
+        "art_execucao": _texto_ou_traco(executor.art_execucao),
         "responsavel_legal": {"nome": legal.nome, "cpf_cnpj": legal.cpf_cnpj, "crea": legal.crea} if legal else None,
         "rte": {"nome": rte.nome, "crea": rte.crea} if rte else None,
     }
