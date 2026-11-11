@@ -8,6 +8,8 @@ from types import SimpleNamespace
 
 import pytest
 import pytest_asyncio
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+
 from app.core.errors import ConflictError, NotFoundError
 from app.models import (
     Contrato,
@@ -25,7 +27,6 @@ from app.models import (
 )
 from app.services.report_generator import rfo_pipeline
 from app.services.report_generator.rfo_contexto import legenda_aprovada, montar_contexto_rfo
-from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
 async def _criar_inspecao(db, tipo: str = "RFO"):
