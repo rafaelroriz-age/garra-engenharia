@@ -6,8 +6,9 @@ Em desenvolvimento local (fora de Docker), copie `04_backend/.env.example` para
 injetadas diretamente pelo serviço `backend` e este arquivo `.env` não é necessário.
 """
 from functools import lru_cache
+from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -55,6 +56,15 @@ class Settings(BaseSettings):
     legenda_ia_saida_max_itens: int = Field(default=20, ge=1)
     legenda_ia_saida_max_caracteres_item: int = Field(default=300, ge=1)
 
+    # --- Legenda por IA: provedor (B-04 decidido: DeepSeek Platform API, V1-07) -----
+    legenda_ia_provedor: Literal["fake", "deepseek"] = "fake"
+    deepseek_api_key: SecretStr | None = None
+    deepseek_base_url: str = "https://api.deepseek.com"
+    deepseek_modelo: str = "deepseek-flash"
+    deepseek_timeout_s: float = Field(default=30.0, gt=0)
+    # A doc oficial não confirma modelo com visão: por padrão só texto (modo='texto').
+    deepseek_enviar_imagem: bool = False
+
     @property
     def database_url(self) -> str:
         """URL de conexão assíncrona do SQLAlchemy (driver `asyncpg`)."""
@@ -89,6 +99,12 @@ class Settings(BaseSettings):
                 )
             if "*" in self.cors_origins_list:
                 raise ValueError("BACKEND_CORS_ORIGINS não pode ser '*' fora de desenvolvimento.")
+            chave = self.deepseek_api_key.get_secret_value().strip() if self.deepseek_api_key else ""
+            if self.legenda_ia_provedor == "deepseek" and not chave:
+                raise ValueError(
+                    "LEGENDA_IA_PROVEDOR=deepseek exige DEEPSEEK_API_KEY em ENVIRONMENT="
+                    f"'{self.environment}'. Defina a chave ou use LEGENDA_IA_PROVEDOR=fake."
+                )
         return self
 
 

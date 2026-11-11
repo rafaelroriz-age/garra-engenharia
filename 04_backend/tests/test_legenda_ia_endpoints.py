@@ -23,7 +23,7 @@ from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
-from app.core.config import get_settings
+from app.core.config import Settings, get_settings
 from app.core.database import get_db
 from app.core.security import create_access_token, hash_password
 from app.main import app
@@ -247,7 +247,12 @@ def test_gerar_sem_prompt_ativo_retorna_erro_de_dominio(usuarios, nome_prompt, f
     assert fake_ia.chamadas == 0
 
 
-def test_gerar_sem_cliente_configurado_retorna_503(usuarios, prompt_ativo, criar_foto):
+def test_gerar_sem_cliente_configurado_retorna_503(usuarios, prompt_ativo, criar_foto, monkeypatch):
+    # Provedor deepseek sem chave (V1-07): sem override do cliente, a rota responde 503.
+    monkeypatch.setattr(
+        "app.services.legenda_ia.get_settings",
+        lambda: Settings(legenda_ia_provedor="deepseek", deepseek_api_key=None),
+    )
     foto_id = _nova_foto(criar_foto)
 
     response = _gerar(foto_id, usuarios["auditor"], {"legenda_bruta": "x"})

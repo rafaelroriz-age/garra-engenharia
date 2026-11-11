@@ -1,7 +1,7 @@
 """Cliente de legenda por IA: contrato, proteções e dependência FastAPI (BL-37, DEC-37, DEC-42).
 
-Não há provedor escolhido (B-04): `obter_cliente_provedor` responde 503. O adapter real entra
-nela, e não em `get_legenda_ia_client`, que é o ponto que aplica o limite de taxa e o saneamento.
+Provedor (B-04: DeepSeek) escolhido em `obter_cliente_provedor` por `LEGENDA_IA_PROVEDOR`, e não
+em `get_legenda_ia_client`, que é o ponto que aplica o limite de taxa e o saneamento.
 """
 from fastapi import Depends
 
@@ -13,6 +13,7 @@ from app.services.legenda_ia.contrato import (
     LegendaIAClient,
     LegendaIAResultado,
 )
+from app.services.legenda_ia.deepseek import DeepSeekLegendaIAClient
 from app.services.legenda_ia.saneamento import (
     ClienteLegendaIAProtegido,
     construir_limites_saida,
@@ -20,6 +21,7 @@ from app.services.legenda_ia.saneamento import (
 
 __all__ = [
     "ClienteLegendaIAProtegido",
+    "DeepSeekLegendaIAClient",
     "FakeLegendaIAClient",
     "LegendaIAClient",
     "LegendaIAResultado",
@@ -29,13 +31,20 @@ __all__ = [
 
 
 def obter_cliente_provedor() -> LegendaIAClient:
-    """Cliente do provedor de LLM (DEC-37 DP-6).
+    """Cliente do provedor de LLM, escolhido por `LEGENDA_IA_PROVEDOR` (DEC-37 DP-6, B-04).
 
-    Enquanto o provedor não for escolhido (B-04) não há adapter concreto: a rota responde 503
-    (RFC 7807). O adapter real (BL-34) passará a ser devolvido aqui.
+    `deepseek` com chave devolve o adapter real; `fake` só vale em desenvolvimento; `deepseek`
+    sem chave (só possível fora de produção) ou `fake` em produção respondem 503 (RFC 7807).
     """
+    settings = get_settings()
+    if settings.legenda_ia_provedor == "deepseek":
+        if settings.deepseek_api_key and settings.deepseek_api_key.get_secret_value().strip():
+            return DeepSeekLegendaIAClient.de_settings(settings)
+    elif settings.is_development:
+        return FakeLegendaIAClient()
     raise DomainError(
-        "Nenhum provedor de IA está configurado para gerar legendas (decisão B-04 pendente).",
+        "Nenhum provedor de IA está configurado para gerar legendas "
+        "(defina LEGENDA_IA_PROVEDOR=deepseek e DEEPSEEK_API_KEY).",
         type_suffix="legenda-ia-indisponivel",
         title="Legenda por IA indisponível",
         status_code=503,

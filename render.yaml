@@ -113,6 +113,19 @@ services:
         value: "20"
       - key: LEGENDA_IA_SAIDA_MAX_CARACTERES_ITEM
         value: "300"
+      # Provedor de legenda por IA (B-04): DeepSeek. Chave é segredo: sync false.
+      - key: LEGENDA_IA_PROVEDOR
+        value: fake
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: DEEPSEEK_BASE_URL
+        value: https://api.deepseek.com
+      - key: DEEPSEEK_MODELO
+        value: deepseek-flash
+      - key: DEEPSEEK_TIMEOUT_S
+        value: "30"
+      - key: DEEPSEEK_ENVIAR_IMAGEM
+        value: "false"
       # Armazenamento de fotos/documentos (MinIO/S3, DEC-02) FICOU FORA do
       # escopo deste Blueprint (só backend+frontend+banco foram pedidos).
       # Sem estas variáveis, a API sobe normalmente, mas os endpoints de
