@@ -1050,7 +1050,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ## Bloco D — Entrega v1.0: emissão dos 5 relatórios
 
 ### T57 · Fundação de dados da emissão: tipo de serviço normalizado, conteúdo narrativo do relatório e campos do responsável
-- **Status:** todo
+- **Status:** doing
 - **Origem:** V1-01
 - **Papel:** Engenheiro Backend
 - **Depende:** —
@@ -1140,7 +1140,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T63 · Legenda por IA: cliente real da DeepSeek Platform API
-- **Status:** todo
+- **Status:** doing
 - **Origem:** V1-07
 - **Papel:** Engenheiro Backend
 - **Depende:** —
