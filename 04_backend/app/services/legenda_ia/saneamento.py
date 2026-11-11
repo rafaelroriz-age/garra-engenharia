@@ -18,6 +18,7 @@ from dataclasses import dataclass, replace
 
 from app.core.config import Settings
 from app.core.errors import DomainError
+from app.services.legenda_ia.contexto import ContextoLegenda
 from app.services.legenda_ia.contrato import LegendaIAClient, LegendaIAResultado
 
 DELIMITADOR_INICIO = "<<<LEGENDA_BRUTA_INICIO>>>"
@@ -153,10 +154,14 @@ class ClienteLegendaIAProtegido:
         self._cliente = cliente
         self._limites = limites
 
+    @property
+    def enviar_imagem(self) -> bool:
+        return bool(getattr(self._cliente, "enviar_imagem", False))
+
     async def gerar_legenda(
-        self, imagem: bytes, prompt: str, legenda_bruta: str | None = None
+        self, contexto: ContextoLegenda, prompt: str, imagem: bytes | None = None
     ) -> LegendaIAResultado:
-        resultado = await self._cliente.gerar_legenda(
-            imagem, prompt, delimitar_legenda_bruta(legenda_bruta)
-        )
+        # Só a legenda bruta é delimitada; o resto do contexto vai como dados estruturados.
+        protegido = replace(contexto, legenda_bruta=delimitar_legenda_bruta(contexto.legenda_bruta))
+        resultado = await self._cliente.gerar_legenda(protegido, prompt, imagem)
         return sanear_resultado(resultado, self._limites)

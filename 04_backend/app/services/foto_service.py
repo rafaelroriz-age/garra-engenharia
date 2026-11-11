@@ -16,7 +16,7 @@ from app.core.errors import ConflictError, DomainError, NotFoundError
 from app.models import Foto, Ocorrencia, Usuario, Visita
 from app.repositories import foto_repository
 from app.services import image_processing, prompt_ia_service
-from app.services.legenda_ia import LegendaIAClient
+from app.services.legenda_ia import LegendaIAClient, montar_contexto
 from app.services.storage.base import StorageClient
 from app.services.storage.s3_client import MAX_UPLOAD_SIZE_BYTES, ObjectNotFoundError
 
@@ -200,21 +200,25 @@ async def gerar_legenda_ia(
     if foto is None:
         raise NotFoundError(f"Foto '{foto_id}' não encontrada.", type_suffix="foto-nao-encontrada")
     prompt = await prompt_ia_service.obter_ativo(db, PROMPT_LEGENDA_IA_NOME)
-    try:
-        imagem = storage.download(foto.storage_key)
-    except ObjectNotFoundError as exc:
-        raise DomainError(
-            "O arquivo da foto não existe no storage.", type_suffix="storage-key-inexistente",
-            title="Foto inválida",
-        ) from exc
+    imagem: bytes | None = None
+    if getattr(cliente, "enviar_imagem", False):  # DEEPSEEK_ENVIAR_IMAGEM=true; senão só texto
+        try:
+            imagem = storage.download(foto.storage_key)
+        except ObjectNotFoundError as exc:
+            raise DomainError(
+                "O arquivo da foto não existe no storage.", type_suffix="storage-key-inexistente",
+                title="Foto inválida",
+            ) from exc
     legenda_bruta = campos["legenda_bruta"] if "legenda_bruta" in campos else foto.legenda_bruta
-    resultado = await cliente.gerar_legenda(imagem, prompt.conteudo, legenda_bruta)
+    contexto = await montar_contexto(db, foto, legenda_bruta)
+    resultado = await cliente.gerar_legenda(contexto, prompt.conteudo, imagem)
 
     if "legenda_bruta" in campos:
         foto.legenda_bruta = legenda_bruta
     foto.legenda_ia_sugerida = resultado.legenda_sugerida
     foto.alertas_ia = list(resultado.alertas)
     foto.pendencias_ia = list(resultado.pendencias)
+    foto.nivel_certeza_ia = resultado.nivel_certeza
     foto.prompt_ia_id = prompt.id
     foto.prompt_conteudo_hash = prompt_ia_service.calcular_hash(prompt.conteudo)
     foto.legenda_ia_gerada_em = datetime.now(UTC)

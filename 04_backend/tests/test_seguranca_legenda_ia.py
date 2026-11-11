@@ -41,12 +41,12 @@ client = TestClient(app)
 class _ClienteLongo:
     """Cliente de IA que devolve uma sugestão muito maior que o limite da legenda (500)."""
 
-    async def gerar_legenda(self, imagem, prompt, legenda_bruta=None):
+    async def gerar_legenda(self, contexto, prompt, imagem=None):
         return LegendaIAResultado(legenda_sugerida="A" * 2000, alertas=["x"] * 500)
 
 
 class _ClienteQuebrado:
-    async def gerar_legenda(self, imagem, prompt, legenda_bruta=None):
+    async def gerar_legenda(self, contexto, prompt, imagem=None):
         raise RuntimeError("401 invalid api key sk-SEGREDO-DO-PROVEDOR")
 
 

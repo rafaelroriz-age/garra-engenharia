@@ -24,6 +24,7 @@ from app.models import Foto
 from app.services import foto_service, prompt_ia_service
 from app.services.legenda_ia import (
     ClienteLegendaIAProtegido,
+    ContextoLegenda,
     FakeLegendaIAClient,
     LegendaIAClient,
     LegendaIAResultado,
@@ -155,8 +156,10 @@ class _ClienteGravador:
         self.resultado = resultado or LegendaIAResultado(legenda_sugerida="Fissura na viga.")
         self.chamadas: list[dict] = []
 
-    async def gerar_legenda(self, imagem, prompt, legenda_bruta=None) -> LegendaIAResultado:
-        self.chamadas.append({"imagem": imagem, "prompt": prompt, "legenda_bruta": legenda_bruta})
+    async def gerar_legenda(self, contexto, prompt, imagem=None) -> LegendaIAResultado:
+        self.chamadas.append(
+            {"imagem": imagem, "prompt": prompt, "legenda_bruta": contexto.legenda_bruta}
+        )
         return self.resultado
 
 
@@ -194,7 +197,11 @@ def rota(monkeypatch):
     async def prompt_ativo(_db, _nome):
         return SimpleNamespace(id=uuid.uuid4(), conteudo=PROMPT)
 
+    async def montar(_db, foto, legenda_bruta=None):
+        return ContextoLegenda(legenda_bruta=legenda_bruta)
+
     monkeypatch.setattr(foto_service.foto_repository, "get_by_id", buscar_foto)
+    monkeypatch.setattr(foto_service, "montar_contexto", montar)
     monkeypatch.setattr(prompt_ia_service, "obter_ativo", prompt_ativo)
 
     relogio = RelogioFalso()
@@ -239,6 +246,7 @@ def test_geracao_n_mais_um_do_mesmo_usuario_responde_429_rfc7807(rota):
 
 
 def test_429_nao_baixa_imagem_nem_chama_o_provedor(rota):
+    rota.cliente.enviar_imagem = True  # só baixa a foto no modo imagem (DEEPSEEK_ENVIAR_IMAGEM)
     foto_id = rota.nova_foto()
     assert [rota.gerar(foto_id).status_code for _ in range(3)] == [200, 200, 429]
 
@@ -483,7 +491,7 @@ async def test_wrapper_cumpre_o_contrato_e_delega_ao_cliente():
     fake = FakeLegendaIAClient()
     cliente = ClienteLegendaIAProtegido(fake, LIMITES_SAIDA)
 
-    resultado = await cliente.gerar_legenda(b"img", PROMPT, None)
+    resultado = await cliente.gerar_legenda(ContextoLegenda(), PROMPT)
 
     assert isinstance(cliente, LegendaIAClient)
     assert fake.chamadas == 1
@@ -516,3 +524,10 @@ def test_defaults_seguros_e_regras_lidas_das_settings():
 def test_configuracao_invalida_impede_o_boot(invalido):
     with pytest.raises(ValidationError):
         Settings(_env_file=None, **invalido)
+
+
+def test_modo_texto_nao_baixa_a_imagem_do_storage(rota):
+    rota.gerar(rota.nova_foto())
+
+    assert rota.storage.downloads == 0
+    assert rota.cliente.chamadas[0]["imagem"] is None
