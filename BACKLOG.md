@@ -1016,7 +1016,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T55 · UNIQUE(storage_key) em fotos com checagem prévia de duplicatas
-- **Status:** doing
+- **Status:** blocked
 - **Origem:** R-15
 - **Papel:** Engenheiro Backend
 - **Depende:** —
