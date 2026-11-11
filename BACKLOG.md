@@ -941,7 +941,7 @@ Siga o agente backend de .github/agents/ e a 'Regra de pronto' do BACKLOG.md. Co
 ```
 
 ### T50 · RFO: validar campos obrigatórios do template antes de gerar e responder 422
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-47
 - **Papel:** Engenheiro Backend
 - **Depende:** T48
