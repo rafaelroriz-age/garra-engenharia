@@ -28,6 +28,9 @@ Testes: `04_backend/tests/test_rfo_contexto.py`. Sem endpoint (tarefa seguinte).
 | `inspecao.id/tipo/status` | `Inspecao` |
 | `logo_data_uri` | `normalizar_contexto` (arquivo SVG) |
 
+## Correção do fechamento de lote (2026-11-10)
+A lacuna 1 e a proposta P1 abaixo **estão obsoletas**: a sessão rodou num worktree defasado. Na `main` existem `report_generator/legenda_foto.py` (`legenda_para_relatorio`, que imprime sempre `legenda` e nunca `legenda_ia_sugerida`) e DEC-37; o estado da IA é `status_validacao_ia`, e `Foto` não tem `legenda_status`. Portanto `legenda_aprovada` é permissiva e deve ser trocada por `legenda_para_relatorio` (DEC-47, item 1); a coluna `legenda_status` não é necessária. Não alterado aqui (só documentação).
+
 ## Lacunas
 1. **`legenda_foto.py` / `legenda_para_relatorio` não existem** neste repositório (busca em todo o worktree sem resultado), nem DEC-37/DP-9 em `00_docs/`. `Foto` não tem campo de status da legenda. Implementei `legenda_aprovada(foto)`: usa `foto.legenda_status` se existir (só `"aprovada"` passa); sem o campo, a legenda é tratada como aprovada. O teste de "pendente" usa objeto simulado, não banco.
 2. O template HTML do RFO não renderiza `ocorrencias` nem `observacoes_gerais`; o contexto as traz, mas hoje são ignoradas.

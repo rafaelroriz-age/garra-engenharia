@@ -649,3 +649,14 @@ last_updated: 2026-09-17
 | **Andamento (T43, 2026-11-10)** | Itens 1 e 2 feitos: `ruff check 04_backend` sai com 0 achados (ruff 0.15.1 com `04_backend/ruff.toml`) e o CI instala `ruff==0.15.1`. **Divergência:** a proposta citava 0.17.3; prevaleceu a versão realmente usada localmente. `continue-on-error: true` **mantido**: itens 3 e 4 (bloqueante e status check obrigatório) aguardam aprovação. `pytest` não rodou (PostgreSQL fechado). A decisão continua proposta. |
 | **Referência** | `00_docs/backlog-auto/ci-lint-bloqueante.md`, `00_docs/backlog-auto/ruff.md`, `00_docs/backlog-auto/lint-backend-limpeza.md` |
 
+
+## DEC-47 — Contexto do RFO: legenda pelo helper comum, validação de completude e ocorrências no RFO (proposta de T45)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-10 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | `montar_contexto_rfo` (BL-13) foi escrita num worktree defasado e declarou inexistentes `legenda_foto.py` e o campo `legenda_status`. Na `main` o helper existe (`legenda_para_relatorio`: imprime sempre `legenda`, nunca `legenda_ia_sugerida`; o estado da IA fica em `status_validacao_ia`, DEC-37) e `Foto` **não** tem `legenda_status`. O `legenda_aprovada` do contexto é, na prática, código morto permissivo. Além disso, o banco traz campos nulos (`fiscal.crea`, `art_fiscalizacao`, `objeto`, `data_inicio`, `prazo_dias`) que o template imprime vazios, e o template do RFO não renderiza `ocorrencias` nem `observacoes_gerais`. |
+| **Decisão proposta** | (1) Trocar `legenda_aprovada` por `legenda_para_relatorio` no contexto e descartar a proposta P1 do doc da T45 (nova coluna `legenda_status` **não** é necessária). (2) Validar campos obrigatórios do template antes de gerar e responder 422 (P2). (3) Decidir se o RFO imprime ocorrências (RF-04..06) ou se ficam só no LTIP (P3). |
+| **Consequências** | Sem (1) o contexto fica divergente dos demais pipelines (T36/T37). Sem (2) o PDF/DOCX sai com campos em branco ou `None`. Nada aplicado nesta etapa; (1) e (2) cabem na T46 ou numa tarefa curta. |
+| **Referência** | `00_docs/backlog-auto/rfo-contexto-banco.md` |
