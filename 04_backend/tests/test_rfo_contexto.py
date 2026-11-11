@@ -3,14 +3,16 @@
 Os testes com banco exigem o PostgreSQL de 05_infra/docker-compose.yml (localhost:5433).
 """
 import uuid
-from datetime import date
+from datetime import UTC, date, datetime
 from types import SimpleNamespace
 
 import pytest
 import pytest_asyncio
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+from sqlalchemy import delete
 
 from app.core.errors import ConflictError, NotFoundError
+from app.core.security import hash_password
 from app.models import (
     Contrato,
     ContratoExecutor,
@@ -25,8 +27,9 @@ from app.models import (
     VisitaMaoObra,
     VisitaMedicao,
 )
+from app.models.usuario import Usuario
 from app.services.report_generator import rfo_pipeline
-from app.services.report_generator.rfo_contexto import legenda_aprovada, montar_contexto_rfo
+from app.services.report_generator.rfo_contexto import montar_contexto_rfo
 
 
 async def _criar_inspecao(db, tipo: str = "RFO"):
@@ -175,7 +178,75 @@ async def test_resultado_passa_por_normalizar_e_renderizar_html(db_session, rfo_
     assert "Escarificação" in html
 
 
-def test_legenda_pendente_nao_entra():
-    assert legenda_aprovada(SimpleNamespace(legenda_status="aprovada"))
-    assert not legenda_aprovada(SimpleNamespace(legenda_status="pendente"))
-    assert legenda_aprovada(SimpleNamespace())  # sem campo de status no modelo (lacuna documentada)
+@pytest_asyncio.fixture
+async def usuario_auditor(db_session):
+    obj = Usuario(
+        nome="Auditor DEC-47",
+        email=f"auditor-dec47-{uuid.uuid4()}@garra-engenharia.com.br",
+        senha_hash=hash_password("senha-forte-123"),
+        role="auditor",
+    )
+    db_session.add(obj)
+    await db_session.commit()
+    usuario_id = obj.id
+    yield obj
+    await db_session.rollback()
+    await db_session.execute(delete(Usuario).where(Usuario.id == usuario_id))
+    await db_session.commit()
+
+
+@pytest_asyncio.fixture
+async def rfo_legendas(db_session, usuario_auditor):
+    """Uma visita com três fotos: legenda manual; IA em rascunho; IA aprovada (sem manual)."""
+    d = await _criar_inspecao(db_session)
+    visita = Visita(inspecao_id=d.inspecao.id, data=date(2026, 1, 6), servicos_executados="Teste", seq_numero=1)
+    db_session.add(visita)
+    await db_session.commit()
+    agora = datetime.now(UTC)
+    db_session.add_all(
+        [
+            # 1) legenda manual, sem sugestão de IA
+            Foto(visita_id=visita.id, storage_key="k/manual.jpg", origem="upload", ordem=1, legenda="Manual humana"),
+            # 2) IA ainda não aprovada (rascunho), sem legenda manual
+            Foto(
+                visita_id=visita.id, storage_key="k/ia-rascunho.jpg", origem="upload", ordem=2,
+                legenda_ia_sugerida="Sugestão IA rascunho", status_validacao_ia="rascunho",
+            ),
+            # 3) IA aprovada, sem legenda manual: a sugestão ainda não é legenda do relatório
+            Foto(
+                visita_id=visita.id, storage_key="k/ia-aprovada.jpg", origem="upload", ordem=3,
+                legenda_ia_sugerida="Sugestão IA aprovada", status_validacao_ia="aprovada",
+                aprovado_por_id=usuario_auditor.id, aprovado_em=agora,
+            ),
+            # 4) IA em rascunho com legenda manual: a manual é a que sai
+            Foto(
+                visita_id=visita.id, storage_key="k/ambas.jpg", origem="upload", ordem=4,
+                legenda="Manual prevalece", legenda_ia_sugerida="Sugestão ignorada", status_validacao_ia="rascunho",
+            ),
+        ]
+    )
+    await db_session.commit()
+    yield d
+    await _limpar(db_session, d)
+
+
+async def test_legenda_no_contexto_usa_legenda_para_relatorio(db_session, rfo_legendas):
+    ctx = await montar_contexto_rfo(db_session, rfo_legendas.inspecao.id)
+    fotos = {f["storage_key"]: f["legenda"] for f in ctx["visitas"][0]["fotos"]}
+    assert fotos["k/manual.jpg"] == "Manual humana"
+    assert fotos["k/ia-rascunho.jpg"] is None  # IA não aprovada nunca vai ao relatório
+    assert fotos["k/ia-aprovada.jpg"] is None  # nem IA aprovada: só `legenda` é impressa
+    assert fotos["k/ambas.jpg"] == "Manual prevalece"
+
+
+async def test_legenda_ia_nao_aparece_no_html_renderizado(db_session, rfo_legendas):
+    ctx = await montar_contexto_rfo(db_session, rfo_legendas.inspecao.id)
+    normalizado = rfo_pipeline.normalizar_contexto(ctx)
+    for foto in normalizado["visitas"][0]["fotos"]:
+        foto["data_uri"] = "data:image/jpeg;base64,AAAA"
+    env = Environment(loader=FileSystemLoader(str(rfo_pipeline.TEMPLATES_DIR)), autoescape=select_autoescape(["html", "j2"]))
+    html = env.get_template(rfo_pipeline.HTML_TEMPLATE_NAME).render(**normalizado)
+    assert "Manual humana" in html
+    assert "Sugestão IA rascunho" not in html
+    assert "Sugestão IA aprovada" not in html
+    assert "Sugestão ignorada" not in html
