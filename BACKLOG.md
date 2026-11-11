@@ -1189,7 +1189,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T66 · Legenda IA: prompt compacto com prefixo estável e seed versionado de `legenda_foto`
-- **Status:** doing
+- **Status:** done
 - **Origem:** IA-02
 - **Papel:** Engenheiro Backend
 - **Depende:** T65
