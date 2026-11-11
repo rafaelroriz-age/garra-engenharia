@@ -35,7 +35,7 @@ TOLERANCIA_A4_PT = 2.0
 
 #: Título numerado de seção: "1.", "4.2.", "5.3.1." — o nível é a profundidade da numeração.
 RE_TITULO_NUMERADO = re.compile(r"^\d+(\.\d+)*\.$")
-#: Legenda de figura do laudo ("Figura 2 – Imagem do imóvel...").  # noqa: RUF003 - travessão é texto literal do modelo do cliente
+#: Legenda de figura do laudo ("Figura 2 - Imagem do imóvel...").
 RE_LEGENDA_FIGURA = re.compile(r"^figura\b", re.IGNORECASE)
 #: Rótulo da ficha fotográfica do relatório por sistema (RN-11).
 RE_ROTULO_FOTO = re.compile(r"^\s*foto\s*n?º?\s*(\d+)\s*$", re.IGNORECASE)

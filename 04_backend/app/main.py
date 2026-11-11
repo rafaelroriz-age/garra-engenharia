@@ -93,7 +93,7 @@ async def health() -> dict:
     try:
         async with engine.connect() as connection:
             await connection.execute(text("SELECT 1"))
-    except Exception:  # qualquer falha de conectividade deve virar "unavailable"
+    except Exception:
         logger.exception("Healthcheck: falha ao conectar ao PostgreSQL")
         database_status = "unavailable"
 

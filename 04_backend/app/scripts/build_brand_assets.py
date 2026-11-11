@@ -28,7 +28,8 @@ import hashlib
 import json
 import sys
 from collections import Counter
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
+from itertools import pairwise
 from pathlib import Path
 from typing import Any
 
@@ -164,7 +165,7 @@ def linha_de_corte(rotulos: list[list[int]]) -> int:
         raise MarcaError("Não há faixa vazia separando o símbolo do nome da marca.")
     melhor_inicio = inicio = vazias[0]
     melhor_tamanho = tamanho = 1
-    for anterior, atual in zip(vazias, vazias[1:]):
+    for anterior, atual in pairwise(vazias):
         if atual == anterior + 1:
             tamanho += 1
         else:

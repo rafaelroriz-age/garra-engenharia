@@ -445,8 +445,6 @@ last_updated: 2026-09-17
 | **Consequências** | **B-01 encerrado.** **BL-15 desbloqueada** (🔴 → 🟢) com escopo definido: derivar a Prioridade do Grau de Risco no momento da criação da Ocorrência, permitir sobrescrita explícita e persistir a autoria do ajuste (campos novos em `ocorrencias`, migration Alembic + ajuste de `ocorrencia_service._validar_payload`, que hoje só valida o intervalo 0-5). **BL-18 e HT-01 concluídas.** Risco **R-06 encerrado**. RN-04 e RN-13 deixam de ser `[A ESCLARECER]` em `estudo-do-contexto.md`; a Seção 6 de `arquitetura.md` deixa de listar o agente desktop de monitoramento de pasta como hipótese em aberto; `escopo.md` passa a listar "Integração API com CREA" e "Monitoramento automático de pasta de fotos" como fora de escopo por decisão, não por indefinição. Permanecem abertos apenas **B-04** (provedor de LLM, lacuna #13) e o destino externo do backup (RNF-08) — nenhum dos dois faz parte de B-01. Qualquer uma destas posições pode ser revista pelo cliente; como nenhuma delas cria estrutura nova além dos campos de auditoria de BL-15, a reversão é barata. |
 | **Referência** | `00_docs/projeto/pauta-validacao-lacunas.md` (Blocos 2 e 3), `00_docs/projeto/ata-validacao-lacunas.md`, `00_docs/estudo-do-contexto.md` RN-04, RN-13, RF-03 e §9, `00_docs/projeto/riscos.md` R-06, DEC-26, DEC-27, DEC-28 |
 
----
-
 ## DEC-30 — Marca vetorizada internamente a partir do JPEG oficial: encerramento do bloqueio B-02
 
 | Campo | Valor |
@@ -459,4 +457,194 @@ last_updated: 2026-09-17
 | **Justificativa** | A vetorização é reprodutível a partir do repositório (script + hash do original registrado), não uma conversão manual num editor gráfico — mesmo princípio de ADR-13 para o layout dos templates. Nenhuma dependência nova: o tracer usa só Pillow, já exigido pelo backend (as bibliotecas prontas de vetorização testadas quebram em processo junto do Pillow neste ambiente). Como o resultado é derivado da marca oficial, e não um redesenho, um `.ai`/`.svg` que o cliente venha a enviar continua sendo insumo **opcional** de refinamento: basta substituir os arquivos gerados. |
 | **Consequências** | **B-02 encerrado.** HT-02 fica reduzida à confirmação da versão vigente dos originais (item de gestão, sem impacto de engenharia) e BL-19 deixa de citar a logo como pendência. O cabeçalho do PDF e do DOCX passa a sair com a marca em fundo transparente — validado na amostra de HT-09 regerada nesta data. Os assets gerados são versionados; quando a marca mudar, reexecutar `python -m app.scripts.build_brand_assets` em vez de editar os arquivos à mão (os SVGs trazem cabeçalho "ARQUIVO GERADO"). O ícone da PWA (`03_frontend/public/icon.svg`, BL-41) segue sendo o símbolo simplificado, por legibilidade em 16-32 px — decisão de design mantida, não mais uma consequência da falta de vetor. |
 | **Referência** | `04_backend/app/scripts/build_brand_assets.py`, `04_backend/app/scripts/bitmap_tracer.py`, `04_backend/templates/assets/`, `04_backend/tests/test_brand_assets.py`, `00_docs/arquitetura.md` ADR-16, DEC-25/ADR-13, RN-07 |
+
+
+## DEC-31 — Ambiente de desenvolvimento reproduzível (T01, T02, T04)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Parcialmente implementada (T02 e T04 concluídas); aguarda aprovação formal do dono e o ajuste do `ci.yml` |
+| **Contexto** | O diagnóstico T01 ([diagnostico.md](../backlog-auto/diagnostico.md)) mostrou que `pytest` não coletava com pytest 9.2.0 + pytest-asyncio 0.23.3, que `ruff check .` retornava 214 achados sem configuração versionada (o resultado vinha de um `pyproject.toml` fora do repositório) e que o ambiente exige Python 3.12 e Docker. |
+| **Decisão** | (1) **Testes:** `04_backend/requirements.txt` fixa `pytest>=9.1.1,<10.0` e `pytest-asyncio>=1.4.1,<1.5`; o 0.23.x é incompatível com o pytest 9 (`'Package' object has no attribute 'obj'`) e não deve voltar. Ao atualizar qualquer um dos dois, validar com `python -m pytest --collect-only -q`. Resultado da T02: 139 testes coletados. (2) **Lint:** configuração versionada em `04_backend/ruff.toml` (`E, F, I, B, UP, RUF`, ignora só `E501`, linha 100, py312); B008 tratado com `extend-immutable-calls` para `fastapi.Depends/Query/...`; os 38 F821 eram falsos positivos de anotações em string do SQLAlchemy, resolvidos com `TYPE_CHECKING`. Resultado da T04: `ruff check .` de 214 para 0 erros, sem mudança em `upgrade()`/`downgrade()` das migrations. |
+| **Pendente** | Em `.github/workflows/ci.yml`: remover `continue-on-error: true` do passo "Lint (ruff)" e fixar a versão (`ruff==0.17.3`); é arquivo `.yml`, fora do escopo de um lote só de documentação, então fica para tarefa de código. Rodar a suíte de integração (`alembic upgrade head` + `pytest`) com a stack de `05_infra` no ar: nas duas tarefas ela não pôde ser verificada (sem Docker/schema). |
+| **Consequências** | Altera `requirements.txt`, `ruff.toml` e dezenas de arquivos `.py` (imports, anotações), sem mudança de comportamento declarada. Risco associado: R-11. |
+| **Referência** | `00_docs/backlog-auto/pytest-compat.md`, `00_docs/backlog-auto/ruff.md`, `00_docs/backlog-auto/diagnostico.md`, `04_backend/requirements.txt`, `04_backend/ruff.toml`, `.github/workflows/ci.yml` |
+
+## DEC-32 — Tratamento das vulnerabilidades do frontend (proposta de T03)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | `npm audit` em `03_frontend`: 30 pacotes (2 críticos, 11 altos, 17 moderados); em produção (`--omit=dev`), 13 pacotes. O risco real concentra-se no `next` 14.2.35 (crítico, em runtime, sem correção em 14.x); `fabric` 6.9.1 e a cadeia `canvas`/`tar` têm exposição baixa/média. Ver [npm-audit.md](../backlog-auto/npm-audit.md). |
+| **Alternativas** | (a) só `npm audit fix` sem `--force`; (b) upgrade do Next para 15.5.28+ ou 16.x (provável React 19) e do fabric para 7.4.0; (c) `npm audit fix --force` (descartada: propõe downgrades inválidos de eslint e eslint-config-next). |
+| **Decisão proposta** | (1) Rodar `npm audit fix` sem `--force` nos 5 pacotes sem major (brace-expansion, js-yaml, nanoid, postcss-selector-parser, source-map-js). (2) Tratar o upgrade do Next como prioridade antes do próximo deploy de produção, em tarefa própria. (3) Fabric 7 junto ou depois, com teste do editor de fotos (RF-14). (4) Nunca usar `--force`. (5) Opcional: gate de CI com `npm audit --omit=dev --audit-level=critical`. |
+| **Consequências** | A T03 não alterou nenhum arquivo do frontend (só análise). Os upgrades majors exigem teste de todas as rotas e do editor de anotação. Risco associado: R-12. | **Atualização (T07, 2026-11-04):** o item 1 foi aplicado (`package-lock.json`, 19 pacotes, sem major): achados 30 → 26, produção 13 → 10. Exceção: a cópia `brace-expansion` 1.1.16 permanece (eslint 8 e cadeia fabric 6 → canvas) até os itens 2–4. Ver [npm-audit-fix.md](../backlog-auto/npm-audit-fix.md).
+| **Referência** | `00_docs/backlog-auto/npm-audit.md`, `03_frontend/package.json`, `03_frontend/Dockerfile.render` |
+
+## DEC-33 — Pontuação GUT calculada no pipeline do LTIP e campos vazios como "—" (proposta de T05)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda confirmação do cliente) |
+| **Contexto** | O `ltip_pipeline.py` precisa imprimir a pontuação GUT na ficha da ocorrência, mas ela não é persistida e `estudo-do-contexto.md` não define a fórmula (RN-04 trata só da prioridade). O template DOCX não tem fallback e imprimiria `None` em campo vazio. |
+| **Decisão proposta** | (1) `pontuacao_gut` = G×U×T quando as três notas existem, calculada no pipeline. (2) Campo vazio ou `None` aparece como `—` no HTML e no DOCX; `prioridade = 0` (não aplicável) é preservada. |
+| **Consequências** | Se o cliente adotar outra fórmula, só o pipeline muda. |
+| **Referência** | `00_docs/backlog-auto/ltip-pipeline.md`, `04_backend/app/services/report_generator/ltip_pipeline.py` |
+
+## DEC-34 — Correção das lacunas de validação de Ocorrências (proposta de T06)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda aprovação do dono). Correções L1–L7 **aplicadas no código pela T08** em 2026-11-04, mas sem os testes executados (sem PostgreSQL); P1–P4 seguem sem decisão |
+| **Contexto** | A revisão de BL-14 ([revisao-regras-ocorrencias.md](revisao-regras-ocorrencias.md)) achou 7 lacunas no backend: L1/L2 situação e classificação aceitam qualquer texto; L3/L4/L5 sistema, subsistema (e coerência com o sistema) e inspeção não são verificados, e o erro vira 500; L6 `PUT` sobrescreve `inspecao_id` e `seq_numero`; L7 filtro `sistema_id` inválido vira 500. |
+| **Decisão proposta** | Aplicar a correção mínima no service, repositório e endpoint: validar enums com `DomainError`, checar existência e coerência com `NotFoundError`/`DomainError` (422), excluir `inspecao_id`/`seq_numero` do `PUT` e tipar `sistema_id` como UUID. Decidir ainda: P1 (restringir ocorrência a Inspeção LTIP/Vistoria), P2 (auxiliar pode excluir?), P3 (enums persistidos no banco exigem migration) e P4 (autoria de `prioridade_ajustada_*` regravada a cada `PUT`). |
+| **Consequências** | Os testes `test_lacuna_*` devem falhar antes e passar depois, com PostgreSQL no ar. P1 quebraria fixtures que usam Inspeção RFO. Risco associado: R-13. |
+| **Referência** | `00_docs/projeto/revisao-regras-ocorrencias.md`, `04_backend/tests/test_ocorrencias_regras.py` |
+
+## DEC-35 — `layout.json` derivado de PDF guarda só geometria e rótulos fixos (proposta de T09/T10)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | As tarefas T09 (Vistoria Cautelar) e T10 (Vistoria Residencial) estenderam o método de ADR-13/DEC-25 aos PDFs finais do cliente. O rodapé desses PDFs traz nome, CREA, e-mail e telefone do responsável. O `templates/ltip/layout.json` (BL-17) guarda hoje as linhas do rodapé do emitente. |
+| **Decisão proposta** | (A) Nos `layout.json` derivados de PDF, o rodapé e a identificação do responsável viram papéis/placeholders, nunca o texto do exemplar; o `layout.json` passa por verificador fail-closed de dado pessoal. Alinhar o LTIP em tarefa própria; se não for alinhado, registrar como resíduo de A02 em `riscos.md`. (B) O `layout.json` não grava `gerado_em`: regerar a partir do mesmo original não pode produzir diff; o sha256 do original basta para a procedência. |
+| **Consequências** | Os `layout.json` das duas vistorias já seguem a regra; o do LTIP não. O nome do arquivo original identifica unidade/obra e por isso não é versionado. |
+| **Referência** | `00_docs/backlog-auto/vistoria-cautelar-templates.md`, `00_docs/backlog-auto/vistoria-residencial-templates.md` |
+
+## DEC-36 — RFIP: coluna auxiliar oculta como mapa rótulo → valor, numeração de páginas e quadro-resumo (proposta de T13)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | O template do RFIP (BL-12, T13) nasce de uma planilha de 491 MB cujas fichas fotográficas misturam rótulos fixos e valores do exemplar. A coluna B, oculta, traz marcadores `<CAMPO> Foto nº NN`, a mesma chave dos `PROCV` da aba de resumo. O exemplar numera as páginas a partir de 30 (anexo do laudo) e tem um quadro-resumo na aba `Relatório`. |
+| **Decisão proposta** | (A) O extrator usa os marcadores da coluna auxiliar para separar rótulo de valor; um texto só é rótulo fixo se repetir igual em todas as fichas amostradas, e a ausência da coluna faz a extração falhar de forma explícita. (B) A numeração de páginas começa em 1 nos dois formatos; o valor original fica em `pagina.primeira_pagina_no_original`, sem ser aplicado. (C) O quadro-resumo é opcional (`incluir_resumo`) e vem depois das fichas. (D) O `layout.json` do RFIP segue a regra de DEC-35 (só geometria e rótulos fixos, verificador fail-closed de dado pessoal). |
+| **Consequências** | Se o cliente mudar a planilha e remover a coluna auxiliar, o extrator precisa de revisão. A numeração contínua com o LTIP passa a ser decisão da montagem do pacote. |
+| **Referência** | `00_docs/backlog-auto/rfip-templates.md` |
+
+## DEC-37 — Legendas por IA: estados de validação, rastreio do prompt e independência do provedor (proposta de T14)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | RF-15, RN-16 e RN-17 já estão descritos em `arquitetura.md` §3 e na ADR-12, mas o código não tem `prompts_ia` nem as colunas de legenda IA em `fotos`. `PUT /fotos/{id}` descarta o usuário e não permite limpar a legenda. A análise mostrou que só 3 de 22 lacunas dependem do provedor de LLM (B-04). |
+| **Decisão proposta** | (1) `status_validacao_ia` com valores fechados `rascunho` e `aprovada`; `NULL` = sem sugestão; só `aprovada` entra no relatório (DP-1). (2) Versões de `prompts_ia` imutáveis e `prompt_conteudo_hash` (SHA-256) gravado na geração (DP-2). (3) `aprovado_por_id`/`aprovado_em` vêm do token, nunca do payload, e só no `PUT` que aprova (DP-3). (4) O endpoint `gerar` escreve apenas nos campos de sugestão; `legenda` só muda no `PUT` de aprovação (DP-4). (5) `PUT /fotos/{id}` passa o usuário ao serviço e distingue `legenda: null` de campo ausente por `model_fields_set` (DP-5). (6) BL-36 e BL-37 deixam de depender de B-04; só BL-34 (adapter concreto), a retenção de dados (L13) e BL-38/39 dependem (DP-6). (7) Sem áudio no storage; a transcrição fica em `legenda_bruta` (DP-7). (8) Corrigir o rótulo do ER em `arquitetura.md:288` (DP-8). |
+| **Consequências** | BL-36 e BL-37 podem começar antes da escolha do provedor, com um `FakeLegendaIAClient` nos testes. Toda migration nova precisa de `downgrade()` e de unicidade parcial de `ativo` por `nome`. A política de retenção (R-10) continua bloqueando o uso em produção. |
+| **Andamento (T22, 2026-11-04)** | DP-1 a DP-4, DP-8 e a parte de persistência de DP-2 implementados em BL-36 (migration `f7c2a9d4e6b1`: `status_validacao_ia` por CHECK, `prompt_conteudo_hash`, `aprovado_por_id`/`aprovado_em`, FK `ON DELETE RESTRICT`, índice parcial de `ativo`). A imutabilidade das versões fica no serviço (BL-37), a regra de escrita e o `PUT` com usuário (DP-3, DP-4, DP-5) em BL-34. **DP-9 (proposta):** em BL-38, a regra «só `aprovada` entra no relatório» vale para legenda de origem IA; foto com `status_validacao_ia = NULL` (manual ou legada) entra com `legenda`; foto em `rascunho` entra com `legenda`, nunca com `legenda_ia_sugerida`. |
+| **Andamento (T23/T24, 2026-11-04)** | T23 implementou a imutabilidade das versões de prompt e o cálculo do hash no serviço (`prompt_ia_service.py`), restando gravar `prompt_conteudo_hash` na geração (BL-34); o hash não tem coluna em `prompts_ia` (proposta: manter assim). T24 implementou DP-9 só no `rfo_pipeline.py`; os outros quatro pipelines ainda precisam chamar `legenda_para_relatorio`. DP-9 segue proposta, sem aprovação do dono. |
+| **Andamento (T25, 2026-11-05)** | DP-3, DP-4, DP-5 e DP-6 implementados em BL-34 (endpoints com cliente injetável; `legenda` só muda no `PUT`; aprovação por `aprovar_legenda_ia` com aprovador e data do token; `legenda: null` limpa, ausente preserva; sem provedor → 503) e hash do prompt gravado na geração (parte restante de DP-2). **DP-10 (proposta):** `PUT` que altera `legenda` de foto já `aprovada` sem a flag mantém hoje o status e o aprovador anterior; pela regra «quem edita é quem aprova», tratar como nova aprovação pelo usuário do token ou exigir a flag (422). Aguarda o dono. Ver `00_docs/backlog-auto/legenda-ia-endpoints.md` |
+| **Andamento (T26, 2026-11-05)** | BL-35 (frontend) consome o contrato de BL-34 sem enviar `aprovado_por_id`, `aprovado_em` nem `status_validacao_ia` (DP-3). Aprovação em duas etapas na UI; só `auditor`/`auxiliar` veem o painel (RN-18). Persiste DP-10: a edição manual da legenda no card continua um `PUT {legenda}` simples e mantém `aprovada`; aguarda o dono. **Proposta:** o `ApiError` do frontend passar a guardar o `type` do RFC 7807 para distinguir `legenda-ia-indisponivel` pelo sufixo. Ver [legenda-ia-frontend.md](../backlog-auto/legenda-ia-frontend.md) |
+| **Referência** | `00_docs/backlog-auto/modelagem-legendas-ia-lacunas.md`, `00_docs/backlog-auto/legenda-ia-modelo.md` |
+
+## DEC-38 — Visitas: unicidade, validação de domínio e CRUD completo (proposta de T15)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | A revisão de BL-10 contra RN-01/RN-02 encontrou 18 lacunas: `seq_numero` sem UNIQUE (corrida gera duplicata), nenhuma regra de uma visita por dia, data futura aceita, visita aceita em inspeção que não é RFO, quantidades sem restrição (500 acima de int32), `PUT` que apaga `observacoes` omitida e ausência de GET/PUT/DELETE dos itens. |
+| **Decisão proposta** | (A) Visita só em inspeção `tipo == "RFO"`, com `Inspecao.tipo` como enum; outro tipo retorna 409. (B) `UNIQUE(inspecao_id, data)` e `UNIQUE(inspecao_id, seq_numero)` em migration com `downgrade()`, 409 no serviço e data de visita ≤ hoje. (C) Payloads com `extra="forbid"`; equipe com `quantidade` inteira 1..32767; medição com `quantidade ≥ 0`; textos aparados e não vazios (a unidade segue livre, DEC-29). (D) `PUT` de visita passa a ser parcial (campo omitido preserva). (E) Completar o CRUD de campo: `GET /visitas/{id}` e PUT/DELETE de mão de obra e medição. Itens (A) e a data futura são interpretações de RN-01/RF-03 e precisam de confirmação do dono antes da correção. |
+| **Consequências** | Exige migration e correção de dados duplicados existentes, se houver. O vínculo usuário↔contrato de DEC-27 (L15) continua sem imposição e depende de decisão própria. A regra de status da inspeção e a de mão de obra duplicada na mesma visita ficam em aberto. |
+| **Andamento (T21, 2026-11-04)** | Itens A–E implementados e testados (migration `e5a1c3f7b9d2`, 409/422, PUT parcial, CRUD de itens). `Inspecao.tipo` como enum, status da inspeção, mão de obra duplicada e L15 (DEC-27) seguem abertos. Se o dono discordar de «só RFO» ou da data ≤ hoje, a reversão é pontual. Ver `00_docs/backlog-auto/visitas-correcoes.md`. |
+| **Referência** | `00_docs/backlog-auto/revisao-regras-visitas.md`, `04_backend/tests/test_visitas_lacunas.py` |
+
+## DEC-39 — Fotos: chave de storage controlada pelo servidor, orientação EXIF e validação de domínio (proposta de T16)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | A revisão de BL-11 achou 9 lacunas. Duas são graves: o vínculo (`POST /ocorrencias|visitas/{id}/fotos`) aceita `storage_key` do cliente (`../../x`, prefixo qualquer, objeto de outro contrato) e `DELETE /fotos/{id}` apaga o objeto; e `reprocessar_imagem` descarta o EXIF sem `exif_transpose`, então foto de celular em pé sai deitada nos PDF/DOCX. Também faltam validação de `ordem`/`origem`/`legenda`, descarte de upload órfão e limite de corpo da requisição. |
+| **Decisão proposta** | (A) O vínculo aceita só `storage_key` que case `^fotos/[0-9a-f-]{36}\.(jpg|png|webp)$`, exista no bucket e ainda não esteja vinculada (`UNIQUE(storage_key)`, migration com `downgrade()`); alternativa mais forte: o upload cria uma `Foto` pendente e o vínculo informa só `foto_id`. (B) `ImageOps.exif_transpose` antes de descartar o EXIF. (C) `origem` como enum fechado, `ordem ≥ 0`, `legenda` com `max_length` (sugestão 500) e `PUT` com `model_fields_set` para poder limpar a legenda. (D) Descarte de upload órfão (endpoint ou job de limpeza de `fotos/*` sem `Foto` com mais de 24 h). (E) Leitura de fotos com URL pré-assinada na resposta, para fechar o fluxo de exibição de BL-11. (F) Limite de corpo no proxy/Uvicorn e `Image.MAX_IMAGE_PIXELS` explícito (ex.: 50 Mpx). |
+| **Consequências** | Fecha uma falha de controle de acesso a objetos (A01) e melhora a qualidade do relatório. O auxiliar continua editando fotos de qualquer contrato enquanto não houver vínculo usuário↔contrato. A URL pré-assinada usa o host interno do MinIO e precisa de endpoint público em produção (pendência de infra). |
+| **Andamento (T19, 2026-11-04)** | Aplicados A (na aplicação, sem `UNIQUE`: exigiria migration), B, C e D (endpoint `DELETE /fotos/upload`) e o teto de 50 Mpx de F. Não aplicados: `UNIQUE(storage_key)`, E (URL pré-assinada) e o limite de corpo no proxy. `PUT` com `ordem: null` passou a limpar o campo. Ver `00_docs/backlog-auto/fotos-correcoes.md`. |
+| **Referência** | `00_docs/backlog-auto/revisao-regras-fotos.md`, `04_backend/tests/test_fotos_lacunas.py` |
+
+## DEC-40 — RNF-06 verificado por tipo de relatório e por job completo; fotos de 1200 px na entrada dos pipelines (proposta de T17)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | A re-medição com os pipelines finais (1 execução por combinação) deu, para o job PDF+DOCX em sequência: RFO 21,1 s, Vistoria Cautelar 34,2 s, Vistoria Residencial 56,7 s e LTIP 63,2 s com apenas 137 páginas. A conclusão de 2026-08-05 (RNF-06 atingível reduzindo a foto uma vez no upload) vale para RFO e Cautelar, não vale para o LTIP e fica no limite na Residencial. O gargalo é o layout do WeasyPrint (98–99,7 % do PDF), não mais o tamanho das fotos. |
+| **Decisão proposta** | (A) RNF-06 passa a ser verificado por tipo de relatório e pelo job completo (leitura das fotos, PDF, DOCX e upload), com PDF e DOCX gerados em processos paralelos e worker com ≥ 1 GB de RAM (pico de ~500 MB). (B) Os pipelines recebem sempre a derivada de 1200 px/q72, gerada uma vez no upload (BL-11), nunca a foto de 2000 px; o limite de upload dos artefatos finais (PDF 37–38 MB, DOCX 30–31 MB nas vistorias) fica separado do limite de foto (25 MB). (C) O template do LTIP troca o container flex único por linhas explícitas de duas fichas (`<table>` ou bloco por par com `break-inside: avoid`), pelo gerador `build_ltip_templates.py`, e ganha o placeholder `{{ ocorrencia.foto }}` no DOCX. (D) A Vistoria Residencial ganha profiling do WeasyPrint antes de ser dada como atendida. |
+| **Consequências** | Enquanto o LTIP não for refeito, RNF-06 não é atendido para ele (R-03 reaberto). A medição precisa ser completada em host dedicado (3 execuções, cenário de 2000 px, LTIP com ~357 ocorrências para chegar a 200 páginas, extrapolação de ~93 s de PDF). O RFIP não foi medido (sem pipeline). |
+| **Andamento (T20, 2026-11-04)** | O item (C) foi feito no LTIP sem trocar o gerador: 11,6 s (239 fotos) e 19,3 s (~200 páginas), RNF-06 atendido. Os detalhes viraram a DEC-41. O item (D) (profiling da Residencial) continua aberto. |
+| **Referência** | `00_docs/backlog-auto/benchmark-pipelines-finais.md`, `00_docs/projeto/relatorio-benchmark-geracao-pdf-docx.md` |
+
+## DEC-41 — WeasyPrint: sem container flex/grid único atravessando páginas; fotos por `url_fetcher` (proposta de T20)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-04 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | O LTIP levava 72,1 s (239 fotos) e 154,5 s (382 fotos) por causa do custo quadrático do WeasyPrint 70 num único `display: flex` de fichas que atravessa várias páginas. Trocando o container por linhas explícitas de duas fichas e entregando as fotos por `url_fetcher` em vez de data URI, o PDF caiu para 11,6 s e 19,3 s (−84 % e −88 %), na faixa do RFO (0,09 s/página). Implementa o item (C) de DEC-40 para o LTIP. |
+| **Decisão proposta** | (A) Nos templates WeasyPrint, conteúdo repetitivo que atravessa páginas (fichas, fotos, figuras) não fica num único container `flex`/`grid`: cada linha vira bloco pequeno (tabela fixa ou flex por linha) com `page-break-inside: avoid`. (B) Os pipelines PDF entregam as fotos ao WeasyPrint por `url_fetcher` (`URLFetcher`), mantendo `renderizar_html` autocontido para testes e pré-visualização; hoje só o LTIP faz isso, e estender aos demais (RFO, vistorias, RFIP) fica para tarefa própria (economia de ~2 s e ~100 MB por 240 fotos). (C) Fixar `weasyprint>=70` em `requirements.txt` ou manter o fallback para data URI, que não foi testado. |
+| **Consequências** | R-03 deixa de apontar o LTIP como violação de RNF-06. O DOCX do LTIP continua sem foto (lacuna de BL-17). O RFIP ainda não foi medido; o `rfip_pipeline.py` (T18) usa data URI e deve ser medido ao receber ocorrências reais. |
+| **Andamento (T28, 2026-11-05)** | O item (B) foi estendido a RFO, Vistoria Cautelar e Vistoria Residencial por `report_generator/foto_fetcher.py` (estrito: só `garra-foto:<n>` registrado e `data:`). RFIP e LTIP não mudaram (o LTIP mantém cópia local; unificar é proposta). Testes de PDF pulados sem GTK; ganho **não medido**. Ver `pipelines-url-fetcher.md`. |
+| **Referência** | `00_docs/backlog-auto/ltip-desempenho.md` |
+
+## DEC-42 — Legenda por IA: aprovação só por auditor, invalidação ao editar/regerar e teto de custo (proposta de T29)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-05 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | A revisão de segurança T29 (SEG-IA-01..09) achou: sem limite de taxa/custo em `POST /fotos/{id}/legenda-ia/gerar`; regerar legenda aprovada mantém `aprovado_por_id/em`; `PUT` que muda `legenda` aprovada mantém a aprovação (DP-10 de DEC-37); saída do LLM sem limite de tamanho; auxiliar aprova legenda embora RN-16/RN-18 reservem a aprovação ao responsável. |
+| **Decisão proposta** | (A) Aprovar legenda IA só com perfil `auditor`; o auxiliar gera e edita rascunho (muda `test_auxiliar_gera_e_aprova` e a UI da T26). (B) Regerar ou editar legenda aprovada zera `aprovado_*` e volta a `rascunho`, o que fecha DP-10. (C) Limite de taxa por usuário e por foto em `gerar`, e tamanho máximo/saneamento da saída do LLM (`legenda_ia_sugerida`, alertas, pendências), antes de BL-34 ligar o adapter real. (D) Delimitar `legenda_bruta` no adapter (injeção de prompt). |
+| **Consequências** | (C) e (D) bloqueiam produção do adapter real, junto de R-10. Decidir L15 (vínculo usuário↔contrato, DEC-27) continua pendente (SEG-IA-07). |
+| **Referência** | `00_docs/backlog-auto/seguranca-legenda-ia.md` |
+| **Andamento (T33–T35, 2026-11-06)** | (A) e (B) implementados no backend (T33, `legenda-ia-aprovacao-auditor.md`) e no painel (T34, `legenda-ia-aprovacao-frontend.md`). (C) e (D) implementados em `app/services/legenda_ia/` (T35, `legenda-ia-limites.md`): limite por usuário (10 por 60 s, 200 por dia) e por foto (5 por hora), com 429 antes de baixar a imagem; saída truncada em 500 caracteres e saneada (marcação, controle Unicode), `legenda_bruta` delimitada no envio e gravada original. Os defaults são escolha do agente, sem medição de uso: o dono deve revê-los. Pendente para a decisão ser considerada cumprida: orçamento global (SEG-IA-01), contador compartilhado entre workers (hoje em memória por processo), `Retry-After` no header, variáveis `LEGENDA_IA_*` no compose, e a revisão do adapter por SEG-IA-08. SEG-IA-06 (auxiliar remove foto aprovada) não está coberto por nenhum item. |
+
+## DEC-43 — `origem` da foto: enum fechado no backend (proposta de T27)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-05 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | `FotoVincularPayload.origem` é `str` livre; não há CHECK no banco. O valor aceito só existe no frontend (`OrigemFoto`), e o seed usa `upload_manual`. A afirmação da T26 de que `upload` causava 422 era incorreta. |
+| **Decisão proposta** | Impor `Literal["upload_manual","lightshot","clipboard"]` no payload e, em tarefa própria com migration, normalizar dados existentes e avaliar um CHECK. |
+| **Consequências** | Registros antigos gravados com `upload` (se houver) precisam de migração de dados antes do CHECK. |
+| **Andamento (T31, 2026-11-06)** | A parte do payload foi concluída: `FotoVincularPayload.origem` é `OrigemFoto = Literal["upload_manual","lightshot","clipboard"]` em `04_backend/app/schemas/foto.py` (422 para outro valor; `FotoBase`/`FotoRead` seguem `str`, então dados antigos continuam legíveis). Testes em `tests/test_foto_origem_enum.py` (schema sem banco: passam; endpoint: pulam sem PostgreSQL). O enum já havia sido esboçado na T19 (DEC-39 C). **Seguem abertos:** migration de normalização de dados antigos (ex.: `upload`) e CHECK no banco; a decisão continua proposta. |
+| **Referência** | `00_docs/backlog-auto/frontend-origem-foto.md`, `00_docs/backlog-auto/dec-43-origem-foto.md` |
+
+## DEC-44 — Política de limpeza de objetos órfãos no storage (proposta de T30)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-05 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | A T30 confirmou o storage compatível com artefatos de IA e adicionou `exists`, `list_keys` e `listar_orfaos` (só leitura). Não existe tarefa agendada de limpeza; uploads sem vínculo (`DELETE /fotos/upload` só cobre o descarte explícito) podem acumular. |
+| **Decisão proposta** | (1) Rodar `listar_orfaos` periodicamente apenas gerando relatório/log. (2) Só apagar objetos com idade > 24 h (exige expor `LastModified`, não incluído). (3) Iniciar em dry-run; apagar só com aprovação manual da lista, ou automático após N dias se o dono decidir. (4) Prefixos distintos para fotos (`fotos/`) e artefatos de IA (`ia/`). |
+| **Consequências** | Nada é apagado automaticamente até a aprovação. Fakes futuros de `StorageClient` devem implementar `exists` e `list_keys`. |
+| **Andamento (T32, 2026-11-06)** | Itens 1–3 em parte: `StorageClient.list_objects(prefix)` devolve `(chave, LastModified)` (`list_keys`/`listar_orfaos` inalterados) e `python -m app.scripts.relatorio_orfaos [--idade-minima-horas 24] [--prefixo fotos/]` gera o relatório **só em dry-run** (sem chamada de exclusão; há teste que garante isso). Testes com S3 falso: 9 passando junto com `test_storage_legenda_ia.py`. **Abertos:** exclusão (exige aprovação manual da lista), agendamento periódico e o item 4 (prefixos `fotos/` x `ia/`); script não executado contra PostgreSQL/MinIO reais. A decisão continua proposta. |
+| **Referência** | `00_docs/backlog-auto/storage-legenda-ia.md`, `00_docs/backlog-auto/storage-orfaos-relatorio.md` |
+
+## DEC-45 — Restore: dump `pre-restore` obrigatório e retenção dos `pre-restore-*` (proposta de T42)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-07 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | O teste com stubs mostrou que o script de restore termina o dump `pre-restore` com `|| true`: se ele falhar ou sair vazio, o script avisa «Estado anterior salvo» e executa `pg_restore --clean`, destruindo o banco sem rede de segurança. Os `pre-restore-*.dump` também nunca expiram. |
+| **Decisão proposta** | (1) Abortar com exit ≠ 0 quando o `pre-restore` falhar ou estiver vazio, com `FORCAR_SEM_PRE_RESTORE=1` para ignorar de forma explícita. (2) Incluir os `pre-restore-*.dump` na retenção por `-mtime`. |
+| **Consequências** | Muda o comportamento visível do script; o bloco INFO do teste vira asserção quando aprovada. Não aplicada nesta etapa. |
+| **Referência** | `00_docs/backlog-auto/backup-verificacao.md` §4 |
+
+## DEC-46 — Lint do backend bloqueante no CI só após limpeza, com ruff fixado (proposta de T39)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-07 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | `ruff check .` (ruff 0.17.3, `04_backend/ruff.toml`) acusa 11 erros em arquivos adicionados depois da T04 (2 RUF001, 4 I001, 2 RUF043, 3 RUF005). O CI instala `ruff` sem versão e mantém o passo com `continue-on-error: true`. |
+| **Decisão proposta** | (1) Corrigir os 11 erros numa tarefa própria (4 com `--fix` seguro; RUF005/RUF043 à mão). (2) Trocar `pip install ruff` por `pip install "ruff==0.17.3"` em `ci.yml`. (3) Remover `continue-on-error` do passo. (4) Marcar o `ci.yml` como status check obrigatório (já pendente em BL-26). |
+| **Consequências** | Sem a limpeza, novos erros de lint continuam entrando sem barrar o merge. Alterar `ci.yml` é mudança de YAML, fora do escopo de documentação. |
+| **Referência** | `00_docs/backlog-auto/ci-lint-bloqueante.md`, `00_docs/backlog-auto/ruff.md` |
 

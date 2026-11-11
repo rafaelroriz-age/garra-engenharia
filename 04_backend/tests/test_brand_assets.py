@@ -14,6 +14,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
+from PIL import Image
+
 from app.scripts.bitmap_tracer import (
     area,
     caminho_svg,
@@ -30,7 +32,6 @@ from app.scripts.build_brand_assets import (
     montar_svg,
     recortar_conteudo,
 )
-from PIL import Image
 
 ASSETS = Path(__file__).resolve().parents[1] / "templates" / "assets"
 SVG_NS = "{http://www.w3.org/2000/svg}"
@@ -151,7 +152,7 @@ def test_extrair_tons_devolve_do_mais_escuro_ao_mais_claro():
 def test_linha_de_corte_separa_simbolo_do_nome():
     recorte = recortar_conteudo(_logo_sintetica(), (250, 247, 240))
     rotulos = [
-        [0 if all(abs(c - f) <= 18 for c, f in zip(recorte.getpixel((x, y)), (250, 247, 240))) else 1 for x in range(recorte.width)]
+        [0 if all(abs(c - f) <= 18 for c, f in zip(recorte.getpixel((x, y)), (250, 247, 240), strict=False)) else 1 for x in range(recorte.width)]
         for y in range(recorte.height)
     ]
 

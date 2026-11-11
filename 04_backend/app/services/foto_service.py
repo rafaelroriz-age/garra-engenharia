@@ -6,18 +6,57 @@ reprocessamento. Uploads nunca aceitam URL fornecida pelo cliente (A10).
 """
 import base64
 import binascii
+import re
 import uuid
+from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.errors import DomainError, NotFoundError
-from app.models import Foto, Ocorrencia, Visita
+from app.core.errors import ConflictError, DomainError, NotFoundError
+from app.models import Foto, Ocorrencia, Usuario, Visita
 from app.repositories import foto_repository
-from app.services import image_processing
+from app.services import image_processing, prompt_ia_service
+from app.services.legenda_ia import LegendaIAClient
 from app.services.storage.base import StorageClient
-from app.services.storage.s3_client import MAX_UPLOAD_SIZE_BYTES
+from app.services.storage.s3_client import MAX_UPLOAD_SIZE_BYTES, ObjectNotFoundError
 
 _PRESIGNED_URL_EXPIRES_IN_SECONDS = 15 * 60
+
+# Nome do prompt-sistema de legenda em `prompts_ia` (BL-34); a versão ativa é a usada (DP-2).
+PROMPT_LEGENDA_IA_NOME = "legenda_foto"
+STATUS_RASCUNHO = "rascunho"
+STATUS_APROVADA = "aprovada"
+
+# Chave emitida pelo servidor em `_processar_e_enviar` (DEC-39 A). `fullmatch` + UUID canônico
+# impede `../`, caminho absoluto, outro prefixo e chaves de outros objetos do bucket.
+_STORAGE_KEY_PATTERN = re.compile(
+    r"fotos/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(?:jpg|png|webp)"
+)
+
+
+def _validar_storage_key(storage_key: str) -> None:
+    """Aceita apenas chaves no formato emitido pelo upload do servidor (A01)."""
+    if not _STORAGE_KEY_PATTERN.fullmatch(storage_key):
+        raise DomainError(
+            "storage_key inválida: use a chave devolvida por /fotos/upload ou /fotos/upload-clipboard.",
+            type_suffix="storage-key-invalida",
+            title="Foto inválida",
+        )
+
+
+async def _validar_chave_para_vinculo(db: AsyncSession, storage_key: str, storage: StorageClient) -> None:
+    """Chave no padrão do servidor, existente no bucket e ainda não vinculada (DEC-39 A)."""
+    _validar_storage_key(storage_key)
+    if not storage.exists(storage_key):
+        raise DomainError(
+            "O arquivo informado não existe no storage; envie-o antes de vincular.",
+            type_suffix="storage-key-inexistente",
+            title="Foto inválida",
+        )
+    if await foto_repository.get_by_storage_key(db, storage_key) is not None:
+        raise ConflictError(
+            "Esta foto já está vinculada a outro registro.", type_suffix="storage-key-ja-vinculada"
+        )
 
 
 def _validar_tamanho(conteudo: bytes) -> None:
@@ -61,14 +100,15 @@ async def upload_clipboard(imagem_base64: str, storage: StorageClient) -> tuple[
 
 
 async def vincular_a_ocorrencia(
-    db: AsyncSession, ocorrencia_id: uuid.UUID, *, storage_key: str, legenda: str | None, ordem: int | None,
-    origem: str, criado_por_id: uuid.UUID | None = None,
+    db: AsyncSession, ocorrencia_id: uuid.UUID, storage: StorageClient, *, storage_key: str,
+    legenda: str | None, ordem: int | None, origem: str, criado_por_id: uuid.UUID | None = None,
 ) -> Foto:
     ocorrencia = await db.get(Ocorrencia, ocorrencia_id)
     if ocorrencia is None:
         raise NotFoundError(
             f"Ocorrência '{ocorrencia_id}' não encontrada.", type_suffix="ocorrencia-nao-encontrada"
         )
+    await _validar_chave_para_vinculo(db, storage_key, storage)
     return await foto_repository.create(
         db,
         storage_key=storage_key,
@@ -81,12 +121,13 @@ async def vincular_a_ocorrencia(
 
 
 async def vincular_a_visita(
-    db: AsyncSession, visita_id: uuid.UUID, *, storage_key: str, legenda: str | None, ordem: int | None,
-    origem: str, criado_por_id: uuid.UUID | None = None,
+    db: AsyncSession, visita_id: uuid.UUID, storage: StorageClient, *, storage_key: str,
+    legenda: str | None, ordem: int | None, origem: str, criado_por_id: uuid.UUID | None = None,
 ) -> Foto:
     visita = await db.get(Visita, visita_id)
     if visita is None:
         raise NotFoundError(f"Visita '{visita_id}' não encontrada.", type_suffix="visita-nao-encontrada")
+    await _validar_chave_para_vinculo(db, storage_key, storage)
     return await foto_repository.create(
         db,
         storage_key=storage_key,
@@ -98,13 +139,89 @@ async def vincular_a_visita(
     )
 
 
+def _invalidar_aprovacao(foto: Foto) -> None:
+    foto.status_validacao_ia = STATUS_RASCUNHO
+    foto.aprovado_por_id = None
+    foto.aprovado_em = None
+
+
 async def atualizar(
-    db: AsyncSession, foto_id: uuid.UUID, *, legenda: str | None, ordem: int | None
+    db: AsyncSession, foto_id: uuid.UUID, campos: dict, *, usuario: Usuario | None = None
 ) -> Foto:
+    """Atualiza só os campos presentes em `campos` (`legenda`/`ordem`); `legenda: None` limpa (DP-5).
+
+    Com `aprovar_legenda_ia=True`, aprova a sugestão de IA (DEC-37 DP-3): `legenda` recebe o
+    texto enviado ou, se ausente, a própria sugestão; `aprovado_por_id`/`aprovado_em` vêm de
+    `usuario` (token), nunca do payload. Sem aprovação, os campos de IA não mudam.
+    """
     foto = await foto_repository.get_by_id(db, foto_id)
     if foto is None:
         raise NotFoundError(f"Foto '{foto_id}' não encontrada.", type_suffix="foto-nao-encontrada")
-    return await foto_repository.update(db, foto, legenda=legenda, ordem=ordem)
+    campos = dict(campos)
+    if campos.pop("aprovar_legenda_ia", False):
+        if usuario is None:
+            raise ValueError("A aprovação exige o usuário autenticado.")
+        if foto.status_validacao_ia is None:
+            raise DomainError(
+                "A foto não tem sugestão de legenda por IA para aprovar.",
+                type_suffix="legenda-ia-sem-sugestao", title="Aprovação inválida",
+            )
+        legenda = campos["legenda"] if "legenda" in campos else foto.legenda_ia_sugerida
+        if not (legenda or "").strip():
+            raise DomainError(
+                "A legenda aprovada não pode ser vazia.",
+                type_suffix="legenda-aprovada-vazia", title="Aprovação inválida",
+            )
+        campos["legenda"] = legenda
+        foto.status_validacao_ia = STATUS_APROVADA
+        foto.aprovado_por_id = usuario.id
+        foto.aprovado_em = datetime.now(UTC)
+    elif (
+        "legenda" in campos
+        and foto.status_validacao_ia == STATUS_APROVADA
+        and campos["legenda"] != foto.legenda
+    ):
+        # DEC-42 B: mudar a legenda aprovada invalida a aprovação (fecha DP-10 de DEC-37).
+        _invalidar_aprovacao(foto)
+    return await foto_repository.update(db, foto, campos)
+
+
+async def gerar_legenda_ia(
+    db: AsyncSession, foto_id: uuid.UUID, storage: StorageClient, cliente: LegendaIAClient,
+    campos: dict,
+) -> Foto:
+    """Gera a sugestão de legenda por IA (BL-34; DEC-37 DP-2, DP-4; RN-16, RN-17).
+
+    Escreve apenas os campos de sugestão (`legenda_ia_sugerida`, `legenda_bruta` se enviada em
+    `campos`, alertas/pendências, prompt e hash, instante) e põe `status_validacao_ia` em
+    `rascunho`. Nunca altera `legenda` nem os campos de aprovação.
+    """
+    foto = await foto_repository.get_by_id(db, foto_id)
+    if foto is None:
+        raise NotFoundError(f"Foto '{foto_id}' não encontrada.", type_suffix="foto-nao-encontrada")
+    prompt = await prompt_ia_service.obter_ativo(db, PROMPT_LEGENDA_IA_NOME)
+    try:
+        imagem = storage.download(foto.storage_key)
+    except ObjectNotFoundError as exc:
+        raise DomainError(
+            "O arquivo da foto não existe no storage.", type_suffix="storage-key-inexistente",
+            title="Foto inválida",
+        ) from exc
+    legenda_bruta = campos["legenda_bruta"] if "legenda_bruta" in campos else foto.legenda_bruta
+    resultado = await cliente.gerar_legenda(imagem, prompt.conteudo, legenda_bruta)
+
+    if "legenda_bruta" in campos:
+        foto.legenda_bruta = legenda_bruta
+    foto.legenda_ia_sugerida = resultado.legenda_sugerida
+    foto.alertas_ia = list(resultado.alertas)
+    foto.pendencias_ia = list(resultado.pendencias)
+    foto.prompt_ia_id = prompt.id
+    foto.prompt_conteudo_hash = prompt_ia_service.calcular_hash(prompt.conteudo)
+    foto.legenda_ia_gerada_em = datetime.now(UTC)
+    _invalidar_aprovacao(foto)  # DEC-42 B: regerar volta a rascunho e zera a aprovação
+    await db.commit()
+    await db.refresh(foto)
+    return foto
 
 
 async def remover(db: AsyncSession, foto_id: uuid.UUID, storage: StorageClient) -> None:
@@ -113,3 +230,14 @@ async def remover(db: AsyncSession, foto_id: uuid.UUID, storage: StorageClient) 
         raise NotFoundError(f"Foto '{foto_id}' não encontrada.", type_suffix="foto-nao-encontrada")
     storage.delete(foto.storage_key)
     await foto_repository.delete(db, foto)
+
+
+async def descartar_upload(db: AsyncSession, storage_key: str, storage: StorageClient) -> None:
+    """Descarta um upload que nunca foi vinculado (DEC-39 D); recusa chave já vinculada a uma `Foto`."""
+    _validar_storage_key(storage_key)
+    if await foto_repository.get_by_storage_key(db, storage_key) is not None:
+        raise ConflictError(
+            "A foto já está vinculada; remova-a por DELETE /fotos/{id}.",
+            type_suffix="storage-key-ja-vinculada",
+        )
+    storage.delete(storage_key)

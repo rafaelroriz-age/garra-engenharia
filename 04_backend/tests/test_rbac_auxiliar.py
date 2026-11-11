@@ -10,6 +10,11 @@ from asyncio import run as run_async
 
 import pytest
 import pytest_asyncio
+from fastapi.testclient import TestClient
+from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
+
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.security import create_access_token, hash_password
@@ -25,10 +30,6 @@ from app.models import (
     Usuario,
     Visita,
 )
-from fastapi.testclient import TestClient
-from sqlalchemy import delete, select
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.pool import NullPool
 
 _settings = get_settings()
 _test_engine = create_async_engine(_settings.database_url, poolclass=NullPool, future=True)
@@ -125,6 +126,16 @@ async def inspecao(db_session):
     await db_session.commit()
 
 
+def _png_minimo() -> bytes:
+    import io
+
+    from PIL import Image
+
+    buffer = io.BytesIO()
+    Image.new("RGB", (10, 10), color="red").save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
 def _cleanup(model, registro_id: uuid.UUID) -> None:
     async def _delete() -> None:
         async with _TestSessionLocal() as session:
@@ -190,9 +201,16 @@ def test_auxiliar_vincula_foto_a_visita_com_autoria(auxiliar, inspecao):
         headers=_headers(auxiliar),
     ).json()
 
+    # DEC-39: o vínculo exige chave emitida pelo servidor e existente no storage -> upload real antes.
+    upload = client.post(
+        "/api/v1/fotos/upload",
+        files={"arquivo": ("f.png", _png_minimo(), "image/png")},
+        headers=_headers(auxiliar),
+    )
+    assert upload.status_code == 201
     response = client.post(
         f"/api/v1/visitas/{visita['id']}/fotos",
-        json={"storage_key": f"fotos/{uuid.uuid4()}.jpg", "origem": "upload", "legenda": "Fachada"},
+        json={"storage_key": upload.json()["storage_key"], "origem": "upload_manual", "legenda": "Fachada"},
         headers=_headers(auxiliar),
     )
 

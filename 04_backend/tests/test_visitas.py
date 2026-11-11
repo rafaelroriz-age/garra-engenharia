@@ -3,10 +3,15 @@
 Cobre criação de visita com `seq_numero` sequencial automático, atualização,
 adição de mão de obra/medição e o detalhe da Inspeção com visitas ordenadas.
 """
+import asyncio
 import uuid
-from asyncio import run as run_async
 
 import pytest_asyncio
+from fastapi.testclient import TestClient
+from sqlalchemy import delete
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
+
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.security import create_access_token, hash_password
@@ -21,10 +26,6 @@ from app.models import (
     VisitaMaoObra,
     VisitaMedicao,
 )
-from fastapi.testclient import TestClient
-from sqlalchemy import delete
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.pool import NullPool
 
 _settings = get_settings()
 _test_engine = create_async_engine(_settings.database_url, poolclass=NullPool, future=True)
@@ -102,7 +103,14 @@ def _cleanup_visita(visita_id: uuid.UUID) -> None:
             await session.execute(delete(Visita).where(Visita.id == visita_id))
             await session.commit()
 
-    run_async(_delete())
+    # Loop próprio, sem registrá-lo como loop corrente: `asyncio.run` faz `set_event_loop(None)` ao
+    # terminar e derruba o loop de sessão do pytest-asyncio para os testes async seguintes
+    # ("There is no current event loop in thread 'MainThread'" em test_visitas_lacunas.py).
+    loop = asyncio.new_event_loop()
+    try:
+        loop.run_until_complete(_delete())
+    finally:
+        loop.close()
 
 
 def test_criar_visita_atribui_seq_numero_sequencial(auth_headers, inspecao):

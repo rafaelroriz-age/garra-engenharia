@@ -9,8 +9,10 @@ related:
   - 00_docs/projeto/backlog-tarefas.md
   - 05_infra/README.md
 tags: [devops, git, ci-cd, deploy, versionamento, seguranca]
-last_updated: 2026-07-19
+last_updated: 2026-11-03
 ---
+
+> **Revisão de 2026-11-03 (D04):** §1.1, §1.4, §2, §3.1 e §3.2 foram reescritas para refletir a DEC-22 (remoção do staging e sincronização automática `main` → `main_back`/`main_front`) e o que `.github/workflows/ci.yml` roda de fato. As demais seções não mudaram.
 
 # Plano de Gestão de Configuração (Git, CI/CD, Deploy)
 
@@ -22,23 +24,22 @@ last_updated: 2026-07-19
 
 Não versionar: `.env`, `.env.*` (exceto `.env.example`), `node_modules/`, `.next/`, `.venv/`, `__pycache__/`, volumes Docker — já cobertos pelo `.gitignore` existente na raiz.
 
-### 1.1 Branching — Trunk-Based simplificado, com branches dedicadas por serviço/ambiente (DEC-17)
+### 1.1 Branching — Trunk-Based com tronco `main` e 2 branches de deploy (DEC-17, simplificado pela DEC-22)
 
-- 4 branches de longa duração, cada uma servindo de gatilho de deploy de UM serviço no Render (o conteúdo do monorepo é o mesmo em todas — sem histórico filtrado, sem quebrar DEC-09):
+- **`main` é o tronco único**: todo commit e todo PR, inclusive do Dependabot, é integrado em `main` (`.github/workflows/ci.yml`, cabeçalho; `render.yaml`, cabeçalho).
+- 2 branches de deploy, cada uma gatilho de UM serviço no Render (o conteúdo do monorepo é o mesmo nas duas — sem histórico filtrado, sem quebrar DEC-09):
   - `main_back` — produção do backend (`garra-backend` em `render.yaml`)
   - `main_front` — produção do frontend (`garra-frontend`)
-  - `staging_back` — staging do backend (`garra-backend-staging`)
-  - `staging_front` — staging do frontend (`garra-frontend-staging`)
-- Todas as 4 protegidas (ver 1.4): merge exige PR + CI verde na branch correspondente.
-- `main`/`staging` (nomes anteriores à DEC-17) continuam existindo no repositório, mas não estão mais conectadas a nenhum serviço do Render — usadas apenas como branch de integração intermediária, se o fluxo de trabalho do time preferir revisar ali antes de promover para as 4 branches de serviço.
-- Branches de trabalho de vida curta (idealmente < 3 dias), a partir da branch de serviço/ambiente alvo:
+- `main_back` e `main_front` recebem `main` **automaticamente**, por merge (não force-push), a cada push em `main` (`.github/workflows/sync-deploy-branches.yml`). Não se commita direto nelas nem se abre PR contra elas. Se o merge automático der conflito, o workflow abre uma issue.
+- Staging (`staging_back`, `staging_front`, `staging`) foi **removido** em 2026-08-05 (DEC-22): nunca chegou a ser provisionado no Render (HT-04). `git branch -r` não lista nenhuma branch de staging.
+- Branches de trabalho de vida curta (idealmente < 3 dias), a partir de `main`:
   - `feat/<slug>` — nova funcionalidade (ex.: `feat/bl-06-auth-jwt`)
   - `fix/<slug>` — correção de bug
   - `chore/<slug>` — infra, dependências, configuração
   - `docs/<slug>` — apenas documentação (`00_docs/`)
-- Uma mudança que afeta front e back ao mesmo tempo pode exigir 2 PRs (um por branch-alvo) ou merge nas duas branches — decisão tomada por PR, não automatizada.
+- Uma mudança que afeta front e back vai num único PR para `main`; a sincronização leva o mesmo conteúdo às duas branches de deploy.
 - Sem `develop`/`release/*` — o backlog (`backlog-tarefas.md`) já cumpre o papel de plano de releases; branches longas de release adicionariam overhead desproporcional ao porte da equipe (mesmo racional de DEC-08).
-- Rebase (não merge commit) da branch de feature sobre a branch-alvo antes de abrir PR, para manter histórico linear; merge do PR via **squash merge** (1 commit por PR).
+- Rebase (não merge commit) da branch de feature sobre `main` antes de abrir PR, para manter histórico linear; merge do PR via **squash merge** (1 commit por PR).
 
 ### 1.2 Convenção de Commits — Conventional Commits
 
@@ -63,15 +64,12 @@ Motivo: permite gerar changelog automaticamente (futuro) e comunica intenção d
 - Tag criada apenas em `main_back`/`main_front` (produção), após deploy bem-sucedido (ver Seção 4). Tag dispara o workflow `cd-production.yml` (Seção 3.3, hoje fallback manual — ver nota da DEC-17).
 - `v0.x.y` enquanto o sistema não atingir os critérios de aceitação da v1.0 (`escopo.md`); `v1.0.0` = primeiro RFO completo gerado em produção fiel ao template do cliente.
 
-### 1.4 Proteção das branches `main_front`/`main_back`/`staging_front`/`staging_back` (DEC-17)
+### 1.4 Proteção das branches `main`, `main_back` e `main_front` (DEC-17, DEC-22)
 
-Configurar em GitHub → Settings → Branches, uma regra por branch (ação manual do gestor do repositório, não automatizável por este plano — ver HT-05 em `backlog-tarefas-humanas.md`):
+Configurar em GitHub → Settings → Branches (ação manual do gestor do repositório, não automatizável por este plano — ver HT-05 em `backlog-tarefas-humanas.md`). Se as regras já estão configuradas no GitHub: **não determinado** (não consultado).
 
-- Exigir Pull Request antes de merge (sem push direto, nem do próprio dono do repositório).
-- Exigir que o workflow `ci.yml` passe (status check obrigatório) antes de permitir merge.
-- Exigir branch atualizada com a branch-alvo antes do merge.
-- Bloquear force-push e deleção das 4 branches.
-- Squash merge como único método de merge habilitado (mantém histórico linear, 1 commit = 1 PR = 1 unidade de trabalho rastreável ao backlog).
+- **`main`**: exigir Pull Request antes de merge; exigir que o workflow `ci.yml` passe (é o status check obrigatório para merge em `main`, segundo o cabeçalho do `ci.yml`); exigir branch atualizada antes do merge; squash merge como único método (1 commit = 1 PR = 1 unidade de trabalho rastreável ao backlog).
+- **`main_back` e `main_front`**: bloquear force-push e deleção. O push nelas vem do `sync-deploy-branches.yml` (com `permissions: contents: write`), então a regra precisa permitir esse push do `github-actions[bot]`.
 
 ### 1.5 Template de Pull Request
 
@@ -84,8 +82,9 @@ Criado em `.github/pull_request_template.md` (ver Seção 5) para garantir que t
 | Ambiente | Onde roda | Como é implantado | Dados |
 |---|---|---|---|
 | **Local (dev)** | Máquina do engenheiro/agente | `cd 05_infra && docker compose up -d` (`docker-compose.yml`) | Postgres/MinIO com dados de teste, sem backup |
-| **Staging** | Render (`garra-backend-staging`/`garra-frontend-staging`, `render.yaml`) | Deploy automático nativo do Render a cada push em `staging_back`/`staging_front` (DEC-17) | Banco `garra-db-staging`, isolado do de produção; pode ser resetado a qualquer momento |
-| **Produção** | Render (`garra-backend`/`garra-frontend`, `render.yaml`) | Deploy automático nativo do Render a cada push em `main_back`/`main_front` (`autoDeployTrigger: commit`) — SEM gate de aprovação manual por padrão; ver nota da DEC-17 se o gate for exigido | Banco `garra-db` — dados reais de clientes, sujeitos às políticas de backup (Seção 6) |
+| **Produção** | Render (`garra-backend`/`garra-frontend`, `render.yaml`) | Deploy automático nativo do Render a cada push em `main_back`/`main_front` (`autoDeployTrigger: commit`), que recebem `main` pelo `sync-deploy-branches.yml` — SEM gate de aprovação manual por padrão; ver nota da DEC-17 se o gate for exigido. O `garra-backend` do Blueprint roda `preDeployCommand: alembic upgrade head`; o serviço realmente provisionado usa runtime nativo e depende de `RUN_MIGRATIONS_ON_STARTUP=true` (comentário em `render.yaml`) | Banco `garra-db` — dados reais de clientes, sujeitos às políticas de backup (Seção 6) |
+
+Não há ambiente de staging (DEC-22).
 
 B-03 (hospedagem) foi resolvido em 2026-07-21 — Render escolhido (BL-20). `docker-compose.prod.yml`/`nginx.conf` (pensados para um VPS próprio) ficaram sem uso real; `cd-staging.yml`/`cd-production.yml` viraram fallback manual (`workflow_dispatch`) para esse cenário alternativo.
 
@@ -95,22 +94,24 @@ B-03 (hospedagem) foi resolvido em 2026-07-21 — Render escolhido (BL-20). `doc
 
 Arquivos em `.github/workflows/`. Todos os workflows devem falhar rápido (lint/type-check antes de testes, testes antes de build de imagem).
 
-### 3.1 `ci.yml` — Integração Contínua (todo PR e push em `main_front`/`main_back`/`staging_front`/`staging_back`, e ainda `main`/`staging` durante a transição)
+### 3.1 `ci.yml` — Integração Contínua (todo PR para `main` e push em `main`, `main_back` e `main_front`)
 
-1. **Lint + type-check**
-   - Backend: `ruff check .` + `mypy app` (ou equivalente já configurado em `04_backend`).
-   - Frontend: `next lint` + `tsc --noEmit` (`03_frontend`).
-2. **Testes unitários**
-   - Backend: `pytest` contra um Postgres de serviço (`services: postgres` do GitHub Actions), reaproveitando `04_backend/pytest.ini`/`conftest.py`.
-   - Frontend: testes de componente (quando existirem — ainda não há suíte de testes de frontend no backlog atual; adicionar ao backlog quando a primeira tela com lógica não trivial for implementada).
-3. **Build de imagens Docker** (cache de layers via `actions/cache` ou GitHub Actions cache do Buildx) para `04_backend/Dockerfile` e `03_frontend/Dockerfile`, sem push (apenas valida que o build funciona).
-4. **Scan de vulnerabilidades**: Trivy (`aquasecurity/trivy-action`) nas imagens buildadas e `pip-audit`/`npm audit` nas dependências — falhas de severidade `HIGH`/`CRITICAL` bloqueiam o merge (BL-23 estende esta etapa com revisão manual OWASP).
-5. **Testes E2E (BL-21)**: job `e2e` sobe a stack completa via `05_infra/docker-compose.yml` (Postgres, MinIO, backend, frontend), aplica migrations/seed do gabarito e roda os testes Playwright dos Fluxos RFO/LTIP (`03_frontend/e2e/*.spec.ts`) — ver "Testes E2E (Playwright, BL-21)" em `03_frontend/README.md`.
+Gatilhos: `pull_request` para `main`; `push` em `main_front`, `main_back` e `main` (`ci.yml`, bloco `on:`). Execuções antigas da mesma branch são canceladas (`concurrency`). Jobs, como estão no arquivo:
 
-### 3.2 `cd-staging.yml` — Deploy em Staging (fallback manual, DEC-17)
+1. **`backend`** (`04_backend`, Python 3.12, serviço `postgres:16-alpine` do Actions na porta 5432, `ENVIRONMENT=test`):
+   - `pip install -r requirements.txt` e `pip install ruff` (o `ruff` não está em `requirements.txt`);
+   - `ruff check .` com `continue-on-error: true` — **não bloqueia** o merge (comentário no arquivo: "Lint ainda não é bloqueante");
+   - `pytest --maxfail=1`. O job não roda `alembic upgrade head` antes; se os testes que dependem de tabela passam assim no Actions: **não determinado** (logs não consultados).
+   - Não há `mypy` nem outro type-check no backend.
+2. **`frontend`** (`03_frontend`, Node 20): `npm ci`; `npm run lint` com `continue-on-error: true` (não bloqueante); `npm run build`. Não há `tsc --noEmit` separado nem testes de componente.
+3. **`docker-build-scan`** (depois de `backend` e `frontend`): build das imagens sem push e scan Trivy (`aquasecurity/trivy-action`) com `severity: HIGH,CRITICAL` e `exit-code: "1"` (bloqueia). Não há `pip-audit` nem `npm audit` no workflow (`grep -n "pip-audit\|npm audit" .github/workflows/ci.yml` → vazio).
+4. **`e2e`** (BL-21, depois de `backend` e `frontend`): sobe `05_infra/docker-compose.yml`, roda `alembic upgrade head`, `seed_gabarito` e `seed_admin` dentro do container `backend`, instala o Chromium do Playwright e roda `npx playwright test` (Fluxos RFO/LTIP, `03_frontend/e2e/*.spec.ts`); publica o relatório em caso de falha e derruba a stack no fim — ver "Testes E2E (Playwright, BL-21)" em `03_frontend/README.md`.
 
-- **Caminho real de deploy hoje**: nativo do Render — push em `staging_back`/`staging_front` já dispara `autoDeployTrigger: commit` nos serviços `garra-backend-staging`/`garra-frontend-staging` (`render.yaml`), sem passar por este workflow.
-- Este workflow foi convertido para `workflow_dispatch` (só roda se disparado manualmente) e serve de fallback para um cenário de VPS próprio: build + push das imagens para o GitHub Container Registry (`ghcr.io`) com tag `staging-<sha curto>`; conexão via SSH (chave em secret) ao host de staging; `docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d`; roda migrations Alembic (`alembic upgrade head`) antes de subir o `backend`; healthcheck pós-deploy (`GET /health/ready`) com rollback automático se falhar (Seção 4.2).
+### 3.2 `cd-staging.yml` — VPS própria (fallback manual)
+
+- **Não há staging no Render** (DEC-22). O nome do arquivo é herança da DEC-17.
+- O workflow só roda por `workflow_dispatch` (disparo manual, `cd-staging.yml`, bloco `on:`) e serve de fallback para um cenário de VPS própria: build + push das imagens para o GitHub Container Registry (`ghcr.io`) com tag `staging-<sha>` (`github.sha` completo); conexão via SSH (chave em secret) ao host; `docker compose -f docker-compose.prod.yml pull`, `run --rm backend alembic upgrade head` e `up -d`; healthcheck pós-deploy com `curl` em `http://localhost:8000/health/ready`.
+- **Divergência com o código:** o backend só expõe `GET /health` (`app/main.py`); `GET /health/ready` não existe, então o passo de healthcheck desse workflow falharia. O workflow também não tem passo de rollback automático (o arquivo termina no healthcheck): o rollback da Seção 4.2 não está implementado nele.
 
 ### 3.3 `cd-production.yml` — Deploy em Produção (fallback manual, DEC-17)
 
@@ -172,10 +173,10 @@ Criar `.github/pull_request_template.md` com checklist mínimo:
 
 ## 6. Backup e Disaster Recovery (coordenação com `05_infra`)
 
-- Backup diário do volume `postgres_data` (dump lógico `pg_dump`, retenção 30 dias) — script a implementar em `05_infra/backup/backup-db.sh` (BL ainda não criada no backlog, ver Seção 8).
+- Backup diário do volume `postgres_data` (dump lógico `pg_dump`, retenção 30 dias) — script em `05_infra/backup/backup-db.sh` (BL-29; uso descrito em `05_infra/README.md`, "Backup e restauração").
 - Backup do bucket MinIO (fotos e PDFs/DOCX gerados) via `mc mirror` para um segundo destino (disco separado ou bucket remoto) — mesma retenção.
 - Backup pré-deploy de produção: `cd-production.yml` dispara um dump avulso do banco antes de rodar `alembic upgrade head`, garantindo ponto de restauração imediatamente anterior a qualquer migration.
-- Procedimento de restore documentado em `05_infra/backup/restore-db.sh` + seção correspondente em `05_infra/README.md` (a implementar).
+- Procedimento de restore em `05_infra/backup/restore-db.sh` + seção "Backup e restauração (BL-29, RNF-08)" em `05_infra/README.md`.
 - **[A ESCLARECER]** frequência/destino definitivo do backup fora do host de produção (RNF-08, lacuna já registrada em `arquitetura.md` Seção 11) — depende da decisão de hospedagem (B-03).
 
 ---

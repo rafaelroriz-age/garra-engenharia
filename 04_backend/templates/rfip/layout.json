@@ -1,0 +1,1277 @@
+{
+  "versao_schema": 1,
+  "tipo_documento": "RFIP",
+  "origem": {
+    "sha256": "0465a67899996748956ee3df2d58010876b73e82a29b12b5c0916d3dd86c8831",
+    "aba_fotografica": "Rel. Fotográfico",
+    "aba_resumo": "Relatório",
+    "linhas_lidas": 120
+  },
+  "pagina": {
+    "tamanho": "A4",
+    "orientacao": "portrait",
+    "margens_cm": {
+      "esquerda": 0.6,
+      "direita": 0.6,
+      "superior": 2.5,
+      "inferior": 2.0,
+      "cabecalho": 0.0,
+      "rodape": 0.0
+    },
+    "ajustar_largura_a_pagina": true,
+    "primeira_pagina_no_original": 30
+  },
+  "tipografia": {
+    "familia": "Calibri",
+    "corpo_pt": 11.0,
+    "padrao_planilha": {
+      "familia": "Times New Roman",
+      "corpo_pt": 10.0
+    }
+  },
+  "cores": {
+    "texto": "#000000",
+    "rotulo_fundo": "#D8D8D8"
+  },
+  "grade": {
+    "escala_impressao": 0.9744,
+    "largura_util_cm": 19.8,
+    "colunas": [
+      {
+        "coluna": "A",
+        "largura_caracteres": 2.0,
+        "largura_cm": 0.36
+      },
+      {
+        "coluna": "D",
+        "largura_caracteres": 33.66,
+        "largura_cm": 6.08
+      },
+      {
+        "coluna": "E",
+        "largura_caracteres": 3.66,
+        "largura_cm": 0.67
+      },
+      {
+        "coluna": "F",
+        "largura_caracteres": 45.0,
+        "largura_cm": 8.12
+      },
+      {
+        "coluna": "H",
+        "largura_caracteres": 16.66,
+        "largura_cm": 3.02
+      },
+      {
+        "coluna": "I",
+        "largura_caracteres": 5.44,
+        "largura_cm": 0.98
+      },
+      {
+        "coluna": "J",
+        "largura_caracteres": 3.11,
+        "largura_cm": 0.57
+      }
+    ],
+    "colunas_ocultas": [
+      "B",
+      "C",
+      "G"
+    ]
+  },
+  "cabecalho": {
+    "secoes": {
+      "direita": [
+        {
+          "papel": "imagem",
+          "trechos": [
+            {
+              "papel": "imagem",
+              "placeholder": null,
+              "negrito": false,
+              "cor": null
+            }
+          ],
+          "imagem": {
+            "largura_cm": 5.63,
+            "altura_cm": 2.82
+          }
+        }
+      ]
+    }
+  },
+  "rodape": {
+    "secoes": {
+      "centro": [
+        {
+          "papel": "nome",
+          "trechos": [
+            {
+              "papel": "nome",
+              "placeholder": "{{ responsavel.nome }}",
+              "negrito": true,
+              "cor": null
+            }
+          ]
+        },
+        {
+          "papel": "registro",
+          "trechos": [
+            {
+              "papel": "registro",
+              "placeholder": "{{ responsavel.titulo_profissional }} - CREA nº {{ responsavel.crea }}",
+              "negrito": false,
+              "cor": null
+            }
+          ]
+        },
+        {
+          "papel": "contato",
+          "trechos": [
+            {
+              "papel": "contato",
+              "placeholder": "{{ responsavel.email }}",
+              "negrito": true,
+              "cor": "#4F81BD"
+            },
+            {
+              "papel": "contato",
+              "placeholder": " / {{ responsavel.telefone }}",
+              "negrito": false,
+              "cor": "#000000"
+            }
+          ]
+        }
+      ],
+      "direita": [
+        {
+          "papel": "numero_pagina",
+          "trechos": [
+            {
+              "papel": "numero_pagina",
+              "placeholder": "{{ numero_pagina }}",
+              "negrito": false,
+              "cor": "#000000"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "titulo_sistema": {
+    "numeracao": {
+      "capitulo": 7,
+      "formato": "{capitulo}.{indice}."
+    },
+    "coluna": "D",
+    "colunas": 6,
+    "altura_pt": 14.25,
+    "espaco_apos_pt": 6.0,
+    "estilo": {
+      "fonte": "Cambria",
+      "corpo_pt": 11.0,
+      "negrito": true,
+      "italico": false,
+      "cor": "#000000",
+      "fundo": null,
+      "alinhamento_h": "left",
+      "alinhamento_v": null,
+      "quebra_texto": true,
+      "bordas": {}
+    }
+  },
+  "ficha": {
+    "linhas_por_ficha": 24,
+    "fichas_por_pagina": 2,
+    "fichas_amostradas": 4,
+    "alturas_pt": [
+      14.25,
+      14.25,
+      14.25,
+      14.25,
+      14.25,
+      14.25,
+      14.25,
+      14.25,
+      14.25,
+      14.25,
+      14.25,
+      24.0,
+      14.25,
+      14.25,
+      14.25,
+      14.25,
+      14.25,
+      14.25,
+      14.25,
+      14.25,
+      14.25,
+      14.25,
+      14.25,
+      14.25
+    ],
+    "legenda": {
+      "prefixo": "Foto nº",
+      "digitos": 2
+    },
+    "campos": [
+      {
+        "campo": "situacao",
+        "rotulo": "SITUAÇÃO",
+        "linha_valor": 2
+      },
+      {
+        "campo": "gravidade",
+        "rotulo": "GRAVIDADE",
+        "linha_valor": 4
+      },
+      {
+        "campo": "urgencia",
+        "rotulo": "URGÊNCIA",
+        "linha_valor": 5
+      },
+      {
+        "campo": "tendencia",
+        "rotulo": "TENDÊNCIA",
+        "linha_valor": 6
+      },
+      {
+        "campo": "pontuacao",
+        "rotulo": "PONTUAÇÃO",
+        "linha_valor": 8
+      },
+      {
+        "campo": "classificacao",
+        "rotulo": "CLASSIFICAÇÃO",
+        "linha_valor": 10
+      },
+      {
+        "campo": "tipo_de_anomalia",
+        "rotulo": "TIPO DE ANOMALIA",
+        "linha_valor": 12
+      },
+      {
+        "campo": "grau_de_risco",
+        "rotulo": "GRAU DE RISCO",
+        "linha_valor": 15
+      },
+      {
+        "campo": "sistema",
+        "rotulo": "SISTEMA",
+        "linha_valor": 17
+      },
+      {
+        "campo": "observacoes_tecnicas",
+        "rotulo": "OBSERVAÇÕES TÉCNICAS",
+        "linha_valor": 18
+      },
+      {
+        "campo": "subsistema",
+        "rotulo": "SUBSISTEMA",
+        "linha_valor": 20
+      },
+      {
+        "campo": "localizacao",
+        "rotulo": "LOCALIZAÇÃO",
+        "linha_valor": 22
+      }
+    ],
+    "foto": {
+      "largura_cm": 14.14,
+      "altura_cm": 7.48,
+      "amostras": 5
+    },
+    "celulas": [
+      {
+        "linha": 0,
+        "coluna": "D",
+        "linhas": 1,
+        "colunas": 5,
+        "papel": "titulo_foto",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 12.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": null,
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "top": "thin",
+            "bottom": "thin",
+            "right": "thin"
+          }
+        }
+      },
+      {
+        "linha": 1,
+        "coluna": "D",
+        "linhas": 15,
+        "colunas": 3,
+        "papel": "foto",
+        "estilo": {
+          "fonte": "Times New Roman",
+          "corpo_pt": 10.0,
+          "negrito": false,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": null,
+          "alinhamento_h": "center",
+          "alinhamento_v": "top",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        }
+      },
+      {
+        "linha": 1,
+        "coluna": "H",
+        "linhas": 1,
+        "colunas": 2,
+        "papel": "rotulo",
+        "texto": "SITUAÇÃO",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 11.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": "#D8D8D8",
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "top": "thin",
+            "bottom": "thin",
+            "right": "thin"
+          }
+        }
+      },
+      {
+        "linha": 2,
+        "coluna": "H",
+        "linhas": 1,
+        "colunas": 2,
+        "papel": "valor",
+        "campo": "situacao",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 11.0,
+          "negrito": false,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": null,
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "top": "thin",
+            "bottom": "thin",
+            "right": "thin"
+          }
+        }
+      },
+      {
+        "linha": 3,
+        "coluna": "H",
+        "linhas": 1,
+        "colunas": 2,
+        "papel": "rotulo",
+        "texto": "PRIORIDADE",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 11.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": "#D8D8D8",
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "top": "thin",
+            "bottom": "thin",
+            "right": "thin"
+          }
+        }
+      },
+      {
+        "linha": 4,
+        "coluna": "H",
+        "linhas": 1,
+        "colunas": 1,
+        "papel": "rotulo",
+        "texto": "GRAVIDADE",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 10.0,
+          "negrito": false,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": null,
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        }
+      },
+      {
+        "linha": 4,
+        "coluna": "I",
+        "linhas": 1,
+        "colunas": 1,
+        "papel": "valor",
+        "campo": "gravidade",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 12.0,
+          "negrito": false,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": null,
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": false,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        }
+      },
+      {
+        "linha": 5,
+        "coluna": "H",
+        "linhas": 1,
+        "colunas": 1,
+        "papel": "rotulo",
+        "texto": "URGÊNCIA",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 10.0,
+          "negrito": false,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": null,
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        }
+      },
+      {
+        "linha": 5,
+        "coluna": "I",
+        "linhas": 1,
+        "colunas": 1,
+        "papel": "valor",
+        "campo": "urgencia",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 12.0,
+          "negrito": false,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": null,
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": false,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        }
+      },
+      {
+        "linha": 6,
+        "coluna": "H",
+        "linhas": 1,
+        "colunas": 1,
+        "papel": "rotulo",
+        "texto": "TENDÊNCIA",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 10.0,
+          "negrito": false,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": null,
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        }
+      },
+      {
+        "linha": 6,
+        "coluna": "I",
+        "linhas": 1,
+        "colunas": 1,
+        "papel": "valor",
+        "campo": "tendencia",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 12.0,
+          "negrito": false,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": null,
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": false,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        }
+      },
+      {
+        "linha": 7,
+        "coluna": "H",
+        "linhas": 1,
+        "colunas": 2,
+        "papel": "rotulo",
+        "texto": "PONTUAÇÃO",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 11.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": "#D8D8D8",
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "top": "thin",
+            "bottom": "thin",
+            "right": "thin"
+          }
+        }
+      },
+      {
+        "linha": 8,
+        "coluna": "H",
+        "linhas": 1,
+        "colunas": 2,
+        "papel": "valor",
+        "campo": "pontuacao",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 11.0,
+          "negrito": false,
+          "italico": false,
+          "cor": "#FF0000",
+          "fundo": null,
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": false,
+          "bordas": {
+            "left": "thin",
+            "top": "thin",
+            "bottom": "thin",
+            "right": "thin"
+          }
+        }
+      },
+      {
+        "linha": 9,
+        "coluna": "H",
+        "linhas": 1,
+        "colunas": 2,
+        "papel": "rotulo",
+        "texto": "CLASSIFICAÇÃO",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 11.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": "#D8D8D8",
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "top": "thin",
+            "bottom": "thin",
+            "right": "thin"
+          }
+        }
+      },
+      {
+        "linha": 10,
+        "coluna": "H",
+        "linhas": 1,
+        "colunas": 2,
+        "papel": "valor",
+        "campo": "classificacao",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 11.0,
+          "negrito": false,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": null,
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "top": "thin",
+            "bottom": "thin",
+            "right": "thin"
+          }
+        }
+      },
+      {
+        "linha": 11,
+        "coluna": "H",
+        "linhas": 1,
+        "colunas": 2,
+        "papel": "rotulo",
+        "texto": "TIPO DE",
+        "sufixo_campo": "classificacao",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 9.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": "#D8D8D8",
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "top": "thin",
+            "bottom": "thin",
+            "right": "thin"
+          }
+        }
+      },
+      {
+        "linha": 12,
+        "coluna": "H",
+        "linhas": 2,
+        "colunas": 2,
+        "papel": "valor",
+        "campo": "tipo_de_anomalia",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 11.0,
+          "negrito": false,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": null,
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "top": "thin",
+            "right": "thin",
+            "bottom": "thin"
+          }
+        }
+      },
+      {
+        "linha": 14,
+        "coluna": "H",
+        "linhas": 1,
+        "colunas": 2,
+        "papel": "rotulo",
+        "texto": "GRAU DE RISCO",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 10.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": "#D8D8D8",
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "top": "thin",
+            "bottom": "thin",
+            "right": "thin"
+          }
+        }
+      },
+      {
+        "linha": 15,
+        "coluna": "H",
+        "linhas": 1,
+        "colunas": 2,
+        "papel": "valor",
+        "campo": "grau_de_risco",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 11.0,
+          "negrito": false,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": null,
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "top": "thin",
+            "right": "thin"
+          }
+        }
+      },
+      {
+        "linha": 16,
+        "coluna": "D",
+        "linhas": 1,
+        "colunas": 2,
+        "papel": "rotulo",
+        "texto": "SISTEMA",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 11.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": "#D8D8D8",
+          "alinhamento_h": "center",
+          "alinhamento_v": "top",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        }
+      },
+      {
+        "linha": 16,
+        "coluna": "F",
+        "linhas": 1,
+        "colunas": 3,
+        "papel": "rotulo",
+        "texto": "OBSERVAÇÕES TÉCNICAS",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 11.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": "#D8D8D8",
+          "alinhamento_h": "left",
+          "alinhamento_v": "center",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        }
+      },
+      {
+        "linha": 17,
+        "coluna": "D",
+        "linhas": 2,
+        "colunas": 2,
+        "papel": "valor",
+        "campo": "sistema",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 11.0,
+          "negrito": false,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": null,
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "top": "thin",
+            "right": "thin",
+            "bottom": "thin"
+          }
+        }
+      },
+      {
+        "linha": 17,
+        "coluna": "I",
+        "linhas": 1,
+        "colunas": 1,
+        "papel": "vazio",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 10.0,
+          "negrito": false,
+          "italico": false,
+          "cor": null,
+          "fundo": null,
+          "alinhamento_h": null,
+          "alinhamento_v": "center",
+          "quebra_texto": true,
+          "bordas": {
+            "right": "thin"
+          }
+        }
+      },
+      {
+        "linha": 18,
+        "coluna": "F",
+        "linhas": 5,
+        "colunas": 3,
+        "papel": "valor",
+        "campo": "observacoes_tecnicas",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 10.0,
+          "negrito": false,
+          "italico": false,
+          "cor": null,
+          "fundo": null,
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "bottom": "thin"
+          }
+        }
+      },
+      {
+        "linha": 19,
+        "coluna": "D",
+        "linhas": 1,
+        "colunas": 2,
+        "papel": "rotulo",
+        "texto": "SUBSISTEMA",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 11.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": "#D8D8D8",
+          "alinhamento_h": "center",
+          "alinhamento_v": "top",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "top": "thin",
+            "bottom": "thin",
+            "right": "thin"
+          }
+        }
+      },
+      {
+        "linha": 20,
+        "coluna": "D",
+        "linhas": 1,
+        "colunas": 2,
+        "papel": "valor",
+        "campo": "subsistema",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 11.0,
+          "negrito": false,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": null,
+          "alinhamento_h": "center",
+          "alinhamento_v": "top",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "top": "thin",
+            "bottom": "thin",
+            "right": "thin"
+          }
+        }
+      },
+      {
+        "linha": 21,
+        "coluna": "D",
+        "linhas": 1,
+        "colunas": 2,
+        "papel": "rotulo",
+        "texto": "LOCALIZAÇÃO",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 11.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": "#D8D8D8",
+          "alinhamento_h": "center",
+          "alinhamento_v": "top",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "top": "thin",
+            "bottom": "thin",
+            "right": "thin"
+          }
+        }
+      },
+      {
+        "linha": 22,
+        "coluna": "D",
+        "linhas": 1,
+        "colunas": 2,
+        "papel": "valor",
+        "campo": "localizacao",
+        "estilo": {
+          "fonte": "Calibri",
+          "corpo_pt": 11.0,
+          "negrito": false,
+          "italico": false,
+          "cor": "#000000",
+          "fundo": null,
+          "alinhamento_h": "center",
+          "alinhamento_v": "top",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "top": "thin",
+            "bottom": "thin",
+            "right": "thin"
+          }
+        }
+      }
+    ]
+  },
+  "resumo": {
+    "aba": "Relatório",
+    "pagina": {
+      "tamanho": "A4",
+      "orientacao": "portrait",
+      "margens_cm": {
+        "esquerda": 1.3,
+        "direita": 1.3,
+        "superior": 2.0,
+        "inferior": 2.0,
+        "cabecalho": 0.0,
+        "rodape": 0.0
+      },
+      "ajustar_largura_a_pagina": false,
+      "primeira_pagina_no_original": null
+    },
+    "cabecalho": [
+      {
+        "coluna": "A",
+        "rotulo": "Imagem",
+        "estilo": {
+          "fonte": "Times New Roman",
+          "corpo_pt": 14.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#FFFFFF",
+          "fundo": "#17365D",
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": false,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        },
+        "largura_caracteres": 15.109375
+      },
+      {
+        "coluna": "B",
+        "rotulo": "Gravidade",
+        "estilo": {
+          "fonte": "Times New Roman",
+          "corpo_pt": 14.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#FFFFFF",
+          "fundo": "#17365D",
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": false,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        },
+        "largura_caracteres": 18.109375
+      },
+      {
+        "coluna": "C",
+        "rotulo": "Urgência",
+        "estilo": {
+          "fonte": "Times New Roman",
+          "corpo_pt": 14.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#FFFFFF",
+          "fundo": "#17365D",
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": false,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        },
+        "largura_caracteres": 16.21875
+      },
+      {
+        "coluna": "D",
+        "rotulo": "Tendência",
+        "estilo": {
+          "fonte": "Times New Roman",
+          "corpo_pt": 14.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#FFFFFF",
+          "fundo": "#17365D",
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": false,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        },
+        "largura_caracteres": 17.77734375
+      },
+      {
+        "coluna": "E",
+        "rotulo": "Pontuação",
+        "estilo": {
+          "fonte": "Times New Roman",
+          "corpo_pt": 14.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#FFFFFF",
+          "fundo": "#17365D",
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": false,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        },
+        "largura_caracteres": 18.0
+      },
+      {
+        "coluna": "F",
+        "rotulo": "Classificação",
+        "estilo": {
+          "fonte": "Times New Roman",
+          "corpo_pt": 14.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#FFFFFF",
+          "fundo": "#17365D",
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": false,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        },
+        "largura_caracteres": 20.88671875
+      },
+      {
+        "coluna": "G",
+        "rotulo": "Tipo",
+        "estilo": {
+          "fonte": "Times New Roman",
+          "corpo_pt": 14.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#FFFFFF",
+          "fundo": "#17365D",
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": false,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        },
+        "largura_caracteres": 23.109375
+      },
+      {
+        "coluna": "H",
+        "rotulo": "Grau de Risco",
+        "estilo": {
+          "fonte": "Times New Roman",
+          "corpo_pt": 14.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#FFFFFF",
+          "fundo": "#17365D",
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": true,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        },
+        "largura_caracteres": 15.88671875
+      },
+      {
+        "coluna": "I",
+        "rotulo": "Sistema",
+        "estilo": {
+          "fonte": "Times New Roman",
+          "corpo_pt": 14.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#FFFFFF",
+          "fundo": "#17365D",
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": false,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        },
+        "largura_caracteres": 39.21875
+      },
+      {
+        "coluna": "J",
+        "rotulo": "Subsistema",
+        "estilo": {
+          "fonte": "Times New Roman",
+          "corpo_pt": 14.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#FFFFFF",
+          "fundo": "#17365D",
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": false,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        },
+        "largura_caracteres": 24.6640625
+      },
+      {
+        "coluna": "K",
+        "rotulo": "Localização",
+        "estilo": {
+          "fonte": "Times New Roman",
+          "corpo_pt": 14.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#FFFFFF",
+          "fundo": "#17365D",
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": false,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        },
+        "largura_caracteres": 45.33203125
+      },
+      {
+        "coluna": "L",
+        "rotulo": "OBSERVAÇÕES TÉCNICAS",
+        "estilo": {
+          "fonte": "Times New Roman",
+          "corpo_pt": 14.0,
+          "negrito": true,
+          "italico": false,
+          "cor": "#FFFFFF",
+          "fundo": "#17365D",
+          "alinhamento_h": "center",
+          "alinhamento_v": "center",
+          "quebra_texto": false,
+          "bordas": {
+            "left": "thin",
+            "right": "thin",
+            "top": "thin",
+            "bottom": "thin"
+          }
+        },
+        "largura_caracteres": 149.33203125
+      }
+    ],
+    "estilo_corpo": {
+      "fonte": "Times New Roman",
+      "corpo_pt": 10.0,
+      "negrito": false,
+      "italico": false,
+      "cor": "#000000",
+      "fundo": null,
+      "alinhamento_h": "center",
+      "alinhamento_v": "top",
+      "quebra_texto": false,
+      "bordas": {
+        "left": "hair",
+        "right": "hair",
+        "bottom": "hair"
+      }
+    }
+  }
+}

@@ -18,7 +18,7 @@ embutir em relatório (mais agressiva) fica em
 """
 import io
 
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from app.core.errors import DomainError
 
@@ -30,6 +30,10 @@ _FORMATOS_PERMITIDOS: dict[str, tuple[str, str]] = {
 }
 
 MAX_LADO_ARMAZENADO_PX = 2000
+# Teto explícito de pixels decodificados (DEC-39 F, A08/DoS): evita que um arquivo pequeno em
+# bytes (PNG muito comprimido) ocupe GBs ao ser descomprimido. 50 Mpx cobre câmeras de celular
+# de 48/50 Mpx; o padrão do Pillow só reage a ~179 Mpx.
+MAX_PIXELS_DECODIFICADOS = 50_000_000
 
 _ERROS_DE_IMAGEM_INVALIDA: tuple[type[Exception], ...] = (
     UnidentifiedImageError,
@@ -48,6 +52,12 @@ def reprocessar_imagem(conteudo: bytes) -> tuple[bytes, str, str]:
     """
     try:
         imagem_verificacao = Image.open(io.BytesIO(conteudo))
+        if imagem_verificacao.width * imagem_verificacao.height > MAX_PIXELS_DECODIFICADOS:
+            raise DomainError(
+                f"A imagem excede o limite de {MAX_PIXELS_DECODIFICADOS // 1_000_000} megapixels.",
+                type_suffix="imagem-excede-pixels-maximos",
+                title="Foto inválida",
+            )
         imagem_verificacao.verify()
     except _ERROS_DE_IMAGEM_INVALIDA as exc:
         raise DomainError(
@@ -70,6 +80,9 @@ def reprocessar_imagem(conteudo: bytes) -> tuple[bytes, str, str]:
 
         extensao, content_type = _FORMATOS_PERMITIDOS[formato]
 
+        # Aplica a orientação do EXIF (celular em pé: Orientation 6/8) ANTES de recodificar sem
+        # EXIF; do contrário a foto sai deitada nos relatórios (DEC-39 B, RF-05).
+        imagem = ImageOps.exif_transpose(imagem)
         imagem_para_salvar = imagem.convert("RGB") if formato == "JPEG" else imagem
         if max(imagem_para_salvar.size) > MAX_LADO_ARMAZENADO_PX:
             escala = MAX_LADO_ARMAZENADO_PX / max(imagem_para_salvar.size)

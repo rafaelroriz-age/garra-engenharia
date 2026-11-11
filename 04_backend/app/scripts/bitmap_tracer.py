@@ -153,7 +153,7 @@ def _douglas_peucker(pontos: list[PontoInteiro], tolerancia: float) -> list[Pont
             manter[indice] = True
             pilha.append((inicio, indice))
             pilha.append((indice, fim))
-    return [ponto for ponto, guardar in zip(pontos, manter) if guardar]
+    return [ponto for ponto, guardar in zip(pontos, manter, strict=True) if guardar]
 
 
 def _distancia_ao_segmento(ponto: Ponto, inicio: Ponto, fim: Ponto) -> float:

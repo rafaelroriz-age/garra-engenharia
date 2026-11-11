@@ -12,6 +12,12 @@ from asyncio import run as run_async
 from datetime import date
 
 import pytest_asyncio
+from fastapi.testclient import TestClient
+from PIL import Image
+from sqlalchemy import delete
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
+
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.security import create_access_token, hash_password
@@ -27,11 +33,6 @@ from app.models import (
     Usuario,
     Visita,
 )
-from fastapi.testclient import TestClient
-from PIL import Image
-from sqlalchemy import delete
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.pool import NullPool
 
 _settings = get_settings()
 _test_engine = create_async_engine(_settings.database_url, poolclass=NullPool, future=True)

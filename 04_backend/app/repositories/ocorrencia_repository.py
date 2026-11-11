@@ -6,7 +6,7 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models import Foto, Inspecao, Ocorrencia, SistemaPredial, Subsistema
+from app.models import Inspecao, Ocorrencia, SistemaPredial, Subsistema
 from app.schemas.ocorrencia import OcorrenciaCreate
 
 _DETALHE_OPTIONS = (
@@ -21,16 +21,28 @@ async def get_by_id(db: AsyncSession, ocorrencia_id: uuid.UUID) -> Ocorrencia | 
     return result.scalar_one_or_none()
 
 
+async def inspecao_existe(db: AsyncSession, inspecao_id: uuid.UUID) -> bool:
+    return await db.get(Inspecao, inspecao_id) is not None
+
+
+async def get_sistema(db: AsyncSession, sistema_id: uuid.UUID) -> SistemaPredial | None:
+    return await db.get(SistemaPredial, sistema_id)
+
+
+async def get_subsistema(db: AsyncSession, subsistema_id: uuid.UUID) -> Subsistema | None:
+    return await db.get(Subsistema, subsistema_id)
+
+
 async def list_by_inspecao(
     db: AsyncSession,
     *,
     inspecao_id: uuid.UUID,
-    sistema_id: str | None = None,
+    sistema_id: uuid.UUID | None = None,
     grau_risco: str | None = None,
 ) -> list[Ocorrencia]:
     filtros = [Ocorrencia.inspecao_id == inspecao_id]
     if sistema_id:
-        filtros.append(Ocorrencia.sistema_id == uuid.UUID(sistema_id))
+        filtros.append(Ocorrencia.sistema_id == sistema_id)
     if grau_risco:
         filtros.append(Ocorrencia.grau_risco == grau_risco)
 
@@ -101,7 +113,8 @@ async def update(
     prioridade_ajustada_por_id: uuid.UUID | None = None,
     prioridade_ajustada_em: datetime | None = None,
 ) -> Ocorrencia:
-    for campo, valor in dados.model_dump().items():
+    # L6: a Inspeção e o `seq_numero` pertencem à ocorrência e não mudam via PUT.
+    for campo, valor in dados.model_dump(exclude={"inspecao_id", "seq_numero"}).items():
         setattr(ocorrencia, campo, valor)
     # RN-04/DEC-29 (BL-15): a prioridade efetiva e o rastreio da sobrescrita são
     # calculados no service, nunca vêm crus do payload.

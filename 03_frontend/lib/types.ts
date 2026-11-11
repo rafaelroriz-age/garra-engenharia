@@ -182,7 +182,11 @@ export interface VisitaInput {
 // Foto (RF-05, RNF-02 parcial, BL-11)
 // ---------------------------------------------------------------------------
 
-export type OrigemFoto = "lightshot" | "upload" | "camera";
+/**
+ * Valores aceitos em `origem` ao vincular foto (`POST /visitas/{id}/fotos`, `POST /ocorrencias/{id}/fotos`).
+ * Único tipo de origem do frontend — o editor usa rótulos internos e os converte só na chamada ao backend.
+ */
+export type OrigemFoto = "upload_manual" | "lightshot" | "clipboard";
 
 export interface Foto {
   id: UUID;
@@ -194,6 +198,57 @@ export interface Foto {
   origem: string;
   ordem?: number | null;
   created_at: string;
+  criado_por_id?: UUID | null;
+  // Campos de legenda assistida por IA (`LegendaIARead`, BL-36/BL-34; RF-15, RN-16, RN-17).
+  // Somente leitura: gravados pelo servidor na geração e na aprovação. Todos nulos = sem sugestão.
+  legenda_bruta?: string | null;
+  legenda_ia_sugerida?: string | null;
+  nivel_certeza_ia?: NivelCertezaIA | null;
+  status_validacao_ia?: StatusValidacaoIA | null;
+  alertas_ia?: string[] | null;
+  pendencias_ia?: string[] | null;
+  prompt_ia_id?: UUID | null;
+  prompt_conteudo_hash?: string | null;
+  legenda_ia_gerada_em?: string | null;
+  aprovado_por_id?: UUID | null;
+  aprovado_em?: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Legenda de foto assistida por IA (RF-15, RN-16, RN-17, DEC-21/DEC-37, BL-35)
+// Contrato: 00_docs/backlog-auto/legenda-ia-endpoints.md §2.
+// ---------------------------------------------------------------------------
+
+/** `rascunho` = sugestão gerada e ainda não revisada; `aprovada` = humano aprovou (RN-17). */
+export type StatusValidacaoIA = "rascunho" | "aprovada";
+
+export type NivelCertezaIA =
+  | "constatacao_direta"
+  | "indicio_tecnico"
+  | "hipotese_tecnica"
+  | "causa_comprovada";
+
+/** Teto de `legenda` no backend (`LEGENDA_MAX_LENGTH`). */
+export const LEGENDA_MAX_LENGTH = 500;
+/** Teto de `legenda_bruta` no backend (`LEGENDA_BRUTA_MAX_LENGTH`). */
+export const LEGENDA_BRUTA_MAX_LENGTH = 5000;
+
+/**
+ * Corpo opcional de `POST /fotos/{id}/legenda-ia/gerar`. Ausente: o backend reaproveita a
+ * `legenda_bruta` gravada; enviado (inclusive `null`): substitui a gravada.
+ */
+export interface LegendaIAGerarInput {
+  legenda_bruta?: string | null;
+}
+
+/**
+ * Payload de `PUT /fotos/{id}`. Campo ausente preserva; `legenda: null` limpa.
+ * `aprovar_legenda_ia: true` aprova a sugestão de IA: o servidor grava aprovador e data pelo token.
+ */
+export interface FotoUpdateInput {
+  legenda?: string | null;
+  ordem?: number | null;
+  aprovar_legenda_ia?: boolean;
 }
 
 /** Resposta do upload bruto (`/fotos/upload` e `/fotos/upload-clipboard`), antes da vinculação. */

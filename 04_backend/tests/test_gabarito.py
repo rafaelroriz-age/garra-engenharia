@@ -5,14 +5,15 @@ contra o PostgreSQL real e os endpoints de dados mestre de
 `00_docs/arquitetura.md` Seção 4.
 """
 import pytest_asyncio
+from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
+
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.main import app
 from app.scripts.rfo_gabarito_parser import build_gabarito
 from app.scripts.seed_gabarito import seed_gabarito
-from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.pool import NullPool
 
 # Engine próprio com `NullPool` para os testes deste módulo (mesmo padrão de
 # `tests/conftest.py`): o `TestClient` (sem uso como context manager) abre um

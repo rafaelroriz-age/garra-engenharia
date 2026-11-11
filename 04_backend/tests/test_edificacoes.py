@@ -8,15 +8,16 @@ PostgreSQL real (mesmo padrão de `tests/test_auth.py`/`test_gabarito.py`).
 import uuid
 
 import pytest_asyncio
+from fastapi.testclient import TestClient
+from sqlalchemy import delete
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
+
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.security import create_access_token, hash_password
 from app.main import app
 from app.models import Edificacao, Usuario
-from fastapi.testclient import TestClient
-from sqlalchemy import delete
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.pool import NullPool
 
 _settings = get_settings()
 _test_engine = create_async_engine(_settings.database_url, poolclass=NullPool, future=True)

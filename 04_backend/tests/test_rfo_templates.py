@@ -16,10 +16,11 @@ from pathlib import Path
 
 import openpyxl
 import pytest
-from app.scripts.build_rfo_templates import gerar_docx, gerar_html
-from app.scripts.rfo_layout_extractor import LayoutExtractionError, extrair_layout
 from jinja2 import DictLoader, Environment, select_autoescape
 from openpyxl.styles import Alignment, Font, PatternFill
+
+from app.scripts.build_rfo_templates import gerar_docx, gerar_html
+from app.scripts.rfo_layout_extractor import LayoutExtractionError, extrair_layout
 
 CINZA_SECAO = "FFD9D9D9"
 
@@ -234,8 +235,9 @@ def test_docx_gerado_renderiza_com_o_mesmo_contexto_do_html(layout: dict, tmp_pa
 def test_templates_versionados_do_original_renderizam() -> None:
     """Os templates de `templates/rfo/` (derivados do original do cliente) devem
     renderizar mesmo em máquinas sem acesso a `01_output-context/`."""
-    from app.scripts.build_rfo_templates import DOCX_TEMPLATE, HTML_TEMPLATE, LAYOUT_JSON
     from docxtpl import DocxTemplate
+
+    from app.scripts.build_rfo_templates import DOCX_TEMPLATE, HTML_TEMPLATE, LAYOUT_JSON
 
     assert LAYOUT_JSON.is_file(), "Rode `python -m app.scripts.build_rfo_templates --original <planilha>`."
     layout_versionado = json.loads(LAYOUT_JSON.read_text(encoding="utf-8"))

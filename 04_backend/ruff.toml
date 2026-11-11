@@ -1,0 +1,29 @@
+# Configuração do ruff do backend (BL-26 / DEC-31 / R-11).
+# Antes deste arquivo o ruff resolvia um pyproject.toml fora do repositório
+# (OneDrive/pyproject.toml, de outro projeto); agora o resultado não depende de config externa.
+line-length = 100
+target-version = "py312"
+extend-exclude = [".venv"]
+
+[lint]
+select = ["E", "F", "I", "B", "UP", "RUF"]
+ignore = [
+    # Comprimento de linha não é bloqueante; o código existente usa linhas longas em
+    # strings/SQL/templates e não há formatter configurado.
+    "E501",
+]
+
+[lint.flake8-bugbear]
+# B008 (chamada de função em default de argumento) é o padrão idiomático do FastAPI
+# (`db: AsyncSession = Depends(get_db)`). Em vez de ignorar a regra globalmente, declaramos
+# essas chamadas como imutáveis, e o B008 continua valendo para o restante do código.
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Security",
+    "fastapi.Header",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.File",
+    "fastapi.Form",
+]

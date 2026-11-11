@@ -63,6 +63,16 @@ PADRAO = {
         "prompt": "",
         "proibidas_extensoes": ["py", "ipynb", "sql", "ts", "tsx", "js", "jsx", "j2", "sh", "ps1", "toml", "yml", "yaml"],
     },
+    "planejamento": {
+        "ativo": False,
+        "model": "sonnet",
+        "effort": "medium",
+        "budget": 3,
+        "timeout": 900,
+        "fontes": [],
+        "max_tarefas": 5,
+        "prompt": "",
+    },
     "lembrete": {
         "ativo": True,
         "extensoes": ["py", "ipynb", "sql"],

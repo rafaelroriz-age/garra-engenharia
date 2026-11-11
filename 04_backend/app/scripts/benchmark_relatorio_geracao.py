@@ -26,7 +26,7 @@ import asyncio
 import json
 import time
 import uuid
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from sqlalchemy import select
@@ -217,7 +217,7 @@ async def rodar(inspecao_id: uuid.UUID) -> dict:
         relatorio_id, tempo_registro = await _registrar_relatorio_concluido(
             inspecao_id, storage, pdf_path_otimizado, docx_path_otimizado
         )
-    except Exception as exc:  # registrado como achado do benchmark, não deve interromper a coleta
+    except Exception as exc:
         resultados["registro_final_erro"] = str(exc)
         return resultados
     resultados["relatorio_id"] = str(relatorio_id)

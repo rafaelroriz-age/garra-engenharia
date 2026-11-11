@@ -3,7 +3,7 @@
 Ver DEC-05 (`00_docs/projeto/decisoes.md`) e `app/core/config.py` para as
 variáveis `JWT_SECRET_KEY`/`JWT_ALGORITHM`/`JWT_ACCESS_TOKEN_EXPIRE_MINUTES`.
 """
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from jose import JWTError, jwt

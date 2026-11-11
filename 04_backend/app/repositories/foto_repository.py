@@ -12,6 +12,11 @@ async def get_by_id(db: AsyncSession, foto_id: uuid.UUID) -> Foto | None:
     return result.scalar_one_or_none()
 
 
+async def get_by_storage_key(db: AsyncSession, storage_key: str) -> Foto | None:
+    result = await db.execute(select(Foto).where(Foto.storage_key == storage_key).limit(1))
+    return result.scalar_one_or_none()
+
+
 async def create(
     db: AsyncSession,
     *,
@@ -40,11 +45,11 @@ async def create(
     return foto
 
 
-async def update(db: AsyncSession, foto: Foto, *, legenda: str | None, ordem: int | None) -> Foto:
-    if legenda is not None:
-        foto.legenda = legenda
-    if ordem is not None:
-        foto.ordem = ordem
+async def update(db: AsyncSession, foto: Foto, campos: dict) -> Foto:
+    """Aplica apenas as chaves presentes em `campos` (`legenda`, `ordem`); `None` explícito limpa o campo."""
+    for nome in ("legenda", "ordem"):
+        if nome in campos:
+            setattr(foto, nome, campos[nome])
     await db.commit()
     await db.refresh(foto)
     return foto
