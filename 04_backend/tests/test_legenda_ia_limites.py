@@ -264,7 +264,11 @@ def test_janela_vencida_libera_a_rota_sem_sleep(rota):
     assert rota.gerar(foto_id).status_code == 200
 
 
-def test_sem_provedor_responde_503_e_nao_gasta_cota(rota):
+def test_sem_provedor_responde_503_e_nao_gasta_cota(rota, monkeypatch):
+    monkeypatch.setattr(
+        "app.services.legenda_ia.get_settings",
+        lambda: Settings(legenda_ia_provedor="deepseek", deepseek_api_key=None),
+    )
     foto_id = rota.nova_foto()
     del app.dependency_overrides[obter_cliente_provedor]
 

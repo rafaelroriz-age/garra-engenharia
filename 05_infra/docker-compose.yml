@@ -141,6 +141,13 @@ services:
       LEGENDA_IA_SAIDA_MAX_CARACTERES: ${LEGENDA_IA_SAIDA_MAX_CARACTERES:-500}
       LEGENDA_IA_SAIDA_MAX_ITENS: ${LEGENDA_IA_SAIDA_MAX_ITENS:-20}
       LEGENDA_IA_SAIDA_MAX_CARACTERES_ITEM: ${LEGENDA_IA_SAIDA_MAX_CARACTERES_ITEM:-300}
+      # Provedor de legenda por IA (B-04): DeepSeek. A chave só vem do .env, nunca do compose.
+      LEGENDA_IA_PROVEDOR: ${LEGENDA_IA_PROVEDOR:-fake}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      DEEPSEEK_MODELO: ${DEEPSEEK_MODELO:-deepseek-flash}
+      DEEPSEEK_TIMEOUT_S: ${DEEPSEEK_TIMEOUT_S:-30}
+      DEEPSEEK_ENVIAR_IMAGEM: ${DEEPSEEK_ENVIAR_IMAGEM:-false}
     ports:
       # Bind apenas em localhost, mesma política de segurança do Postgres/MinIO.
       - "127.0.0.1:${BACKEND_PORT:-8000}:8000"

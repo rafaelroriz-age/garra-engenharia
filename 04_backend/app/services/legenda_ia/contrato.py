@@ -14,6 +14,8 @@ class LegendaIAResultado:
     legenda_sugerida: str
     alertas: list[str] = field(default_factory=list)
     pendencias: list[str] = field(default_factory=list)
+    # Como o provedor foi chamado: 'texto' (sem imagem) ou 'imagem'; None para o fake.
+    modo: str | None = None
 
 
 @runtime_checkable
