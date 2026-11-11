@@ -27,14 +27,17 @@ from __future__ import annotations
 import base64
 import copy
 import io
+import logging
 import re
 import time
 from collections import OrderedDict
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+from PIL import Image, ImageOps
 
 from app.services.report_generator.legenda_foto import legenda_para_relatorio
 
@@ -75,6 +78,15 @@ CAMPOS_FICHA = (
 VAZIO = "—"
 # Largura da foto na ficha do DOCX: metade útil da página A4 (2 fichas por linha).
 LARGURA_FOTO_DOCX_MM = 80
+# Lado maior da foto embutida no DOCX: 80 mm a ~200 dpi são ~630 px. As fotos chegam com
+# 1200 px (DEC-40); reduzir aqui evita inflar o arquivo (239 fotos) sem perda visível.
+LADO_MAX_FOTO_DOCX_PX = 640
+QUALIDADE_FOTO_DOCX = 80
+TEXTO_FOTO_INDISPONIVEL = "[foto indisponível]"
+# Pillow libera o GIL ao decodificar/codificar; poucas threads bastam.
+THREADS_REDUCAO_FOTOS = 4
+
+logger = logging.getLogger(__name__)
 
 _ORDEM_INDEFINIDA = 10**9
 # Esquema das fotos servidas da memória ao WeasyPrint em `gerar_pdf` (T20).
@@ -297,6 +309,62 @@ def gerar_pdf(contexto: dict[str, Any], fotos_bytes: dict[str, bytes], destino: 
     }
 
 
+def reduzir_foto_docx(conteudo: bytes, *, lado_max: int = LADO_MAX_FOTO_DOCX_PX) -> bytes:
+    """Reduz a foto para a largura útil da ficha; fotos já menores seguem como vieram."""
+    with Image.open(io.BytesIO(conteudo)) as imagem:
+        if max(imagem.size) <= lado_max:
+            return conteudo
+        imagem = ImageOps.exif_transpose(imagem).convert("RGB")
+        imagem.thumbnail((lado_max, lado_max), Image.LANCZOS)
+        buffer = io.BytesIO()
+        imagem.save(buffer, format="JPEG", quality=QUALIDADE_FOTO_DOCX)
+        return buffer.getvalue()
+
+
+def _reduzir_fotos(fotos_bytes: dict[str, bytes], chaves: list[str]) -> dict[str, bytes | Exception]:
+    """Reduz em paralelo as fotos de `chaves`; falha de uma vira a exceção no lugar dos bytes."""
+
+    def reduzir(chave: str) -> bytes | Exception:
+        try:
+            return reduzir_foto_docx(fotos_bytes[chave])
+        except Exception as erro:  # imagem corrompida não pode derrubar o laudo
+            return erro
+
+    with ThreadPoolExecutor(max_workers=THREADS_REDUCAO_FOTOS) as pool:
+        return dict(zip(chaves, pool.map(reduzir, chaves), strict=True))
+
+
+def _foto_para_docx(tpl: Any, ocorrencia: dict[str, Any], reduzidas: dict[str, bytes | Exception]) -> Any:
+    """`InlineImage` da foto da ocorrência, ou texto-placeholder se ela não puder ser usada.
+
+    Foto ausente do `fotos_bytes` ou ilegível não derruba o DOCX: registra aviso no log.
+    Ocorrência sem foto cadastrada fica sem nada (como no PDF).
+    """
+    from docx.shared import Mm
+    from docxtpl import InlineImage
+
+    storage_key = _storage_key_da_foto(ocorrencia)
+    if storage_key is None:
+        return ""
+    reduzida = reduzidas.get(storage_key)
+    if reduzida is None:
+        logger.warning(
+            "LTIP DOCX: foto '%s' da ocorrência nº %s não foi fornecida; usando placeholder.",
+            storage_key,
+            ocorrencia.get("seq_numero"),
+        )
+        return TEXTO_FOTO_INDISPONIVEL
+    if isinstance(reduzida, Exception):
+        logger.warning(
+            "LTIP DOCX: foto '%s' da ocorrência nº %s ilegível (%s); usando placeholder.",
+            storage_key,
+            ocorrencia.get("seq_numero"),
+            reduzida,
+        )
+        return TEXTO_FOTO_INDISPONIVEL
+    return InlineImage(tpl, io.BytesIO(reduzida), width=Mm(LARGURA_FOTO_DOCX_MM))
+
+
 def gerar_docx(
     contexto: dict[str, Any],
     fotos_bytes: dict[str, bytes],
@@ -306,27 +374,33 @@ def gerar_docx(
 ) -> dict[str, float]:
     """Renderiza o DOCX (docxtpl) a partir do template base do LTIP.
 
-    Cada ocorrência recebe `foto` (`InlineImage`, criado sem custo de render).
-    O template versionado ainda não tem o placeholder `{{ ocorrencia.foto }}`
-    na ficha (lacuna de BL-17 registrada no doc da tarefa); assim que o gerador
-    do template o incluir, a foto passa a sair no DOCX sem mudar este módulo.
+    Cada ocorrência recebe `foto` (`InlineImage` reduzida à largura da ficha, ou
+    `[foto indisponível]`) e `legenda_foto` (só a legenda aprovada/manual, DEC-37
+    DP-9). Fotos de 1200 px (DEC-40) são reduzidas a `LADO_MAX_FOTO_DOCX_PX`.
 
     Retorna o tempo (segundos) de `montagem_fotos`, `render_e_salvar` e
     `total`, além de `tamanho_bytes`.
     """
-    from docx.shared import Mm
-    from docxtpl import DocxTemplate, InlineImage
+    from docxtpl import DocxTemplate
 
     tpl = DocxTemplate(str(template_path or TEMPLATES_DIR / DOCX_TEMPLATE_NAME))
     contexto_docx = normalizar_contexto(contexto)
 
     inicio_fotos = time.perf_counter()
+    chaves = list(
+        dict.fromkeys(
+            chave
+            for sistema in contexto_docx["sistemas"]
+            for ocorrencia in sistema["ocorrencias"]
+            if (chave := _storage_key_da_foto(ocorrencia)) in fotos_bytes
+        )
+    )
+    reduzidas = _reduzir_fotos(fotos_bytes, chaves)
     for sistema in contexto_docx["sistemas"]:
         for ocorrencia in sistema["ocorrencias"]:
-            conteudo = _bytes_da_foto(ocorrencia, fotos_bytes)
-            ocorrencia["foto"] = (
-                InlineImage(tpl, io.BytesIO(conteudo), width=Mm(LARGURA_FOTO_DOCX_MM)) if conteudo else ""
-            )
+            ocorrencia["foto"] = _foto_para_docx(tpl, ocorrencia, reduzidas)
+            fotos = ocorrencia.get("fotos") or []
+            ocorrencia["legenda_foto"] = fotos[0].get("legenda", "") if fotos else ""
     fim_fotos = time.perf_counter()
 
     tpl.render(contexto_docx, autoescape=True)
