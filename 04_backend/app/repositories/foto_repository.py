@@ -2,8 +2,10 @@
 import uuid
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import ConflictError
 from app.models import Foto
 
 
@@ -40,7 +42,16 @@ async def create(
         criado_por_id=criado_por_id,
     )
     db.add(foto)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError as exc:
+        await db.rollback()
+        if "uq_fotos_storage_key" in str(exc.orig):
+            raise ConflictError(
+                f"A chave de armazenamento '{storage_key}' já está vinculada a outra foto.",
+                type_suffix="storage-key-ja-vinculada",
+            ) from exc
+        raise
     await db.refresh(foto)
     return foto
 

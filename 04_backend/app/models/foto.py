@@ -7,7 +7,16 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -33,7 +42,9 @@ class Foto(Base):
     """Fotografia de inspeção, vinculada a uma Ocorrência e/ou a uma Visita."""
 
     __tablename__ = "fotos"
+    # R-15: uma storage_key só pode estar vinculada a uma Foto.
     __table_args__ = (
+        UniqueConstraint("storage_key", name="uq_fotos_storage_key"),
         CheckConstraint(_in("status_validacao_ia", STATUS_VALIDACAO_IA), name="ck_fotos_status_validacao_ia"),
         CheckConstraint(_in("nivel_certeza_ia", NIVEIS_CERTEZA_IA), name="ck_fotos_nivel_certeza_ia"),
         CheckConstraint(
