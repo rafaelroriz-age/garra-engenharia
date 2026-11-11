@@ -724,6 +724,36 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro Backend (.github/agents/backend.agent.md). Contexto: BL-07 (storage MinIO/S3, 04_backend/app/services/storage_service.py) foi concluída com a ressalva de que deve ser confirmada como compatível com o fluxo de legendas/artefatos gerados por IA. Pendências relacionadas de BL-11 (00_docs/backlog-auto/fotos-correcoes.md, DEC-39): URL pré-assinada de leitura (item E) e job de limpeza de órfãos. Faça: (1) leia o storage service e 04_backend/app/api/v1/fotos.py e responda no Doc, com arquivo:linha, se o service cobre: upload, download, URL pré-assinada de leitura com expiração curta, checagem de existência e listagem por prefixo; (2) acrescente SOMENTE o que faltar e for pequeno: uma função `listar_orfaos(chaves_registradas)` (ou nome coerente com o módulo) que devolve as chaves do bucket sem registro, SEM apagar nada (a exclusão automática exige decisão do dono; proponha a política no Doc); (3) teste em 04_backend/tests/test_storage_legenda_ia.py com cliente S3 falso/stub (sem MinIO e sem PostgreSQL); (4) NÃO altere fotos.py (a tarefa B altera pipelines, esta depende dela só para evitar conflito de execução; fotos.py fica fora do escopo — registre no Doc a mudança necessária no router em vez de fazê-la). Rode a partir de 04_backend: `pytest tests/test_storage_legenda_ia.py` e `ruff check` nos arquivos tocados. Se o PostgreSQL de 05_infra (localhost:5433) ou o MinIO não estiverem no ar, registre que não rodou os testes de integração. Registre resultado e decisões propostas em 00_docs/backlog-auto/storage-legenda-ia.md; não edite os documentos de gestão compartilhados. Commit: `feat(backend): ... (BL-07)` com rodapé `Refs BL-07`. Não faça push.
 ```
 
+### T52 · Rodar no PostgreSQL de 05_infra as suítes de Ocorrências, Visitas, Fotos e emissão do RFO que nunca executaram
+- **Status:** todo
+- **Origem:** R-14
+- **Papel:** Engenheiro de Software
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** baixa
+- **Toca:** 00_docs/backlog-auto/execucao-testes-banco.md
+- **Doc:** 00_docs/backlog-auto/execucao-testes-banco.md
+- **Pronto:** O doc lista, por arquivo de teste (test_ocorrencias_regras, test_visitas*, test_fotos*, test_relatorios_rfo_api, test_rfo_contexto, test_portal_cliente), a contagem passed/failed/skipped/xfail e a saída literal dos comandos, ou registra que o PostgreSQL (localhost:5433) não respondeu. Nenhum arquivo fora do doc foi alterado.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro de Software. Contexto: várias tarefas anteriores (T08, T15, T16, T45, T46, T50, T51) registraram que os testes com banco NÃO rodaram (riscos R-13/R-14 em 00_docs/projeto/riscos.md). Esta tarefa só EXECUTA e REGISTRA, sem corrigir código. Passos: (1) a partir de 05_infra/ confira com `docker compose ps` se PostgreSQL (localhost:5433) e MinIO estão no ar; se não estiverem, tente `docker compose up -d`; se não houver Docker, escreva isso no doc e pare, sem inventar resultado. (2) A partir de 04_backend/, rode `alembic upgrade head` apenas se o banco estiver sem schema, anotando o resultado. (3) Rode, um arquivo por vez para evitar a queda por `asyncio.run` descrita em R-15: tests/test_ocorrencias_regras.py, tests/test_visitas*.py, tests/test_fotos*.py, tests/test_relatorios_rfo_api.py, tests/test_rfo_contexto.py, tests/test_portal_cliente.py. (4) Em 00_docs/backlog-auto/execucao-testes-banco.md registre data, versões, comandos, contagens e a lista de falhas com a causa provável de cada uma (ambiente x código), e proponha, sem aplicar, as correções. Não edite código, testes, nem os documentos de gestão (00_docs/projeto/*) nem o BACKLOG.md. Não altere 01_output-context/. Commit: `docs(00_docs): resultado dos testes com banco (R-14)` com `Refs R-14`. Não faça push.
+```
+
+### T53 · RFO: tratar ART de execução ausente no contexto e no template
+- **Status:** todo
+- **Origem:** T50
+- **Papel:** Engenheiro Backend
+- **Depende:** —
+- **Ambiente:** offline
+- **Dificuldade:** baixa
+- **Toca:** 04_backend/app/services/report_generator/rfo_contexto.py, 04_backend/templates/rfo/rfo_template.html.j2, 04_backend/tests/test_rfo_art_execucao.py, 00_docs/backlog-auto/rfo-art-execucao.md
+- **Doc:** 00_docs/backlog-auto/rfo-art-execucao.md
+- **Pronto:** Com `executores[].art_execucao` nulo ou vazio, o contexto do RFO traz '—' (padrão DEC-33) e o PDF/DOCX nunca imprime 'None'; testes novos em test_rfo_art_execucao.py (sem banco, com contexto sintético) passam; `pytest` do arquivo e `ruff check .` limpos em 04_backend.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro Backend (.github/agents/backend.agent.md). Contexto: a T50 (00_docs/backlog-auto/rfo-validacao-completude.md) deixou uma lacuna: `executores[].art_execucao` pode ser nulo no banco (04_backend/app/models/contrato_executor.py) e o template `04_backend/templates/rfo/rfo_template.html.j2` (linha ~94) imprime `None`. Em 04_backend/app/services/report_generator/rfo_contexto.py a função `_executor_ctx` (linha ~76) repassa o valor cru. Leia também a DEC-33 em 00_docs/projeto/decisoes.md (campos vazios viram '—'). Implemente: valor nulo/vazio/só espaços vira '—' no contexto, sem alterar o formato dos demais campos; confira que o DOCX (rfo_pipeline.py, só leitura) também imprime '—'. Crie 04_backend/tests/test_rfo_art_execucao.py com testes que não dependam de banco (chame a função auxiliar diretamente e renderize o template com contexto sintético; se o WeasyPrint não existir, teste só o HTML e o DOCX). Rode, a partir de 04_backend, `pytest tests/test_rfo_art_execucao.py tests/test_rfo_pipeline.py` e `ruff check .`; se algum teste com banco não rodar, registre. Registre fatos e saídas em 00_docs/backlog-auto/rfo-art-execucao.md. Não edite 00_docs/projeto/* nem BACKLOG.md; não altere 01_output-context/. Commit: `fix(backend): RFO imprime — quando a ART de execução falta (DEC-47)` com `Refs DEC-47`. Não faça push.
+```
+
 ---
 
 ## Bloco C — Endurecimento de legendas por IA e storage (DEC-42/43/44)
@@ -968,4 +998,49 @@ Siga o agente backend de .github/agents/ e a 'Regra de pronto' do BACKLOG.md. Co
 - **Prompt:**
 ```text
 Siga o agente backend de .github/agents/ e a 'Regra de pronto' do BACKLOG.md. Contexto: DEC-48 P1 (00_docs/projeto/decisoes.md) deixou em aberto se o Portal do Cliente deve mostrar só a emissão mais recente de cada relatório, já que cada emissão cria um `Relatorio` novo (V01, V02…). Portal: 04_backend/app/api/v1/portal.py e app/services/portal_service.py (`GET /portal/relatorios`, `GET /portal/relatorios/{id}/download/{formato}`, URL pré-assinada de 15 min); veja os testes existentes do portal em 04_backend/tests/ para reaproveitar fixtures (usuário cliente, contrato com contratante, Relatorio com pdf_key/docx_key). Esta é tarefa de TESTE e DIAGNÓSTICO: NÃO altere código de produção. Escreva 04_backend/tests/test_portal_versoes_relatorio.py cobrindo: (a) uma inspeção com RFO V01 e V02 → o que a listagem retorna (contagem, ordem, campo de versão exposto); (b) cliente de outro contratante não vê nem baixa nenhuma versão (404); (c) download devolve URL pré-assinada e nunca a chave do storage; (d) relatório sem pdf_key/docx_key não gera download. Onde o comportamento atual contrariar o esperado, marque o teste com `pytest.mark.xfail(strict=True, reason=...)` e descreva no Doc. Rode a partir de 04_backend/: `python -m pytest tests/test_portal_versoes_relatorio.py` e `ruff check .`. O PostgreSQL de 05_infra/docker-compose.yml (localhost:5433) precisa estar no ar; se não estiver, registre que não rodou em vez de inventar resultado. Registre em 00_docs/backlog-auto/portal-versoes-relatorio.md: fatos observados, tabela de casos, comandos/saída e uma proposta de decisão para DEC-48 P1 (marcada como proposta). Não edite documentos de gestão em 00_docs/projeto/ nem o BACKLOG.md. Commit: `test(backend): testes de versoes de relatorio no portal (DEC-48)` com `Refs DEC-48`. Nunca faça push.
+```
+
+### T54 · Portal do Cliente: tratar o perfil na interface (redirecionar quem não é cliente)
+- **Status:** todo
+- **Origem:** T41
+- **Papel:** Engenheiro Frontend
+- **Depende:** —
+- **Ambiente:** offline
+- **Dificuldade:** baixa
+- **Toca:** 03_frontend/app/portal, 03_frontend/e2e/portal-perfil.spec.ts, 00_docs/backlog-auto/portal-perfil-ui.md
+- **Doc:** 00_docs/backlog-auto/portal-perfil-ui.md
+- **Pronto:** Em 03_frontend/app/portal/, usuário autenticado com role diferente de `cliente` é redirecionado para a área interna (sem listar relatórios) e `cliente` vê o portal; 4 ou mais testes Playwright novos com API mockada (`page.route`) em e2e/portal-perfil.spec.ts passam; `npm run lint` e `npm run build` limpos em 03_frontend.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro Frontend (.github/agents/frontend.agent.md). Contexto: a T41 (00_docs/backlog-auto/portal-e2e.md, spec 03_frontend/e2e/portal.spec.ts) apontou uma lacuna de UX: o portal em 03_frontend/app/portal/ não controla o perfil na UI (sem link para `cliente`, sem redirecionamento por `role`). O perfil do usuário vem do endpoint de sessão/usuário já usado pelo restante do frontend; leia como o `role` é obtido nas telas existentes (ex.: 03_frontend/app/inspecoes) e reutilize. Implemente: (1) quem não é `cliente` ao abrir /portal vai para a home interna sem ver dados do portal; (2) `cliente` vê o portal normalmente; (3) sem sessão vai para o login, como nas demais rotas. Não altere o backend nem o portal.spec.ts existente (só leia; se um teste dele quebrar com a mudança, ajuste a causa no código e registre no Doc). Crie e2e/portal-perfil.spec.ts com a API mockada. Rode, a partir de 03_frontend, `npm run lint`, `npm run build` e o Playwright dos dois specs do portal; se o Playwright não puder rodar, registre. Registre fatos e saídas em 00_docs/backlog-auto/portal-perfil-ui.md. Não edite 00_docs/projeto/* nem BACKLOG.md. Commit: `feat(frontend): portal só para o perfil cliente (BL-32)` com `Refs BL-32`. Não faça push.
+```
+
+### T55 · UNIQUE(storage_key) em fotos com checagem prévia de duplicatas
+- **Status:** todo
+- **Origem:** R-15
+- **Papel:** Engenheiro Backend
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** media
+- **Toca:** 04_backend/app/models/foto.py, 04_backend/alembic/versions, 04_backend/tests/test_fotos_storage_key_unico.py, 00_docs/backlog-auto/fotos-storage-key-unico.md
+- **Doc:** 00_docs/backlog-auto/fotos-storage-key-unico.md
+- **Pronto:** Nova migration Alembic (parte do único head, com downgrade() validado em banco descartável) cria a unicidade de `storage_key` em `fotos`, abortando com mensagem clara se houver duplicatas; `alembic check` sem divergência; testes novos passam (ou o doc registra que o PostgreSQL não rodou); `pytest` e `ruff check .` limpos em 04_backend.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro Backend (.github/agents/backend.agent.md). Contexto: o risco R-15 (00_docs/projeto/riscos.md) lista `UNIQUE(storage_key)` como aberto. A T19 (00_docs/backlog-auto/fotos-correcoes.md) já devolve 409 para chave já vinculada, mas só a aplicação garante isso. Modelo: 04_backend/app/models/foto.py. Passos: (1) rode `alembic heads` em 04_backend e crie uma migration nova com `down_revision` no head atual (confira que continua um único head); nunca altere migrations antigas. (2) No `upgrade()`, antes de criar a restrição, consulte `storage_key` duplicadas (ignorando nulos); se houver, `raise` com a lista das chaves e NÃO apague nem altere dados; depois crie a unicidade (índice único parcial onde `storage_key IS NOT NULL`, se a coluna aceitar nulo) e declare o mesmo no modelo. (3) `downgrade()` obrigatório e validado: upgrade → downgrade → upgrade em banco descartável (não use o banco de dados reais de dev; crie um banco temporário no PostgreSQL de 05_infra, localhost:5433). (4) Crie tests/test_fotos_storage_key_unico.py: segundo vínculo da mesma chave falha com 409 no endpoint e com IntegrityError direto no banco. Rode `alembic check`, `pytest tests/test_fotos_storage_key_unico.py tests/test_fotos*.py` e `ruff check .` a partir de 04_backend; se o PostgreSQL não estiver no ar, registre que não rodou. Registre fatos e saídas em 00_docs/backlog-auto/fotos-storage-key-unico.md. Não edite 00_docs/projeto/* nem BACKLOG.md. Commit: `feat(backend): unicidade de storage_key em fotos (R-15)` com `Refs R-15`. Não faça push.
+```
+
+### T56 · Fotos no DOCX do LTIP
+- **Status:** todo
+- **Origem:** T20
+- **Papel:** Engenheiro Backend
+- **Depende:** —
+- **Ambiente:** offline
+- **Dificuldade:** media
+- **Toca:** 04_backend/app/services/report_generator/ltip_pipeline.py, 04_backend/tests/test_ltip_docx_fotos.py, 00_docs/backlog-auto/ltip-docx-fotos.md
+- **Doc:** 00_docs/backlog-auto/ltip-docx-fotos.md
+- **Pronto:** `ltip_pipeline.gerar_docx` embute as fotos das ocorrências (com legenda via `legenda_para_relatorio`) no DOCX; teste novo com fotos sintéticas confere por inspeção do .docx (word/media e texto da legenda) e passa; tempo do DOCX com 239 fotos sintéticas registrado; `pytest` e `ruff check .` limpos em 04_backend.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro Backend (.github/agents/backend.agent.md). Contexto: a T20 (00_docs/backlog-auto/ltip-desempenho.md) deixou pendente 'foto no DOCX do LTIP'. Arquivo: 04_backend/app/services/report_generator/ltip_pipeline.py (`gerar_docx`); o PDF já usa fotos por `url_fetcher` (DEC-41, 00_docs/projeto/decisoes.md) e a legenda vem de `legenda_foto.py` (T36). Veja como `rfo_pipeline.py` (somente leitura) embute fotos no DOCX e como `foto_fetcher.py` obtém os bytes; siga o mesmo padrão, reduzindo a imagem para a largura útil da página (fotos de 1200 px, DEC-40) para não inflar o arquivo. Mantenha o contrato de `normalizar_contexto` e o PDF intactos; foto indisponível não derruba o DOCX (placeholder de texto e aviso no log). Crie tests/test_ltip_docx_fotos.py sem banco e sem rede (fetcher injetado/monkeypatch, imagens geradas com Pillow) e meça o tempo com ~239 fotos sintéticas. Rode, a partir de 04_backend, `pytest tests/test_ltip_docx_fotos.py tests/test_ltip_pipeline.py` e `ruff check .`. Registre fatos, tempos e saídas em 00_docs/backlog-auto/ltip-docx-fotos.md. Não edite 00_docs/projeto/* nem BACKLOG.md; não altere 01_output-context/. Commit: `feat(backend): fotos no DOCX do LTIP (BL-22)` com `Refs BL-22`. Não faça push.
 ```
