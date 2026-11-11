@@ -5,7 +5,7 @@ Ver RN-03, RN-08, RN-11 em `00_docs/estudo-do-contexto.md` Seção 5.
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -16,6 +16,8 @@ class Foto(Base):
     """Fotografia de inspeção, vinculada a uma Ocorrência e/ou a uma Visita."""
 
     __tablename__ = "fotos"
+    # R-15: uma storage_key só pode estar vinculada a uma Foto.
+    __table_args__ = (UniqueConstraint("storage_key", name="uq_fotos_storage_key"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     ocorrencia_id: Mapped[uuid.UUID | None] = mapped_column(
