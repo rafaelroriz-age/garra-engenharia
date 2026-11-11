@@ -896,7 +896,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T47 · Verificar e repassar MAX_RELATORIO_SIZE_BYTES (e demais env da emissão) aos .env.example, compose e render.yaml
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-48
 - **Papel:** Engenheiro DevOps
 - **Depende:** —
@@ -911,7 +911,7 @@ Siga o agente .github/agents do DevOps e a 'Regra de pronto' do BACKLOG.md (raiz
 ```
 
 ### T48 · RFO: trocar legenda_aprovada por legenda_para_relatorio no contexto do banco
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-47
 - **Papel:** Engenheiro Backend
 - **Depende:** —
@@ -926,7 +926,7 @@ Siga o agente backend de .github/agents/ e a 'Regra de pronto' do BACKLOG.md. Co
 ```
 
 ### T49 · Migration UNIQUE (inspecao_id, tipo, versao) em relatorios com checagem prévia de duplicatas
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-48
 - **Papel:** Engenheiro Backend
 - **Depende:** —
@@ -956,7 +956,7 @@ Siga o agente backend de .github/agents/ e a 'Regra de pronto' do BACKLOG.md. Co
 ```
 
 ### T51 · Portal do Cliente: testes de lacuna para versões múltiplas de relatório (V01, V02…)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-48
 - **Papel:** Engenheiro Backend
 - **Depende:** —
