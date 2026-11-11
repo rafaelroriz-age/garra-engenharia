@@ -660,3 +660,14 @@ last_updated: 2026-09-17
 | **Decisão proposta** | (1) Trocar `legenda_aprovada` por `legenda_para_relatorio` no contexto e descartar a proposta P1 do doc da T45 (nova coluna `legenda_status` **não** é necessária). (2) Validar campos obrigatórios do template antes de gerar e responder 422 (P2). (3) Decidir se o RFO imprime ocorrências (RF-04..06) ou se ficam só no LTIP (P3). |
 | **Consequências** | Sem (1) o contexto fica divergente dos demais pipelines (T36/T37). Sem (2) o PDF/DOCX sai com campos em branco ou `None`. Nada aplicado nesta etapa; (1) e (2) cabem na T46 ou numa tarefa curta. |
 | **Referência** | `00_docs/backlog-auto/rfo-contexto-banco.md` |
+
+## DEC-48 — Emissão de relatórios: versionamento, chaves, unicidade e 503 (proposta de T46)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-10 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | A T46 criou o primeiro endpoint que emite relatório (RFO). Foi preciso escolher versionamento, convenção de chaves no storage e comportamento sem WeasyPrint. Implementado como padrão, sem migration. |
+| **Decisão proposta** | (P1) Cada emissão cria um `Relatorio` novo (`V01`, `V02`…) por inspeção e tipo, sem sobrescrever; avaliar se o Portal deve mostrar só a mais recente. (P2) Chaves `relatorios/{inspecao_id}/{tipo}-v{NN}.{ext}` para todos os tipos. (P3) Migration futura com `UNIQUE (inspecao_id, tipo, versao)` após conferir os dados; hoje a unicidade depende do lock `FOR NO KEY UPDATE`. (P4) `503 gerador-relatorio-indisponivel` como contrato para todo endpoint de geração. (P5) Teto de 200 MB por arquivo (`MAX_RELATORIO_SIZE_BYTES`), a revisar com o benchmark de 200 páginas. |
+| **Consequências** | Sem P3 a unicidade não é garantida pelo banco. A emissão é síncrona e o tempo cresce com as fotos (RNF-06); geração assíncrona fica como tarefa futura. DEC-47 (2) e (3) seguem pendentes. |
+| **Referência** | `00_docs/backlog-auto/rfo-endpoint-emissao.md` |
