@@ -177,7 +177,7 @@ last_updated: 2026-09-17
 | R-11 — Ambiente de desenvolvimento não reproduzível (pytest × pytest-asyncio, ruff, Docker, Python 3.12) | Média → Baixa | Parcialmente mitigado (T02 e T04); restam o ruff na CI e a suíte de integração (DEC-31) |
 | R-12 — Vulnerabilidades de dependências do frontend (Next.js 14.2.35 crítico em produção) | Alta | Ação necessária (DEC-32 proposta; T03) |
 | R-13 — Lacunas de validação no CRUD de Ocorrências (enums, existência, `PUT`) | Média | Em mitigação: correção aplicada na T08, testes ainda não executados (DEC-34 proposta) |
-| R-14 — PDF dos templates e pipelines nunca renderizado de verdade; suíte completa sem PostgreSQL | Média | Ação necessária (rodar no container de `05_infra/`) T45 (2026-11-10): `test_rfo_contexto.py` também não rodou (sem PostgreSQL e sem Pango no Windows); T46 (2026-11-10): os 9 testes de integração de `test_relatorios_rfo_api.py` também não rodaram e a coleta da suíte completa cai em `test_rfo_contexto.py` (import de WeasyPrint no topo) |
+| R-14 — PDF dos templates e pipelines nunca renderizado de verdade; suíte completa sem PostgreSQL | Média | Ação necessária (rodar no container de `05_infra/`) T45 (2026-11-10): `test_rfo_contexto.py` também não rodou (sem PostgreSQL e sem Pango no Windows); T46 (2026-11-10): os 9 testes de integração de `test_relatorios_rfo_api.py` também não rodaram e a coleta da suíte completa cai em `test_rfo_contexto.py` (import de WeasyPrint no topo); T47–T51 (2026-11-11): testes de banco/endpoint de T48, T49 e T50 também não rodaram |
 | R-15 — Lacunas de regra e segurança em Visitas e Fotos | Média | **Reduzido (2026-11-04, T19/T21)** — correções aplicadas e testadas; abertos: L15 (vínculo usuário↔contrato), `UNIQUE(storage_key)`, URL pré-assinada, limite de corpo, suíte completa numa só execução (T22: 34 falhas anteriores, 14 delas testes de banco que falham por `asyncio.run` derrubar o event loop em 7 arquivos; proposta: helper único em `tests/conftest.py`); DEC-38/DEC-39 ainda propostas. T25 (2026-11-05) confirmou a falha de `asyncio.run` em `test_fotos.py` e `test_rbac_auxiliar.py` (22 falhas ao rodar junto dos testes `async`, que passam isolados) e que a suíte completa estoura a memória neste Windows |
 
 ### R-11 — Ambiente de desenvolvimento não reproduzível
@@ -234,6 +234,17 @@ last_updated: 2026-09-17
 | **Atualização (T33–T35, 2026-11-06)** | Legenda IA: o `auxiliar` não aprova mais (403) e editar/regerar legenda aprovada invalida a aprovação (T33/T34); `gerar` tem limite de taxa e a saída do LLM é truncada e saneada (T35). **Riscos que ficam:** (1) o limite é por usuário e em memória por processo, então com vários workers o teto efetivo é multiplicado e não há orçamento global de custo; (2) os testes com banco real e MinIO desses pontos não rodaram; (3) SEG-IA-06 e L15/SEG-IA-07 seguem abertos; (4) o campo «Legenda da foto» no card é uma segunda porta de edição sem o aviso de invalidação. |
 | **Atualização (T37/T38, 2026-11-07)** | Cautelar e Residencial não imprimem mais sugestão de IA (T37). **Riscos que ficam:** (1) LTIP e RFIP ainda sem a regra (T36 bloqueada); (2) nenhum pipeline avisa ao gerar relatório com fotos IA em rascunho; (3) o caminho PDF dos testes novos não rodou (sem WeasyPrint/GTK no Windows); (4) a anotação cria foto nova e a invalidação da aprovação só reage a mudança de `legenda`, não de imagem; (5) CORS do bucket para `toDataURL` não verificado em MinIO real. |
 | **Gatilho de escalada** | Qualquer uso de BL-10/BL-11 com dados reais antes de aplicar a migration e conferir os dados duplicados de produção. |
+| **Responsável** | Engenheiro Backend |
+
+### R-17 — Alembic com duas heads (T49 × T36)
+
+| Campo | Valor |
+|---|---|
+| **Origem** | Lote T47–T51 (2026-11-11), em [relatorio-unicidade.md](../backlog-auto/relatorio-unicidade.md); confirmado com `alembic heads` na `main` mesclada |
+| **Descrição** | `e5a1f0c2b7d4` (UNIQUE de `relatorios`, T49) e `f7c2a9d4e6b1` (legendas IA, T36, via `e5a1c3f7b9d2`) partem da mesma base `d3b7c9e4f1a2`. `alembic upgrade head` falha com múltiplas heads. A migration da T49 também nunca rodou upgrade/downgrade/upgrade e aborta se houver duplicatas em `relatorios` |
+| **Probabilidade / Impacto** | Alta / Alta (deploy e CI com banco bloqueados) |
+| **Mitigação** | Criar migration de merge (`alembic merge`) ou religar `down_revision` da T49 a `f7c2a9d4e6b1`; depois testar upgrade/downgrade/upgrade num banco limpo e conferir duplicatas antes de aplicar em produção |
+| **Gatilho de escalada** | Qualquer `alembic upgrade head` em ambiente compartilhado ou deploy. |
 | **Responsável** | Engenheiro Backend |
 
 ### R-16 — Deploy por VPS e rotina de backup com falhas conhecidas
