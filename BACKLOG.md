@@ -956,7 +956,7 @@ Siga o agente backend de .github/agents/ e a 'Regra de pronto' do BACKLOG.md. Co
 ```
 
 ### T51 · Portal do Cliente: testes de lacuna para versões múltiplas de relatório (V01, V02…)
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-48
 - **Papel:** Engenheiro Backend
 - **Depende:** —
