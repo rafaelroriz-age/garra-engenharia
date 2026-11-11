@@ -1140,7 +1140,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T63 · Legenda por IA: cliente real da DeepSeek Platform API
-- **Status:** doing
+- **Status:** done
 - **Origem:** V1-07
 - **Papel:** Engenheiro Backend
 - **Depende:** —
