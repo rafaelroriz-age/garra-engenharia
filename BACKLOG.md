@@ -725,7 +725,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T52 · Rodar no PostgreSQL de 05_infra as suítes de Ocorrências, Visitas, Fotos e emissão do RFO que nunca executaram
-- **Status:** todo
+- **Status:** doing
 - **Origem:** R-14
 - **Papel:** Engenheiro de Software
 - **Depende:** —
@@ -740,7 +740,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T53 · RFO: tratar ART de execução ausente no contexto e no template
-- **Status:** todo
+- **Status:** doing
 - **Origem:** T50
 - **Papel:** Engenheiro Backend
 - **Depende:** —
@@ -1001,7 +1001,7 @@ Siga o agente backend de .github/agents/ e a 'Regra de pronto' do BACKLOG.md. Co
 ```
 
 ### T54 · Portal do Cliente: tratar o perfil na interface (redirecionar quem não é cliente)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** T41
 - **Papel:** Engenheiro Frontend
 - **Depende:** —
@@ -1016,7 +1016,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T55 · UNIQUE(storage_key) em fotos com checagem prévia de duplicatas
-- **Status:** todo
+- **Status:** doing
 - **Origem:** R-15
 - **Papel:** Engenheiro Backend
 - **Depende:** —
@@ -1031,7 +1031,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T56 · Fotos no DOCX do LTIP
-- **Status:** todo
+- **Status:** doing
 - **Origem:** T20
 - **Papel:** Engenheiro Backend
 - **Depende:** —
