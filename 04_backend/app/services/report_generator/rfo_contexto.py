@@ -20,6 +20,30 @@ from app.services.report_generator.legenda_foto import legenda_para_relatorio
 
 TIPO_RFO = "RFO"
 
+# DEC-47 (2): campos que `rfo_template.html.j2` imprime SEM fallback (`or "—"`/`{% if %}`) e
+# cujas colunas aceitam NULL. Colunas NOT NULL (contrato.numero, edificacao.nome/endereco,
+# fiscal.nome, executor.cnpj/razao_social) ficam de fora: o banco já garante.
+CAMPOS_OBRIGATORIOS_RFO: tuple[tuple[str, str], ...] = (
+    ("fiscal", "crea"),
+    ("contrato", "art_fiscalizacao"),
+    ("contrato", "objeto"),
+    ("contrato", "data_inicio"),
+    ("contrato", "prazo_dias"),
+)
+
+
+def validar_contexto_rfo(contexto: dict[str, Any]) -> list[str]:
+    """Lista os caminhos (`contrato.objeto`) obrigatórios ausentes; vazia = contexto emitível.
+
+    Ausente = `None` ou texto em branco. `prazo_dias == 0` conta como preenchido.
+    """
+    faltantes: list[str] = []
+    for secao, campo in CAMPOS_OBRIGATORIOS_RFO:
+        valor = (contexto.get(secao) or {}).get(campo)
+        if valor is None or (isinstance(valor, str) and not valor.strip()):
+            faltantes.append(f"{secao}.{campo}")
+    return faltantes
+
 
 def _data_br(valor: date | None) -> str | None:
     return valor.strftime("%d/%m/%Y") if valor else None

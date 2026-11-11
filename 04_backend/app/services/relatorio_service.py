@@ -25,7 +25,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import ConflictError, DomainError
 from app.models import Inspecao, Relatorio
-from app.services.report_generator.rfo_contexto import TIPO_RFO, montar_contexto_rfo
+from app.services.report_generator.rfo_contexto import (
+    TIPO_RFO,
+    montar_contexto_rfo,
+    validar_contexto_rfo,
+)
 from app.services.storage import ObjectNotFoundError, StorageClient
 
 logger = logging.getLogger(__name__)
@@ -36,6 +40,20 @@ CONTENT_TYPE_DOCX = "application/vnd.openxmlformats-officedocument.wordprocessin
 # Um RFO com muitas fotos passa fácil do limite de foto de `StorageClient.upload`.
 MAX_RELATORIO_SIZE_BYTES = 200 * 1024 * 1024
 _VERSAO_RE = re.compile(r"^V(\d+)$")
+
+
+class RfoContextoIncompletoError(DomainError):
+    """Contexto sem campos que o template imprime sem fallback (DEC-47). Vira HTTP 422."""
+
+    def __init__(self, campos_faltantes: list[str]) -> None:
+        super().__init__(
+            "Dados obrigatórios do RFO ausentes: " + ", ".join(campos_faltantes) + ".",
+            type_suffix="rfo-contexto-incompleto",
+            title="Contexto do RFO incompleto",
+            status_code=422,
+            errors=[{"field": campo, "message": "Campo obrigatório para emitir o RFO."} for campo in campos_faltantes],
+        )
+        self.campos_faltantes = campos_faltantes
 
 
 class GeradorIndisponivelError(DomainError):
@@ -132,6 +150,9 @@ async def emitir_rfo(
 ) -> Relatorio:
     """Gera PDF e DOCX do RFO e registra uma nova versão de `Relatorio`."""
     contexto = await montar_contexto_rfo(db, inspecao_id)
+    faltantes = validar_contexto_rfo(contexto)
+    if faltantes:
+        raise RfoContextoIncompletoError(faltantes)
     fotos = await asyncio.to_thread(_baixar_fotos, storage, storage_keys_das_fotos(contexto))
     pdf = await asyncio.to_thread(renderizador.gerar_pdf, contexto, fotos)
     docx = await asyncio.to_thread(renderizador.gerar_docx, contexto, fotos)
