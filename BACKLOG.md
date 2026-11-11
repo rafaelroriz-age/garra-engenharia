@@ -866,7 +866,7 @@ Passos: (1) Leia `04_backend/app/core/config.py` e confirme a lista COMPLETA e o
 ```
 
 ### T45 · Montar o contexto do RFO a partir do banco (inspeção → contexto do rfo_pipeline)
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-13
 - **Papel:** Engenheiro Backend
 - **Depende:** T43
