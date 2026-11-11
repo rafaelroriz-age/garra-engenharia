@@ -21,7 +21,6 @@ from typing import Any
 from docx.shared import Mm
 from docxtpl import DocxTemplate
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from PIL import Image
 from weasyprint import HTML
 
 from app.services.report_generator.foto_fetcher import (
@@ -29,6 +28,7 @@ from app.services.report_generator.foto_fetcher import (
     criar_url_fetcher,
     mime_da_imagem,
 )
+from app.services.report_generator.imagem import otimizar_imagem  # noqa: F401 — re-export (V1-02)
 from app.services.report_generator.legenda_foto import legenda_para_relatorio
 
 TEMPLATES_DIR = Path(__file__).resolve().parents[3] / "templates"
@@ -68,24 +68,6 @@ def normalizar_contexto(contexto: dict[str, Any]) -> dict[str, Any]:
         visita.setdefault("servicos_executados_lista", _em_itens(visita.get("servicos_executados")))
         visita.setdefault("observacoes_lista", _em_itens(visita.get("observacoes")))
     return normalizado
-
-
-def otimizar_imagem(conteudo: bytes, *, max_lado: int = 1200, qualidade: int = 72) -> bytes:
-    """Redimensiona (se necessário) e recomprime uma foto para uso em relatório.
-
-    Mitiga o gargalo identificado no benchmark de BL-22: `app.services.image_processing`
-    (BL-11) recodifica a imagem no upload mas NUNCA a redimensiona — fotos de
-    câmera de celular em resolução total (vários MB) hoje são embutidas em
-    PDF/DOCX sem nenhuma redução prévia.
-    """
-    imagem = Image.open(io.BytesIO(conteudo)).convert("RGB")
-    if max(imagem.size) > max_lado:
-        escala = max_lado / max(imagem.size)
-        novo_tamanho = (max(1, int(imagem.width * escala)), max(1, int(imagem.height * escala)))
-        imagem = imagem.resize(novo_tamanho, Image.LANCZOS)
-    buffer = io.BytesIO()
-    imagem.save(buffer, format="JPEG", quality=qualidade, optimize=True)
-    return buffer.getvalue()
 
 
 def gerar_pdf(contexto: dict[str, Any], fotos_bytes: dict[str, bytes], destino: Path) -> dict[str, float]:

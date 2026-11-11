@@ -1,11 +1,18 @@
-"""Emissão do RFO (PDF + DOCX) a partir do banco (BL-13, RF-06, RN-18/DEC-27).
+"""Emissão de relatórios (PDF + DOCX) a partir do banco, por tipo (BL-13, V1-02, RF-06, RN-18/DEC-27).
 
-Fluxo: `montar_contexto_rfo` (404/409) → baixa as fotos do storage → renderiza
-PDF e DOCX (renderizador injetável) → trava a inspeção → calcula a próxima
-versão → grava os arquivos em chaves determinísticas do servidor → cria um
-`Relatorio` novo por emissão (as versões anteriores ficam preservadas).
+Cada tipo de relatório é um `Emissor` registrado em `EMISSORES` (hoje só o
+RFO): ele sabe montar e validar o contexto, quais fotos o template embute e
+qual módulo de `app.services.report_generator` renderiza o documento. Contrato
+e passo a passo para registrar um tipo novo: 00_docs/backlog-auto/v1-emissao-generica.md.
 
-O renderizador padrão importa `rfo_pipeline` (WeasyPrint) sob demanda: sem as
+Fluxo (`emitir_relatorio`): tipo registrado (422) → inspeção existe (404) e é
+do tipo pedido (409) → `montar_contexto` → `validar_contexto` (422) → baixa as
+fotos do storage → renderiza PDF e DOCX (renderizador injetável) → trava a
+inspeção → calcula a próxima versão do tipo → grava os arquivos em chaves
+determinísticas → cria um `Relatorio` novo por emissão (versões anteriores
+preservadas).
+
+O `Renderizador` importa o pipeline (WeasyPrint) sob demanda: sem as
 bibliotecas nativas (GTK/Pango, ex.: Windows fora do container) a emissão falha
 com 503 `gerador-relatorio-indisponivel`, nunca com 500.
 """
@@ -16,15 +23,21 @@ import logging
 import re
 import tempfile
 import uuid
+from collections.abc import Awaitable, Callable, Iterable
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from types import ModuleType
 from typing import Any, Protocol
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.errors import ConflictError, DomainError
+from app.core.errors import ConflictError, DomainError, NotFoundError
 from app.models import Inspecao, Relatorio
+from app.schemas.portal import PortalDownloadRead
+from app.services import portal_service
+from app.services.report_generator.imagem import otimizar_imagem
 from app.services.report_generator.rfo_contexto import (
     TIPO_RFO,
     montar_contexto_rfo,
@@ -37,23 +50,56 @@ logger = logging.getLogger(__name__)
 STATUS_EMITIDO = "emitido"
 CONTENT_TYPE_PDF = "application/pdf"
 CONTENT_TYPE_DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-# Um RFO com muitas fotos passa fácil do limite de foto de `StorageClient.upload`.
+# Um relatório com muitas fotos passa fácil do limite de foto de `StorageClient.upload`.
 MAX_RELATORIO_SIZE_BYTES = 200 * 1024 * 1024
 _VERSAO_RE = re.compile(r"^V(\d+)$")
+PACOTE_PIPELINES = "app.services.report_generator"
 
 
-class RfoContextoIncompletoError(DomainError):
-    """Contexto sem campos que o template imprime sem fallback (DEC-47). Vira HTTP 422."""
+# --- erros -------------------------------------------------------------------------
+
+
+class ContextoIncompletoError(DomainError):
+    """Contexto sem campos que o template imprime sem fallback (DEC-47). Vira HTTP 422.
+
+    `type_suffix` = `{tipo}-contexto-incompleto` (ex.: `rfo-contexto-incompleto`).
+    """
+
+    def __init__(self, tipo: str, campos_faltantes: list[str]) -> None:
+        super().__init__(
+            f"Dados obrigatórios do {tipo} ausentes: " + ", ".join(campos_faltantes) + ".",
+            type_suffix=f"{tipo.lower()}-contexto-incompleto",
+            title=f"Contexto do {tipo} incompleto",
+            status_code=422,
+            errors=[
+                {"field": campo, "message": f"Campo obrigatório para emitir o {tipo}."}
+                for campo in campos_faltantes
+            ],
+        )
+        self.tipo = tipo
+        self.campos_faltantes = campos_faltantes
+
+
+class RfoContextoIncompletoError(ContextoIncompletoError):
+    """Compatibilidade (BL-13/DEC-47): `ContextoIncompletoError` do RFO."""
 
     def __init__(self, campos_faltantes: list[str]) -> None:
+        super().__init__(TIPO_RFO, campos_faltantes)
+
+
+class TipoRelatorioNaoRegistradoError(DomainError):
+    """Tipo sem `Emissor` registrado. Vira HTTP 422 com a lista de tipos disponíveis."""
+
+    def __init__(self, tipo: str, disponiveis: list[str]) -> None:
         super().__init__(
-            "Dados obrigatórios do RFO ausentes: " + ", ".join(campos_faltantes) + ".",
-            type_suffix="rfo-contexto-incompleto",
-            title="Contexto do RFO incompleto",
+            f"Tipo de relatório '{tipo}' não é emitível. Tipos disponíveis: " + ", ".join(disponiveis) + ".",
+            type_suffix="tipo-relatorio-nao-registrado",
+            title="Tipo de relatório não registrado",
             status_code=422,
-            errors=[{"field": campo, "message": "Campo obrigatório para emitir o RFO."} for campo in campos_faltantes],
+            errors=[{"field": "tipo", "message": "Use um dos tipos disponíveis.", "disponiveis": disponiveis}],
         )
-        self.campos_faltantes = campos_faltantes
+        self.tipo = tipo
+        self.disponiveis = disponiveis
 
 
 class GeradorIndisponivelError(DomainError):
@@ -68,33 +114,53 @@ class GeradorIndisponivelError(DomainError):
         )
 
 
-class RenderizadorRFO(Protocol):
+# --- renderização --------------------------------------------------------------------
+
+
+class RenderizadorProtocol(Protocol):
+    """O que a emissão consome: bytes do PDF e do DOCX a partir do contexto e das fotos."""
+
     def gerar_pdf(self, contexto: dict[str, Any], fotos_bytes: dict[str, bytes]) -> bytes: ...
 
     def gerar_docx(self, contexto: dict[str, Any], fotos_bytes: dict[str, bytes]) -> bytes: ...
 
 
-class RenderizadorRFOPadrao:
-    """Adapta `rfo_pipeline` (que escreve em arquivo) para devolver bytes."""
+# Compatibilidade: nome usado por `app/api/v1/relatorios.py` e testes do BL-13.
+RenderizadorRFO = RenderizadorProtocol
 
-    @staticmethod
-    def _pipeline() -> Any:
+
+class Renderizador:
+    """Adapta um pipeline (`gerar_pdf/gerar_docx(contexto, fotos, destino)`) para devolver bytes.
+
+    `pipeline` é o nome do módulo em `app.services.report_generator` (importado
+    sob demanda, para não carregar o WeasyPrint fora do container) ou o próprio
+    módulo já importado. As fotos passam por `otimizar_imagem` antes de embutir.
+    """
+
+    def __init__(self, pipeline: str | ModuleType, *, otimizar_fotos: bool = True) -> None:
+        self.pipeline = pipeline
+        self.otimizar_fotos = otimizar_fotos
+
+    def _pipeline(self) -> Any:
+        if isinstance(self.pipeline, ModuleType):
+            return self.pipeline
         try:
-            from app.services.report_generator import rfo_pipeline
+            pacote = __import__(PACOTE_PIPELINES, fromlist=[self.pipeline])
+            return getattr(pacote, self.pipeline)
         except (ImportError, OSError) as exc:  # OSError: libpango/libgobject ausentes
-            logger.warning("WeasyPrint indisponível para gerar o RFO: %s", exc)
+            logger.warning("Pipeline '%s' indisponível: %s", self.pipeline, exc)
             raise GeradorIndisponivelError(
                 "O gerador de PDF (WeasyPrint) não está disponível neste servidor: faltam as "
                 "bibliotecas nativas GTK/Pango. Gere o relatório pelo container da API."
             ) from exc
-        return rfo_pipeline
 
     def _gerar(self, metodo: str, extensao: str, contexto: dict[str, Any], fotos: dict[str, bytes]) -> bytes:
         pipeline = self._pipeline()
-        fotos_otimizadas = {chave: pipeline.otimizar_imagem(conteudo) for chave, conteudo in fotos.items()}
-        with tempfile.TemporaryDirectory(prefix="rfo-") as pasta:
-            destino = Path(pasta) / f"rfo.{extensao}"
-            getattr(pipeline, metodo)(contexto, fotos_otimizadas, destino)
+        if self.otimizar_fotos:
+            fotos = {chave: otimizar_imagem(conteudo) for chave, conteudo in fotos.items()}
+        with tempfile.TemporaryDirectory(prefix="relatorio-") as pasta:
+            destino = Path(pasta) / f"relatorio.{extensao}"
+            getattr(pipeline, metodo)(contexto, fotos, destino)
             return destino.read_bytes()
 
     def gerar_pdf(self, contexto: dict[str, Any], fotos_bytes: dict[str, bytes]) -> bytes:
@@ -104,15 +170,64 @@ class RenderizadorRFOPadrao:
         return self._gerar("gerar_docx", "docx", contexto, fotos_bytes)
 
 
-def chave_relatorio(inspecao_id: uuid.UUID, versao: str, extensao: str) -> str:
-    """Chave determinística no storage: `relatorios/{inspecao_id}/rfo-v01.pdf`."""
-    return f"relatorios/{inspecao_id}/rfo-{versao.lower()}.{extensao}"
+class RenderizadorRFOPadrao(Renderizador):
+    """Compatibilidade (BL-13): `Renderizador` do `rfo_pipeline`."""
+
+    def __init__(self) -> None:
+        super().__init__("rfo_pipeline")
 
 
-def proxima_versao(versoes: list[str]) -> str:
-    """`V01`, `V02`... Ignora valores fora do padrão (ex.: cargas manuais antigas)."""
-    numeros = [int(m.group(1)) for v in versoes if (m := _VERSAO_RE.match(v or ""))]
-    return f"V{max(numeros, default=0) + 1:02d}"
+# --- registro de emissores --------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Emissor:
+    """Como emitir um tipo de relatório. Contrato em 00_docs/backlog-auto/v1-emissao-generica.md.
+
+    - `tipo`: valor de `Inspecao.tipo`/`Relatorio.tipo` (maiúsculas, ex. `RFO`).
+    - `montar_contexto(db, inspecao_id)`: dict consumido pelo pipeline. Pode lançar
+      404/409; a emissão já garante antes que a inspeção existe e é deste tipo.
+    - `validar_contexto(contexto)`: caminhos obrigatórios ausentes (lista vazia = ok).
+    - `extrair_fotos(contexto)`: `storage_key` das fotos que o template embute.
+    - `pipeline`: módulo em `app.services.report_generator` com `gerar_pdf` e `gerar_docx`.
+    """
+
+    tipo: str
+    montar_contexto: Callable[[AsyncSession, uuid.UUID], Awaitable[dict[str, Any]]]
+    validar_contexto: Callable[[dict[str, Any]], list[str]]
+    extrair_fotos: Callable[[dict[str, Any]], set[str]]
+    pipeline: str
+
+    def criar_renderizador(self) -> RenderizadorProtocol:
+        return Renderizador(self.pipeline)
+
+
+EMISSORES: dict[str, Emissor] = {}
+
+
+def normalizar_tipo(tipo: str) -> str:
+    return tipo.strip().upper()
+
+
+def registrar_emissor(tipo: str, emissor: Emissor) -> Emissor:
+    """Registra (ou substitui) o emissor de `tipo`. Devolve o próprio emissor."""
+    chave = normalizar_tipo(tipo)
+    if normalizar_tipo(emissor.tipo) != chave:
+        raise ValueError(f"Emissor do tipo '{emissor.tipo}' registrado como '{chave}'.")
+    EMISSORES[chave] = emissor
+    return emissor
+
+
+def tipos_disponiveis() -> list[str]:
+    return sorted(EMISSORES)
+
+
+def obter_emissor(tipo: str) -> Emissor:
+    """Emissor de `tipo` (sem diferenciar maiúsculas) ou 422 com os tipos disponíveis."""
+    emissor = EMISSORES.get(normalizar_tipo(tipo))
+    if emissor is None:
+        raise TipoRelatorioNaoRegistradoError(normalizar_tipo(tipo), tipos_disponiveis())
+    return emissor
 
 
 def storage_keys_das_fotos(contexto: dict[str, Any]) -> list[str]:
@@ -121,9 +236,42 @@ def storage_keys_das_fotos(contexto: dict[str, Any]) -> list[str]:
     return list(dict.fromkeys(chaves))
 
 
-def _baixar_fotos(storage: StorageClient, chaves: list[str]) -> dict[str, bytes]:
+def extrair_fotos_rfo(contexto: dict[str, Any]) -> set[str]:
+    return set(storage_keys_das_fotos(contexto))
+
+
+registrar_emissor(
+    TIPO_RFO,
+    Emissor(
+        tipo=TIPO_RFO,
+        montar_contexto=montar_contexto_rfo,
+        validar_contexto=validar_contexto_rfo,
+        extrair_fotos=extrair_fotos_rfo,
+        pipeline="rfo_pipeline",
+    ),
+)
+
+
+# --- versão, chave e storage ------------------------------------------------------------
+
+
+def chave_relatorio(inspecao_id: uuid.UUID, versao: str, extensao: str, tipo: str = TIPO_RFO) -> str:
+    """Chave determinística no storage: `relatorios/{inspecao_id}/{tipo}-{versao}.{ext}` em minúsculas.
+
+    Ex.: `relatorios/{id}/rfo-v01.pdf` (formato do BL-13 preservado).
+    """
+    return f"relatorios/{inspecao_id}/{tipo.lower()}-{versao.lower()}.{extensao}"
+
+
+def proxima_versao(versoes: list[str]) -> str:
+    """`V01`, `V02`... Ignora valores fora do padrão (ex.: cargas manuais antigas)."""
+    numeros = [int(m.group(1)) for v in versoes if (m := _VERSAO_RE.match(v or ""))]
+    return f"V{max(numeros, default=0) + 1:02d}"
+
+
+def _baixar_fotos(storage: StorageClient, chaves: Iterable[str]) -> dict[str, bytes]:
     fotos: dict[str, bytes] = {}
-    for chave in chaves:
+    for chave in sorted(chaves):
         try:
             fotos[chave] = storage.download(chave)
         except ObjectNotFoundError as exc:
@@ -139,21 +287,45 @@ def _apagar_sem_falhar(storage: StorageClient, chaves: list[str]) -> None:
         try:
             storage.delete(chave)
         except Exception:  # limpeza best-effort; o erro original prevalece
-            logger.exception("Falha ao remover '%s' após erro na emissão do RFO", chave)
+            logger.exception("Falha ao remover '%s' após erro na emissão do relatório", chave)
 
 
-async def emitir_rfo(
+async def _exigir_inspecao_do_tipo(db: AsyncSession, inspecao_id: uuid.UUID, tipo: str) -> None:
+    tipo_inspecao = (await db.execute(select(Inspecao.tipo).where(Inspecao.id == inspecao_id))).scalar_one_or_none()
+    if tipo_inspecao is None:
+        raise NotFoundError(f"Inspeção '{inspecao_id}' não encontrada.", type_suffix="inspecao-nao-encontrada")
+    if tipo_inspecao != tipo:
+        raise ConflictError(
+            f"Inspeção '{inspecao_id}' é do tipo '{tipo_inspecao}'; o {tipo} só é gerado para "
+            f"inspeções do tipo '{tipo}'.",
+            type_suffix=f"inspecao-nao-{tipo.lower()}",
+        )
+
+
+# --- emissão ----------------------------------------------------------------------------
+
+
+async def emitir_relatorio(
     db: AsyncSession,
     inspecao_id: uuid.UUID,
+    tipo: str,
     storage: StorageClient,
-    renderizador: RenderizadorRFO,
+    renderizador: RenderizadorProtocol | None = None,
 ) -> Relatorio:
-    """Gera PDF e DOCX do RFO e registra uma nova versão de `Relatorio`."""
-    contexto = await montar_contexto_rfo(db, inspecao_id)
-    faltantes = validar_contexto_rfo(contexto)
+    """Gera PDF e DOCX do `tipo` e registra uma nova versão de `Relatorio`.
+
+    Sem `renderizador`, usa o do emissor (`Emissor.criar_renderizador`).
+    """
+    emissor = obter_emissor(tipo)
+    await _exigir_inspecao_do_tipo(db, inspecao_id, emissor.tipo)
+    contexto = await emissor.montar_contexto(db, inspecao_id)
+    faltantes = emissor.validar_contexto(contexto)
     if faltantes:
-        raise RfoContextoIncompletoError(faltantes)
-    fotos = await asyncio.to_thread(_baixar_fotos, storage, storage_keys_das_fotos(contexto))
+        if emissor.tipo == TIPO_RFO:
+            raise RfoContextoIncompletoError(faltantes)
+        raise ContextoIncompletoError(emissor.tipo, faltantes)
+    renderizador = renderizador or emissor.criar_renderizador()
+    fotos = await asyncio.to_thread(_baixar_fotos, storage, emissor.extrair_fotos(contexto))
     pdf = await asyncio.to_thread(renderizador.gerar_pdf, contexto, fotos)
     docx = await asyncio.to_thread(renderizador.gerar_docx, contexto, fotos)
 
@@ -162,12 +334,12 @@ async def emitir_rfo(
     await db.execute(select(Inspecao.id).where(Inspecao.id == inspecao_id).with_for_update(key_share=True))
     versoes = (
         await db.execute(
-            select(Relatorio.versao).where(Relatorio.inspecao_id == inspecao_id, Relatorio.tipo == TIPO_RFO)
+            select(Relatorio.versao).where(Relatorio.inspecao_id == inspecao_id, Relatorio.tipo == emissor.tipo)
         )
     ).scalars().all()
     versao = proxima_versao(list(versoes))
-    pdf_key = chave_relatorio(inspecao_id, versao, "pdf")
-    docx_key = chave_relatorio(inspecao_id, versao, "docx")
+    pdf_key = chave_relatorio(inspecao_id, versao, "pdf", emissor.tipo)
+    docx_key = chave_relatorio(inspecao_id, versao, "docx", emissor.tipo)
 
     gravadas: list[str] = []
     try:
@@ -183,7 +355,7 @@ async def emitir_rfo(
         relatorio = Relatorio(
             inspecao_id=inspecao_id,
             versao=versao,
-            tipo=TIPO_RFO,
+            tipo=emissor.tipo,
             status=STATUS_EMITIDO,
             pdf_key=pdf_key,
             docx_key=docx_key,
@@ -197,3 +369,54 @@ async def emitir_rfo(
         raise
     await db.refresh(relatorio)
     return relatorio
+
+
+async def emitir_rfo(
+    db: AsyncSession,
+    inspecao_id: uuid.UUID,
+    storage: StorageClient,
+    renderizador: RenderizadorProtocol,
+) -> Relatorio:
+    """Compatibilidade (BL-13): `emitir_relatorio` com tipo `RFO`."""
+    return await emitir_relatorio(db, inspecao_id, TIPO_RFO, storage, renderizador)
+
+
+# --- consulta e download (equipe interna) -------------------------------------------------
+
+
+async def listar_relatorios(db: AsyncSession, inspecao_id: uuid.UUID) -> list[Relatorio]:
+    """Versões emitidas da inspeção (mais recente primeiro); 404 se a inspeção não existe."""
+    if (await db.execute(select(Inspecao.id).where(Inspecao.id == inspecao_id))).scalar_one_or_none() is None:
+        raise NotFoundError(f"Inspeção '{inspecao_id}' não encontrada.", type_suffix="inspecao-nao-encontrada")
+    result = await db.execute(
+        select(Relatorio)
+        .where(Relatorio.inspecao_id == inspecao_id)
+        .order_by(Relatorio.emitido_em.desc().nullslast(), Relatorio.tipo, Relatorio.versao.desc())
+    )
+    return list(result.scalars().all())
+
+
+async def gerar_url_download(
+    db: AsyncSession,
+    inspecao_id: uuid.UUID,
+    relatorio_id: uuid.UUID,
+    formato: str,
+    storage: StorageClient,
+) -> PortalDownloadRead:
+    """URL pré-assinada do PDF/DOCX; a mesma lógica do portal, mas escopada pela inspeção.
+
+    404 se o formato não é suportado, se o relatório não pertence à inspeção ou se
+    não há arquivo daquele formato.
+    """
+    campo_key = portal_service.campo_do_formato(formato)
+    relatorio = (
+        await db.execute(
+            select(Relatorio).where(Relatorio.id == relatorio_id, Relatorio.inspecao_id == inspecao_id)
+        )
+    ).scalar_one_or_none()
+    if relatorio is None:
+        raise NotFoundError(
+            f"Relatório '{relatorio_id}' não encontrado na inspeção '{inspecao_id}'.",
+            type_suffix="relatorio-nao-encontrado",
+        )
+    return portal_service.url_assinada_do_relatorio(relatorio, campo_key, formato, storage)
