@@ -896,7 +896,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T47 · Verificar e repassar MAX_RELATORIO_SIZE_BYTES (e demais env da emissão) aos .env.example, compose e render.yaml
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-48
 - **Papel:** Engenheiro DevOps
 - **Depende:** —
