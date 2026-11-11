@@ -926,7 +926,7 @@ Siga o agente backend de .github/agents/ e a 'Regra de pronto' do BACKLOG.md. Co
 ```
 
 ### T49 · Migration UNIQUE (inspecao_id, tipo, versao) em relatorios com checagem prévia de duplicatas
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-48
 - **Papel:** Engenheiro Backend
 - **Depende:** —
