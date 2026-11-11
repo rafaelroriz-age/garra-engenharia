@@ -911,7 +911,7 @@ Siga o agente .github/agents do DevOps e a 'Regra de pronto' do BACKLOG.md (raiz
 ```
 
 ### T48 · RFO: trocar legenda_aprovada por legenda_para_relatorio no contexto do banco
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-47
 - **Papel:** Engenheiro Backend
 - **Depende:** —
