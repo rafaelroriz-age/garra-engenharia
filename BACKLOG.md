@@ -1189,7 +1189,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T66 · Legenda IA: prompt compacto com prefixo estável e seed versionado de `legenda_foto`
-- **Status:** todo
+- **Status:** doing
 - **Origem:** IA-02
 - **Papel:** Engenheiro Backend
 - **Depende:** T65
@@ -1204,7 +1204,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T67 · Legenda IA: golden set do Relatório Fotográfico e harness de avaliação (replay/live)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** IA-03
 - **Papel:** Engenheiro Backend
 - **Depende:** T65
