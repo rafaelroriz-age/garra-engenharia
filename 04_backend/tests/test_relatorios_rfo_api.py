@@ -130,6 +130,9 @@ async def cenario():
             tipo_servico="Fiscalização",
             status="em_andamento",
             data_inicio=date(2026, 1, 5),
+            objeto="Reforma BL-13",
+            prazo_dias=60,
+            art_fiscalizacao="ART-BL13",
         )
         s.add(contrato)
         await s.commit()
