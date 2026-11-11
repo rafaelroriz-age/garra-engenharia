@@ -16,9 +16,10 @@ from sqlalchemy.orm import selectinload
 
 from app.core.errors import ConflictError, NotFoundError
 from app.models import Contrato, ContratoExecutor, Foto, Inspecao, Ocorrencia, Visita
+from app.models.tipo_servico import TipoServico
 from app.services.report_generator.legenda_foto import legenda_para_relatorio
 
-TIPO_RFO = "RFO"
+TIPO_RFO = TipoServico.RFO.value
 
 # DEC-47 (2): campos que `rfo_template.html.j2` imprime SEM fallback (`or "—"`/`{% if %}`) e
 # cujas colunas aceitam NULL. Colunas NOT NULL (contrato.numero, edificacao.nome/endereco,
@@ -147,7 +148,7 @@ async def montar_contexto_rfo(db: AsyncSession, inspecao_id: uuid.UUID) -> dict[
     inspecao = resultado.scalar_one_or_none()
     if inspecao is None:
         raise NotFoundError(f"Inspeção '{inspecao_id}' não encontrada.", type_suffix="inspecao-nao-encontrada")
-    if inspecao.tipo != TIPO_RFO:
+    if TipoServico.normalizar(inspecao.tipo) is not TipoServico.RFO:
         raise ConflictError(
             f"Inspeção '{inspecao_id}' é do tipo '{inspecao.tipo}'; o RFO só é gerado para inspeções do tipo 'RFO'.",
             type_suffix="inspecao-nao-rfo",

@@ -1,5 +1,5 @@
 """Modelos SQLAlchemy 2 (async) do domínio — 14 entidades do diagrama ER (BL-04),
-mais `PromptIA` (BL-36).
+mais `PromptIA` (BL-36) e `RelatorioConteudo` (V1-01).
 
 Ver `00_docs/arquitetura.md` Seção 3. Importar deste pacote garante que todas as
 classes sejam registradas na `Base.metadata` antes do uso pelo Alembic ou pelos
@@ -16,11 +16,13 @@ from app.models.localizacao import Localizacao
 from app.models.ocorrencia import Ocorrencia
 from app.models.prompt_ia import PromptIA
 from app.models.relatorio import Relatorio
+from app.models.relatorio_conteudo import RelatorioConteudo
 from app.models.responsavel import Responsavel
 from app.models.sistema_predial import SistemaPredial
 from app.models.subsistema import Subsistema
 from app.models.tipo_anomalia import TipoAnomalia
 from app.models.tipo_falha import TipoFalha
+from app.models.tipo_servico import TipoServico
 from app.models.usuario import Usuario
 from app.models.visita import Visita
 from app.models.visita_mao_obra import VisitaMaoObra
@@ -38,11 +40,13 @@ __all__ = [
     "Ocorrencia",
     "PromptIA",
     "Relatorio",
+    "RelatorioConteudo",
     "Responsavel",
     "SistemaPredial",
     "Subsistema",
     "TipoAnomalia",
     "TipoFalha",
+    "TipoServico",
     "Usuario",
     "Visita",
     "VisitaMaoObra",

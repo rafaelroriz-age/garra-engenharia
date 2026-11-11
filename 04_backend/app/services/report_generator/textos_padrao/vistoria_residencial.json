@@ -1,0 +1,110 @@
+{
+  "s1": [],
+  "s1_1": [
+    "O presente Laudo Técnico de Constatação e Vistoria para Recebimento de Imóvel foi solicitado com a finalidade de documentar, caracterizar e qualificar tecnicamente o estado construtivo da unidade autônoma vistoriada, no {edificacao_nome}, no momento da entrega das chaves, com vistas à identificação de anomalias, falhas executivas, inconformidades de acabamento e eventuais desconformidades em relação aos documentos técnicos e ao padrão de desempenho esperado.",
+    "Este Laudo Técnico de Constatação caracteriza-se pela elaboração de um documento em que registra a inspeção \"in loco\", a análise dos documentos técnicos (projetos, memoriais, manual do proprietário, entre outros), tendo como foco central a constatação geral e aparente de irregularidades ou manifestações patológicas dos sistemas e subsistemas do imóvel, situado em {edificacao_endereco}.",
+    "Trata-se de uma medida cautelar para verificação do desempenho e funcionalidade de todos os sistemas construtivos existentes no imóvel, em face da possibilidade de constatações futuras de irregularidades e das possíveis solicitações de reparo pelo proprietário.",
+    "Com a finalidade, por meio deste trabalho, de obter-se um diagnóstico preciso e uma avaliação da responsabilidade objetiva inerente às irregularidades do interior da unidade, decorrentes de falhas de execução, uso, operação, manutenção e funcionalidade, no ato da entrega das chaves para moradia."
+  ],
+  "s2": [],
+  "s2_1": [
+    "A Inspeção Predial Especializada e a formulação do Laudo Técnico de Constatação são as ferramentas que propiciam a avaliação de um sistema ou subsistema da edificação. Deve ser elaborado por profissionais habilitados, especializados e devidamente registrados. Este documento classifica as não conformidades constatadas na edificação quanto à sua origem, grau de risco e indica orientações técnicas necessárias à melhoria da manutenção dos sistemas e elementos construtivos, permitindo a posterior apuração das responsabilidades.",
+    "O profissional que subscreve este laudo efetuou um levantamento com base nas coletas de dados dos ambientes privativos da unidade, nos quais foram vistoriados e feito o registro fotográfico datado; análise das manifestações patológicas alegadas, fundamentação teórica e análise da documentação como: projetos, memoriais descritivos, relatórios, laudos, contratos e outros.",
+    "Este trabalho visa unicamente a constatação e análise de vícios construtivos e manifestações patológicas que foram expressamente solicitados. Vícios ocultos ou demais anomalias existentes não apontadas neste laudo técnico não são de responsabilidade deste trabalho ou do profissional aqui envolvido.",
+    "No escopo dessa inspeção não está prevista a realização de ensaios destrutivos ao imóvel.",
+    "O profissional responsável apresenta este Laudo Técnico obedecendo às diretrizes preconizadas pela Associação Brasileira de Normas Técnicas – ABNT e pelo Instituto Brasileiro de Avaliações e Perícias – IBAPE. Bem como declara respeitar os preceitos do Código de Ética da Profissão elaborado pelo CREA/CONFEA."
+  ],
+  "s2_2": [
+    "Este laudo de inspeção segue as condições abaixo relacionadas, além de estar sujeito às seguintes limitações:",
+    "Neste trabalho aceitam-se como verdadeiros os documentos enviados e/ou consultados, bem como informações prestadas por terceiros, como de boa fé e confiáveis. Foram realizados questionamentos e observações ao proprietário no dia da inspeção \"in loco\" para melhor compreensão dos fatos, conforme preconiza o Art. 473 do Código de Processo Civil.",
+    "O trabalho apresentado e os resultados são válidos apenas para a sequência metodológica apresentada, sendo vedada a utilização deste laudo de inspeção em conexão com qualquer outro.",
+    "Salienta-se que o responsável técnico não assume responsabilidades sobre matéria alheia ao exercício profissional, estabelecido em leis, códigos e regulamentos próprios.",
+    "A presente constatação técnica foi desenvolvida com base em inspeção predominantemente visual e instrumental não destrutiva, sem desmontagens sistemáticas, remoção de revestimentos, abertura de elementos construtivos ou execução de ensaios laboratoriais. Assim, os achados descritos refletem as manifestações aparentes, os indícios tecnicamente verificáveis e as evidências compatíveis com os métodos empregados na diligência.",
+    "Eventuais ensaios complementares, testes de estanqueidade, verificações de aderência por métodos específicos, abertura de interfaces construtivas ou investigações invasivas poderão aprofundar o diagnóstico, sem, contudo, invalidar as constatações objetivas ora registradas.",
+    "As imagens termográficas, quando utilizadas, possuem caráter indicativo de anomalia térmica ou higrotérmica, devendo sua correlação causal ser interpretada em conjunto com o contexto construtivo, as evidências visuais e os demais elementos técnicos disponíveis."
+  ],
+  "s3": [],
+  "s3_1": [
+    "A Inspeção Predial Especializada e a formulação do Laudo Técnico de Constatação são as ferramentas que propiciam a avaliação de um sistema ou subsistema da edificação. Este documento classifica as não conformidades constatadas quanto à sua origem e grau de risco e indica as orientações técnicas necessárias, apontando as anomalias e falhas verificadas e o nexo causal aos seus efeitos, permitindo a posterior apuração das responsabilidades."
+  ],
+  "s3_2": [
+    "Elaborar Laudo Técnico de Constatação destinado ao registro técnico, descritivo e fotográfico das condições construtivas e funcionais do imóvel inspecionado, mediante vistoria \"in loco\", com o objetivo de identificar, caracterizar e classificar todas as irregularidades, anomalias, falhas executivas, vícios construtivos e não conformidades eventualmente constatadas na unidade e em seus elementos aparentes, observando-se as normas vigentes da ABNT, as diretrizes do IBAPE e as boas práticas da Engenharia Diagnóstica.",
+    "O Laudo tem por finalidade fornecer diagnóstico técnico preciso e fundamentado acerca das condições do imóvel no ato do recebimento das chaves, permitindo ao adquirente plena ciência quanto ao estado físico, funcional e construtivo da unidade, além de subsidiar tecnicamente eventuais tratativas extrajudiciais, medidas corretivas, negociações com a construtora/incorporadora e, se necessário, demandas judiciais.",
+    "Adicionalmente, busca-se:",
+    "Verificar a conformidade dos materiais, acabamentos e soluções executivas em relação ao Memorial Descritivo e às especificações contratuais do empreendimento;",
+    "Identificar eventuais desconformidades executivas, vícios construtivos, incompatibilidades projetuais e descumprimentos normativos;",
+    "Classificar tecnicamente as ocorrências constatadas, distinguindo anomalias e falhas conforme terminologia e metodologia preconizadas pelo IBAPE;",
+    "Evidenciar os reflexos técnicos e funcionais das irregularidades identificadas, especialmente quanto ao desempenho, estanqueidade, segurança, habitabilidade, salubridade, conforto e vida útil dos sistemas construtivos;",
+    "Produzir fundamentação técnica objetiva e metodologicamente consistente, apta a subsidiar medidas corretivas, tratativas extrajudiciais e eventual instrução probatória."
+  ],
+  "s4": [],
+  "s4_1": [
+    "O presente laudo refere-se à inspeção técnica especializada de unidade residencial do {edificacao_nome}, com objetivo de verificar a conformidade dos sistemas construtivos com as normas técnicas vigentes e identificar irregularidades."
+  ],
+  "s4_2": [],
+  "s4_2_1": [],
+  "s4_2_2": [],
+  "s4_2_3": [
+    "Endereço: {edificacao_endereco}."
+  ],
+  "s4_2_4": [],
+  "s4_2_4_1": [],
+  "s4_2_4_2": [],
+  "s5": [],
+  "s5_1": [],
+  "s5_2": [],
+  "s6": [],
+  "s6_1": [
+    "A inspeção predial é classificada quanto à sua complexidade, em função das características técnicas (construtivas), da manutenção e do uso da edificação inspecionada, e da necessidade ou não de formação de equipe multidisciplinar para execução dos trabalhos.",
+    "Portanto, consoante o item 7.1.12 da Norma de Inspeção Predial do IBAPE/SP, esta inspeção enquadra-se como sendo de NÍVEL 2, que compreende inspeção visual detalhada dos sistemas construtivos, com utilização de equipamentos de medição e análise de documentação técnica. A Inspeção Predial nesse nível foi elaborada por profissional habilitado em uma especialidade."
+  ],
+  "s6_2": [
+    "Os achados identificados no presente laudo foram analisados segundo sua natureza, origem provável, repercussão funcional e grau de comprometimento, adotando-se, para fins de engenharia diagnóstica, os seguintes parâmetros conceituais:",
+    "anomalia endógena: manifestação associada a vício de concepção, especificação, execução, instalação ou controle tecnológico;",
+    "falha executiva: desconformidade decorrente da materialização inadequada de sistema, subsistema ou detalhe construtivo;",
+    "inconformidade funcional: condição que compromete ou tende a comprometer o desempenho esperado do elemento, ainda que sem colapso imediato;",
+    "inconformidade de acabamento: desvio visível que compromete a qualidade final entregue e, em certos casos, pode indicar deficiência executiva subjacente.",
+    "A criticidade de cada ocorrência foi apreciada à luz de seus reflexos sobre estanqueidade, durabilidade, funcionalidade, segurança de uso, manutenibilidade e padrão global de entrega."
+  ],
+  "s6_3": [
+    "Para a formação do convencimento técnico e da análise comparativa, foram considerados, conforme disponibilidade e pertinência ao objeto vistoriado, os seguintes elementos: contrato de compra e venda da unidade; projetos e detalhamentos disponibilizados para consulta técnica; Memorial Descritivo do empreendimento e da unidade; registro fotográfico produzido durante a diligência; medições in loco realizadas com instrumentos de apoio; e referenciais normativos aplicáveis aos sistemas inspecionados.",
+    "A análise técnica desenvolveu-se a partir da correlação entre o estado aparente do imóvel, os documentos de referência e os critérios normativos de desempenho, conformidade e boa prática construtiva."
+  ],
+  "s7": [],
+  "s7_1": [
+    "A inspeção técnica abrangeu os sistemas e elementos construtivos aparentes da unidade, entre eles: estrutura e laje (análise visual das estruturas aparentes); revestimentos cerâmicos e pisos; acabamentos e pintura; instalações hidrossanitárias; vedações e canaletas; e acabamentos de portas e esquadrias."
+  ],
+  "s8": [
+    "As imagens constantes neste laudo foram capturadas pelo perito signatário, por meio de equipamento fotográfico digital, contendo registro de data e horário no próprio arquivo. As evidências visuais foram devidamente organizadas e acompanhadas de legendas explicativas, que descrevem, de forma objetiva, as manifestações patológicas, interferências construtivas e demais elementos técnicos observados no local."
+  ],
+  "s9": [
+    "Com base nas constatações \"in loco\" e nas análises expostas no relatório fotográfico, foram constatadas as irregularidades descritas a seguir, organizadas por sistema construtivo."
+  ],
+  "s10": [
+    "À luz das constatações realizadas, da documentação analisada, das medições efetuadas e das evidências registradas ao longo da presente inspeção, conclui-se que a unidade vistoriada apresenta as anomalias, falhas executivas, inconformidades de acabamento e desconformidades funcionais aparentes descritas neste laudo.",
+    "As ocorrências registradas não devem ser tratadas como meros apontamentos estéticos isolados, pois, em vários casos, apresentam repercussão objetiva ou potencial sobre funcionalidade, estanqueidade, durabilidade, qualidade final da entrega e necessidade de retrabalho corretivo.",
+    "Recomenda-se que todas as ocorrências listadas no presente laudo sejam objeto de saneamento pela responsável pela entrega do imóvel, seguido de nova inspeção técnica para conferência da qualidade, funcionalidade e regularidade dos reparos executados. Recomenda-se, ainda:",
+    "a elaboração de plano formal de correções, com individualização dos itens, metodologia de reparo e indicação de responsáveis;",
+    "a execução dos reparos com rastreabilidade fotográfica prévia, intermediária e final;",
+    "a reapresentação da unidade à vistoria após a conclusão integral das correções;",
+    "a realização de verificações complementares específicas nos pontos que indiquem risco de infiltração, perda de aderência, deficiência de vedação ou inadequação geométrica persistente."
+  ],
+  "s11": [
+    "Sem mais a acrescentar, o signatário deste Laudo Técnico de Constatação para Recebimento de Imóvel apresenta o presente trabalho concluído, que segue devidamente datado e assinado, colocando-se à disposição para quaisquer esclarecimentos adicionais que se fizerem necessários.",
+    "Declara ainda ter sua conduta ética profissional norteada pelo CREA – Conselho Regional de Engenharia e Agronomia e pelo IBAPE – Instituto Brasileiro de Avaliações e Perícias de Engenharia, não possuindo qualquer tipo de interesse sobre os bens que são objeto do presente trabalho.",
+    "Eximem-se de qualquer responsabilidade técnica a empresa ou profissional quanto às observações e orientações existentes neste laudo que não forem implementadas pelo proprietário ou responsável legal da edificação, bem como por qualquer anomalia e falha decorrente de deficiências de projeto, execução, especificação de materiais e/ou manutenção, bem como qualquer outra alheia ao trabalho de inspeção procedido.",
+    "O presente laudo consolida, de forma metodologicamente fundamentada, os achados técnicos verificados na unidade vistoriada, servindo como documento de constatação, suporte à tomada de decisão, instrumento de negociação técnica e elemento apto a subsidiar eventual produção de prova em esfera judicial, arbitral ou extrajudicial."
+  ],
+  "s12": [
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 16747. Inspeção predial: diretrizes, conceitos, terminologia e procedimento.",
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 13752. Perícias de engenharia na construção civil.",
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 15575. Edificações habitacionais – Desempenho.",
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 5674. Manutenção de edificações – Requisitos para o sistema de gestão de manutenção.",
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 14037. Diretrizes para elaboração de manuais de uso, operação e manutenção das edificações.",
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 5410. Instalações elétricas de baixa tensão.",
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 5626. Sistemas prediais de água fria e água quente.",
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 8160. Sistemas prediais de esgoto sanitário.",
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 10821. Esquadrias para edificações.",
+    "INSTITUTO BRASILEIRO DE AVALIAÇÕES E PERÍCIAS DE ENGENHARIA – IBAPE. Publicações e referenciais aplicáveis à engenharia diagnóstica, inspeção predial e classificação de anomalias construtivas."
+  ]
+}

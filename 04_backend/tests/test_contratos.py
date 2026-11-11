@@ -98,7 +98,7 @@ def _payload_contrato(edificacao_id, fiscal_id, executora_id):
         "edificacao_id": str(edificacao_id),
         "fiscal_id": str(fiscal_id),
         "numero": f"CT-{uuid.uuid4()}",
-        "tipo_servico": "Fiscalização de obra",
+        "tipo_servico": "RFO",
         "art_fiscalizacao": "ART-FISC-001",
         "executores": [
             {

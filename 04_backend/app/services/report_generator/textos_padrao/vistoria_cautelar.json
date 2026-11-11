@@ -1,0 +1,116 @@
+{
+  "introducao": [],
+  "historico_e_contexto_da_diligencia": [
+    "O presente Laudo Técnico de Vistoria Cautelar de Recebimento foi elaborado por solicitação da administração do {edificacao_nome}, com a finalidade de documentar, caracterizar e qualificar tecnicamente o estado construtivo das áreas submetidas à obra de reforma, no momento da solicitação de entrega dos serviços pela Contratada.",
+    "O trabalho tem como foco central a constatação geral e aparente de irregularidades, anomalias, falhas executivas e eventuais desconformidades em relação aos projetos executivos, aos cadernos de obra e ao padrão de desempenho e acabamento contratualmente pactuado.",
+    "A diligência caracterizou-se por uma inspeção minuciosa de todos os sistemas construtivos das áreas reformadas, com especial atenção à conformidade entre o executado e o projetado, à qualidade dos acabamentos, à funcionalidade das instalações elétricas e hidrossanitárias, à aderência dos revestimentos e ao estado de limpeza e desmobilização do canteiro de obras.",
+    "O trabalho foi conduzido com independência técnica e imparcialidade, visando retratar fielmente as condições da obra e subsidiar a tomada de decisão pela administração quanto ao recebimento parcial ou definitivo dos serviços executados."
+  ],
+  "consideracoes_preliminares": [],
+  "consideracoes_preliminares_geral": [
+    "A Inspeção Predial Especializada e a formulação do Laudo Técnico de Vistoria Cautelar de Recebimento constituem ferramentas fundamentais da Engenharia Diagnóstica para avaliar o desempenho e a conformidade de sistemas e subsistemas construtivos submetidos a intervenções de reforma. Este documento classifica as não conformidades constatadas quanto à sua origem e grau de risco, indicando as orientações técnicas necessárias para a correção de anomalias e falhas executivas.",
+    "O profissional que subscreve este laudo efetuou um levantamento detalhado com base em coletas de dados in loco, realizando registros fotográficos datados e análise da documentação técnica fornecida (contrato, projetos executivos e cadernos de obra).",
+    "Este trabalho visa unicamente a constatação e análise de vícios construtivos, falhas executivas, inconformidades de acabamento e pendências remanescentes da obra. Vícios ocultos ou demais anomalias existentes não apontadas neste laudo técnico não são de responsabilidade deste trabalho ou do profissional aqui envolvido.",
+    "No escopo desta inspeção não está prevista a realização de ensaios destrutivos. Vícios ocultos ou anomalias supervenientes não identificáveis pelos métodos empregados não fazem parte do escopo deste documento.",
+    "O profissional responsável apresenta este laudo obedecendo às diretrizes preconizadas pela Associação Brasileira de Normas Técnicas – ABNT e pelo Instituto Brasileiro de Avaliações e Perícias de Engenharia – IBAPE, bem como declara respeitar os preceitos do Código de Ética Profissional elaborado pelo CREA/CONFEA."
+  ],
+  "pressupostos_ressalvas_e_fatores_limitantes": [
+    "Presume-se a boa-fé e a fidedignidade de todos os documentos técnicos, projetos executivos, cadernos de obra, contrato e informações prestadas por terceiros que serviram de subsídio para esta análise.",
+    "A vistoria foi desenvolvida com base em inspeção predominantemente visual e instrumental não destrutiva, sem a realização de aberturas invasivas, remoção sistemática de revestimentos ou ensaios laboratoriais destrutivos. Os achados refletem o estado aparente e os indícios tecnicamente verificáveis no dia da diligência.",
+    "O presente trabalho é válido exclusivamente para as áreas objeto da obra vistoriada e para a sequência metodológica descrita, sendo vedada sua aplicação para outros fins ou em conexão com outras peças técnicas sem a autorização expressa do autor.",
+    "A emissão deste laudo não exime a Contratada de suas responsabilidades legais e contratuais pela solidez e segurança da obra, bem como pelas garantias contratuais e pelo Art. 618 do Código Civil Brasileiro, cujos prazos fluem a partir do recebimento definitivo.",
+    "Salienta-se que o responsável técnico não assume responsabilidades sobre matéria alheia ao exercício profissional, estabelecido em leis, códigos e regulamentos próprios."
+  ],
+  "objetivo": [],
+  "objetivo_geral": [
+    "O objetivo geral deste Laudo Técnico é registrar, qualificar e certificar as condições físicas, construtivas e funcionais das áreas submetidas à obra, identificando eventuais não conformidades remanescentes e emitindo parecer técnico fundamentado sobre a viabilidade do recebimento dos serviços, em conformidade com as diretrizes do IBAPE, as normas técnicas vigentes da ABNT e as obrigações contratuais pactuadas entre as partes."
+  ],
+  "especifico": [
+    "Auditoria contratual e de conformidade projetual: verificar se os serviços executados atendem ao escopo definido em contrato e nos projetos executivos, com atenção às divergências entre o projeto aprovado e a execução efetivamente realizada.",
+    "Vistoria sistêmica de acabamentos: avaliar a qualidade visual, o emassamento, a pintura, o alinhamento de arestas e o desempenho estético de paredes, tetos, forros, pisos e revestimentos.",
+    "Validação das instalações elétricas e hidrossanitárias: verificar a conformidade dos circuitos, pontos de iluminação e tomadas com a ABNT NBR 5410, bem como o escoamento de pisos, ralos e louças e a estanqueidade das conexões.",
+    "Registro de pendências remanescentes: delimitar as irregularidades que obstam o recebimento definitivo da obra, estabelecendo as diretrizes recomendadas para sua correção pela Contratada.",
+    "Verificação da documentação de entrega: atestar a apresentação ou ausência dos documentos obrigatórios para o recebimento, incluindo projeto As Built, Manual de Uso, Operação e Manutenção e ART."
+  ],
+  "objeto": [],
+  "objeto_geral": [
+    "O objeto deste laudo são as áreas do {edificacao_nome} submetidas à obra de reforma, abrangendo a totalidade dos ambientes contemplados no escopo contratual."
+  ],
+  "identificacao": [],
+  "da_realizacao_da_inspecao": [],
+  "apresentacao_do_responsavel_tecnico": [],
+  "datas_das_vistorias": [],
+  "metodologia": [],
+  "classificacao_da_inspecao_quanto_ao_nivel": [
+    "A inspeção predial é classificada quanto à sua complexidade, em função das características técnicas (construtivas), da manutenção e do uso da edificação inspecionada, e da necessidade ou não de formação de equipe multidisciplinar para execução dos trabalhos.",
+    "Consoante o item 7.1.12 da Norma de Inspeção Predial do IBAPE/SP, esta inspeção enquadra-se como sendo de NÍVEL 2, que compreende inspeção visual detalhada dos sistemas construtivos, com utilização de equipamentos de medição e análise de documentação técnica, elaborada por profissional habilitado em uma especialidade."
+  ],
+  "criterio_de_classificacao_tecnica_dos_achados": [
+    "Os achados identificados no presente laudo foram analisados segundo sua natureza, origem provável, repercussão funcional e grau de comprometimento, adotando-se os seguintes parâmetros conceituais:",
+    "Falha executiva: desconformidade decorrente da materialização inadequada de sistema, subsistema ou detalhe construtivo, em desacordo com os projetos executivos aprovados ou com as boas práticas da técnica construtiva;",
+    "Inconformidade funcional: condição que compromete ou tende a comprometer o desempenho esperado do elemento, ainda que sem colapso imediato, afetando a segurança, a habitabilidade ou a funcionalidade do ambiente;",
+    "Inconformidade de acabamento: desvio visível que compromete a qualidade final entregue e, em certos casos, pode indicar deficiência executiva subjacente;",
+    "Pendência executiva: serviço previsto no escopo contratual ou nos projetos executivos que não foi concluído ou sequer iniciado até a data da vistoria, obstando o recebimento definitivo.",
+    "A criticidade de cada ocorrência foi apreciada à luz de seus reflexos sobre estanqueidade, durabilidade, funcionalidade, segurança de uso, manutenibilidade e padrão global de entrega, bem como à luz das obrigações contratuais assumidas pela Contratada."
+  ],
+  "levantamento_de_dados_e_documentacao": [
+    "Para a fundamentação das análises, foram consultados o contrato de execução da obra, os projetos executivos e cadernos de obra disponibilizados e os relatórios de fiscalização elaborados ao longo da execução.",
+    "A análise técnica desenvolveu-se a partir da correlação entre o estado aparente das áreas reformadas, os documentos de referência, as obrigações contratuais pactuadas e os critérios normativos de desempenho, conformidade e boa prática construtiva."
+  ],
+  "ensaios_tecnicos_instrumentais_realizados": [],
+  "desenvolvimento_das_atividades_da_inspecao": [],
+  "sistemas_construtivos_inspecionados": [
+    "A inspeção técnica foi estruturada de forma a avaliar sistematicamente os sistemas e subsistemas construtivos das áreas submetidas à obra: vedações verticais e acabamentos superficiais; revestimentos de piso e paredes; esquadrias, portas e ferragens; instalações elétricas; instalações hidrossanitárias e drenagem; vedações e impermeabilização; áreas externas e elementos complementares; e limpeza pós-obra e desmobilização."
+  ],
+  "dinamica_de_campo_e_correcoes_em_tempo_real": [
+    "A diligência foi conduzida de forma sistemática e abrangente, percorrendo a totalidade dos ambientes contemplados no escopo contratual, com registro fotográfico datado de todas as constatações relevantes, que compõem o Relatório Fotográfico deste laudo.",
+    "A metodologia de campo consistiu na inspeção ambiente a ambiente, com identificação visual das inconformidades, verificação de funcionalidade de instalações aparentes e confronto das condições executadas com as especificações dos projetos executivos."
+  ],
+  "relatorio_fotografico": [
+    "As imagens constantes neste laudo foram capturadas pelo perito signatário, por meio de equipamento fotográfico digital, contendo registro de data e horário no próprio arquivo. As evidências visuais foram devidamente organizadas e acompanhadas de legendas explicativas, que descrevem, de forma objetiva, as manifestações patológicas, interferências construtivas e demais elementos técnicos observados no local."
+  ],
+  "analise_e_consideracoes_tecnicas": [
+    "Com base nas constatações in loco e nas análises expostas no Relatório Fotográfico, foram constatadas as irregularidades descritas a seguir, organizadas por sistema construtivo."
+  ],
+  "correlacao_tecnica_entre_origem_provavel_repercussao_funcional_e_responsabilidade": [
+    "O conjunto de inconformidades identificadas nas áreas reformadas possui nexo causal com falhas de controle de qualidade na execução dos serviços, deficiências na supervisão técnica de campo e ausência de verificação final antes da solicitação de entrega, caracterizando-se predominantemente como desvios executivos, inconformidades de acabamento e pendências de conclusão.",
+    "A responsabilidade corretiva recai sobre a Contratada, conforme o Art. 618 do Código Civil Brasileiro, as garantias contratuais pactuadas e as diretrizes da ABNT NBR 15575 e NBR 17170."
+  ],
+  "conclusao_e_consideracoes_finais": [
+    "À luz das constatações realizadas, da análise documental e do confronto entre as condições verificadas in loco e as obrigações contratuais pactuadas, conclui-se que as obras vistoriadas encontram-se nas condições descritas neste laudo, cabendo à Contratada sanar as inconformidades apontadas antes do recebimento definitivo."
+  ],
+  "parecer_tecnico": [
+    "O recebimento parcial, quando recomendado, visa resguardar os interesses do Contratante, permitindo o uso controlado dos ambientes que se encontram em condições funcionais adequadas, sem, contudo, eximir a Contratada de suas responsabilidades corretivas. A emissão do Termo de Recebimento Definitivo fica condicionada ao cumprimento integral do Plano de Correções Remanescentes e à entrega da documentação técnica obrigatória."
+  ],
+  "plano_de_correcoes_remanescentes": [
+    "Para a conclusão integral da conformidade das áreas reformadas e viabilização do recebimento definitivo, a Contratada deverá executar as intervenções corretivas relacionadas a seguir."
+  ],
+  "prazos_e_condicionantes_para_o_recebimento_definitivo": [
+    "Recomenda-se que o Contratante formalize o recebimento parcial mediante Termo de Recebimento Provisório, com a inclusão expressa de todas as ressalvas constantes deste laudo, estabelecendo prazo formal para que a Contratada comprove a execução integral dos reparos, prazo para entrega da documentação técnica obrigatória e agendamento de nova vistoria de validação após a comunicação formal de conclusão dos reparos.",
+    "A emissão do Termo de Recebimento Definitivo somente deverá ocorrer após a validação técnica integral de todos os itens do Plano de Correções, momento a partir do qual iniciar-se-ão os prazos de garantia contratuais e do Art. 618 do Código Civil Brasileiro."
+  ],
+  "encerramento": [
+    "Sem mais a acrescentar, o signatário deste Laudo Técnico apresenta o presente trabalho concluído, colocando-se à disposição das partes para quaisquer esclarecimentos técnicos adicionais que se fizerem necessários.",
+    "Declara ainda ter sua conduta ética profissional norteada pelo CREA – Conselho Regional de Engenharia e Agronomia e pelo IBAPE – Instituto Brasileiro de Avaliações e Perícias de Engenharia, não possuindo qualquer tipo de interesse sobre os bens que são objeto do presente trabalho, tendo atuado com independência, imparcialidade e diligência profissional.",
+    "Eximem-se de qualquer responsabilidade técnica a empresa ou profissional signatário quanto às observações e orientações existentes neste laudo que não forem implementadas pelo Contratante ou pela Contratada, bem como por qualquer anomalia e falha decorrente de vícios ocultos não identificáveis pelos métodos de inspeção empregados, de deficiências supervenientes de manutenção após o recebimento definitivo e/ou de qualquer outra causa alheia ao trabalho de inspeção procedido.",
+    "O presente laudo consolida, de forma metodologicamente fundamentada, os achados técnicos verificados, servindo como documento de constatação técnica, suporte à tomada de decisão, instrumento de negociação técnica com a Contratada, base para formalização do Termo de Recebimento Provisório e elemento apto a subsidiar eventual produção de prova em esfera judicial, arbitral ou extrajudicial."
+  ],
+  "referencias_bibliograficas": [
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 5410: Instalações elétricas de baixa tensão. Rio de Janeiro: ABNT, 2004.",
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 5626: Sistemas prediais de água fria e água quente — Projeto, execução, operação e manutenção. Rio de Janeiro: ABNT, 2020.",
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 5674: Manutenção de edificações — Requisitos para o sistema de gestão de manutenção. Rio de Janeiro: ABNT, 2012.",
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 8160: Sistemas prediais de esgoto sanitário — Projeto e execução. Rio de Janeiro: ABNT, 1999.",
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 13749: Revestimento de paredes e tetos de argamassas inorgânicas — Especificação. Rio de Janeiro: ABNT, 2013.",
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 13752: Perícias de engenharia na construção civil. Rio de Janeiro: ABNT, 1996.",
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 13753: Revestimento de piso interno ou externo com placas cerâmicas e com utilização de argamassa colante — Procedimento. Rio de Janeiro: ABNT, 1996.",
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 14037: Diretrizes para elaboração de manuais de uso, operação e manutenção das edificações — Requisitos para elaboração e apresentação dos conteúdos. Rio de Janeiro: ABNT, 2011.",
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 14081: Argamassa colante industrializada para assentamento de placas cerâmicas — Requisitos. Rio de Janeiro: ABNT, 2012.",
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 15575: Edificações habitacionais — Desempenho. Partes 1 a 6. Rio de Janeiro: ABNT, 2013.",
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 16747: Inspeção predial — Diretrizes, conceitos, terminologia e procedimento. Rio de Janeiro: ABNT, 2020.",
+    "ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. ABNT NBR 17170: Edificações — Garantias e prazos recomendados para atividades de manutenção. Rio de Janeiro: ABNT, 2022.",
+    "BRASIL. Lei nº 4.591, de 16 de dezembro de 1964. Dispõe sobre o condomínio em edificações e as incorporações imobiliárias. Diário Oficial da União, Brasília, DF, 21 dez. 1964.",
+    "BRASIL. Lei nº 10.406, de 10 de janeiro de 2002. Institui o Código Civil. (Art. 618 — Responsabilidade do Empreiteiro; Arts. 1.331 a 1.358 — Do Condomínio Edilício). Diário Oficial da União, Brasília, DF, 11 jan. 2002.",
+    "INSTITUTO BRASILEIRO DE AVALIAÇÕES E PERÍCIAS DE ENGENHARIA – IBAPE. Publicações e referenciais aplicáveis à engenharia diagnóstica, inspeção predial e classificação de anomalias construtivas.",
+    "INSTITUTO BRASILEIRO DE AVALIAÇÕES E PERÍCIAS DE ENGENHARIA DE SÃO PAULO – IBAPE/SP. Norma de Inspeção Predial. São Paulo: IBAPE/SP, 2012."
+  ]
+}

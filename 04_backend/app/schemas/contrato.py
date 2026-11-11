@@ -4,17 +4,21 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.models.tipo_servico import TipoServico
 from app.schemas.contrato_executor import ContratoExecutorRead
 from app.schemas.contrato_nbr import ContratoNbrRead
 from app.schemas.inspecao import InspecaoRead
 
 
 class ContratoBase(BaseModel):
+    # `use_enum_values`: o enum valida e normaliza ("ltip" -> "LTIP"); o modelo grava o texto.
+    model_config = ConfigDict(use_enum_values=True)
+
     edificacao_id: uuid.UUID
     fiscal_id: uuid.UUID
     contratante_id: uuid.UUID | None = None
     numero: str
-    tipo_servico: str
+    tipo_servico: TipoServico
     objeto: str | None = None
     data_inicio: date | None = None
     prazo_dias: int | None = None
@@ -28,8 +32,11 @@ class ContratoCreate(ContratoBase):
 
 
 class ContratoRead(ContratoBase):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
+    # Leitura tolerante: valor fora do enum gravado antes de V1-01 (ex.: "FISCALIZAÇÃO DE OBRA")
+    # sai como texto em vez de derrubar a listagem com 500.
+    tipo_servico: TipoServico | str
     id: uuid.UUID
     created_at: datetime
 
