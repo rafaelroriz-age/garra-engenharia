@@ -1204,7 +1204,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T67 · Legenda IA: golden set do Relatório Fotográfico e harness de avaliação (replay/live)
-- **Status:** doing
+- **Status:** done
 - **Origem:** IA-03
 - **Papel:** Engenheiro Backend
 - **Depende:** T65
