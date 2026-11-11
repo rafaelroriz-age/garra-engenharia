@@ -13,7 +13,12 @@ from sqlalchemy import delete, select
 from app.core.errors import DomainError
 from app.models import PromptIA
 from app.services import prompt_ia_service
-from app.services.legenda_ia import FakeLegendaIAClient, LegendaIAClient, LegendaIAResultado
+from app.services.legenda_ia import (
+    ContextoLegenda,
+    FakeLegendaIAClient,
+    LegendaIAClient,
+    LegendaIAResultado,
+)
 
 
 @pytest.fixture
@@ -93,9 +98,10 @@ async def test_criar_valida_entrada(db_session, nome):
 async def test_fake_deterministico():
     client = FakeLegendaIAClient()
     assert isinstance(client, LegendaIAClient)
-    r1 = await client.gerar_legenda(b"img", "prompt", "trinca na parede")
-    r2 = await client.gerar_legenda(b"img", "prompt", "trinca na parede")
-    r3 = await client.gerar_legenda(b"outra", "prompt", None)
+    trinca = ContextoLegenda(legenda_bruta="trinca na parede")
+    r1 = await client.gerar_legenda(trinca, "prompt", b"img")
+    r2 = await client.gerar_legenda(trinca, "prompt", b"img")
+    r3 = await client.gerar_legenda(ContextoLegenda(), "prompt", b"outra")
     assert r1 == r2 and isinstance(r1, LegendaIAResultado)
     assert r1.legenda_sugerida and r1 != r3
     assert r3.pendencias  # sem legenda bruta, o Fake sinaliza pendência

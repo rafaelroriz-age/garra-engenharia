@@ -12,6 +12,7 @@ from pydantic import SecretStr, ValidationError
 from app.core.config import Settings
 from app.core.errors import DomainError
 from app.services.legenda_ia import (
+    ContextoLegenda,
     DeepSeekLegendaIAClient,
     FakeLegendaIAClient,
     obter_cliente_provedor,
@@ -33,11 +34,14 @@ def _resposta(conteudo: str) -> dict:
 
 
 def _cliente(handler, **kw) -> DeepSeekLegendaIAClient:
+    kw.setdefault("backoff_s", 0)
     return DeepSeekLegendaIAClient(CHAVE, transport=httpx.MockTransport(handler), **kw)
 
 
-def _gerar(cliente: DeepSeekLegendaIAClient, bruta: str | None = "fissura na parede"):
-    return asyncio.run(cliente.gerar_legenda(_jpeg(), "PROMPT", bruta))
+def _gerar(cliente: DeepSeekLegendaIAClient, bruta: str | None = "fissura na parede", **ctx):
+    contexto = ContextoLegenda(legenda_bruta=bruta, **ctx)
+    imagem = _jpeg() if cliente.enviar_imagem else None
+    return asyncio.run(cliente.gerar_legenda(contexto, "PROMPT", imagem))
 
 
 def test_resposta_valida_vira_resultado_e_requisicao_correta():
@@ -62,7 +66,8 @@ def test_resposta_valida_vira_resultado_e_requisicao_correta():
     assert corpo["model"] == "m-x"
     assert corpo["response_format"] == {"type": "json_object"}
     assert corpo["messages"][0]["role"] == "system" and "PROMPT" in corpo["messages"][0]["content"]
-    assert corpo["messages"][1] == {"role": "user", "content": "fissura na parede"}
+    assert corpo["messages"][1]["role"] == "user"
+    assert corpo["messages"][1]["content"].endswith("LEGENDA BRUTA\nfissura na parede")
 
 
 def test_modo_texto_nao_envia_imagem():
@@ -92,7 +97,7 @@ def test_modo_imagem_envia_data_uri_jpeg_reduzido():
     assert url.startswith("data:image/jpeg;base64,")
     img = Image.open(io.BytesIO(base64.b64decode(url.split(",", 1)[1])))
     assert max(img.size) <= 1024
-    assert {"type": "text", "text": "fissura na parede"} in partes
+    assert any(p["type"] == "text" and "fissura na parede" in p["text"] for p in partes)
 
 
 def test_reducao_nao_amplia_imagem_pequena():
@@ -196,3 +201,150 @@ def test_producao_com_deepseek_e_chave_sobe():
         deepseek_api_key=SecretStr(CHAVE),
     )
     assert CHAVE not in repr(s)
+
+
+# --- Contexto, system estável, enums, usage e retry (BL-34) --------------------------------
+
+
+def _capturar(**kw):
+    corpos: list[dict] = []
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        corpos.append(json.loads(req.content))
+        return httpx.Response(200, json=_resposta('{"legenda_sugerida": "ok"}'))
+
+    return _cliente(handler, **kw), corpos
+
+
+def test_system_identico_entre_chamadas_com_o_mesmo_prompt():
+    cliente, corpos = _capturar()
+    _gerar(cliente, "fissura", tipo_anomalia="Trinca", grau_risco="Alto")
+    _gerar(cliente, "outra coisa", sistema="Cobertura", descricao="infiltração")
+
+    assert corpos[0]["messages"][0] == corpos[1]["messages"][0]
+    assert corpos[0]["messages"][0]["content"].startswith("PROMPT")
+    assert corpos[0]["messages"][0]["content"].encode() == corpos[1]["messages"][0]["content"].encode()
+
+
+def test_contexto_vai_na_mensagem_user_e_nunca_no_system():
+    cliente, corpos = _capturar()
+    _gerar(
+        cliente, "fissura", tipo_anomalia="Trinca", sistema="Cobertura", grau_risco="Alto",
+        gut_gravidade=4, tipo_relatorio="LTIP",
+    )
+    sistema, usuario = (m["content"] for m in corpos[0]["messages"])
+
+    assert "DADOS DA OCORRÊNCIA" in usuario
+    for trecho in ("Trinca", "Cobertura", "Alto", "G=4", "LTIP"):
+        assert trecho in usuario and trecho not in sistema
+    assert "fissura" in usuario and "fissura" not in sistema
+
+
+@pytest.mark.parametrize(
+    ("bruto", "esperado", "alerta"),
+    [
+        ("constatacao_direta", "constatacao_direta", False),
+        ("indicio_tecnico", "indicio_tecnico", False),
+        ("hipotese_tecnica", "hipotese_tecnica", False),
+        ("causa_documentalmente_comprovada", "causa_comprovada", False),
+        ("nao_aplicavel", None, False),
+        ("inventado", None, True),
+    ],
+)
+def test_nivel_certeza_mapeia_para_enum_do_banco(bruto, esperado, alerta):
+    from app.models.foto import NIVEIS_CERTEZA_IA
+
+    conteudo = json.dumps({"legenda_tecnica": "ok", "nivel_certeza": bruto, "status_validacao": "aprovada"})
+    r = _gerar(_cliente(lambda req: httpx.Response(200, json=_resposta(conteudo))))
+
+    assert r.nivel_certeza == esperado
+    assert esperado is None or esperado in NIVEIS_CERTEZA_IA
+    assert bool(r.alertas) is alerta
+
+
+def test_status_do_modelo_vira_alerta_e_status_desconhecido_tambem():
+    def resp(status):
+        c = json.dumps({"legenda_sugerida": "ok", "status_validacao": status})
+        return _gerar(_cliente(lambda req: httpx.Response(200, json=_resposta(c))))
+
+    assert resp("revisar").alertas and resp("informacao_insuficiente").alertas
+    assert resp("zzz").alertas
+    assert resp("aprovada").alertas == []
+
+
+def test_usage_e_modelo_sao_capturados():
+    usage = {
+        "prompt_tokens": 100, "prompt_cache_hit_tokens": 80, "prompt_cache_miss_tokens": 20,
+        "completion_tokens": 30, "total_tokens": 130,
+    }
+    cliente = _cliente(
+        lambda req: httpx.Response(200, json={**_resposta('{"legenda_sugerida": "ok"}'), "usage": usage}),
+        modelo="m-y",
+    )
+    r = _gerar(cliente)
+
+    assert r.modelo == "m-y"
+    assert r.uso == {
+        "prompt_tokens": 100, "prompt_cache_hit_tokens": 80, "prompt_cache_miss_tokens": 20,
+        "completion_tokens": 30,
+    }
+
+
+def test_sem_usage_uso_fica_none():
+    r = _gerar(_cliente(lambda req: httpx.Response(200, json=_resposta('{"legenda_sugerida": "ok"}'))))
+    assert r.uso is None
+
+
+def _sequencia(*respostas):
+    chamadas: list[int] = []
+    fila = list(respostas)
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        chamadas.append(1)
+        item = fila.pop(0)
+        if isinstance(item, Exception):
+            raise item
+        return item
+
+    return _cliente(handler), chamadas
+
+
+OK = httpx.Response(200, json=_resposta('{"legenda_sugerida": "ok"}'))
+
+
+@pytest.mark.parametrize("falha", [429, 500, 503])
+def test_retry_em_429_e_5xx_ate_duas_novas_tentativas(falha):
+    cliente, chamadas = _sequencia(httpx.Response(falha), httpx.Response(falha), OK)
+    assert _gerar(cliente).legenda_sugerida == "ok"
+    assert len(chamadas) == 3
+
+
+def test_retry_esgotado_falha_apos_tres_tentativas():
+    cliente, chamadas = _sequencia(*[httpx.Response(503)] * 3)
+    with pytest.raises(ProvedorIAIndisponivel, match="503"):
+        _gerar(cliente)
+    assert len(chamadas) == 3
+
+
+def test_retry_em_timeout():
+    def lento():
+        return httpx.ReadTimeout("lento")
+
+    cliente, chamadas = _sequencia(lento(), OK)
+    assert _gerar(cliente).legenda_sugerida == "ok"
+    assert len(chamadas) == 2
+
+
+@pytest.mark.parametrize("status", [400, 401, 402, 422])
+def test_4xx_restantes_nao_fazem_retry(status):
+    cliente, chamadas = _sequencia(httpx.Response(status), OK)
+    with pytest.raises(ProvedorIAIndisponivel):
+        _gerar(cliente)
+    assert len(chamadas) == 1
+
+
+def test_falha_de_rede_nao_faz_retry():
+    cliente, chamadas = _sequencia(httpx.ConnectError("x"), OK)
+    with pytest.raises(ProvedorIAIndisponivel, match="rede"):
+        _gerar(cliente)
+    assert len(chamadas) == 1

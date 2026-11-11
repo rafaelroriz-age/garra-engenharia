@@ -8,6 +8,7 @@ from fastapi import Depends
 from app.api.deps import limitar_geracao_legenda_ia
 from app.core.config import get_settings
 from app.core.errors import DomainError
+from app.services.legenda_ia.contexto import ContextoLegenda, montar_contexto
 from app.services.legenda_ia.contrato import (
     FakeLegendaIAClient,
     LegendaIAClient,
@@ -21,11 +22,13 @@ from app.services.legenda_ia.saneamento import (
 
 __all__ = [
     "ClienteLegendaIAProtegido",
+    "ContextoLegenda",
     "DeepSeekLegendaIAClient",
     "FakeLegendaIAClient",
     "LegendaIAClient",
     "LegendaIAResultado",
     "get_legenda_ia_client",
+    "montar_contexto",
     "obter_cliente_provedor",
 ]
 
