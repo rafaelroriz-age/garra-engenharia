@@ -43,7 +43,12 @@ from app.schemas.localizacao import LocalizacaoBase, LocalizacaoCreate, Localiza
 from app.schemas.ocorrencia import OcorrenciaBase, OcorrenciaCreate, OcorrenciaRead
 from app.schemas.prompt_ia import PromptIABase, PromptIACreate, PromptIARead
 from app.schemas.relatorio import RelatorioBase, RelatorioCreate, RelatorioRead
-from app.schemas.responsavel import ResponsavelBase, ResponsavelCreate, ResponsavelRead
+from app.schemas.responsavel import (
+    ResponsavelBase,
+    ResponsavelCreate,
+    ResponsavelRead,
+    ResponsavelUpdate,
+)
 from app.schemas.sistema_predial import (
     SistemaPredialBase,
     SistemaPredialComSubsistemas,
@@ -124,6 +129,7 @@ __all__ = [
     "ResponsavelBase",
     "ResponsavelCreate",
     "ResponsavelRead",
+    "ResponsavelUpdate",
     "SistemaPredialBase",
     "SistemaPredialComSubsistemas",
     "SistemaPredialCreate",

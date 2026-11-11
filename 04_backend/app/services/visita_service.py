@@ -12,15 +12,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import ConflictError, NotFoundError
 from app.models import Visita, VisitaMaoObra, VisitaMedicao
+from app.models.tipo_servico import TipoServico
 from app.repositories import visita_repository
 from app.schemas.visita import VisitaCreatePayload, VisitaUpdatePayload
 from app.schemas.visita_mao_obra import VisitaMaoObraCreatePayload
 from app.schemas.visita_medicao import VisitaMedicaoCreatePayload
 from app.services import inspecao_service
 
-# Tipo de Inspeção que admite Visitas (RF-03: "Registro de Visitas para RFO"). `Inspecao.tipo` é
-# texto livre hoje (há dados com "ltip" minúsculo), então a comparação ignora caixa e espaços.
-TIPO_INSPECAO_COM_VISITAS = "RFO"
+# Tipo de Inspeção que admite Visitas (RF-03: "Registro de Visitas para RFO"). A comparação passa
+# pelo enum (V1-01), que ignora caixa e espaços de dados gravados antes da normalização.
+TIPO_INSPECAO_COM_VISITAS = TipoServico.RFO
 
 
 def _data_duplicada(visita_data: date) -> ConflictError:
@@ -56,7 +57,7 @@ async def criar_visita(
     criado_por_id: uuid.UUID | None = None,
 ) -> Visita:
     inspecao = await inspecao_service.obter_por_id(db, inspecao_id)  # 404 se não existe
-    if (inspecao.tipo or "").strip().upper() != TIPO_INSPECAO_COM_VISITAS:
+    if TipoServico.normalizar(inspecao.tipo) is not TIPO_INSPECAO_COM_VISITAS:
         raise ConflictError(
             f"Visitas só podem ser registradas em inspeção do tipo RFO (esta é '{inspecao.tipo}').",
             type_suffix="visita-exige-inspecao-rfo",

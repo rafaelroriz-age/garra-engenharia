@@ -258,7 +258,7 @@ def test_auxiliar_nao_cria_contrato(auxiliar, inspecao):
             "edificacao_id": str(uuid.uuid4()),
             "fiscal_id": str(uuid.uuid4()),
             "numero": "CT-PROIBIDO",
-            "tipo_servico": "Fiscalização de obra",
+            "tipo_servico": "RFO",
             "status": "em_andamento",
             "art_fiscalizacao": "ART-000",
             "executores": [],

@@ -1,0 +1,44 @@
+{
+  "introducao": [
+    "O presente Laudo Técnico de Inspeção Predial foi elaborado por solicitação da Administração do {edificacao_nome}, com a finalidade de apresentar um diagnóstico técnico das condições aparentes de conservação, uso, operação e manutenção da edificação.",
+    "O Laudo Técnico caracteriza-se pela elaboração de um documento em que registra a inspeção “in loco”, a análise dos documentos técnicos (projetos, memoriais, entre outros), tendo como foco central a constatação geral e aparente das manifestações patológicas identificadas na edificação, em que serão apontadas anomalias construtivas e falhas decorrentes da falta de manutenção, além da realização da análise de riscos oferecidos aos usuários, ao meio ambiente e ao patrimônio, que prejudicam a utilização do espaço, frente ao desempenho dos sistemas construtivos no que tange os elementos estruturais aparentes, as alvenarias de vedações, as instalações elétricas, as hidráulicas e as de esgotamento sanitário, exceto as fundações da construção.",
+    "No contexto aqui apresentado a ANOMALIA representa a irregularidade relativa à construção e suas instalações, enquanto que a FALHA diz respeito à manutenção, operação e uso da edificação.",
+    "Portanto este documento tem por finalidade identificar as manifestações patológicas aparentes, vícios e/ou defeitos construtivos existentes na edificação, objetivando a elaboração do presente laudo técnico que avaliará as condições técnicas, de uso e de manutenção da edificação."
+  ],
+  "consideracoes_preliminares": [
+    "A Inspeção Predial e a formulação do Laudo de Inspeção Predial são as ferramentas que propiciam a avaliação sistêmica da edificação. Deve ser elaborado por profissional habilitado, especializado e devidamente registrado.",
+    "Este documento classifica as não conformidades constatadas na edificação quanto a sua origem, grau de risco e indica orientações técnicas necessárias à melhoria da Manutenção dos sistemas e elementos construtivos. Sendo assim serão apontadas as anomalias dos fatos verificados, condição ou direito e indicar o nexo causal aos seus efeitos, permitindo a posterior apuração das responsabilidades.",
+    "O profissional que subscreve este laudo efetuou um levantamento com base na coleta de dados no imóvel vistoriado com registro fotográfico datado e depoimento dos residentes e funcionários.",
+    "Este trabalho visa unicamente a constatação e análise de vícios construtivos e patologias que foram expressamente solicitados. Vícios ocultos ou demais anomalias existentes não apontadas neste laudo técnico não são de responsabilidade deste trabalho ou do profissional aqui envolvido.",
+    "O profissional responsável apresenta este Laudo Técnico de Inspeção Predial obedecendo às diretrizes preconizadas pela Associação Brasileira de Normas Técnicas – ABNT e pelo Instituto Brasileiro de Avaliações e Perícias – IBAPE. Bem como declara respeitar os preceitos do Código de Ética da Profissão elaborado pelo CREA/CONFEA.",
+    "Neste trabalho aceitam-se como verdadeiros os documentos enviados e/ou consultados, bem como informações prestadas por terceiros, como de boa fé e confiáveis.",
+    "O trabalho apresentado e os resultados finais são válidos apenas para a sequência metodológica apresentada, sendo vedada a utilização deste laudo de inspeção em conexão com qualquer outro.",
+    "Ressalta-se que a inspeção predial é um diagnóstico de constatação visual e não substitui projeto executivo ou “as built”, laudo estrutural específico, ensaios de estanqueidade ou estruturais, laudo elétrico específico, inspeção e medição ôhmica de SPDA, vistoria do Corpo de Bombeiros, orçamento executivo de obras ou plano de recuperação estrutural.",
+    "A inspeção não contemplou aberturas exploratórias, ensaios destrutivos ou testes laboratoriais, limitando-se à constatação de manifestações patológicas aparentes. As conclusões baseiam-se no estado da edificação no momento das vistorias, podendo sofrer alterações em decorrência da evolução natural das patologias ou de intervenções posteriores."
+  ],
+  "objetivo": [
+    "Este documento técnico apresenta a inspeção predial na fase de uso da edificação. Através dessa atividade pode-se constatar e avaliar as condições das edificações, no tocante ao aparecimento de manifestações patológicas, que, porventura, possam surgir e diminuir sua vida útil. Isso proporciona ao síndico subsídios à tomada de decisão, a fim de garantir uma manutenção mais eficiente e menos onerosa.",
+    "Sendo assim, serão apontadas anomalias construtivas e/ou falhas decorrentes da falta de manutenção, além da realização da análise de riscos oferecidos aos usuários, ao meio ambiente e ao patrimônio, que prejudicam a utilização do espaço, frente ao desempenho dos sistemas construtivos.",
+    "O resultado do processo consiste na identificação das anomalias e/ou falhas e na proposição de recomendações técnicas que atestem as condições de estabilidade, segurança e conservação adequadas.",
+    "Ao se apresentar como uma atividade especializada, a inspeção predial é a avaliação técnica da edificação em uso ao longo da vida útil, visando preservar seu desempenho original, seus sistemas e subsistemas. Tal atividade oportuniza a manutenção das condições mínimas necessárias à segurança, habitabilidade e durabilidade da edificação, que, se realizada com periodicidade regular, pode reduzir riscos técnicos e econômicos associados à perda do desempenho."
+  ],
+  "objeto": [
+    "O objeto de análise investigatória é a edificação {edificacao_nome}, situada em {edificacao_endereco}, compreendendo as áreas de uso comum e os sistemas construtivos acessíveis no momento das vistorias."
+  ],
+  "metodologia": [
+    "A Inspeção Predial é classificada quanto à sua complexidade em função das características técnicas (construtivas), do nível de manutenção, do uso da edificação inspecionada e da necessidade de formação de equipe multidisciplinar.",
+    "Consoante o item 7.1.12 da Norma de Inspeção Predial do IBAPE/SP, o presente trabalho enquadra-se no Nível 2 (Média Complexidade), que compreende a vistoria em edificações com complexidade técnica, manutenção e operação medianas, dotadas de sistemas construtivos convencionais. A inspeção neste nível foi conduzida por profissional habilitado na especialidade técnica pertinente.",
+    "A metodologia adotada foi predominantemente visual, com registro fotográfico datado das constatações. Eventuais equipamentos de apoio atuaram estritamente como ferramenta auxiliar à constatação visual, não configurando a realização de ensaios tecnológicos formais.",
+    "A classificação das anomalias e falhas quanto à origem e ao grau de risco segue as diretrizes da ABNT NBR 16747 e da Norma de Inspeção Predial do IBAPE, e a priorização das ações corretivas adota a matriz GUT (Gravidade, Urgência e Tendência)."
+  ],
+  "documentacao_analisada": [
+    "A análise documental constitui etapa fundamental da Inspeção Predial. Para subsidiar este trabalho, foi solicitado o acesso aos documentos administrativos, técnicos, de operação e de manutenção da edificação.",
+    "A verificação documental tem por objetivo identificar não conformidades técnicas e legais nas documentações administrativas, técnicas e de manutenção e operação, antes mesmo da inspeção propriamente dita."
+  ],
+  "conclusao": [
+    "Com o aumento do risco de acidentes e dos custos envolvidos na manutenção tardia das edificações, cresce cada vez mais a conscientização sobre a importância da inspeção predial. Devido à incidência de manifestações patológicas constatadas, é solicitado que sejam feitas as intervenções construtivas com base nos critérios elencados neste trabalho, para cada sistema e subsistema.",
+    "Ressalta-se que a presente inspeção possui natureza predominantemente visual e sensorial, não substituindo laudos específicos, ensaios, projetos executivos, orçamentos ou vistorias especializadas. As constatações estruturais, elétricas, de impermeabilização, SPDA, SPCI, gás e acessibilidade devem ser complementadas, quando necessário, por profissionais legalmente habilitados.",
+    "Recomenda-se à Administração providenciar e manter a documentação administrativa, técnica e de manutenção e operação da edificação, incluindo o Manual de Uso, Operação e Manutenção (ABNT NBR 14037) e o Plano de Manutenção (ABNT NBR 5674).",
+    "Definido o posicionamento deste signatário, retratadas as anomalias e caracterizados os riscos, não sendo prudente que se adiem as providências que a edificação tem a demandar, temos por completado este relatório, cujos objetivos de alerta preventivo esperamos ver atingidos."
+  ]
+}
