@@ -646,5 +646,6 @@ last_updated: 2026-09-17
 | **Contexto** | `ruff check .` (ruff 0.17.3, `04_backend/ruff.toml`) acusa 11 erros em arquivos adicionados depois da T04 (2 RUF001, 4 I001, 2 RUF043, 3 RUF005). O CI instala `ruff` sem versão e mantém o passo com `continue-on-error: true`. |
 | **Decisão proposta** | (1) Corrigir os 11 erros numa tarefa própria (4 com `--fix` seguro; RUF005/RUF043 à mão). (2) Trocar `pip install ruff` por `pip install "ruff==0.17.3"` em `ci.yml`. (3) Remover `continue-on-error` do passo. (4) Marcar o `ci.yml` como status check obrigatório (já pendente em BL-26). |
 | **Consequências** | Sem a limpeza, novos erros de lint continuam entrando sem barrar o merge. Alterar `ci.yml` é mudança de YAML, fora do escopo de documentação. |
-| **Referência** | `00_docs/backlog-auto/ci-lint-bloqueante.md`, `00_docs/backlog-auto/ruff.md` |
+| **Andamento (T43, 2026-11-10)** | Itens 1 e 2 feitos: `ruff check 04_backend` sai com 0 achados (ruff 0.15.1 com `04_backend/ruff.toml`) e o CI instala `ruff==0.15.1`. **Divergência:** a proposta citava 0.17.3; prevaleceu a versão realmente usada localmente. `continue-on-error: true` **mantido**: itens 3 e 4 (bloqueante e status check obrigatório) aguardam aprovação. `pytest` não rodou (PostgreSQL fechado). A decisão continua proposta. |
+| **Referência** | `00_docs/backlog-auto/ci-lint-bloqueante.md`, `00_docs/backlog-auto/ruff.md`, `00_docs/backlog-auto/lint-backend-limpeza.md` |
 
