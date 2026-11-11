@@ -725,7 +725,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T52 · Rodar no PostgreSQL de 05_infra as suítes de Ocorrências, Visitas, Fotos e emissão do RFO que nunca executaram
-- **Status:** doing
+- **Status:** done
 - **Origem:** R-14
 - **Papel:** Engenheiro de Software
 - **Depende:** —
