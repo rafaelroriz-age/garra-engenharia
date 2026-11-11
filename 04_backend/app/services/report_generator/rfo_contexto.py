@@ -16,28 +16,18 @@ from sqlalchemy.orm import selectinload
 
 from app.core.errors import ConflictError, NotFoundError
 from app.models import Contrato, ContratoExecutor, Foto, Inspecao, Ocorrencia, Visita
+from app.services.report_generator.legenda_foto import legenda_para_relatorio
 
 TIPO_RFO = "RFO"
-LEGENDA_APROVADA = "aprovada"
 
 
 def _data_br(valor: date | None) -> str | None:
     return valor.strftime("%d/%m/%Y") if valor else None
 
 
-def legenda_aprovada(foto: Any) -> bool:
-    """DEC-37/DP-9: só legenda aprovada entra no relatório.
-
-    O modelo `Foto` ainda não tem campo de status da legenda (lacuna registrada
-    em 00_docs/backlog-auto/rfo-contexto-banco.md). Enquanto ele não existir,
-    a legenda (humana) é considerada aprovada; havendo `legenda_status`, só
-    `"aprovada"` passa.
-    """
-    return getattr(foto, "legenda_status", LEGENDA_APROVADA) == LEGENDA_APROVADA
-
-
 def _foto_ctx(foto: Foto) -> dict[str, Any]:
-    legenda = foto.legenda if legenda_aprovada(foto) and foto.legenda else None
+    # DEC-37 DP-9 / DEC-47 (1): só `legenda` entra; a sugestão de IA nunca, qualquer status.
+    legenda = legenda_para_relatorio(foto) or None
     return {
         "id": str(foto.id),
         "storage_key": foto.storage_key,
