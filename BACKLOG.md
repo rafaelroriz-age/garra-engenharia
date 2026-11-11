@@ -881,7 +881,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T46 · Endpoint de emissão do RFO (PDF/DOCX) que grava no storage e registra o Relatorio
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-13
 - **Papel:** Engenheiro Backend
 - **Depende:** T45
