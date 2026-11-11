@@ -1174,7 +1174,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ## Bloco E — IA DeepSeek: acurácia e custo da legenda (RF-15)
 
 ### T65 · Legenda IA: contexto técnico só texto, minimização de dados, enums de certeza/status, usage e retry
-- **Status:** todo
+- **Status:** doing
 - **Origem:** IA-01
 - **Papel:** Engenheiro Backend
 - **Depende:** —
