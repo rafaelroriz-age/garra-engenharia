@@ -297,6 +297,12 @@ def gerar_docx(layout: dict[str, Any], destino: Path) -> None:
     documento.add_paragraph("{{ sistema.nome }}")
     documento.add_paragraph("{%p for ocorrencia in sistema.ocorrencias %}")
     documento.add_paragraph(ficha["rotulo_foto"] + ' {{ "%02d"|format(ocorrencia.seq_numero) }}')
+    # Foto da ocorrência (InlineImage ou texto-placeholder, montado por `ltip_pipeline.gerar_docx`)
+    # e a legenda aprovada/manual (DEC-37 DP-9), omitida quando vazia.
+    documento.add_paragraph("{{ ocorrencia.foto }}")
+    documento.add_paragraph("{%p if ocorrencia.legenda_foto %}")
+    documento.add_paragraph("{{ ocorrencia.legenda_foto }}")
+    documento.add_paragraph("{%p endif %}")
 
     # A tabela da ficha é o modelo iterado: 4 linhas (cabeçalho, `for`, dados, `endfor`)
     # porque `{%tr %}` remove a linha inteira em que aparece (armadilha do docxtpl).
