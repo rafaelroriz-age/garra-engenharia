@@ -740,7 +740,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T53 · RFO: tratar ART de execução ausente no contexto e no template
-- **Status:** doing
+- **Status:** done
 - **Origem:** T50
 - **Papel:** Engenheiro Backend
 - **Depende:** —
