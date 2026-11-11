@@ -372,7 +372,7 @@ Passos: (1) Leia os dois scripts por inteiro, a seção de backup de `05_infra/R
 ```
 
 ### T43 · Zerar os 11 erros do ruff no backend e fixar a versão do ruff no CI
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-46
 - **Papel:** Engenheiro Backend
 - **Depende:** —
