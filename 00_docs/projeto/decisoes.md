@@ -726,3 +726,14 @@ last_updated: 2026-09-17
 | **Decisão proposta** | (P1) Busca no próprio PostgreSQL (FTS `portuguese` + `pg_trgm`), sem pgvector nem provedor novo. (P2) Até `LEGENDA_IA_RAG_K` (3) legendas aprovadas do mesmo tipo de anomalia ou sistema entram como few-shot depois do `system` (que continua idêntico e cacheável); até 2 trechos de `trechos_conhecimento_ia` entram dentro de "DADOS DA OCORRÊNCIA" como material de apoio não confiável; corte de 2.500 caracteres; `LEGENDA_IA_RAG_ATIVO=false` desliga. (P3) Textos de outros clientes passam por anonimização regex antes do envio. (P4) A ingestão lê só `00_docs/convertidos/*.md` e é passo manual de deploy, após `alembic upgrade head` e revisão do `--dry-run --amostras`. (P5) Migrar para embeddings só se o harness live mostrar falha por sinônimo, a precisão de sistema das referências cair abaixo de ~70%, o volume passar de ~50 mil trechos ou entrarem NBRs inteiras. |
 | **Consequências** | Os tokens do RAG vêm depois do `system` e contam como cache miss (até ~625 tokens a mais por foto). A chave de cache da DEC-52 passa a incluir os ids usados. A anonimização é heurística: legenda de um cliente pode seguir, com a chamada de outro, para o provedor fora do Brasil (R-10, R-21); alternativa é restringir a busca ao mesmo cliente. Os trechos ficam no banco como dado de clientes reais anonimizado. O ganho de acurácia segue não medido (T67 parcial, R-18). |
 | **Referência** | `00_docs/backlog-auto/ia-rag-fts.md` |
+
+## DEC-54 — Imagem repetida em elemento corrido dos templates WeasyPrint é raster ou SVG simples (proposta de T76)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-12 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | A T76 mediu o PDF da Vistoria Residencial em 24,2 s (200 páginas, 358 fotos). Em 1 execução por variante, o `write_pdf()` leva ~26 s com o logo SVG vetorizado (76 KB) no cabeçalho corrido (`position: running(cabecalho)`) e ~1,4 s sem ele (~2,5 s com o PNG). O WeasyPrint 70 redesenha o SVG em cada página (~0,12 s/página). O template da Cautelar tem o mesmo padrão e não foi medido. |
+| **Decisão proposta** | Nos templates, imagem repetida em elemento corrido (`running()`, `@top-*`/`@bottom-*`) é raster (≥ 300 dpi na largura usada) ou SVG simplificado; o SVG vetorizado fica só na capa. A mudança vai nos geradores de template (ADR-13/DEC-25), não no `.html.j2`, e vem com teste determinístico (o HTML do cabeçalho não referencia `image/svg+xml`). |
+| **Consequências** | Ganho estimado de ~5× no `write_pdf`. Não é necessária para atender RNF-06 hoje (margem de 59,7 %); fica como folga para I/O real e mais páginas. Exige conferir que o PNG é a mesma arte do SVG. |
+| **Referência** | `00_docs/backlog-auto/vistoria-residencial-desempenho.md` |
