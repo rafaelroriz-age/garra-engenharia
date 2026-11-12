@@ -161,7 +161,17 @@ class ClienteLegendaIAProtegido:
     async def gerar_legenda(
         self, contexto: ContextoLegenda, prompt: str, imagem: bytes | None = None
     ) -> LegendaIAResultado:
-        # Só a legenda bruta é delimitada; o resto do contexto vai como dados estruturados.
-        protegido = replace(contexto, legenda_bruta=delimitar_legenda_bruta(contexto.legenda_bruta))
+        # A legenda bruta é delimitada; o resto do contexto vai como dados estruturados. O que veio do
+        # RAG (IA-05) é dado não confiável (SEG-IA-08): bruta dos exemplos delimitada, legenda aprovada
+        # e trechos de referência pelo mesmo saneamento da saída (sem marcação, delimitadores ou controle).
+        protegido = replace(
+            contexto,
+            legenda_bruta=delimitar_legenda_bruta(contexto.legenda_bruta),
+            exemplos=tuple(
+                replace(e, legenda=sanear_texto(e.legenda), legenda_bruta=delimitar_legenda_bruta(e.legenda_bruta))
+                for e in contexto.exemplos
+            ),
+            referencias=tuple(replace(r, texto=sanear_texto(r.texto)) for r in contexto.referencias),
+        )
         resultado = await self._cliente.gerar_legenda(protegido, prompt, imagem)
         return sanear_resultado(resultado, self._limites)

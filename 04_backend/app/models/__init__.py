@@ -24,6 +24,7 @@ from app.models.subsistema import Subsistema
 from app.models.tipo_anomalia import TipoAnomalia
 from app.models.tipo_falha import TipoFalha
 from app.models.tipo_servico import TipoServico
+from app.models.trecho_conhecimento_ia import TrechoConhecimentoIA
 from app.models.usuario import Usuario
 from app.models.visita import Visita
 from app.models.visita_mao_obra import VisitaMaoObra
@@ -49,6 +50,7 @@ __all__ = [
     "TipoAnomalia",
     "TipoFalha",
     "TipoServico",
+    "TrechoConhecimentoIA",
     "Usuario",
     "Visita",
     "VisitaMaoObra",

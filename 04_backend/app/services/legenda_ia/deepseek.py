@@ -6,7 +6,9 @@ delimitada (DEC-42 D) dentro do `ContextoLegenda` e segue na mensagem de usuári
 
 Cache de prefixo da DeepSeek: a API reaproveita (a preço menor) o prefixo idêntico das mensagens.
 Por isso o `system` é `prompt + instrução JSON` e **nada variável** entra nele: contexto, legenda
-bruta, ids e datas ficam só na mensagem `user`. `_mensagens` mantém essa ordem fixa.
+bruta, ids e datas ficam só na mensagem `user`. Os few-shots do RAG (IA-05) vêm depois do `system`
+como pares user/assistant, e o material de apoio dentro do bloco «DADOS DA OCORRÊNCIA» da mensagem
+final; com ou sem RAG o `system` é byte a byte o mesmo. `_mensagens` mantém essa ordem fixa.
 
 Retry: até `MAX_REENVIOS` novas tentativas com backoff exponencial curto, só para 429, 5xx e
 timeout; os demais 4xx e falhas de rede falham na hora.
@@ -22,7 +24,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 
 from app.core.config import Settings
 from app.core.errors import DomainError
-from app.services.legenda_ia.contexto import ContextoLegenda
+from app.services.legenda_ia.contexto import ContextoLegenda, ExemploLegenda
 from app.services.legenda_ia.contrato import LegendaIAResultado
 from app.services.legenda_ia.saneamento import SaidaLegendaIAInvalida
 
@@ -40,6 +42,8 @@ _NIVEL_CERTEZA = {
     "causa_documentalmente_comprovada": "causa_comprovada",
     "nao_aplicavel": None,
 }
+# Inverso (banco → prompt), para a resposta-modelo dos few-shots.
+_NIVEL_CERTEZA_PROMPT = {banco: prompt for prompt, banco in _NIVEL_CERTEZA.items() if banco}
 _STATUS_CONHECIDOS = {"aprovada", "aprovada_com_ressalva", "revisar", "informacao_insuficiente"}
 _STATUS_COM_ALERTA = {
     "aprovada_com_ressalva": "O modelo aprovou a legenda com ressalvas: revise antes de aprovar.",
@@ -86,6 +90,31 @@ def _lista_textos(valor: object) -> list[str]:
     return valor
 
 
+def _texto_usuario(contexto: ContextoLegenda) -> str:
+    bruta = contexto.legenda_bruta or "(sem legenda bruta informada)"
+    return f"{contexto.bloco_dados()}\n\nLEGENDA BRUTA\n{bruta}"
+
+
+def _contexto_do_exemplo(exemplo: ExemploLegenda) -> ContextoLegenda:
+    """Só o que identifica o caso do exemplo (sem NBRs/GUT de outro contrato)."""
+    return ContextoLegenda(
+        legenda_bruta=exemplo.legenda_bruta,
+        tipo_anomalia=exemplo.tipo_anomalia,
+        sistema=exemplo.sistema,
+        grau_risco=exemplo.grau_risco,
+    )
+
+
+def _resposta_do_exemplo(exemplo: ExemploLegenda) -> str:
+    """Resposta-modelo no mesmo formato JSON pedido no `system` (a legenda que o auditor aprovou)."""
+    resposta: dict[str, object] = {"legenda_sugerida": exemplo.legenda, "alertas": [], "pendencias": []}
+    nivel = _NIVEL_CERTEZA_PROMPT.get(exemplo.nivel_certeza or "")
+    if nivel:
+        resposta["nivel_certeza"] = nivel
+    resposta["status_validacao"] = "aprovada"
+    return json.dumps(resposta, ensure_ascii=False)
+
+
 def _extrair_uso(usage: object) -> dict[str, int] | None:
     if not isinstance(usage, dict):
         return None
@@ -128,10 +157,13 @@ class DeepSeekLegendaIAClient:
         )
 
     def _mensagens(self, contexto: ContextoLegenda, prompt: str, imagem: bytes | None) -> list[dict]:
-        """`system` idêntico para o mesmo prompt; todo dado variável vai na mensagem `user`."""
+        """`system` idêntico para o mesmo prompt; todo dado variável vai depois dele.
+
+        Ordem: `system` fixo → few-shots do RAG (pares user/assistant, IA-05) → `user` final com o
+        bloco «DADOS DA OCORRÊNCIA» (inclui o material de apoio) e a legenda bruta delimitada.
+        """
         sistema = f"{prompt}\n\n{_INSTRUCAO_JSON}"
-        bruta = contexto.legenda_bruta or "(sem legenda bruta informada)"
-        texto = f"{contexto.bloco_dados()}\n\nLEGENDA BRUTA\n{bruta}"
+        texto = _texto_usuario(contexto)
         if self.enviar_imagem and imagem is not None:
             usuario: object = [
                 {"type": "image_url", "image_url": {"url": reduzir_imagem_para_data_uri(imagem)}},
@@ -139,7 +171,12 @@ class DeepSeekLegendaIAClient:
             ]
         else:
             usuario = texto
-        return [{"role": "system", "content": sistema}, {"role": "user", "content": usuario}]
+        mensagens: list[dict] = [{"role": "system", "content": sistema}]
+        for exemplo in contexto.exemplos:
+            mensagens.append({"role": "user", "content": _texto_usuario(_contexto_do_exemplo(exemplo))})
+            mensagens.append({"role": "assistant", "content": _resposta_do_exemplo(exemplo)})
+        mensagens.append({"role": "user", "content": usuario})
+        return mensagens
 
     async def _enviar(self, corpo: dict, modo: str) -> httpx.Response:
         for tentativa in range(MAX_REENVIOS + 1):

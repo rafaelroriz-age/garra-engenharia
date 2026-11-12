@@ -18,7 +18,7 @@ from app.core.errors import ConflictError, DomainError, NotFoundError
 from app.models import Foto, Ocorrencia, Usuario, Visita
 from app.repositories import foto_repository
 from app.services import image_processing, prompt_ia_service
-from app.services.legenda_ia import LegendaIAClient, montar_contexto, telemetria
+from app.services.legenda_ia import LegendaIAClient, montar_contexto, recuperacao, telemetria
 from app.services.storage.base import StorageClient
 from app.services.storage.s3_client import MAX_UPLOAD_SIZE_BYTES, ObjectNotFoundError
 
@@ -211,6 +211,11 @@ async def gerar_legenda_ia(
     contexto = await montar_contexto(db, foto, legenda_bruta)
 
     settings = get_settings()
+    if settings.legenda_ia_rag_ativo:
+        # RAG (IA-05): few-shots aprovados + trechos de referência; os ids entram na chave de cache
+        # via `contexto.canonico()`. Desligado, nenhuma consulta de RAG é feita.
+        recuperado = await recuperacao.buscar(db, contexto, settings.legenda_ia_rag_k, excluir_foto_id=foto.id)
+        contexto = recuperado.aplicar(contexto)
     provedor = settings.legenda_ia_provedor
     modelo = settings.deepseek_modelo if provedor == "deepseek" else "fake"
     prompt_hash = prompt_ia_service.calcular_hash(prompt.conteudo)
