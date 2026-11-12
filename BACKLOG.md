@@ -1095,7 +1095,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T60 · Vistoria Cautelar: contexto a partir do banco e registro na emissão
-- **Status:** doing
+- **Status:** done
 - **Origem:** V1-04
 - **Papel:** Engenheiro Backend
 - **Depende:** T57, T58
