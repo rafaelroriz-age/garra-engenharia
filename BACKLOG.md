@@ -1187,7 +1187,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: arquiteto-
 ```
 
 ### T76 · Reduzir o tempo do PDF da Vistoria Residencial e travar a margem com teste
-- **Status:** todo
+- **Status:** doing
 - **Origem:** R-03
 - **Papel:** backend
 - **Depende:** T73
@@ -1345,7 +1345,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T75 · E2E Playwright de Visitas, Ocorrências e upload de fotos pela UI
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-21
 - **Papel:** frontend
 - **Depende:** T74
