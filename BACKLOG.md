@@ -1236,7 +1236,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T69 · Legenda IA: RAG por busca textual no Postgres (legendas aprovadas, relatórios históricos e NBRs)
-- **Status:** doing
+- **Status:** done
 - **Origem:** IA-05
 - **Papel:** Engenheiro Backend
 - **Depende:** T68, T66, T67
