@@ -7,16 +7,18 @@ reprocessamento. Uploads nunca aceitam URL fornecida pelo cliente (A10).
 import base64
 import binascii
 import re
+import time
 import uuid
 from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.errors import ConflictError, DomainError, NotFoundError
 from app.models import Foto, Ocorrencia, Usuario, Visita
 from app.repositories import foto_repository
 from app.services import image_processing, prompt_ia_service
-from app.services.legenda_ia import LegendaIAClient, montar_contexto
+from app.services.legenda_ia import LegendaIAClient, montar_contexto, telemetria
 from app.services.storage.base import StorageClient
 from app.services.storage.s3_client import MAX_UPLOAD_SIZE_BYTES, ObjectNotFoundError
 
@@ -188,30 +190,71 @@ async def atualizar(
 
 async def gerar_legenda_ia(
     db: AsyncSession, foto_id: uuid.UUID, storage: StorageClient, cliente: LegendaIAClient,
-    campos: dict,
+    campos: dict, usuario_id: uuid.UUID | None = None,
 ) -> Foto:
     """Gera a sugestão de legenda por IA (BL-34; DEC-37 DP-2, DP-4; RN-16, RN-17).
 
     Escreve apenas os campos de sugestão (`legenda_ia_sugerida`, `legenda_bruta` se enviada em
     `campos`, alertas/pendências, prompt e hash, instante) e põe `status_validacao_ia` em
     `rascunho`. Nunca altera `legenda` nem os campos de aprovação.
+
+    Telemetria e cache local (R-10): a mesma entrada (prompt, modelo, contexto) dentro do TTL
+    reaproveita o último resultado de sucesso sem chamar a API; cada geração vira uma linha em
+    `chamadas_ia` (origem `api` ou `cache_local`; erro do provedor também é registrado e relançado).
     """
     foto = await foto_repository.get_by_id(db, foto_id)
     if foto is None:
         raise NotFoundError(f"Foto '{foto_id}' não encontrada.", type_suffix="foto-nao-encontrada")
     prompt = await prompt_ia_service.obter_ativo(db, PROMPT_LEGENDA_IA_NOME)
-    imagem: bytes | None = None
-    if getattr(cliente, "enviar_imagem", False):  # DEEPSEEK_ENVIAR_IMAGEM=true; senão só texto
-        try:
-            imagem = storage.download(foto.storage_key)
-        except ObjectNotFoundError as exc:
-            raise DomainError(
-                "O arquivo da foto não existe no storage.", type_suffix="storage-key-inexistente",
-                title="Foto inválida",
-            ) from exc
+    enviar_imagem = bool(getattr(cliente, "enviar_imagem", False))  # DEEPSEEK_ENVIAR_IMAGEM=true; senão só texto
     legenda_bruta = campos["legenda_bruta"] if "legenda_bruta" in campos else foto.legenda_bruta
     contexto = await montar_contexto(db, foto, legenda_bruta)
-    resultado = await cliente.gerar_legenda(contexto, prompt.conteudo, imagem)
+
+    settings = get_settings()
+    provedor = settings.legenda_ia_provedor
+    modelo = settings.deepseek_modelo if provedor == "deepseek" else "fake"
+    prompt_hash = prompt_ia_service.calcular_hash(prompt.conteudo)
+    # Em modo imagem o resultado também depende da foto (storage_key é único e imutável).
+    chave = telemetria.chave_cache(
+        prompt_hash, modelo, contexto, extra=f"imagem:{foto.storage_key}" if enviar_imagem else "texto"
+    )
+    comum = dict(
+        chave=chave, provedor=provedor, usuario_id=usuario_id, foto_id=foto.id,
+        prompt_ia_id=prompt.id, prompt_conteudo_hash=prompt_hash,
+    )
+
+    resultado = await telemetria.buscar_em_cache(db, chave, settings.legenda_ia_cache_ttl_h)
+    if resultado is not None:
+        await telemetria.registrar(
+            db, origem="cache_local", sucesso=True, modelo=resultado.modelo or modelo,
+            modo=resultado.modo, latencia_ms=0, commit=False, **comum,
+        )
+    else:
+        imagem: bytes | None = None
+        if enviar_imagem:
+            try:
+                imagem = storage.download(foto.storage_key)
+            except ObjectNotFoundError as exc:
+                raise DomainError(
+                    "O arquivo da foto não existe no storage.", type_suffix="storage-key-inexistente",
+                    title="Foto inválida",
+                ) from exc
+        inicio = time.perf_counter()
+        try:
+            resultado = await cliente.gerar_legenda(contexto, prompt.conteudo, imagem)
+        except Exception as exc:
+            # Só o tipo do erro: sem mensagem (pode ecoar conteúdo) e sem chave.
+            await telemetria.registrar(
+                db, origem="api", sucesso=False, modelo=modelo, modo="imagem" if enviar_imagem else "texto",
+                latencia_ms=round((time.perf_counter() - inicio) * 1000),
+                erro_tipo=(getattr(exc, "type_suffix", None) or type(exc).__name__)[:100], **comum,
+            )
+            raise
+        await telemetria.registrar(
+            db, origem="api", sucesso=True, modelo=resultado.modelo or modelo, modo=resultado.modo,
+            latencia_ms=round((time.perf_counter() - inicio) * 1000), uso=resultado.uso,
+            precos=telemetria.Precos.de_settings(settings), resultado=resultado, commit=False, **comum,
+        )
 
     if "legenda_bruta" in campos:
         foto.legenda_bruta = legenda_bruta
@@ -220,7 +263,7 @@ async def gerar_legenda_ia(
     foto.pendencias_ia = list(resultado.pendencias)
     foto.nivel_certeza_ia = resultado.nivel_certeza
     foto.prompt_ia_id = prompt.id
-    foto.prompt_conteudo_hash = prompt_ia_service.calcular_hash(prompt.conteudo)
+    foto.prompt_conteudo_hash = prompt_hash
     foto.legenda_ia_gerada_em = datetime.now(UTC)
     _invalidar_aprovacao(foto)  # DEC-42 B: regerar volta a rascunho e zera a aprovação
     await db.commit()

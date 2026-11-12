@@ -6,6 +6,7 @@ classes sejam registradas na `Base.metadata` antes do uso pelo Alembic ou pelos
 testes de integração.
 """
 from app.models.base import Base
+from app.models.chamada_ia import ChamadaIA
 from app.models.contrato import Contrato
 from app.models.contrato_executor import ContratoExecutor
 from app.models.contrato_nbr import ContratoNbr
@@ -30,6 +31,7 @@ from app.models.visita_medicao import VisitaMedicao
 
 __all__ = [
     "Base",
+    "ChamadaIA",
     "Contrato",
     "ContratoExecutor",
     "ContratoNbr",

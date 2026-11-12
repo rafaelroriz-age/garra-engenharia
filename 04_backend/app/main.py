@@ -19,6 +19,7 @@ from app.api.v1.dados_mestre import router as dados_mestre_router
 from app.api.v1.dashboard import router as dashboard_router
 from app.api.v1.edificacoes import router as edificacoes_router
 from app.api.v1.fotos import router as fotos_router
+from app.api.v1.ia_uso import router as ia_uso_router
 from app.api.v1.inspecoes import router as inspecoes_router
 from app.api.v1.ocorrencias import router as ocorrencias_router
 from app.api.v1.portal import router as portal_router
@@ -84,6 +85,7 @@ app.include_router(dashboard_router)
 app.include_router(portal_router)
 app.include_router(relatorios_router)
 app.include_router(conteudos_router)
+app.include_router(ia_uso_router)
 
 
 @app.get("/health", tags=["health"], summary="Healthcheck da API e do PostgreSQL")

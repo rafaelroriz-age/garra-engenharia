@@ -147,7 +147,7 @@ async def gerar_legenda_ia(
     `usuario` é declarado antes de `cliente` para que 401/403 venham antes do 503 sem provedor.
     """
     campos = {nome: getattr(dados, nome) for nome in dados.model_fields_set} if dados else {}
-    return await foto_service.gerar_legenda_ia(db, foto_id, storage, cliente, campos)
+    return await foto_service.gerar_legenda_ia(db, foto_id, storage, cliente, campos, usuario_id=usuario.id)
 
 
 @router.delete("/fotos/upload", status_code=status.HTTP_204_NO_CONTENT)
