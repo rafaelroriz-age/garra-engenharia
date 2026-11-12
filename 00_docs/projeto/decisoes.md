@@ -715,3 +715,14 @@ last_updated: 2026-09-17
 | **Decisão proposta** | (P1) Chave do cache = sha256 de prompt (hash), modelo e contexto canônico, mais a `storage_key` em modo imagem. Só resposta de sucesso da API entra no cache; TTL de 720 h (`LEGENDA_IA_CACHE_TTL_H`, `0` desliga). Acerto de cache não chama o provedor e continua exigindo aprovação (a legenda volta a `rascunho`, DEC-42). (P2) Toda chamada grava `chamadas_ia` (tokens, custo estimado, latência, origem `api` ou `cache_local`; erro sem mensagem nem chave); `foto_id` é `SET NULL` para o histórico sobreviver à exclusão da foto. (P3) `GET /api/v1/ia/uso` só para auditor. (P4) Preços por variável de ambiente (`DEEPSEEK_PRECO_*`); sem os 3 preços o custo é `null`. |
 | **Consequências** | A coluna `resposta` guarda a legenda saneada sem política de retenção definida (avaliar com R-10). O limite de taxa (DEC-42 C) continua contando acertos de cache; decidir se devem poupar cota. Preços reais dependem de IA-07. |
 | **Referência** | `00_docs/backlog-auto/ia-telemetria-cache.md` |
+
+## DEC-53 — RAG da legenda IA por FTS + pg_trgm, sem embeddings (proposta de T69)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-12 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | A DeepSeek não tem API de embeddings; o plano IA-05 quer elevar a acurácia sem fine-tuning, usando legendas já aprovadas e laudos anteriores. |
+| **Decisão proposta** | (P1) Busca no próprio PostgreSQL (FTS `portuguese` + `pg_trgm`), sem pgvector nem provedor novo. (P2) Até `LEGENDA_IA_RAG_K` (3) legendas aprovadas do mesmo tipo de anomalia ou sistema entram como few-shot depois do `system` (que continua idêntico e cacheável); até 2 trechos de `trechos_conhecimento_ia` entram dentro de "DADOS DA OCORRÊNCIA" como material de apoio não confiável; corte de 2.500 caracteres; `LEGENDA_IA_RAG_ATIVO=false` desliga. (P3) Textos de outros clientes passam por anonimização regex antes do envio. (P4) A ingestão lê só `00_docs/convertidos/*.md` e é passo manual de deploy, após `alembic upgrade head` e revisão do `--dry-run --amostras`. (P5) Migrar para embeddings só se o harness live mostrar falha por sinônimo, a precisão de sistema das referências cair abaixo de ~70%, o volume passar de ~50 mil trechos ou entrarem NBRs inteiras. |
+| **Consequências** | Os tokens do RAG vêm depois do `system` e contam como cache miss (até ~625 tokens a mais por foto). A chave de cache da DEC-52 passa a incluir os ids usados. A anonimização é heurística: legenda de um cliente pode seguir, com a chamada de outro, para o provedor fora do Brasil (R-10, R-21); alternativa é restringir a busca ao mesmo cliente. Os trechos ficam no banco como dado de clientes reais anonimizado. O ganho de acurácia segue não medido (T67 parcial, R-18). |
+| **Referência** | `00_docs/backlog-auto/ia-rag-fts.md` |
