@@ -1345,7 +1345,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T75 · E2E Playwright de Visitas, Ocorrências e upload de fotos pela UI
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-21
 - **Papel:** frontend
 - **Depende:** T74
