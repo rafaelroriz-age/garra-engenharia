@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Manrope } from "next/font/google";
 
 import { AppShell } from "@/components/layout/app-shell";
+import { SwRegister } from "@/components/sw-register";
 import { cn } from "@/lib/utils";
 
 import "./globals.css";
@@ -51,6 +52,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={cn(inter.variable, manrope.variable)}>
       <body className="font-sans antialiased">
+        <SwRegister />
         <AppShell>{children}</AppShell>
       </body>
     </html>

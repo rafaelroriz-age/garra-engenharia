@@ -68,6 +68,8 @@ export function setAuthToken(token: string): void {
 export function clearAuthToken(): void {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+  // Limpa o cache de leitura do Service Worker (DEC-26); ver components/sw-register.tsx.
+  window.dispatchEvent(new Event("garra:clear-sw-cache"));
 }
 
 /** Indica se há um token de acesso armazenado (não valida expiração/assinatura). */
