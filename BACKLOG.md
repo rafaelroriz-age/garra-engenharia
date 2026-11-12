@@ -1112,7 +1112,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T61 · Vistoria Residencial: contexto a partir do banco e registro na emissão
-- **Status:** doing
+- **Status:** done
 - **Origem:** V1-05
 - **Papel:** Engenheiro Backend
 - **Depende:** T57, T58
