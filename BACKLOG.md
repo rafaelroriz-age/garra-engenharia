@@ -1221,7 +1221,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T68 · Legenda IA: telemetria de custo (`chamadas_ia`), cache local de resposta e resumo de uso
-- **Status:** doing
+- **Status:** done
 - **Origem:** IA-04
 - **Papel:** Engenheiro Backend
 - **Depende:** T65, T57, T58
