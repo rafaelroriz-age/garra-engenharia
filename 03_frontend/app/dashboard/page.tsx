@@ -11,6 +11,9 @@ import { PageHeader } from "@/components/page-header";
 import { ApiErrorAlert } from "@/components/api-error-alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/prancha/empty-state";
+import { KpiTile } from "@/components/prancha/kpi-tile";
+import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,26 +34,29 @@ export default function DashboardPage() {
   );
 }
 
+function KpiSkeletonGrid() {
+  return (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-hidden="true">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="rounded-lg border bg-card px-4 pb-3 pt-3.5">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="mt-3 h-8 w-16" />
+          <Skeleton className="mt-3 h-1.5 w-full" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function DashboardSkeleton() {
   return (
     <div>
       <PageHeader
+        eyebrow="Folha 01 · Visão geral"
         title="Dashboard"
         description="Indicadores de saúde por edificação e sistema predial (RF-07)."
       />
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i} aria-hidden="true">
-            <CardHeader className="space-y-2 pb-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-7 w-16" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-3 w-32" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <KpiSkeletonGrid />
     </div>
   );
 }
@@ -119,14 +125,18 @@ function DashboardContent() {
   const totalCritico = dashboard?.grau_risco_por_sistema.reduce((soma, item) => soma + item.critico, 0) ?? 0;
   const totalOcorrencias = totalConforme + totalNaoConforme;
 
+  const pct = (parte: number) => (totalOcorrencias > 0 ? Math.round((parte / totalOcorrencias) * 100) : 0);
+
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <PageHeader
+          eyebrow="Folha 01 · Visão geral"
+          className="mb-0"
           title="Dashboard"
           description="Indicadores de saúde por edificação e sistema predial (RF-07): proporção Conforme/Não Conforme, distribuição por Grau de Risco e gravidade GUT média por subsistema."
         />
-        <div className="min-w-56 space-y-1.5">
+        <div className="w-full space-y-2 sm:w-auto sm:min-w-64">
           <Label htmlFor="dashboard-edificacao">Edificação</Label>
           <Select
             id="dashboard-edificacao"
@@ -145,150 +155,143 @@ function DashboardContent() {
       </div>
 
       {!loadingEdificacoes && edificacoes.length === 0 ? (
-        <Card>
-          <CardContent className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
-            <Building2 className="h-4 w-4" aria-hidden="true" />
-            Nenhuma edificação cadastrada ainda. Cadastre em{" "}
-            <a href="/edificacoes" className="font-medium text-primary underline-offset-4 hover:underline">
-              Edificações
-            </a>
-            .
-          </CardContent>
-        </Card>
+        <EmptyState icon={Building2}>
+          Nenhuma edificação cadastrada ainda. Cadastre em{" "}
+          <a href="/edificacoes" className="font-medium text-primary underline underline-offset-4">
+            Edificações
+          </a>
+          .
+        </EmptyState>
       ) : (
         <>
           <ApiErrorAlert error={error} />
 
           {loadingDashboard ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Card key={i} aria-hidden="true">
-                  <CardHeader className="space-y-2 pb-2">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-7 w-16" />
-                  </CardHeader>
-                  <CardContent>
-                    <Skeleton className="h-3 w-32" />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <KpiSkeletonGrid />
           ) : dashboard ? (
             <>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Total de ocorrências
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-2xl font-bold">{totalOcorrencias}</CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex-row items-center gap-1.5 space-y-0 pb-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden="true" />
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Conforme</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-2xl font-bold">
-                    {totalConforme}
-                    <span className="ml-1.5 text-sm font-normal text-muted-foreground">
-                      ({totalOcorrencias > 0 ? Math.round((totalConforme / totalOcorrencias) * 100) : 0}%)
-                    </span>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex-row items-center gap-1.5 space-y-0 pb-2">
-                    <XCircle className="h-4 w-4 text-destructive" aria-hidden="true" />
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Não Conforme</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-2xl font-bold">
-                    {totalNaoConforme}
-                    <span className="ml-1.5 text-sm font-normal text-muted-foreground">
-                      ({totalOcorrencias > 0 ? Math.round((totalNaoConforme / totalOcorrencias) * 100) : 0}%)
-                    </span>
-                  </CardContent>
-                </Card>
-                <Card className={totalCritico > 0 ? "border-destructive" : undefined}>
-                  <CardHeader className="flex-row items-center gap-1.5 space-y-0 pb-2">
-                    <AlertTriangle className="h-4 w-4 text-destructive" aria-hidden="true" />
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Ocorrências em Grau Crítico
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-2xl font-bold">{totalCritico}</CardContent>
-                </Card>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <KpiTile index={0} label="Total de ocorrências" value={totalOcorrencias} tone="primary" />
+                <KpiTile
+                  index={1}
+                  label="Conforme"
+                  icon={CheckCircle2}
+                  tone="ok"
+                  value={totalConforme}
+                  suffix={`(${pct(totalConforme)}%)`}
+                  ratio={totalOcorrencias > 0 ? totalConforme / totalOcorrencias : 0}
+                />
+                <KpiTile
+                  index={2}
+                  label="Não Conforme"
+                  icon={XCircle}
+                  tone="atencao"
+                  value={totalNaoConforme}
+                  suffix={`(${pct(totalNaoConforme)}%)`}
+                  ratio={totalOcorrencias > 0 ? totalNaoConforme / totalOcorrencias : 0}
+                />
+                <KpiTile
+                  index={3}
+                  label="Ocorrências em Grau Crítico"
+                  icon={AlertTriangle}
+                  tone="critico"
+                  value={totalCritico}
+                  emphasis={totalCritico > 0}
+                  ratio={totalOcorrencias > 0 ? totalCritico / totalOcorrencias : 0}
+                />
               </div>
 
-              <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <Card>
-                  <CardHeader>
+              <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <Card className="animate-reveal [animation-delay:200ms]">
+                  <CardHeader className="flex-row items-baseline gap-3 space-y-0 border-b border-foreground/15 pb-3 sm:pb-3">
+                    <span aria-hidden="true" className="dado text-xs font-medium text-sinal-ink">
+                      02 —
+                    </span>
                     <CardTitle className="text-base">Conformidade e Grau de Risco por sistema</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="p-0 sm:p-0">
                     {dashboard.conformidade_por_sistema.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">Nenhuma ocorrência registrada ainda.</p>
+                      <p className="p-5 text-sm text-muted-foreground sm:p-6">Nenhuma ocorrência registrada ainda.</p>
                     ) : (
-                      dashboard.conformidade_por_sistema.map((item) => {
-                        const risco = dashboard.grau_risco_por_sistema.find(
-                          (r) => r.sistema_id === item.sistema_id
-                        );
-                        const proporcaoConforme = item.total > 0 ? (item.conforme / item.total) * 100 : 0;
-                        const critico = risco?.critico ?? 0;
-                        return (
-                          <div
-                            key={item.sistema_id}
-                            className={`space-y-1.5 rounded-md border p-3 ${critico > 0 ? "border-destructive" : ""}`}
-                          >
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="text-sm font-medium">{item.sistema_nome}</span>
-                              {critico > 0 ? (
-                                <Badge variant="destructive">{critico} crítico(s)</Badge>
-                              ) : null}
-                            </div>
-                            <div
-                              className="h-2 w-full overflow-hidden rounded-full bg-muted"
-                              role="progressbar"
-                              aria-valuenow={Math.round(proporcaoConforme)}
-                              aria-valuemin={0}
-                              aria-valuemax={100}
-                              aria-label={`${item.sistema_nome}: ${Math.round(proporcaoConforme)}% conforme`}
+                      <ul>
+                        {dashboard.conformidade_por_sistema.map((item) => {
+                          const risco = dashboard.grau_risco_por_sistema.find(
+                            (r) => r.sistema_id === item.sistema_id
+                          );
+                          const proporcaoConforme = item.total > 0 ? (item.conforme / item.total) * 100 : 0;
+                          const critico = risco?.critico ?? 0;
+                          return (
+                            <li
+                              key={item.sistema_id}
+                              className={cn(
+                                "relative space-y-2 border-b border-border px-5 py-3.5 last:border-b-0 sm:px-6",
+                                critico > 0 && "bg-sev-critico/[0.05]"
+                              )}
                             >
-                              <div
-                                className="h-full bg-emerald-600"
-                                style={{ width: `${proporcaoConforme}%` }}
-                              />
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              {item.conforme} conforme · {item.nao_conforme} não conforme
-                              {risco ? (
-                                <>
-                                  {" · "}
-                                  {risco.minimo} mínimo, {risco.medio} médio, {risco.critico} crítico
-                                </>
+                              {critico > 0 ? (
+                                <span aria-hidden="true" className="absolute inset-y-0 left-0 w-[3px] bg-sev-critico" />
                               ) : null}
-                            </p>
-                          </div>
-                        );
-                      })
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-sm font-semibold">{item.sistema_nome}</span>
+                                {critico > 0 ? (
+                                  <Badge variant="destructive">{critico} crítico(s)</Badge>
+                                ) : null}
+                              </div>
+                              <div
+                                className="relative h-2 w-full overflow-hidden bg-sev-atencao/25"
+                                role="progressbar"
+                                aria-valuenow={Math.round(proporcaoConforme)}
+                                aria-valuemin={0}
+                                aria-valuemax={100}
+                                aria-label={`${item.sistema_nome}: ${Math.round(proporcaoConforme)}% conforme`}
+                              >
+                                <div
+                                  className="h-full origin-left bg-sev-ok animate-regua-fill"
+                                  style={{ width: `${proporcaoConforme}%` }}
+                                />
+                                <div
+                                  aria-hidden="true"
+                                  className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,hsl(var(--card))_1px,transparent_1px)] bg-[length:10%_100%]"
+                                />
+                              </div>
+                              <p className="dado text-xs text-muted-foreground">
+                                {item.conforme} conforme · {item.nao_conforme} não conforme
+                                {risco ? (
+                                  <>
+                                    {" · "}
+                                    {risco.minimo} mínimo, {risco.medio} médio, {risco.critico} crítico
+                                  </>
+                                ) : null}
+                              </p>
+                            </li>
+                          );
+                        })}
+                      </ul>
                     )}
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader>
+                <Card className="animate-reveal [animation-delay:260ms]">
+                  <CardHeader className="flex-row items-baseline gap-3 space-y-0 border-b border-foreground/15 pb-3 sm:pb-3">
+                    <span aria-hidden="true" className="dado text-xs font-medium text-sinal-ink">
+                      03 —
+                    </span>
                     <CardTitle className="text-base">Gravidade GUT média por subsistema</CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-0 sm:p-0">
                     {dashboard.gravidade_por_subsistema.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">Nenhum dado de gravidade disponível ainda.</p>
+                      <p className="p-5 text-sm text-muted-foreground sm:p-6">Nenhum dado de gravidade disponível ainda.</p>
                     ) : (
-                      <ul className="space-y-2">
+                      <ul>
                         {dashboard.gravidade_por_subsistema
                           .slice()
                           .sort((a, b) => b.media_gravidade - a.media_gravidade)
                           .map((item) => (
-                            <li key={item.subsistema_id} className="flex items-center justify-between gap-2 text-sm">
-                              <span>
+                            <li
+                              key={item.subsistema_id}
+                              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 border-b border-border px-5 py-2.5 text-sm last:border-b-0 sm:px-6"
+                            >
+                              <span className="min-w-0">
                                 {item.subsistema_nome}
                                 {item.sistema_nome ? (
                                   <span className="text-muted-foreground"> · {item.sistema_nome}</span>
@@ -297,6 +300,24 @@ function DashboardContent() {
                               <Badge variant={item.media_gravidade >= 4 ? "destructive" : "outline"}>
                                 {item.media_gravidade.toFixed(1)}
                               </Badge>
+                              {/* Escala GUT 1–5 (decorativa; o valor está no badge) */}
+                              <span aria-hidden="true" className="col-span-2 flex h-1 gap-px">
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                  <span
+                                    key={i}
+                                    className={cn(
+                                      "flex-1",
+                                      i < Math.round(item.media_gravidade)
+                                        ? item.media_gravidade >= 4
+                                          ? "bg-sev-critico"
+                                          : item.media_gravidade >= 3
+                                            ? "bg-sev-atencao"
+                                            : "bg-primary"
+                                        : "bg-foreground/10"
+                                    )}
+                                  />
+                                ))}
+                              </span>
                             </li>
                           ))}
                       </ul>
@@ -309,7 +330,7 @@ function DashboardContent() {
         </>
       )}
 
-      <p className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+      <p className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-foreground/15 pt-4 text-sm text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
           <Building2 className="h-4 w-4" aria-hidden="true" /> Ver{" "}
           <a href="/edificacoes" className="font-medium text-primary underline-offset-4 hover:underline">
@@ -326,4 +347,3 @@ function DashboardContent() {
     </div>
   );
 }
-

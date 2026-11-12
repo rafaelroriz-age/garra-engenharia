@@ -154,11 +154,8 @@ test("Dashboard: indicadores por sistema predial batem com as ocorrências semea
       page.getByRole("heading", { name: "Dashboard" }),
     ).toBeVisible();
 
-    const card = (titulo: string) =>
-      page
-        .locator("div.rounded-lg, div[class*='card']")
-        .filter({ hasText: titulo })
-        .last();
+    // Indicadores (`KpiTile`) expõem `role="group"` nomeado pelo título.
+    const card = (titulo: string) => page.getByRole("group", { name: titulo, exact: true });
 
     // Cartões de totais
     await expect(card("Total de ocorrências")).toContainText("3");
