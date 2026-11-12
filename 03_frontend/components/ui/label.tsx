@@ -11,14 +11,14 @@ const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
     <label
       ref={ref}
       className={cn(
-        "text-sm font-medium leading-none text-foreground peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+        "text-[0.8125rem] font-semibold leading-none text-foreground peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
         className
       )}
       {...props}
     >
       {children}
       {required ? (
-        <span className="ml-0.5 text-destructive" aria-hidden="true">
+        <span className="ml-0.5 text-sinal-ink" aria-hidden="true">
           *
         </span>
       ) : null}
