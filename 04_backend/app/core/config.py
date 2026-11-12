@@ -8,7 +8,7 @@ injetadas diretamente pelo serviço `backend` e este arquivo `.env` não é nece
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, SecretStr, model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -64,6 +64,22 @@ class Settings(BaseSettings):
     deepseek_timeout_s: float = Field(default=30.0, gt=0)
     # A doc oficial não confirma modelo com visão: por padrão só texto (modo='texto').
     deepseek_enviar_imagem: bool = False
+    # Telemetria e cache local da legenda IA (BL-34, R-10). TTL em horas; preços em USD por 1M de
+    # tokens (vazio = custo null; valores reais vêm da página oficial de preços, tarefa IA-07).
+    legenda_ia_cache_ttl_h: int = Field(default=720, ge=0)
+    deepseek_preco_entrada_cache_hit_usd: float | None = Field(default=None, ge=0)
+    deepseek_preco_entrada_cache_miss_usd: float | None = Field(default=None, ge=0)
+    deepseek_preco_saida_usd: float | None = Field(default=None, ge=0)
+
+    @field_validator(
+        "deepseek_preco_entrada_cache_hit_usd",
+        "deepseek_preco_entrada_cache_miss_usd",
+        "deepseek_preco_saida_usd",
+        mode="before",
+    )
+    @classmethod
+    def _preco_vazio_vira_none(cls, valor):
+        return None if isinstance(valor, str) and not valor.strip() else valor
 
     @property
     def database_url(self) -> str:

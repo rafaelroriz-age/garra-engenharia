@@ -163,7 +163,25 @@ class _ClienteGravador:
         return self.resultado
 
 
+class _ResultadoVazio:
+    def scalar_one_or_none(self):
+        return None
+
+
 class _BancoFalso:
+    """Sessão mínima: sem cache local (consulta vazia) e sem persistir a telemetria (BL-34)."""
+
+    def __init__(self) -> None:
+        self.adicionados: list = []
+
+    async def execute(self, _consulta) -> _ResultadoVazio:
+        return _ResultadoVazio()
+
+    def add(self, objeto) -> None:
+        self.adicionados.append(objeto)
+
+    async def flush(self) -> None: ...
+
     async def commit(self) -> None: ...
 
     async def refresh(self, _objeto) -> None: ...

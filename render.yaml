@@ -126,6 +126,15 @@ services:
         value: "30"
       - key: DEEPSEEK_ENVIAR_IMAGEM
         value: "false"
+      # Telemetria/cache local (BL-34): preços por 1M de tokens vazios até a IA-07.
+      - key: LEGENDA_IA_CACHE_TTL_H
+        value: "720"
+      - key: DEEPSEEK_PRECO_ENTRADA_CACHE_HIT_USD
+        value: ""
+      - key: DEEPSEEK_PRECO_ENTRADA_CACHE_MISS_USD
+        value: ""
+      - key: DEEPSEEK_PRECO_SAIDA_USD
+        value: ""
       # Armazenamento de fotos/documentos (MinIO/S3, DEC-02) FICOU FORA do
       # escopo deste Blueprint (só backend+frontend+banco foram pedidos).
       # Sem estas variáveis, a API sobe normalmente, mas os endpoints de
