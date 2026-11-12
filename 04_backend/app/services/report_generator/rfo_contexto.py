@@ -7,7 +7,6 @@ com `storage_key` (e `url_publica`); o binário continua a cargo do
 from __future__ import annotations
 
 import uuid
-from datetime import date
 from typing import Any
 
 from sqlalchemy import select
@@ -17,6 +16,9 @@ from sqlalchemy.orm import selectinload
 from app.core.errors import ConflictError, NotFoundError
 from app.models import Contrato, ContratoExecutor, Foto, Inspecao, Ocorrencia, Visita
 from app.models.tipo_servico import TipoServico
+from app.services.report_generator.contexto_comum import data_br as _data_br
+from app.services.report_generator.contexto_comum import fotos_ordenadas
+from app.services.report_generator.contexto_comum import texto_ou_traco as _texto_ou_traco
 from app.services.report_generator.legenda_foto import legenda_para_relatorio
 
 TIPO_RFO = TipoServico.RFO.value
@@ -46,10 +48,6 @@ def validar_contexto_rfo(contexto: dict[str, Any]) -> list[str]:
     return faltantes
 
 
-def _data_br(valor: date | None) -> str | None:
-    return valor.strftime("%d/%m/%Y") if valor else None
-
-
 def _foto_ctx(foto: Foto) -> dict[str, Any]:
     # DEC-37 DP-9 / DEC-47 (1): só `legenda` entra; a sugestão de IA nunca, qualquer status.
     legenda = legenda_para_relatorio(foto) or None
@@ -63,16 +61,7 @@ def _foto_ctx(foto: Foto) -> dict[str, Any]:
 
 
 def _fotos_ordenadas(fotos: list[Foto]) -> list[dict[str, Any]]:
-    # `ordem` pode ser nulo: nulos ao final, desempate por created_at/id estável.
-    ordenadas = sorted(fotos, key=lambda f: (f.ordem is None, f.ordem or 0, str(f.id)))
-    return [_foto_ctx(f) for f in ordenadas]
-
-
-def _texto_ou_traco(valor: str | None) -> str:
-    """DEC-33: campo vazio (None, '' ou só espaços) vira '—'; demais valores seguem inalterados."""
-    if valor is None or not valor.strip():
-        return "—"
-    return valor
+    return [_foto_ctx(f) for f in fotos_ordenadas(fotos)]
 
 
 def _executor_ctx(executor: ContratoExecutor) -> dict[str, Any]:
