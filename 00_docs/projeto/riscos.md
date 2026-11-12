@@ -173,12 +173,12 @@ last_updated: 2026-09-17
 | R-05 — Original do cliente desatualizado | Baixa | Mitigado (templates e marca derivados dos originais arquivados — DEC-25/DEC-30); resta confirmar versão vigente (HT-02) |
 | R-08 — Escopo crescente | Média | Mitigado (congelamento v1.0) |
 | R-09 — Hospedagem indefinida | Baixa | Mitigado (Docker Compose agnóstico) |
-| R-10 — Dados enviados a IA externa (RF-15) | Média | Ação necessária (escolher provedor — lacuna #13, B-04; T29 (2026-11-05) soma como bloqueio de produção: sem limite de taxa/custo e sem limite da saída do LLM, DEC-42). Em 2026-11-04 (T23) o contrato `LegendaIAClient` e o Fake isolam o provedor, mas nenhum cliente real existe **Atualização (T63/T65, 2026-11-11, DEC-49 proposta):** cliente DeepSeek implementado, só texto e contexto minimizado (regex para CPF, CNPJ, e-mail e telefone, sem nome de pessoa); política de retenção do provedor ainda indefinida e nenhuma chamada real feita |
+| R-10 — Dados enviados a IA externa (RF-15) | Média | Ação necessária (escolher provedor — lacuna #13, B-04; T29 (2026-11-05) soma como bloqueio de produção: sem limite de taxa/custo e sem limite da saída do LLM, DEC-42). Em 2026-11-04 (T23) o contrato `LegendaIAClient` e o Fake isolam o provedor, mas nenhum cliente real existe **Atualização (T63/T65, 2026-11-11, DEC-49 proposta):** cliente DeepSeek implementado, só texto e contexto minimizado (regex para CPF, CNPJ, e-mail e telefone, sem nome de pessoa); política de retenção do provedor ainda indefinida e nenhuma chamada real feita **Atualização (T68, 2026-11-12, DEC-52 proposta):** custo agora medido por `chamadas_ia` e `GET /ia/uso`, e o cache local evita regeração; preços reais pendentes (IA-07) e a coluna `resposta` sem política de retenção |
 | R-11 — Ambiente de desenvolvimento não reproduzível (pytest × pytest-asyncio, ruff, Docker, Python 3.12) | Média → Baixa | Parcialmente mitigado (T02 e T04); restam o ruff na CI e a suíte de integração (DEC-31) |
 | R-12 — Vulnerabilidades de dependências do frontend (Next.js 14.2.35 crítico em produção) | Alta | Ação necessária (DEC-32 proposta; T03) |
 | R-13 — Lacunas de validação no CRUD de Ocorrências (enums, existência, `PUT`) | Média | Em mitigação: correção aplicada na T08, testes ainda não executados (DEC-34 proposta) |
-| R-14 — PDF dos templates e pipelines nunca renderizado de verdade; suíte completa sem PostgreSQL | Média | Ação necessária (rodar no container de `05_infra/`) T45 (2026-11-10): `test_rfo_contexto.py` também não rodou (sem PostgreSQL e sem Pango no Windows); T46 (2026-11-10): os 9 testes de integração de `test_relatorios_rfo_api.py` também não rodaram e a coleta da suíte completa cai em `test_rfo_contexto.py` (import de WeasyPrint no topo); T47–T51 (2026-11-11): testes de banco/endpoint de T48, T49 e T50 também não rodaram |
-| R-15 — Lacunas de regra e segurança em Visitas e Fotos | Média | **Reduzido (2026-11-04, T19/T21)** — correções aplicadas e testadas; abertos: L15 (vínculo usuário↔contrato), `UNIQUE(storage_key)`, URL pré-assinada, limite de corpo, suíte completa numa só execução (T22: 34 falhas anteriores, 14 delas testes de banco que falham por `asyncio.run` derrubar o event loop em 7 arquivos; proposta: helper único em `tests/conftest.py`); DEC-38/DEC-39 ainda propostas. T25 (2026-11-05) confirmou a falha de `asyncio.run` em `test_fotos.py` e `test_rbac_auxiliar.py` (22 falhas ao rodar junto dos testes `async`, que passam isolados) e que a suíte completa estoura a memória neste Windows |
+| R-14 — PDF dos templates e pipelines nunca renderizado de verdade; suíte completa sem PostgreSQL | Média | Ação necessária (rodar no container de `05_infra/`) T45 (2026-11-10): `test_rfo_contexto.py` também não rodou (sem PostgreSQL e sem Pango no Windows); T46 (2026-11-10): os 9 testes de integração de `test_relatorios_rfo_api.py` também não rodaram e a coleta da suíte completa cai em `test_rfo_contexto.py` (import de WeasyPrint no topo); T47–T51 (2026-11-11): testes de banco/endpoint de T48, T49 e T50 também não rodaram **Atualização (T64, 2026-11-12):** primeira suíte completa no container: 697 passed, 15 failed, 14 errors, 3 skipped, 5 xfailed; PDFs reais dos 5 tipos gerados, **conferência visual (HT-09) ainda pendente** |
+| R-15 — Lacunas de regra e segurança em Visitas e Fotos | Média | **Reduzido (2026-11-04, T19/T21)** — correções aplicadas e testadas; abertos: L15 (vínculo usuário↔contrato), `UNIQUE(storage_key)`, URL pré-assinada, limite de corpo, suíte completa numa só execução (T22: 34 falhas anteriores, 14 delas testes de banco que falham por `asyncio.run` derrubar o event loop em 7 arquivos; proposta: helper único em `tests/conftest.py`); DEC-38/DEC-39 ainda propostas. T25 (2026-11-05) confirmou a falha de `asyncio.run` em `test_fotos.py` e `test_rbac_auxiliar.py` (22 falhas ao rodar junto dos testes `async`, que passam isolados) e que a suíte completa estoura a memória neste Windows **Atualização (T64, 2026-11-12):** na suíte única do container, 6 dos 29 itens com falha passam isolados (efeito R-15) e 23 persistem em testes antigos (ver R-21) |
 
 ### R-11 — Ambiente de desenvolvimento não reproduzível
 
@@ -259,12 +259,34 @@ last_updated: 2026-09-17
 | **Gatilho de escalada** | Primeiro restore em produção, ou primeiro deploy por VPS, sem as correções acima. |
 | **Responsável** | Engenheiro DevOps |
 
+### R-20 — Lacunas do frontend de relatório: responsável sem edição e assinatura órfã
+
+| Campo | Valor |
+|---|---|
+| **Origem** | T62, em [v1-frontend-relatorio.md](../backlog-auto/v1-frontend-relatorio.md) |
+| **Descrição** | (1) Não há `PUT/PATCH /responsaveis/{id}`: a tela só cadastra, então título, qualificações e assinatura não podem ser acrescentados a um responsável existente. (2) A imagem da assinatura sobe por `POST /fotos/upload`, fica sob o prefixo `fotos/` e não é uma `Foto`: o relatório de órfãos (DEC-44) a lista como órfã, e o backend não valida `assinatura_storage_key`. (3) O frontend envia o conteúdo completo (PUT substitui), o que congela os textos padrão no primeiro salvamento. (4) `window.open` após `await` pode ser bloqueado no iOS/Safari. (5) O teste `(e)` de `portal.spec.ts` espera o comportamento anterior à T54. |
+| **Probabilidade / Impacto** | Média / Baixa |
+| **Mitigação** | Criar a rota de edição de responsável (auditor); rota própria de assinatura com prefixo `assinaturas/` ou incluí-la no conjunto de chaves vinculadas do script de órfãos; testar o download no celular e, se preciso, trocar por `window.location.assign`; reescrever o teste `(e)`. |
+| **Gatilho de escalada** | Limpeza de órfãos real (sem dry-run) ou o cliente pedir assinatura em responsável já cadastrado |
+| **Responsável** | Engenheiro Backend + Engenheiro Frontend |
+
+### R-21 — Testes antigos falhando na suíte completa e migration que falha no banco de desenvolvimento
+
+| Campo | Valor |
+|---|---|
+| **Origem** | T64, em [v1-amostras-ht09.md](../backlog-auto/v1-amostras-ht09.md) |
+| **Descrição** | 23 itens persistem isolados, todos em testes ou comportamento já existentes: `test_ocorrencias_prioridade.py` (5; `headers=auth["Authorization"]` não serve ao `httpx` 0.28), `test_ocorrencias_regras.py` (13 erros; o fixture cria 2 inspeções para o mesmo contrato, mas `inspecoes.contrato_id` é UNIQUE), `test_seguranca_legenda_ia.py` (4; causa só analisada em um), `test_relatorio_unicidade.py` (1 erro de teardown, `MissingGreenlet`). Há 2 skips desatualizados. Além disso a migration `e5a1f0c2b7d4` falha no banco `garra_engenharia` (2 linhas `BENCH-01` duplicadas em `relatorios`, inspeção `22db6dc2-...`), que está em `f7c2a9d4e6b1`. |
+| **Probabilidade / Impacto** | Alta / Média (a suíte não pode ser porta de qualidade enquanto falhar, e o dev não sobe de revisão) |
+| **Mitigação** | Corrigir os fixtures e os testes citados; analisar os 3 testes de `seguranca_legenda_ia` restantes; remover ou renumerar as 2 linhas `BENCH-01` com aval do dono e rodar `alembic upgrade head` no dev; remover os bancos temporários `garra_bl34_tmp2`, `garra_tmp_v105` e `garra_demo_v1` quando não forem mais necessários. |
+| **Gatilho de escalada** | Primeiro deploy ou primeira exigência de CI com a suíte completa |
+| **Responsável** | Engenheiro Backend |
+
 ### R-18 — T66 e T67 marcadas `done` com entrega parcial; golden set inexistente
 
 | Campo | Valor |
 |---|---|
 | **Origem** | Fechamento do lote T57–T67 (2026-11-11). As integrações de T66 e T67 trouxeram só os commits `wip(backend)` |
-| **Descrição** | T66: prompt compacto em 37,3% do original (alvo ≤ 35%) e seed sem teste nem Doc. T67: só o harness `avaliar_legenda_ia.py` (597 linhas), sem extrator, sem `golden_legenda.jsonl`, sem teste nem Doc. T68 (telemetria e cache) depende delas, e T69 também. Sem golden set não há como medir se prompt compacto, RAG ou troca de modelo melhora ou piora a legenda |
+| **Descrição** | T66: prompt compacto em 37,3% do original (alvo ≤ 35%) e seed sem teste nem Doc. T67: só o harness `avaliar_legenda_ia.py` (597 linhas), sem extrator, sem `golden_legenda.jsonl`, sem teste nem Doc. T68 (telemetria e cache) foi entregue (2026-11-12) sem depender delas na prática; T69 ainda depende. Sem golden set não há como medir se prompt compacto, RAG ou troca de modelo melhora ou piora a legenda |
 | **Probabilidade / Impacto** | Alta / Média (o prompt compacto pode ir ao seed sem avaliação, com risco de regressão na qualidade técnica da legenda) |
 | **Mitigação** | Reabrir T66 e T67 (o BACKLOG é do integrador) e concluir: testes do seed, ruff, Doc, extrator, golden set ≥ 60 casos anonimizados e teste do replay. Não ativar o prompt compacto em produção antes disso |
 | **Gatilho de escalada** | Qualquer execução do seed em ambiente compartilhado, ou o início de T68/T69 sobre T66/T67 |

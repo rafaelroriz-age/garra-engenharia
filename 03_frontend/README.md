@@ -85,6 +85,13 @@ npm run lint    # ESLint
 - **Origem da foto (BL-31)**: `OrigemFoto` em `lib/types.ts` é `upload_manual | lightshot | clipboard`; o editor converte `upload → upload_manual` e `clipboard → lightshot` só na chamada ao backend, que hoje não valida o campo (DEC-43, proposta). Spec `e2e/foto-origem.spec.ts` (API mockada).
 - **Rotas de `inspecoes/[id]/*`**: não aparecem na navegação global (`components/layout/nav-items.ts`) — são acessadas a partir do contexto de uma edificação/contrato.
 
+## Tela de relatório e responsáveis (T62, V1-06)
+
+- `/inspecoes/[id]/relatorio`: textos do relatório por tipo (agrupados), salvar (auditor), emitir nova versão (auditor), lista de versões e download de PDF e DOCX por URL pré-assinada. O auxiliar vê tudo em leitura. Um 422 de contexto incompleto aparece como lista de campos faltantes. Componentes em `components/relatorio/` (`conteudo-form.tsx`, `emissao-versoes.tsx`, `rotulos.ts`).
+- `/responsaveis`: lista e cadastro (só auditor), com título profissional, qualificações e imagem de assinatura. Ainda não edita responsável existente (falta rota no backend, R-20).
+- Helpers novos em `lib/api-client.ts`: `relatorios`, `conteudo`, `responsaveis`, `uploadImagem`.
+- `e2e/relatorio.spec.ts`: 9 testes com a API mockada, rodam sem backend. Doc: [v1-frontend-relatorio.md](../00_docs/backlog-auto/v1-frontend-relatorio.md).
+
 ## Testes E2E (Playwright, BL-21)
 
 Testes de ponta a ponta dos Fluxos 1 (RFO) e 2 (LTIP) de [00_docs/estudo-do-contexto.md](../00_docs/estudo-do-contexto.md#8-fluxos-principais), em `e2e/rfo.spec.ts` e `e2e/ltip.spec.ts`. Rodam contra uma instância local **já em execução** via `05_infra/docker-compose.yml` — não sobem a stack sozinhos.

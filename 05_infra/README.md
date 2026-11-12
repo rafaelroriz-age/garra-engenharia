@@ -161,6 +161,14 @@ Use [`.env.render.example`](.env.render.example) como checklist das variáveis d
 - Prompt de setup: [.github/prompts/14-setup-ambiente-desenvolvimento.prompt.md](../.github/prompts/14-setup-ambiente-desenvolvimento.prompt.md)
 - Prompt de DevOps: [.github/prompts/12-devops.prompt.md](../.github/prompts/12-devops.prompt.md)
 
+## Variáveis da telemetria da legenda IA (T68, 2026-11-12)
+
+`LEGENDA_IA_CACHE_TTL_H`, `DEEPSEEK_PRECO_ENTRADA_CACHE_HIT_USD`, `DEEPSEEK_PRECO_ENTRADA_CACHE_MISS_USD` e `DEEPSEEK_PRECO_SAIDA_USD` estão em `.env.example`, `docker-compose.yml` e `render.yaml`. Os preços reais dependem da tarefa humana IA-07. O banco de desenvolvimento precisa de `alembic upgrade head` (migration `b8d4f2a6c1e7`).
+
+## Dados de demonstração e amostras (T64, 2026-11-12)
+
+O seed `DEMO` roda dentro do container do backend, num banco separado, por exemplo `docker exec -e POSTGRES_DB=garra_demo_v1 garra-backend python -m app.scripts.seed_demo`. O gabarito exige `00_docs/convertidos/RFO_INSPECAO.md`, ausente da imagem (contexto de build é `../04_backend`). A migration `e5a1f0c2b7d4` falha no banco de desenvolvimento por duas linhas `BENCH-01` duplicadas em `relatorios` (R-21).
+
 ## Dimensionamento do worker de relatórios (T17, 2026-11-04)
 
 O benchmark dos pipelines finais (`00_docs/backlog-auto/benchmark-pipelines-finais.md`) mediu pico de RSS de 320 a 420 MB para um PDF de ~200 páginas e ~500 MB com PDF e DOCX em paralelo. Uma instância de 512 MB não comporta isso com folga: o worker deve ter **≥ 1 GB de RAM** (proposta DEC-40). Os PDF/DOCX das vistorias passam de 25 MB (37–38 MB e 30–31 MB), então o limite de upload de artefatos precisa ser separado do limite de foto.
