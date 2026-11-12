@@ -1172,7 +1172,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T73 · Re-medir o desempenho dos 5 pipelines depois do url_fetcher da T28 (Vistoria Residencial com 5 % de margem)
-- **Status:** doing
+- **Status:** done
 - **Origem:** R-03
 - **Papel:** arquiteto-software
 - **Depende:** T17, T20, T28, T56
