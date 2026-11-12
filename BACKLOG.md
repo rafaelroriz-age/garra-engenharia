@@ -1157,7 +1157,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T64 · Seed de demonstração dos 5 tipos e amostras reais de PDF/DOCX para a conferência visual (HT-09)
-- **Status:** doing
+- **Status:** done
 - **Origem:** V1-08
 - **Papel:** Engenheiro Backend
 - **Depende:** T59, T60, T61
