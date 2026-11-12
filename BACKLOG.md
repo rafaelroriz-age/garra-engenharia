@@ -1172,7 +1172,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T73 · Re-medir o desempenho dos 5 pipelines depois do url_fetcher da T28 (Vistoria Residencial com 5 % de margem)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** R-03
 - **Papel:** arquiteto-software
 - **Depende:** T17, T20, T28, T56
@@ -1330,7 +1330,7 @@ Tarefa humana. Só iniciar quando o export de IA-06 tiver ≥500 legendas aprova
 ## Bloco F — Validação ponta a ponta da interface (E2E)
 
 ### T74 · E2E Playwright de Edificações, Contratos e Dashboard de saúde
-- **Status:** todo
+- **Status:** doing
 - **Origem:** BL-21
 - **Papel:** frontend
 - **Depende:** —
