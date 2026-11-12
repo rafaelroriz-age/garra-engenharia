@@ -19,10 +19,11 @@ export function PaginationBar({ page, pageSize, total, onPageChange }: Paginatio
   return (
     <nav
       aria-label="Paginação"
-      className="flex items-center justify-between gap-4 border-t px-1 py-3 text-sm text-muted-foreground"
+      className="flex flex-wrap items-center justify-between gap-3 border-t border-foreground/20 px-1 py-3 text-sm text-muted-foreground"
     >
-      <span>
-        Página {page} de {totalPages} · {total} {total === 1 ? "registro" : "registros"}
+      <span className="dado text-xs">
+        Página <span className="font-semibold text-foreground">{page}</span> de {totalPages} · {total}{" "}
+        {total === 1 ? "registro" : "registros"}
       </span>
       <div className="flex gap-2">
         <Button

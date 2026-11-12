@@ -171,6 +171,22 @@
     background-position: -1px -1px;
   }
 
+  /* Malha sobre superfície tinta (sidebar, painel do login, header da landing). */
+  .prancha-grid-tinta {
+    background-color: hsl(var(--sidebar));
+    background-image:
+      linear-gradient(hsl(var(--sidebar-border)) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--sidebar-border)) 1px, transparent 1px),
+      linear-gradient(hsl(var(--sidebar-accent)) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--sidebar-accent)) 1px, transparent 1px);
+    background-size:
+      60px 60px,
+      60px 60px,
+      12px 12px,
+      12px 12px;
+    background-position: -1px -1px;
+  }
+
   /* Rótulo técnico: caixa-alta espaçada (eyebrows, cabeçalhos de tabela). */
   .rotulo {
     font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
