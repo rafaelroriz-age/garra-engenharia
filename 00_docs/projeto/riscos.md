@@ -179,6 +179,7 @@ last_updated: 2026-09-17
 | R-13 — Lacunas de validação no CRUD de Ocorrências (enums, existência, `PUT`) | Média | Em mitigação: correção aplicada na T08, testes ainda não executados (DEC-34 proposta) |
 | R-14 — PDF dos templates e pipelines nunca renderizado de verdade; suíte completa sem PostgreSQL | Média | Ação necessária (rodar no container de `05_infra/`) T45 (2026-11-10): `test_rfo_contexto.py` também não rodou (sem PostgreSQL e sem Pango no Windows); T46 (2026-11-10): os 9 testes de integração de `test_relatorios_rfo_api.py` também não rodaram e a coleta da suíte completa cai em `test_rfo_contexto.py` (import de WeasyPrint no topo); T47–T51 (2026-11-11): testes de banco/endpoint de T48, T49 e T50 também não rodaram **Atualização (T64, 2026-11-12):** primeira suíte completa no container: 697 passed, 15 failed, 14 errors, 3 skipped, 5 xfailed; PDFs reais dos 5 tipos gerados, **conferência visual (HT-09) ainda pendente** |
 | R-15 — Lacunas de regra e segurança em Visitas e Fotos | Média | **Reduzido (2026-11-04, T19/T21)** — correções aplicadas e testadas; abertos: L15 (vínculo usuário↔contrato), `UNIQUE(storage_key)`, URL pré-assinada, limite de corpo, suíte completa numa só execução (T22: 34 falhas anteriores, 14 delas testes de banco que falham por `asyncio.run` derrubar o event loop em 7 arquivos; proposta: helper único em `tests/conftest.py`); DEC-38/DEC-39 ainda propostas. T25 (2026-11-05) confirmou a falha de `asyncio.run` em `test_fotos.py` e `test_rbac_auxiliar.py` (22 falhas ao rodar junto dos testes `async`, que passam isolados) e que a suíte completa estoura a memória neste Windows **Atualização (T64, 2026-11-12):** na suíte única do container, 6 dos 29 itens com falha passam isolados (efeito R-15) e 23 persistem em testes antigos (ver R-21) |
+| R-21 — RAG da legenda IA: texto de outros clientes e ganho não medido | Média | Aberto (T69, 2026-11-12): decidir LGPD/escopo na IA-07 e medir com o harness (T66/T67) antes de ligar com dados reais |
 
 ### R-11 — Ambiente de desenvolvimento não reproduzível
 
@@ -302,3 +303,14 @@ last_updated: 2026-09-17
 | **Mitigação** | Rodar a suíte completa em container com `bcrypt<4.1` e `pytest-asyncio` (`docker compose build backend`; uma tag por worktree); reexecutar os testes de endpoint de legenda IA; um teste manual com chave real antes de ligar `deepseek` fora de desenvolvimento. `ruff check .` ainda acusa 10 erros em `e5a1f0c2b7d4_*`, `test_fotos_storage_key_unico.py`, `test_portal_versoes_relatorio.py` e `test_relatorio_unicidade.py` (DEC-46 pede zero antes do CI bloquear) |
 | **Gatilho de escalada** | Deploy de legenda IA ou de emissão em produção sem a suíte completa verde |
 | **Responsável** | Engenheiro DevOps |
+
+### R-21 — RAG da legenda IA envia texto de outros clientes e não teve ganho medido
+
+| Campo | Valor |
+|---|---|
+| **Origem** | T69 (2026-11-12), em [ia-rag-fts.md](../backlog-auto/ia-rag-fts.md); agrava R-10 |
+| **Descrição** | Os few-shots usam legendas aprovadas de qualquer cliente e as referências vêm de laudos históricos; a anonimização é por regex (0 nome real encontrado em 1.056 trechos após 4 rodadas, sem garantia). Esse texto segue junto com a chamada de outro cliente ao provedor fora do Brasil (LGPD). O ganho de acurácia não foi medido: o golden set da T67 não existe (R-18) e não havia chave DeepSeek. A base de dev precisa de `alembic upgrade head` e da ingestão manual. |
+| **Probabilidade / Impacto** | Média / Alta |
+| **Mitigação** | Decidir na IA-07 (DEC-53 e LGPD) entre manter a anonimização ou restringir a busca ao mesmo contrato/cliente; revisar `--dry-run --amostras` antes de ingerir em produção; concluir T66/T67 e rodar o harness live com `--rag 3` contra o baseline; manter `LEGENDA_IA_RAG_ATIVO=false` em ambientes com dados reais até lá. |
+| **Gatilho de escalada** | Ligar o RAG em produção sem decisão de LGPD, ou achar nome de cliente em trecho ou few-shot |
+| **Responsável** | Engenheiro Backend / Arquiteto |
