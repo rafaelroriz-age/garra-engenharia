@@ -259,3 +259,10 @@ Os testes de `tests/test_models.py` exigem o PostgreSQL do `05_infra/docker-comp
 
 Comandos Python/uvicorn/alembic deste app são executados a partir desta pasta (`04_backend/`). O `Dockerfile` de build/runtime também vive aqui; o `docker-compose.yml` que o referencia está em [05_infra/](../05_infra/) (build context `../04_backend`).
 
+## Export do dataset de feedback da legenda IA (T70, BL-34)
+
+```bash
+python -m app.scripts.exportar_dataset_legenda --saida D:/dados/legenda [--desde AAAA-MM-DD] [--ate AAAA-MM-DD] [--min-registros N]
+```
+
+Somente leitura; gera `dataset_legenda.jsonl` (formato chat) e `metricas_legenda.csv` das fotos com legenda IA aprovada. `--saida` dentro de repositório git é recusada. Detalhes em [ia-dataset-feedback.md](../00_docs/backlog-auto/ia-dataset-feedback.md).
