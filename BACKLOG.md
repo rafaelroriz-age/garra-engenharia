@@ -1281,7 +1281,7 @@ Tarefa humana (pode ser feita com o Claude Code interativo). Contexto: 00_docs/i
 ```
 
 ### T72 · Gate de fine-tuning da legenda IA (≥500 legendas aprovadas): LoRA em modelo menor × manter few-shot
-- **Status:** blocked
+- **Status:** todo
 - **Origem:** IA-08
 - **Papel:** Responsável técnico (humano)
 - **Depende:** T70, T71
