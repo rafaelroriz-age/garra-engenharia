@@ -359,3 +359,11 @@ Para rodar os testes de lacuna: `docker compose up -d` em `05_infra/`, `alembic 
 A suíte completa do backend não foi validada numa única execução: o venv do checkout principal estava sem `greenlet` funcional, houve interrupção por falta de memória e testes assíncronos falham com `RuntimeError: There is no current event loop` quando um teste usa `asyncio.run`. `ruff check .` ainda acusa erros preexistentes fora das áreas tocadas.
 
 > **Lint (T39, 2026-11-07; T43, 2026-11-10):** `ruff check .` (ruff 0.15.1, com `ruff.toml`) sai com 0 achados e o CI fixa `ruff==0.15.1`; o passo segue não bloqueante até a aprovação da DEC-46. Plano em DEC-46 e em [ci-lint-bloqueante.md](../00_docs/backlog-auto/ci-lint-bloqueante.md).
+
+## Export do dataset de feedback da legenda IA (T70, BL-34)
+
+```bash
+python -m app.scripts.exportar_dataset_legenda --saida D:/dados/legenda [--desde AAAA-MM-DD] [--ate AAAA-MM-DD] [--min-registros N]
+```
+
+Somente leitura; gera `dataset_legenda.jsonl` (formato chat) e `metricas_legenda.csv` das fotos com legenda IA aprovada. `--saida` dentro de repositório git é recusada. Detalhes em [ia-dataset-feedback.md](../00_docs/backlog-auto/ia-dataset-feedback.md).
