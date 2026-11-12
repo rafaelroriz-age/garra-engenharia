@@ -693,3 +693,25 @@ last_updated: 2026-09-17
 | **Decisão proposta** | (P1) Cada tipo é um `Emissor` (`montar_contexto`, `validar_contexto`, `extrair_fotos`, `pipeline`) registrado em `relatorio_service.EMISSORES`; uma rota única `POST /inspecoes/{id}/relatorios/{tipo}`, mais listagem de versões e download interno por URL pré-assinada (auditor e auxiliar). Tipos registrados: RFO e VISTORIA_CAUTELAR. (P2) `TipoServico` é o enum de 5 valores, gravado em maiúsculas; a leitura aceita `TipoServico ou str` para não dar 500 com valores legados. (P3) `relatorio_conteudos`: um conteúdo por (inspeção, tipo de relatório), independente de `inspecao.tipo`; `PUT` substitui e é só do auditor; a leitura mescla o padrão com o salvo; placeholders só nos padrões. (P4) Campos obrigatórios da Vistoria Cautelar: fiscal (nome, CREA) e parecer, estendendo DEC-47. (P5) A cidade da emissão sai do endereço (`Cidade-UF`) até existir `cidade`/`uf` em `Edificacao`. (P6) Foto com legenda não aprovada continua no relatório, com legenda `—` (BL-36). |
 | **Consequências** | LTIP, RFIP e Residencial só precisam registrar um `Emissor`, sem rota nova. `inspecoes.contrato_id` é UNIQUE, então um contrato tem uma inspeção só: RFO e LTIP do mesmo contrato exigem decisão de produto (a fixture de teste foi corrigida, o modelo não). Valores legados fora do enum (`FISCALIZAÇÃO DE OBRA` no dev) pedem migration de dados com aval do cliente. A Cautelar lista todas as ocorrências no Plano de Correções, sem filtrar por `situacao`; falta decidir com o cliente. `ResponsavelUpdate` existe sem rota, e a emissão devolve 409 se `assinatura_storage_key` aponta para arquivo ausente. |
 | **Referência** | `00_docs/backlog-auto/v1-emissao-generica.md`, `v1-fundacao-dados.md`, `v1-vistoria-cautelar-contexto.md` |
+
+## DEC-51 — Dados de demonstração com prefixo `DEMO` (proposta de T64)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-12 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | A conferência visual (HT-09) e a suíte completa precisam de dados dos 5 tipos de relatório sem tocar nos dados reais. |
+| **Decisão proposta** | Tudo que o seed de demonstração cria leva o prefixo `DEMO` (nomes `DEMO - ...`, e-mail `demo.auditor@example.com`, chaves de storage `fotos/demo/`). `seed_demo --reset` e `--limpar` só mexem nesse prefixo. A senha do auditor vem só de `DEMO_SENHA`. Rodar em banco separado (`garra_demo_v1`), não no de desenvolvimento. |
+| **Consequências** | Seed idempotente e reversível. Em ambiente novo o gabarito de sistemas prediais precisa do arquivo `00_docs/convertidos/RFO_INSPECAO.md`, que não está na imagem do backend (embutir o gabarito parseado ou montar a pasta como volume). Os relatórios emitidos no MinIO precisam de limpeza à parte. |
+| **Referência** | `00_docs/backlog-auto/v1-amostras-ht09.md` |
+
+## DEC-52 — Cache local e telemetria de custo da legenda IA (proposta de T68)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-12 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | R-10: com 150 ou mais fotos por relatório, o custo da legenda IA precisa ser medido e a regeração, evitada. |
+| **Decisão proposta** | (P1) Chave do cache = sha256 de prompt (hash), modelo e contexto canônico, mais a `storage_key` em modo imagem. Só resposta de sucesso da API entra no cache; TTL de 720 h (`LEGENDA_IA_CACHE_TTL_H`, `0` desliga). Acerto de cache não chama o provedor e continua exigindo aprovação (a legenda volta a `rascunho`, DEC-42). (P2) Toda chamada grava `chamadas_ia` (tokens, custo estimado, latência, origem `api` ou `cache_local`; erro sem mensagem nem chave); `foto_id` é `SET NULL` para o histórico sobreviver à exclusão da foto. (P3) `GET /api/v1/ia/uso` só para auditor. (P4) Preços por variável de ambiente (`DEEPSEEK_PRECO_*`); sem os 3 preços o custo é `null`. |
+| **Consequências** | A coluna `resposta` guarda a legenda saneada sem política de retenção definida (avaliar com R-10). O limite de taxa (DEC-42 C) continua contando acertos de cache; decidir se devem poupar cota. Preços reais dependem de IA-07. |
+| **Referência** | `00_docs/backlog-auto/ia-telemetria-cache.md` |
