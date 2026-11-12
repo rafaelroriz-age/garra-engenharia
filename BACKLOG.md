@@ -1330,7 +1330,7 @@ Tarefa humana. Só iniciar quando o export de IA-06 tiver ≥500 legendas aprova
 ## Bloco F — Validação ponta a ponta da interface (E2E)
 
 ### T74 · E2E Playwright de Edificações, Contratos e Dashboard de saúde
-- **Status:** doing
+- **Status:** done
 - **Origem:** BL-21
 - **Papel:** frontend
 - **Depende:** —
