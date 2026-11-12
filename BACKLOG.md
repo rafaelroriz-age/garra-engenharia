@@ -1080,7 +1080,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T59 · LTIP e RFIP: contexto a partir do banco e registro na emissão
-- **Status:** doing
+- **Status:** blocked
 - **Origem:** V1-03
 - **Papel:** Engenheiro Backend
 - **Depende:** T57, T58
