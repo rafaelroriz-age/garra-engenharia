@@ -11,6 +11,8 @@ Comandos: `backlog-auto list`, `backlog-auto next`, `backlog-auto run`, `backlog
 2. Registrar o resultado no doc indicado em `Doc` (fatos, números, caminhos, comandos e saída dos testes); decisão nova vai como proposta no `Doc`, não direto em `00_docs/projeto/decisoes.md`.
 3. Em lote paralelo, **não editar este arquivo**: o status é atualizado por `backlog-auto`.
 4. Nunca alterar nem apagar dados existentes; ler é livre (barreira configurada em `[guard]`).
+5. Antes de qualquer outra coisa, rode `git merge --ff-only main` no worktree (ou `git merge main` se o ff falhar): o worktree pode nascer de `origin/main`, que está atrás da `main` local.
+6. Testes do backend rodam no banco isolado `garra_engenharia_test` (já migrado), nunca no `garra_engenharia` de dev: em PowerShell `$env:POSTGRES_DB='garra_engenharia_test'`, em bash `export POSTGRES_DB=garra_engenharia_test`; rode `alembic upgrade head` nele antes do `pytest`. Use o venv `04_backend/.venv` (o `ruff` está instalado nele). O Docker fica em `C:/Program Files/Docker/Docker/resources/bin`.
 
 ## Fechamento de lote
 

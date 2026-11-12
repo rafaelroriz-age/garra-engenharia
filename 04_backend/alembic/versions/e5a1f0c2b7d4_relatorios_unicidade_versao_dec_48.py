@@ -12,16 +12,16 @@ Revises: d3b7c9e4f1a2
 Create Date: 2026-11-10 00:00:00.000000
 
 """
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import sqlalchemy as sa
+
 from alembic import op
 
-
 revision: str = "e5a1f0c2b7d4"
-down_revision: Union[str, Sequence[str], None] = "d3b7c9e4f1a2"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = "d3b7c9e4f1a2"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 CONSTRAINT = "uq_relatorios_inspecao_tipo_versao"
 

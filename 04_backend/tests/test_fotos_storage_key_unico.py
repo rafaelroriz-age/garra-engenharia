@@ -1,3 +1,4 @@
+# ruff: noqa: F811 - fixtures importadas de tests.test_fotos são redefinidas como parâmetros
 """Unicidade de `fotos.storage_key` (R-15): API devolve 409 e o banco rejeita (IntegrityError).
 
 Requer PostgreSQL e MinIO reais (`05_infra/docker-compose.yml`), como `tests/test_fotos.py`.

@@ -4,10 +4,11 @@ Roda contra o PostgreSQL real do `05_infra/docker-compose.yml`.
 """
 import pytest
 import pytest_asyncio
-from app.models import Contrato, Edificacao, Inspecao, Relatorio, Responsavel
 from sqlalchemy import delete
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models import Contrato, Edificacao, Inspecao, Relatorio, Responsavel
 
 
 @pytest_asyncio.fixture
