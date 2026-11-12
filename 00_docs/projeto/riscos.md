@@ -173,7 +173,7 @@ last_updated: 2026-09-17
 | R-05 — Original do cliente desatualizado | Baixa | Mitigado (templates e marca derivados dos originais arquivados — DEC-25/DEC-30); resta confirmar versão vigente (HT-02) |
 | R-08 — Escopo crescente | Média | Mitigado (congelamento v1.0) |
 | R-09 — Hospedagem indefinida | Baixa | Mitigado (Docker Compose agnóstico) |
-| R-10 — Dados enviados a IA externa (RF-15) | Média | Ação necessária (escolher provedor — lacuna #13, B-04; T29 (2026-11-05) soma como bloqueio de produção: sem limite de taxa/custo e sem limite da saída do LLM, DEC-42). Em 2026-11-04 (T23) o contrato `LegendaIAClient` e o Fake isolam o provedor, mas nenhum cliente real existe |
+| R-10 — Dados enviados a IA externa (RF-15) | Média | Ação necessária (escolher provedor — lacuna #13, B-04; T29 (2026-11-05) soma como bloqueio de produção: sem limite de taxa/custo e sem limite da saída do LLM, DEC-42). Em 2026-11-04 (T23) o contrato `LegendaIAClient` e o Fake isolam o provedor, mas nenhum cliente real existe **Atualização (T63/T65, 2026-11-11, DEC-49 proposta):** cliente DeepSeek implementado, só texto e contexto minimizado (regex para CPF, CNPJ, e-mail e telefone, sem nome de pessoa); política de retenção do provedor ainda indefinida e nenhuma chamada real feita |
 | R-11 — Ambiente de desenvolvimento não reproduzível (pytest × pytest-asyncio, ruff, Docker, Python 3.12) | Média → Baixa | Parcialmente mitigado (T02 e T04); restam o ruff na CI e a suíte de integração (DEC-31) |
 | R-12 — Vulnerabilidades de dependências do frontend (Next.js 14.2.35 crítico em produção) | Alta | Ação necessária (DEC-32 proposta; T03) |
 | R-13 — Lacunas de validação no CRUD de Ocorrências (enums, existência, `PUT`) | Média | Em mitigação: correção aplicada na T08, testes ainda não executados (DEC-34 proposta) |
@@ -236,7 +236,7 @@ last_updated: 2026-09-17
 | **Gatilho de escalada** | Qualquer uso de BL-10/BL-11 com dados reais antes de aplicar a migration e conferir os dados duplicados de produção. |
 | **Responsável** | Engenheiro Backend |
 
-### R-17 — Alembic com duas heads (T49 × T36)
+### R-17 — Alembic com duas heads (T49 × T36) — **mitigado, migration ainda não aplicada**
 
 | Campo | Valor |
 |---|---|
@@ -245,6 +245,7 @@ last_updated: 2026-09-17
 | **Probabilidade / Impacto** | Alta / Alta (deploy e CI com banco bloqueados) |
 | **Mitigação** | Criar migration de merge (`alembic merge`) ou religar `down_revision` da T49 a `f7c2a9d4e6b1`; depois testar upgrade/downgrade/upgrade num banco limpo e conferir duplicatas antes de aplicar em produção |
 | **Gatilho de escalada** | Qualquer `alembic upgrade head` em ambiente compartilhado ou deploy. |
+| **Atualização (2026-11-11)** | A migration de merge `e5a1c7d9b3f4` (T55) unificou as duas; com a `a9c3e5f7b1d2` (T57) a head é única (`alembic upgrade`/`downgrade`/`check` limpos num banco descartável). Falta aplicar em dev: o banco de `05_infra` segue em `f7c2a9d4e6b1` e a UNIQUE de `relatorios` não existe nele. |
 | **Responsável** | Engenheiro Backend |
 
 ### R-16 — Deploy por VPS e rotina de backup com falhas conhecidas
@@ -256,4 +257,26 @@ last_updated: 2026-09-17
 | **Probabilidade / Impacto** | Média / Alta (restore sem rede de segurança); Média / Média (demais) |
 | **Mitigação** | Pôr a `image:` entre aspas e validar com `docker compose config`; aprovar DEC-45 antes de qualquer uso real do restore; tarefa de limpeza do ruff e DEC-46; conferir as variáveis no Dashboard do Render. |
 | **Gatilho de escalada** | Primeiro restore em produção, ou primeiro deploy por VPS, sem as correções acima. |
+| **Responsável** | Engenheiro DevOps |
+
+### R-18 — T66 e T67 marcadas `done` com entrega parcial; golden set inexistente
+
+| Campo | Valor |
+|---|---|
+| **Origem** | Fechamento do lote T57–T67 (2026-11-11). As integrações de T66 e T67 trouxeram só os commits `wip(backend)` |
+| **Descrição** | T66: prompt compacto em 37,3% do original (alvo ≤ 35%) e seed sem teste nem Doc. T67: só o harness `avaliar_legenda_ia.py` (597 linhas), sem extrator, sem `golden_legenda.jsonl`, sem teste nem Doc. T68 (telemetria e cache) depende delas, e T69 também. Sem golden set não há como medir se prompt compacto, RAG ou troca de modelo melhora ou piora a legenda |
+| **Probabilidade / Impacto** | Alta / Média (o prompt compacto pode ir ao seed sem avaliação, com risco de regressão na qualidade técnica da legenda) |
+| **Mitigação** | Reabrir T66 e T67 (o BACKLOG é do integrador) e concluir: testes do seed, ruff, Doc, extrator, golden set ≥ 60 casos anonimizados e teste do replay. Não ativar o prompt compacto em produção antes disso |
+| **Gatilho de escalada** | Qualquer execução do seed em ambiente compartilhado, ou o início de T68/T69 sobre T66/T67 |
+| **Responsável** | Engenheiro Backend |
+
+### R-19 — Testes de legenda IA e emissão sem execução completa no ambiente Windows
+
+| Campo | Valor |
+|---|---|
+| **Origem** | Lote T57–T67, em [ia-contexto-legenda.md](../backlog-auto/ia-contexto-legenda.md), [v1-legenda-ia-deepseek.md](../backlog-auto/v1-legenda-ia-deepseek.md) e [v1-emissao-generica.md](../backlog-auto/v1-emissao-generica.md) |
+| **Descrição** | No Python do Windows, `passlib`×`bcrypt` quebra as fixtures de usuário (`password cannot be longer than 72 bytes`), então de 32 a 38 testes de endpoint de legenda IA (`endpoints`, `aprovacao`, parte de `seguranca`, `fotos`) deram erro de *setup* em T63 e T65 e não rodaram. WeasyPrint sem `libpango` impede coletar `test_rfo_contexto.py`. T57, T58 e T60 rodaram em container descartável da imagem `05_infra-backend`; a tag é compartilhada entre worktrees e a imagem não traz `pytest-asyncio` compatível. Na `main`, a T58 viu 12 falhas e 19 erros pré-existentes na suíte completa. Sem chave, a DeepSeek nunca foi chamada de verdade |
+| **Probabilidade / Impacto** | Alta / Média |
+| **Mitigação** | Rodar a suíte completa em container com `bcrypt<4.1` e `pytest-asyncio` (`docker compose build backend`; uma tag por worktree); reexecutar os testes de endpoint de legenda IA; um teste manual com chave real antes de ligar `deepseek` fora de desenvolvimento. `ruff check .` ainda acusa 10 erros em `e5a1f0c2b7d4_*`, `test_fotos_storage_key_unico.py`, `test_portal_versoes_relatorio.py` e `test_relatorio_unicidade.py` (DEC-46 pede zero antes do CI bloquear) |
+| **Gatilho de escalada** | Deploy de legenda IA ou de emissão em produção sem a suíte completa verde |
 | **Responsável** | Engenheiro DevOps |
