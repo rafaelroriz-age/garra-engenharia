@@ -1360,7 +1360,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T77 · PWA: Service Worker de cache só de leitura e página de fallback sem rede (DEC-26)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-26
 - **Papel:** Engenheiro Frontend
 - **Depende:** —
