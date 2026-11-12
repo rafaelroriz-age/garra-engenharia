@@ -1,7 +1,7 @@
 """Emissão de relatórios (PDF + DOCX) a partir do banco, por tipo (BL-13, V1-02, RF-06, RN-18/DEC-27).
 
-Cada tipo de relatório é um `Emissor` registrado em `EMISSORES` (hoje só o
-RFO): ele sabe montar e validar o contexto, quais fotos o template embute e
+Cada tipo de relatório é um `Emissor` registrado em `EMISSORES` (hoje RFO e
+VISTORIA_CAUTELAR): ele sabe montar e validar o contexto, quais fotos o template embute e
 qual módulo de `app.services.report_generator` renderiza o documento. Contrato
 e passo a passo para registrar um tipo novo: 00_docs/backlog-auto/v1-emissao-generica.md.
 
@@ -42,6 +42,12 @@ from app.services.report_generator.rfo_contexto import (
     TIPO_RFO,
     montar_contexto_rfo,
     validar_contexto_rfo,
+)
+from app.services.report_generator.vistoria_cautelar_contexto import (
+    TIPO_VISTORIA_CAUTELAR,
+    extrair_fotos_vistoria_cautelar,
+    montar_contexto_vistoria_cautelar,
+    validar_contexto_vistoria_cautelar,
 )
 from app.services.storage import ObjectNotFoundError, StorageClient
 
@@ -248,6 +254,17 @@ registrar_emissor(
         validar_contexto=validar_contexto_rfo,
         extrair_fotos=extrair_fotos_rfo,
         pipeline="rfo_pipeline",
+    ),
+)
+
+registrar_emissor(
+    TIPO_VISTORIA_CAUTELAR,
+    Emissor(
+        tipo=TIPO_VISTORIA_CAUTELAR,
+        montar_contexto=montar_contexto_vistoria_cautelar,
+        validar_contexto=validar_contexto_vistoria_cautelar,
+        extrair_fotos=extrair_fotos_vistoria_cautelar,
+        pipeline="vistoria_cautelar_pipeline",
     ),
 )
 
