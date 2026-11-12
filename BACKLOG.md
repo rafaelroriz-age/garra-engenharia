@@ -1251,7 +1251,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T70 · Legenda IA: export do dataset de feedback (JSONL anonimizado) para avaliação e fine-tuning futuro
-- **Status:** todo
+- **Status:** doing
 - **Origem:** IA-06
 - **Papel:** Engenheiro Backend
 - **Depende:** T68, T65
