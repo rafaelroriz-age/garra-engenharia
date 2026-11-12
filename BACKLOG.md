@@ -1127,7 +1127,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T62 · Frontend: tela de relatório (textos, emissão, versões e download)
-- **Status:** doing
+- **Status:** done
 - **Origem:** V1-06
 - **Papel:** Engenheiro Frontend
 - **Depende:** T57, T58
