@@ -70,6 +70,10 @@ class Settings(BaseSettings):
     deepseek_preco_entrada_cache_hit_usd: float | None = Field(default=None, ge=0)
     deepseek_preco_entrada_cache_miss_usd: float | None = Field(default=None, ge=0)
     deepseek_preco_saida_usd: float | None = Field(default=None, ge=0)
+    # RAG por busca textual (BL-34, IA-05): few-shots com legendas aprovadas parecidas + trechos de
+    # laudos anteriores (FTS 'portuguese' + pg_trgm). K = máximo de exemplos aprovados por chamada.
+    legenda_ia_rag_ativo: bool = True
+    legenda_ia_rag_k: int = Field(default=3, ge=0, le=10)
 
     @field_validator(
         "deepseek_preco_entrada_cache_hit_usd",

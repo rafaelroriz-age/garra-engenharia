@@ -135,6 +135,11 @@ services:
         value: ""
       - key: DEEPSEEK_PRECO_SAIDA_USD
         value: ""
+      # RAG por busca textual da legenda IA (BL-34, IA-05).
+      - key: LEGENDA_IA_RAG_ATIVO
+        value: "true"
+      - key: LEGENDA_IA_RAG_K
+        value: "3"
       # Armazenamento de fotos/documentos (MinIO/S3, DEC-02) FICOU FORA do
       # escopo deste Blueprint (só backend+frontend+banco foram pedidos).
       # Sem estas variáveis, a API sobe normalmente, mas os endpoints de

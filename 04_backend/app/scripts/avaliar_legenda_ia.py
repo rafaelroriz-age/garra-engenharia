@@ -14,6 +14,7 @@ e `<saida>/<rotulo>.resumo.json` com as métricas por caso e agregadas, compará
 Exemplos (a partir de 04_backend):
     python -m app.scripts.avaliar_legenda_ia --modo replay --rotulo sintetico
     python -m app.scripts.avaliar_legenda_ia --modo live --rotulo baseline --prompt ativo --limite 20
+    python -m app.scripts.avaliar_legenda_ia --modo live --rotulo rag --prompt ativo --rag 3
 """
 import argparse
 import asyncio
@@ -430,10 +431,32 @@ def verificar_chave(settings) -> None:
         )
 
 
+# Fonte do golden set: com --rag fica fora das referências, senão o trecho traria a própria resposta.
+FONTES_GOLDEN = ("Relatorio_Fotografico_de_Inspecao_Predial_-_CORTINA_DAMPAREZZO_-_Versao_Final.md",)
+
+
+async def contextos_com_rag(casos: list[dict], k: int) -> list[ContextoLegenda]:
+    """Enriquece cada caso com o RAG (IA-05) a partir do banco configurado (aprovadas + trechos)."""
+    from app.core.database import AsyncSessionLocal
+    from app.services.legenda_ia import recuperacao
+
+    saida = []
+    async with AsyncSessionLocal() as db:
+        for caso in casos:
+            ctx = contexto_de_dict(caso["entrada"])
+            achado = await recuperacao.buscar(db, ctx, k, excluir_fontes=FONTES_GOLDEN)
+            saida.append(achado.aplicar(ctx))
+    return saida
+
+
 async def coletar_live(
-    casos: list[dict], prompt: str, settings, rotulo: str, transporte: httpx.AsyncBaseTransport | None = None
+    casos: list[dict], prompt: str, settings, rotulo: str, transporte: httpx.AsyncBaseTransport | None = None,
+    rag_k: int | None = None,
 ) -> list[dict]:
-    """Chama a API para cada caso; devolve os registros brutos (sem chave, sem a imagem)."""
+    """Chama a API para cada caso; devolve os registros brutos (sem chave, sem a imagem).
+
+    `rag_k` (não None) liga o RAG da IA-05: few-shots e referências entram como na produção.
+    """
     from app.services.legenda_ia import ClienteLegendaIAProtegido, DeepSeekLegendaIAClient
     from app.services.legenda_ia.saneamento import construir_limites_saida
 
@@ -444,12 +467,15 @@ async def coletar_live(
     )
     prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
     registros = []
-    for caso in casos:
+    contextos = (
+        await contextos_com_rag(casos, rag_k) if rag_k is not None else [contexto_de_dict(c["entrada"]) for c in casos]
+    )
+    for caso, contexto in zip(casos, contextos, strict=True):
         gravador.ultimo_corpo = None
         inicio = time.perf_counter()
         erro = None
         try:
-            await cliente.gerar_legenda(contexto_de_dict(caso["entrada"]), prompt)
+            await cliente.gerar_legenda(contexto, prompt)
         except Exception as exc:  # registra e segue: um caso ruim não derruba a rodada paga
             erro = f"{type(exc).__name__}: {getattr(exc, 'detail', None) or exc}"
         registros.append(
@@ -503,6 +529,10 @@ def _parser() -> argparse.ArgumentParser:
     p.add_argument("--golden", type=Path, default=GOLDEN_PADRAO)
     p.add_argument("--respostas", type=Path, default=RESPOSTAS_PADRAO, help="diretório das respostas brutas")
     p.add_argument("--sobrescrever", action="store_true", help="live: substitui respostas existentes do rótulo")
+    p.add_argument(
+        "--rag", type=int, metavar="K",
+        help="live: liga o RAG (IA-05) com K exemplos aprovados; exige banco com a migration c6f2a8d4e1b9",
+    )
     p.add_argument("--preco-hit", type=float, help=f"US$/1M tokens de entrada em cache (ou {ENV_PRECOS['hit']})")
     p.add_argument("--preco-miss", type=float, help=f"US$/1M tokens de entrada fora do cache (ou {ENV_PRECOS['miss']})")
     p.add_argument("--preco-saida", type=float, help=f"US$/1M tokens de saída (ou {ENV_PRECOS['saida']})")
@@ -535,7 +565,7 @@ def executar(argv: list[str] | None = None) -> dict:
         prompt_hash = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
         selecionados = casos[: args.limite] if args.limite else casos
         print(f"Chamando a API para {len(selecionados)} caso(s)...", file=sys.stderr)
-        registros = asyncio.run(coletar_live(selecionados, prompt, settings, args.rotulo))
+        registros = asyncio.run(coletar_live(selecionados, prompt, settings, args.rotulo, rag_k=args.rag))
         arquivo_respostas.parent.mkdir(parents=True, exist_ok=True)
         with arquivo_respostas.open("w", encoding="utf-8") as arq:
             for reg in registros:

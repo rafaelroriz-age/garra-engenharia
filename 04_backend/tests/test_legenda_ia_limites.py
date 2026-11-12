@@ -167,6 +167,9 @@ class _ResultadoVazio:
     def scalar_one_or_none(self):
         return None
 
+    def all(self):  # consultas do RAG (IA-05): nenhum exemplo/trecho
+        return []
+
 
 class _BancoFalso:
     """Sessão mínima: sem cache local (consulta vazia) e sem persistir a telemetria (BL-34)."""
