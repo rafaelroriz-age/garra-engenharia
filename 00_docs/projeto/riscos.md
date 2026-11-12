@@ -168,7 +168,7 @@ last_updated: 2026-09-17
 | R-07 — Offline descoberto tarde | — | **Encerrado (2026-09-10)** — cliente confirmou cobertura 4G/Wi-Fi (DEC-26) |
 | R-01 — Fidelidade visual PDF | Alta | Mitigado (protótipo antecipado) |
 | R-02 — Clipboard API | Média | Mitigado (fallback upload manual) |
-| R-03 — Performance PDF | Alta | **Reduzido (2026-11-04, T20)** — o LTIP caiu para 11,6 s (239 fotos) e 19,3 s (~200 páginas); resta a Vistoria Residencial com 5 % de margem (T28, 2026-11-05, estendeu o `url_fetcher` a RFO/Cautelar/Residencial sem medir), o DOCX do LTIP sem foto e a medição em host dedicado. Histórico: **reaberto** pela re-medição T17 com os pipelines finais: LTIP viola RNF-06 (63,2 s com 137 páginas) e a Vistoria Residencial passa por 5 %; RFO e Cautelar atendem. Ver [benchmark-pipelines-finais.md](../backlog-auto/benchmark-pipelines-finais.md) e DEC-40 |
+| R-03 — Performance PDF | Alta | **Reduzido (2026-11-04, T20)** — o LTIP caiu para 11,6 s (239 fotos) e 19,3 s (~200 páginas); a Vistoria Residencial, re-medida pela T76 (2026-11-12) após a T28 (`url_fetcher`), gera 200 páginas/358 fotos em 24,2 s (margem de 59,7 %; PDF+DOCX 30,8 s, ~30 % com I/O ilustrativo); nenhum tipo medido fica a menos de 20 % no pipeline (resta o logo SVG do cabeçalho, DEC-54 proposta), o DOCX do LTIP sem foto e a medição em host dedicado. Histórico: **reaberto** pela re-medição T17 com os pipelines finais: LTIP viola RNF-06 (63,2 s com 137 páginas) e a Vistoria Residencial passa por 5 %; RFO e Cautelar atendem. Ver [benchmark-pipelines-finais.md](../backlog-auto/benchmark-pipelines-finais.md) e DEC-40 |
 | R-04 — Complexidade modelo | Média | Mitigado (modelo ER definido) |
 | R-05 — Original do cliente desatualizado | Baixa | Mitigado (templates e marca derivados dos originais arquivados — DEC-25/DEC-30); resta confirmar versão vigente (HT-02) |
 | R-08 — Escopo crescente | Média | Mitigado (congelamento v1.0) |
@@ -275,7 +275,7 @@ last_updated: 2026-09-17
 
 | Campo | Valor |
 |---|---|
-| **Origem** | T64, em [v1-amostras-ht09.md](../backlog-auto/v1-amostras-ht09.md) |
+| **Origem** | T64, em [v1-amostras-ht09.md](../backlog-auto/v1-amostras-ht09.md); reconfirmado pela T75 ([e2e-visitas-ocorrencias-fotos.md](../backlog-auto/e2e-visitas-ocorrencias-fotos.md): `alembic upgrade head` aborta no grupo duplicado `BENCH-01`; o E2E rodou em banco descartável) |
 | **Descrição** | 23 itens persistem isolados, todos em testes ou comportamento já existentes: `test_ocorrencias_prioridade.py` (5; `headers=auth["Authorization"]` não serve ao `httpx` 0.28), `test_ocorrencias_regras.py` (13 erros; o fixture cria 2 inspeções para o mesmo contrato, mas `inspecoes.contrato_id` é UNIQUE), `test_seguranca_legenda_ia.py` (4; causa só analisada em um), `test_relatorio_unicidade.py` (1 erro de teardown, `MissingGreenlet`). Há 2 skips desatualizados. Além disso a migration `e5a1f0c2b7d4` falha no banco `garra_engenharia` (2 linhas `BENCH-01` duplicadas em `relatorios`, inspeção `22db6dc2-...`), que está em `f7c2a9d4e6b1`. |
 | **Probabilidade / Impacto** | Alta / Média (a suíte não pode ser porta de qualidade enquanto falhar, e o dev não sobe de revisão) |
 | **Mitigação** | Corrigir os fixtures e os testes citados; analisar os 3 testes de `seguranca_legenda_ia` restantes; remover ou renumerar as 2 linhas `BENCH-01` com aval do dono e rodar `alembic upgrade head` no dev; remover os bancos temporários `garra_bl34_tmp2`, `garra_tmp_v105` e `garra_demo_v1` quando não forem mais necessários. |

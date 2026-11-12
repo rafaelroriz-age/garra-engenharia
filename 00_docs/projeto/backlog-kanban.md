@@ -82,8 +82,8 @@ last_updated: 2026-09-17
 | BL-25 | Repositório Git remoto no GitHub | DEC-14 | Engenheiro DevOps |
 | BL-26 | `ci.yml` (lint, testes, build, scan Trivy) (ruff zerado e fixado em 0.15.1, T43; lint ainda não bloqueante, DEC-46) | DEC-14 | Engenheiro DevOps |
 | BL-28 | `cd-staging.yml`/`cd-production.yml` (reavaliados) | DEC-14, DEC-17 | Engenheiro DevOps |
-| BL-21 | Testes E2E dos fluxos RFO e LTIP (Playwright) | RNF-06, DEC-23 | Engenheiro de Software |
-| BL-22 | Benchmark de geração de PDF/DOCX (191 páginas, 570 fotos) — re-medido (T17): LTIP violava RNF-06; T20 reduziu para 11,6 s (239 fotos) e 19,3 s (~200 páginas) | RNF-06, R-03 | Engenheiro de Software |
+| BL-21 | Testes E2E dos fluxos RFO e LTIP (Playwright) — T75 cobriu visitas, ocorrências e upload de fotos | RNF-06, DEC-23 | Engenheiro de Software |
+| BL-22 | Benchmark de geração de PDF/DOCX (191 páginas, 570 fotos) — T76: Vistoria Residencial 24,2 s (margem 59,7 %) — re-medido (T17): LTIP violava RNF-06; T20 reduziu para 11,6 s (239 fotos) e 19,3 s (~200 páginas) | RNF-06, R-03 | Engenheiro de Software |
 | BL-30 | RBAC: `role`, `Responsavel.usuario_id`, `Contrato.contratante_id` | RF-13, RN-14, DEC-18 | Engenheiro Backend |
 | BL-31 | Editor de anotação de fotos (Fabric.js) | RF-14, RN-15, DEC-19 | Engenheiro Frontend |
 | BL-40 | Template DOCX do Contrato de Prestação de Serviços | Administrativo | Engenheiro Backend |
