@@ -188,8 +188,8 @@ def test_rfo_registrado_com_contrato_do_emissor():
 def test_registrar_emissor_com_tipo_divergente_falha():
     emissor = obter_emissor("RFO")
     with pytest.raises(ValueError):
-        registrar_emissor("LTIP", emissor)
-    assert "LTIP" not in EMISSORES
+        registrar_emissor("INEXISTENTE", emissor)  # LTIP e RFIP já têm emissor (V1-03)
+    assert "INEXISTENTE" not in EMISSORES
 
 
 def test_chave_por_tipo_preserva_formato_do_rfo():

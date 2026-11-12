@@ -38,6 +38,18 @@ from app.models import Inspecao, Relatorio
 from app.schemas.portal import PortalDownloadRead
 from app.services import portal_service
 from app.services.report_generator.imagem import otimizar_imagem
+from app.services.report_generator.ltip_contexto import (
+    TIPO_LTIP,
+    extrair_fotos_ltip,
+    montar_contexto_ltip,
+    validar_contexto_ltip,
+)
+from app.services.report_generator.rfip_contexto import (
+    TIPO_RFIP,
+    extrair_fotos_rfip,
+    montar_contexto_rfip,
+    validar_contexto_rfip,
+)
 from app.services.report_generator.rfo_contexto import (
     TIPO_RFO,
     montar_contexto_rfo,
@@ -265,6 +277,28 @@ registrar_emissor(
         validar_contexto=validar_contexto_rfo,
         extrair_fotos=extrair_fotos_rfo,
         pipeline="rfo_pipeline",
+    ),
+)
+
+registrar_emissor(
+    TIPO_LTIP,
+    Emissor(
+        tipo=TIPO_LTIP,
+        montar_contexto=montar_contexto_ltip,
+        validar_contexto=validar_contexto_ltip,
+        extrair_fotos=extrair_fotos_ltip,
+        pipeline="ltip_pipeline",
+    ),
+)
+
+registrar_emissor(
+    TIPO_RFIP,
+    Emissor(
+        tipo=TIPO_RFIP,
+        montar_contexto=montar_contexto_rfip,
+        validar_contexto=validar_contexto_rfip,
+        extrair_fotos=extrair_fotos_rfip,
+        pipeline="rfip_pipeline",
     ),
 )
 
