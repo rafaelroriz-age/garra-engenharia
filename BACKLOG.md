@@ -1266,7 +1266,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T71 · Rodada real da legenda IA: chave, preços, decisão LGPD e comparação baseline × compacto × RAG × flash/pro
-- **Status:** doing
+- **Status:** done
 - **Origem:** IA-07
 - **Papel:** Responsável técnico (humano)
 - **Depende:** T66, T67, T68, T69
