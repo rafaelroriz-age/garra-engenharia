@@ -43,6 +43,13 @@ from app.services.report_generator.rfo_contexto import (
     montar_contexto_rfo,
     validar_contexto_rfo,
 )
+from app.services.report_generator.vistoria_residencial_contexto import (
+    TIPO_VISTORIA_RESIDENCIAL,
+    anexar_imagens_do_storage,
+    extrair_fotos_vistoria_residencial,
+    montar_contexto_vistoria_residencial,
+    validar_contexto_vistoria_residencial,
+)
 from app.services.storage import ObjectNotFoundError, StorageClient
 
 logger = logging.getLogger(__name__)
@@ -190,6 +197,9 @@ class Emissor:
     - `validar_contexto(contexto)`: caminhos obrigatórios ausentes (lista vazia = ok).
     - `extrair_fotos(contexto)`: `storage_key` das fotos que o template embute.
     - `pipeline`: módulo em `app.services.report_generator` com `gerar_pdf` e `gerar_docx`.
+    - `anexar_do_storage(contexto, storage)` (opcional): completa o contexto com arquivos
+      opcionais do storage (ex.: assinatura e capa como data URI). Roda depois da validação;
+      deve tratar os próprios erros (arquivo opcional ausente não derruba a emissão).
     """
 
     tipo: str
@@ -197,6 +207,7 @@ class Emissor:
     validar_contexto: Callable[[dict[str, Any]], list[str]]
     extrair_fotos: Callable[[dict[str, Any]], set[str]]
     pipeline: str
+    anexar_do_storage: Callable[[dict[str, Any], StorageClient], None] | None = None
 
     def criar_renderizador(self) -> RenderizadorProtocol:
         return Renderizador(self.pipeline)
@@ -248,6 +259,18 @@ registrar_emissor(
         validar_contexto=validar_contexto_rfo,
         extrair_fotos=extrair_fotos_rfo,
         pipeline="rfo_pipeline",
+    ),
+)
+
+registrar_emissor(
+    TIPO_VISTORIA_RESIDENCIAL,
+    Emissor(
+        tipo=TIPO_VISTORIA_RESIDENCIAL,
+        montar_contexto=montar_contexto_vistoria_residencial,
+        validar_contexto=validar_contexto_vistoria_residencial,
+        extrair_fotos=extrair_fotos_vistoria_residencial,
+        pipeline="vistoria_residencial_pipeline",
+        anexar_do_storage=anexar_imagens_do_storage,
     ),
 )
 
@@ -325,6 +348,8 @@ async def emitir_relatorio(
             raise RfoContextoIncompletoError(faltantes)
         raise ContextoIncompletoError(emissor.tipo, faltantes)
     renderizador = renderizador or emissor.criar_renderizador()
+    if emissor.anexar_do_storage is not None:
+        await asyncio.to_thread(emissor.anexar_do_storage, contexto, storage)
     fotos = await asyncio.to_thread(_baixar_fotos, storage, emissor.extrair_fotos(contexto))
     pdf = await asyncio.to_thread(renderizador.gerar_pdf, contexto, fotos)
     docx = await asyncio.to_thread(renderizador.gerar_docx, contexto, fotos)
