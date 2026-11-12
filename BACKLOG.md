@@ -1171,6 +1171,36 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro Backend (.github/agents/backend.agent.md). Contexto: com V1-03/04/05 os 5 tipos são emitidos a partir do banco (Docs 00_docs/backlog-auto/v1-*.md). Falta material para a conferência visual humana (HT-09, 00_docs/projeto/backlog-tarefas-humanas.md) e uma execução completa da suíte com banco e WeasyPrint (riscos R-14/R-15). Referência de seed: app/scripts/seed_benchmark_rfo.py. Implemente app/scripts/seed_demo.py idempotente (marca os registros com prefixo 'DEMO'): edificação com endereço completo; fiscal com CREA, título e qualificações; um contrato por tipo (RFO, LTIP, RFIP, VISTORIA_CAUTELAR, VISTORIA_RESIDENCIAL); para RFO 2 visitas com mão de obra, medições e fotos; para os demais ~8 ocorrências em 4 sistemas com GUT e grau de risco; fotos sintéticas (Pillow, 1200 px) enviadas ao MinIO de 05_infra com legendas aprovadas; conteúdo padrão salvo (parecer e unidade preenchidos). Teste tests/test_seed_demo.py: rodar duas vezes não duplica. Depois, no container (o Docker está em `C:\Program Files\Docker\Docker\resources\bin`, adicione ao PATH): `cd 05_infra; docker compose build backend; docker compose up -d`; rode alembic upgrade head e o seed dentro do container; emita os 5 relatórios pela API (auditor de seed_admin ou criado pelo seed) e baixe PDF/DOCX para 01_output-context/_amostras_ht09/v1/<tipo>-v1.pdf|docx — crie SOMENTE essa pasta nova; não altere nem apague nada mais em 01_output-context/. Rode a suíte completa `pytest` dentro do container backend (um arquivo por vez se aparecer o problema de event loop do R-15) e registre contagens passed/failed/error/skipped e a lista de falhas com causa provável; não corrija código fora do Toca, só proponha. No Doc 00_docs/backlog-auto/v1-amostras-ht09.md: tabela por tipo (páginas, tempo, tamanho), folha de conferência por tipo (cabeçalho/logo, rodapé e paginação, tabelas, fotos e legendas, quebras de página, tipografia) apontando o original correspondente em 01_output-context/, e as saídas literais dos comandos. Não edite 00_docs/projeto/* nem BACKLOG.md. Commit: `feat(backend): seed de demonstração e amostras dos 5 relatórios (V1-08)` com `Refs V1-08` (não commite os PDF/DOCX se 01_output-context estiver no .gitignore). Não faça push.
 ```
 
+### T73 · Re-medir o desempenho dos 5 pipelines depois do url_fetcher da T28 (Vistoria Residencial com 5 % de margem)
+- **Status:** todo
+- **Origem:** R-03
+- **Papel:** arquiteto-software
+- **Depende:** T17, T20, T28, T56
+- **Ambiente:** docker
+- **Dificuldade:** baixa
+- **Toca:** 00_docs/backlog-auto/benchmark-pos-t28.md
+- **Doc:** 00_docs/backlog-auto/benchmark-pos-t28.md
+- **Pronto:** O Doc tem uma tabela com mediana de 3 execuções (PDF e DOCX, separados) para RFO, LTIP, RFIP, Vistoria Cautelar e Vistoria Residencial, com nº de fotos/páginas, tempo e margem sobre o limite de RNF-06. Cada tipo recebe o veredito 'atende' ou 'viola', com comando e saída reais. Se não houver ambiente Docker/Pango, o Doc diz que não mediu. Nenhum código de produção foi alterado.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: arquiteto-software (.github/agents/arquiteto-software.agent.md). Tarefa de MEDIÇÃO e documentação; não altere código de produção nem testes. Contexto: o risco R-03 (00_docs/projeto/riscos.md) diz que a Vistoria Residencial passou no RNF-06 com só 5 % de margem na medição da T17, que a T28 estendeu o `url_fetcher` (entrega de fotos) a RFO, Cautelar e Residencial sem medir, e que o DOCX do LTIP ficou sem foto até a T56. Leia 00_docs/backlog-auto/benchmark-pipelines-finais.md (método e limite de RNF-06), 00_docs/backlog-auto/ltip-desempenho.md e a seção do RNF-06 em 00_docs/estudo-do-contexto.md. A ferramenta de medição é 04_backend/app/scripts/benchmark_relatorio_geracao.py (veja `--help`; os seeds estão em seed_benchmark_rfo.py e seed_demo.py). Passos: (1) suba o PostgreSQL com `docker compose up -d` em 05_infra/ e use o banco isolado `garra_engenharia_test` (regra 6 do BACKLOG.md), rodando `alembic upgrade head` a partir de 04_backend/; (2) repita o benchmark da T17 com o mesmo método e volume de fotos para os 5 tipos, PDF e DOCX separados, mediana de 3 execuções; (3) compare com a T17 e a T20 e destaque a Vistoria Residencial (PDF), onde a margem era 5 %; (4) registre em 00_docs/backlog-auto/benchmark-pos-t28.md: ambiente (CPU, RAM, versões), comandos, tabela de resultados, veredito por tipo e, se algum tipo violar ou ficar a menos de 20 % de margem, o gargalo provável (foto, fonte, tabela) sem corrigir. Se o Docker/Pango não estiver disponível, escreva isso no Doc em vez de inventar números. Não edite os documentos de gestão compartilhados; proponha ajuste de R-03 no próprio Doc. Commit: `docs(backlog-auto): re-medicao pos-T28 dos pipelines (R-03)` com rodapé `Refs R-03`.
+```
+
+### T76 · Reduzir o tempo do PDF da Vistoria Residencial e travar a margem com teste
+- **Status:** todo
+- **Origem:** R-03
+- **Papel:** backend
+- **Depende:** T73
+- **Ambiente:** docker
+- **Dificuldade:** alta
+- **Toca:** 04_backend/app/services/report_generator/vistoria_residencial_pipeline.py, 04_backend/tests/test_vistoria_residencial_desempenho.py, 00_docs/backlog-auto/vistoria-residencial-desempenho.md
+- **Doc:** 00_docs/backlog-auto/vistoria-residencial-desempenho.md
+- **Pronto:** Se o Doc da tarefa A mostrar a Vistoria Residencial (PDF) com menos de 20 % de margem sobre o limite de RNF-06, o tempo fica com pelo menos 20 % de margem, medido antes e depois com a mediana de 3 execuções, sem mudar o HTML visual (mesmo número de páginas e mesmas fotos). Há teste que trava a regressão (contagem de fotos redimensionadas/buscadas e ausência de trabalho repetido). `pytest` e `ruff check .` passam em 04_backend. Se a margem da A já for de 20 % ou mais, nada é alterado e o Doc registra por quê. Se o PostgreSQL ou o Pango não estiver disponível, o Doc diz que não rodou.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro Backend (.github/agents/backend.agent.md). Contexto: R-03 em 00_docs/projeto/riscos.md. A Vistoria Residencial passou no RNF-06 com 5 % de margem (00_docs/backlog-auto/benchmark-pipelines-finais.md) e a T28 estendeu o `url_fetcher` a esse pipeline. A tarefa A mediu de novo em 00_docs/backlog-auto/benchmark-pos-t28.md: leia-o primeiro. REGRA DE PARADA: se a margem da Vistoria Residencial (PDF) já for de 20 % ou mais sobre o limite de RNF-06, não altere código; só registre no Doc novo 00_docs/backlog-auto/vistoria-residencial-desempenho.md e encerre. Caso contrário, aplique para este pipeline o método que a T20 usou no LTIP: leia 00_docs/backlog-auto/ltip-desempenho.md e o código de 04_backend/app/services/report_generator/ (vistoria_residencial_pipeline.py, ltip_pipeline.py, legenda_foto.py). Passos: (1) perfile a geração (cProfile ou tempos por etapa) com o benchmark de 04_backend/app/scripts/benchmark_relatorio_geracao.py; (2) corrija só o gargalo medido (por exemplo, reencode/redimensionamento de fotos, leitura repetida do storage, CSS ou fontes recarregados), reaproveitando o que a T20 fez no LTIP; não mude o layout nem os textos do relatório; (3) escreva 04_backend/tests/test_vistoria_residencial_desempenho.py com testes determinísticos, sem relógio, que travem a causa corrigida; (4) re-meça com a mediana de 3 execuções e registre antes e depois no Doc. Rode `pytest` e `ruff check .` a partir de 04_backend, com o banco isolado `garra_engenharia_test` (regra 6 do BACKLOG.md) e o PostgreSQL de 05_infra no ar. Não use `git add -A`; adicione só os arquivos de `toca`. Commit: `perf(backend): pdf da vistoria residencial (R-03)` com rodapé `Refs R-03`.
+```
+
 ---
 
 ## Bloco E — IA DeepSeek: acurácia e custo da legenda (RF-15)
@@ -1293,4 +1323,38 @@ Tarefa humana (pode ser feita com o Claude Code interativo). Contexto: 00_docs/i
 - **Prompt:**
 ```text
 Tarefa humana. Só iniciar quando o export de IA-06 tiver ≥500 legendas aprovadas (até lá, deixe em todo). Contexto: 00_docs/ia/plano-deepseek.md, 00_docs/backlog-auto/ia-dataset-feedback.md e ia-deepseek-avaliacao.md. Passos: (1) Exportar o dataset (IA-06) para fora do repositório e olhar a % de legendas aceitas sem edição e a distância média por sistema: se o few-shot (RAG) já entrega ≥85% aceitas com edição leve, provavelmente não compensa fine-tuning. (2) Levantar as opções da época: fine-tuning oferecido pela própria DeepSeek (se houver), LoRA/QLoRA num modelo aberto menor (ex.: destilado de 7–14B) hospedado em GPU sob demanda, e o custo de manter isso. (3) Separar 20% do dataset como teste, treinar/avaliar a opção mais promissora fora do sistema (com dados anonimizados) e comparar no harness IA-03 com a configuração vencedora de IA-07: acurácia, US$/relatório de 150 fotos, latência, privacidade (dados ficam no Brasil?) e esforço de operação. (4) Decidir go/no-go; se go, escrever no Doc as tarefas propostas (adapter do novo provedor, roteamento por sistema, retreino periódico). Commit só do Doc: `docs: gate de fine-tuning da legenda IA (BL-34)`.
+```
+
+---
+
+## Bloco F — Validação ponta a ponta da interface (E2E)
+
+### T74 · E2E Playwright de Edificações, Contratos e Dashboard de saúde
+- **Status:** todo
+- **Origem:** BL-21
+- **Papel:** frontend
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** media
+- **Toca:** 03_frontend/e2e/edificacoes-contratos.spec.ts, 03_frontend/e2e/dashboard.spec.ts, 00_docs/backlog-auto/e2e-edificacoes-contratos-dashboard.md
+- **Doc:** 00_docs/backlog-auto/e2e-edificacoes-contratos-dashboard.md
+- **Pronto:** Dois specs novos (edificacoes-contratos.spec.ts e dashboard.spec.ts) rodam com `npx playwright test` e passam contra backend e frontend locais. Cobrem listagem, busca e criação de edificação, listagem com filtros e criação de contrato, e o dashboard de saúde com dados semeados. `npm run lint` e `npm run build` passam. O Doc traz o comando e a saída reais, ou diz que não rodou e por quê. Nenhum arquivo existente em e2e/ foi alterado.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro Frontend (.github/agents/frontend.agent.md). Contexto: status.md (próximos passos, item 9) pede validação ponta a ponta em navegador do frontend. Já existem specs Playwright em 03_frontend/e2e/ (rfo.spec.ts, ltip.spec.ts, relatorio.spec.ts, portal.spec.ts e helpers.ts): leia helpers.ts e rfo.spec.ts para copiar o padrão de login, de criação de dados via API e de limpeza, e 03_frontend/playwright.config.ts para a configuração. As telas estão em 03_frontend/app/edificacoes/, 03_frontend/app/contratos/ e 03_frontend/app/dashboard/. Os endpoints e as regras estão em 04_backend/app/api/ (edificacoes, contratos, dashboard) e em RF-01, RF-02, RF-07, RN-06 e RN-09 de 00_docs/estudo-do-contexto.md; o conteúdo de BL-08, BL-09 e BL-16 está em 00_docs/projeto/backlog-tarefas.md. Crie, SEM alterar os specs existentes: (1) 03_frontend/e2e/edificacoes-contratos.spec.ts: login como auditor, listar e buscar edificações, criar uma edificação pela UI e vê-la na lista; listar contratos, aplicar filtros e criar um contrato com mais de uma empresa executora e NBRs (RN-06/RN-09); (2) 03_frontend/e2e/dashboard.spec.ts: com uma edificação e ocorrências semeadas via API ou `seed_demo` (04_backend/app/scripts/seed_demo.py, dados com prefixo DEMO), abrir o dashboard de saúde e checar que os indicadores por sistema predial aparecem e batem com os dados criados. Use nomes únicos por execução e limpe o que criar. Para rodar: PostgreSQL de 05_infra (`docker compose up -d` em 05_infra/), `alembic upgrade head` e backend a partir de 04_backend/, depois `npx playwright test` a partir de 03_frontend/. Se algum passo falhar por ambiente, registre no Doc em vez de inventar o resultado; se achar bug real na UI, não corrija: descreva-o no Doc. Rode `npm run lint` e `npm run build` em 03_frontend. Registre no Doc o que foi coberto, os comandos e as saídas. Commit: `test(frontend): e2e de edificacoes, contratos e dashboard (BL-21)` com rodapé `Refs BL-21`.
+```
+
+### T75 · E2E Playwright de Visitas, Ocorrências e upload de fotos pela UI
+- **Status:** todo
+- **Origem:** BL-21
+- **Papel:** frontend
+- **Depende:** T74
+- **Ambiente:** docker
+- **Dificuldade:** media
+- **Toca:** 03_frontend/e2e/visitas-ocorrencias.spec.ts, 03_frontend/e2e/fotos-upload.spec.ts, 00_docs/backlog-auto/e2e-visitas-ocorrencias-fotos.md
+- **Doc:** 00_docs/backlog-auto/e2e-visitas-ocorrencias-fotos.md
+- **Pronto:** Os specs visitas-ocorrencias.spec.ts e fotos-upload.spec.ts passam com `npx playwright test`. Cobrem criar visita (e a rejeição de data futura e de segunda visita no mesmo dia, DEC-38), criar ocorrência com sistema/subsistema/localização/classificação, e subir foto por upload manual e por colagem, vinculada à visita. `npm run lint` e `npm run build` passam. O Doc registra a saída real, ou diz que não rodou e por quê. Nenhum spec existente foi alterado.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro Frontend (.github/agents/frontend.agent.md). Contexto: status.md (próximos passos, item 9) pede re-testar em navegador os frontends de Visitas (BL-10), Upload de fotos (BL-11) e Ocorrências (BL-14), cujas regras mudaram nas tarefas T19, T21 e T08 (data futura e segunda visita no mesmo dia rejeitadas, `storage_key` controlada pelo servidor, enums de ocorrência). Leia 03_frontend/e2e/helpers.ts, rfo.spec.ts e foto-origem.spec.ts (padrão de login, criação de dados via API, mock de upload), e o spec 03_frontend/e2e/edificacoes-contratos.spec.ts da tarefa B, que você pode reaproveitar. As telas estão em 03_frontend/app/inspecoes/[id]/ (subpastas visitas/, ocorrencias/) e os endpoints em 04_backend/app/api/ (visitas, ocorrencias, fotos). Regras: 00_docs/backlog-auto/visitas-correcoes.md, ocorrencias-correcoes.md e fotos-correcoes.md, e RF-03, RF-04, RF-05, RN-01 a RN-05 de 00_docs/estudo-do-contexto.md. Crie, sem alterar os specs existentes: (1) 03_frontend/e2e/visitas-ocorrencias.spec.ts: criar visita pela UI; tentar data futura e segunda visita no mesmo dia e checar a mensagem de erro; criar ocorrência com sistema, subsistema, localização e classificação; editar e confirmar; (2) 03_frontend/e2e/fotos-upload.spec.ts: subir uma imagem pequena por upload manual e outra por colagem (clipboard) vinculada à visita, e confirmar que aparecem na lista (use imagem gerada no teste; não use arquivos de 01_output-context/). Use nomes únicos por execução e limpe o que criar. Rode o PostgreSQL de 05_infra (`docker compose up -d` em 05_infra/), `alembic upgrade head` e o backend a partir de 04_backend/, e `npx playwright test` a partir de 03_frontend/. Se algum passo falhar por ambiente, registre no Doc; se achar bug real, descreva-o sem corrigir. Rode `npm run lint` e `npm run build` em 03_frontend. Commit: `test(frontend): e2e de visitas, ocorrencias e upload de fotos (BL-21)` com rodapé `Refs BL-21`.
 ```
