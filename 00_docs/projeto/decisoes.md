@@ -748,3 +748,14 @@ last_updated: 2026-09-17
 | **Decisão proposta** | (P1) Next.js com `output: "export"`, `trailingSlash: true` e `basePath` vindo de `NEXT_PUBLIC_BASE_PATH` (`/garra-engenharia` no deploy, vazio em dev). (P2) Rotas com ID passam de segmento `[id]` para query string: `/contratos/detalhe?id=`, `/edificacoes/detalhe?id=`, `/inspecoes/{visitas,ocorrencias,relatorio}?id=` (hook `lib/use-id-param.ts`). (P3) Publicação por `.github/workflows/deploy-pages.yml` a cada push em `main` que toque `03_frontend/`, em `https://rafaelroriz-age.github.io/garra-engenharia/`. (P4) `BACKEND_CORS_ORIGINS` inclui `https://rafaelroriz-age.github.io`. (P5) Após validar o Pages, remover `garra-frontend` do `render.yaml`, suspender o serviço no Render, tirar `main_front` do `sync-deploy-branches.yml` e apagar `03_frontend/Dockerfile.render`. |
 | **Consequências** | Fim do custo do web service do frontend. URLs antigas de detalhe (`/contratos/<id>`) deixam de existir. `NEXT_PUBLIC_API_URL` continua fixa em build time (agora no workflow). Enquanto `main_front` existir, o build Docker do Render para o frontend quebra (o `standalone` saiu); o Render mantém o último deploy no ar. Pages em repositório privado exige plano pago do GitHub. Sem cabeçalhos HTTP customizados (CSP etc.) no Pages. |
 | **Referência** | `.github/workflows/deploy-pages.yml`, `03_frontend/next.config.mjs`, `05_infra/README.md` § "Frontend no GitHub Pages" |
+
+## DEC-56 — Detalhamento do cache de leitura do Service Worker (proposta de T77)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-13 |
+| **Status** | Proposta (aguarda aprovação do dono) |
+| **Contexto** | DEC-26 definiu que o Service Worker cacheia só leitura de baixa volatilidade, sem fila de escrita. A T77 precisou fixar TTLs, escopo e tratamento de dados dependentes de token. |
+| **Decisão proposta** | (P1) Stale-while-revalidate com TTL; entrada vencida nunca é servida. (P2) Dados mestre (`/sistemas-prediais`, `/gabarito/*`): 24 h. Contratos (`/contratos`, `/contratos/{id}`): 5 min, com chave incluindo fingerprint SHA-256 do `Authorization` (nunca o token); sem token não se cacheia. (P3) Logout (`clearAuthToken`) apaga o cache de dados. (P4) Nunca cacheados: não-GET, `/auth/*`, `/portal/*`, fotos/downloads/relatórios e qualquer rota fora da allowlist. (P5) `node --test` como runner de testes unitários do frontend para lógica pura. |
+| **Consequências** | Uso sem rede só funciona dentro do TTL (intencional, DEC-26). Logout em outra aba não limpa o cache da aba atual (TTL limita a exposição). Allowlist duplicada em `sw.js` e `lib/sw-cache.ts`, com teste de paridade. Registro do SW precisa respeitar `basePath` se DEC-55 for aprovada (R-22). |
+| **Referência** | `00_docs/backlog-auto/pwa-service-worker.md`, `03_frontend/public/sw.js`, `03_frontend/lib/sw-cache.ts`, DEC-26, DEC-55, R-22 |
