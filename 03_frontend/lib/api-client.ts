@@ -10,6 +10,21 @@
  * Não contém regra de negócio — apenas transporte e parsing de erro.
  */
 
+import type {
+  ConteudoDados,
+  Foto,
+  FotoUpdateInput,
+  FotoUploadResult,
+  FormatoRelatorio,
+  LegendaIAGerarInput,
+  RelatorioConteudo,
+  RelatorioDownload,
+  RelatorioEmitido,
+  RelatorioVersao,
+  Responsavel,
+  ResponsavelInput,
+} from "@/lib/types";
+
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
@@ -156,3 +171,65 @@ export const api = {
     apiFetch<T>(path, { ...options, method: "PUT", body }),
   delete: <T>(path: string, options?: ApiFetchOptions) => apiFetch<T>(path, { ...options, method: "DELETE" }),
 };
+
+/**
+ * Chamadas de legenda de foto assistida por IA (BL-34/BL-35; RF-15, RN-16, RN-17).
+ * Contrato em `00_docs/backlog-auto/legenda-ia-endpoints.md` §2. Ambas devolvem `FotoRead`.
+ *
+ * - `gerar`: grava só a sugestão (`legenda_ia_sugerida`, alertas, pendências) com
+ *   `status_validacao_ia = "rascunho"`; nunca toca na `legenda` final. Responde 503
+ *   (`legenda-ia-indisponivel`) enquanto não houver provedor de LLM configurado.
+ * - `aprovar`: `PUT /fotos/{id}` com `aprovar_legenda_ia: true`; aprovador e data vêm do token.
+ */
+export const legendaIA = {
+  gerar: (fotoId: string, input?: LegendaIAGerarInput) =>
+    api.post<Foto>(`/fotos/${fotoId}/legenda-ia/gerar`, input ?? {}),
+  aprovar: (fotoId: string, legenda: string) =>
+    api.put<Foto>(`/fotos/${fotoId}`, { legenda, aprovar_legenda_ia: true } satisfies FotoUpdateInput),
+};
+
+/**
+ * Emissão, versões e download de relatórios por inspeção (V1-02).
+ * Contrato em `00_docs/backlog-auto/v1-emissao-generica.md`.
+ *
+ * - `listar`: auditor e auxiliar; mais recente primeiro.
+ * - `emitir`: só auditor. Pode levar dezenas de segundos (PDF + DOCX). 422 traz em
+ *   `errors[]` os campos faltantes (`{tipo}-contexto-incompleto`) ou o tipo não emitível.
+ * - `download`: devolve URL pré-assinada de curta duração (mesmo formato do portal).
+ */
+export const relatorios = {
+  listar: (inspecaoId: string) => api.get<RelatorioVersao[]>(`/inspecoes/${inspecaoId}/relatorios`),
+  emitir: (inspecaoId: string, tipo: string) =>
+    api.post<RelatorioEmitido>(`/inspecoes/${inspecaoId}/relatorios/${encodeURIComponent(tipo.toLowerCase())}`, {}),
+  download: (inspecaoId: string, relatorioId: string, formato: FormatoRelatorio) =>
+    api.get<RelatorioDownload>(`/inspecoes/${inspecaoId}/relatorios/${relatorioId}/download/${formato}`),
+};
+
+/**
+ * Conteúdo narrativo do relatório por (inspeção, tipo) (V1-01).
+ * Contrato em `00_docs/backlog-auto/v1-fundacao-dados.md`.
+ *
+ * - `obter`: auditor e auxiliar; `dados` já vem com os textos padrão mesclados.
+ * - `salvar`: só auditor; SUBSTITUI o conteúdo salvo (o que não for enviado volta ao padrão).
+ */
+export const conteudo = {
+  obter: (inspecaoId: string, tipo: string) =>
+    api.get<RelatorioConteudo>(`/inspecoes/${inspecaoId}/conteudo/${encodeURIComponent(tipo.toLowerCase())}`),
+  salvar: (inspecaoId: string, tipo: string, dados: ConteudoDados) =>
+    api.put<RelatorioConteudo>(`/inspecoes/${inspecaoId}/conteudo/${encodeURIComponent(tipo.toLowerCase())}`, {
+      dados,
+    }),
+};
+
+/** Responsáveis (fiscal, RTE, responsável legal). A API não tem rota de edição (só criar/listar/obter). */
+export const responsaveis = {
+  listar: () => api.get<Responsavel[]>("/responsaveis"),
+  criar: (input: ResponsavelInput) => api.post<Responsavel>("/responsaveis", input),
+};
+
+/** Upload bruto de imagem (`POST /fotos/upload`, multipart): devolve a chave no storage, sem vincular. */
+export function uploadImagem(arquivo: File): Promise<FotoUploadResult> {
+  const formData = new FormData();
+  formData.append("arquivo", arquivo);
+  return api.post<FotoUploadResult>("/fotos/upload", formData, { raw: true });
+}

@@ -1,13 +1,16 @@
 ---
 title: Solicitação formal de templates .docx e logo ao cliente — HT-02 / BL-19
 type: gestao
-status: draft
+status: superado
 owner: Garra Engenharia
 related:
   - 00_docs/projeto/backlog-tarefas-humanas.md
   - 00_docs/projeto/status.md
-last_updated: 2026-08-07
+  - 00_docs/projeto/decisoes.md
+last_updated: 2026-11-03
 ---
+
+> **⚠️ Superado — não enviar.** Sem objeto desde 2026-09-17: os originais dos modelos já estão em `01_output-context/` e os templates do RFO e do LTIP são derivados deles por script (DEC-25/ADR-13); a marca foi vetorizada internamente a partir do JPEG oficial (DEC-30/ADR-16). O bloqueio B-02 foi encerrado e a HT-02 ficou reduzida à confirmação da versão vigente dos arquivos, "sem nada a solicitar ao cliente" (`00_docs/projeto/status.md`, nota de encerramento do B-02). O texto abaixo fica só como registro histórico; removê-lo é decisão do gestor (pendência 4 de `00_docs/_preparo/03_classificacao.md` §5.4).
 
 # Solicitação de templates originais (HT-02)
 
@@ -56,5 +59,5 @@ Rafael Roriz — desenvolvimento do Sistema de Automação de Relatórios Predia
 - [ ] Salvar os arquivos em `01_output-context/` (local/OneDrive) — **não commitar** binários do cliente no Git (ver `.gitignore`).
 - [ ] Conferir se os 6 itens chegaram completos; cobrar os que faltarem antes de iniciar BL-12/BL-13.
 - [ ] Acionar o agente conversor para gerar/atualizar as referências `.md` em `00_docs/convertidos/`.
-- [ ] Remover B-02 de [status.md](status.md#bloqueios-ativos) e marcar HT-02 como ✅ em [backlog-tarefas-humanas.md](backlog-tarefas-humanas.md).
-- [ ] Desbloquear BL-12, BL-13, BL-17, BL-19 e a parte de download de BL-33 em [backlog-tarefas.md](backlog-tarefas.md).
+- [ ] Remover B-02 de [status.md](../projeto/status.md#bloqueios-ativos) e marcar HT-02 como ✅ em [backlog-tarefas-humanas.md](../projeto/backlog-tarefas-humanas.md).
+- [ ] Desbloquear BL-12, BL-13, BL-17, BL-19 e a parte de download de BL-33 em [backlog-tarefas.md](../projeto/backlog-tarefas.md).

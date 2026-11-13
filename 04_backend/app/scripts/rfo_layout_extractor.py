@@ -19,6 +19,7 @@ from __future__ import annotations
 import hashlib
 import re
 from dataclasses import dataclass, field
+from itertools import pairwise
 from pathlib import Path
 from typing import Any
 
@@ -155,7 +156,7 @@ def _extrair_grade_fotografica(ws: Worksheet) -> dict[str, Any]:
     marcadores.sort()
     linhas = sorted({linha for _, linha, _ in marcadores})
     colunas = sorted({coluna for _, _, coluna in marcadores})
-    espacamentos = {b - a for a, b in zip(linhas, linhas[1:]) if b - a > 0}
+    espacamentos = {b - a for a, b in pairwise(linhas) if b - a > 0}
     return {
         "encontrado": True,
         "total_no_original": len(marcadores),

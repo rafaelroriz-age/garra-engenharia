@@ -210,14 +210,26 @@ def test_pdf_sem_ficha_fotografica_falha(tmp_path: Path) -> None:
 def test_html_gerado_respeita_as_medidas_e_itera_por_sistema(layout: dict) -> None:
     html = gerar_html(layout)
     margens = layout["pagina"]["margens_cm"]
-    assert f"size: A4 portrait" in html
+    assert "size: A4 portrait" in html
     assert f"margin: {margens['superior']}cm" in html
     assert f"font-size: {layout['tipografia']['corpo_pt']}pt" in html
     # RN-11: fotos organizadas por Sistema e, dentro dele, por ocorrência.
     assert "{% for sistema in sistemas %}" in html
-    assert "{% for ocorrencia in sistema.ocorrencias %}" in html
+    # As fichas saem em linhas (`batch`), que preservam a ordem das ocorrências (T20).
+    assert "{% for linha in sistema.ocorrencias|batch(" in html
+    assert "{% for ocorrencia in linha %}" in html
     assert "OBSERVAÇÕES TÉCNICAS" in html
     assert RODAPE_EMITENTE[0] in html
+
+
+def test_html_gerado_agrupa_fichas_em_linhas_sem_flex(layout: dict) -> None:
+    """T20/DEC-40: o flex único por sistema tinha custo quadrático no WeasyPrint."""
+    html = gerar_html(layout)
+    por_linha = layout["relatorio_fotografico"]["fichas_por_pagina"]
+    assert f"sistema.ocorrencias|batch({por_linha})" in html
+    assert "table-layout: fixed" in html
+    assert "display: flex" not in html
+    assert '<td class="ficha">' in html
 
 
 def test_docx_gerado_tem_blocos_balanceados(layout: dict, tmp_path: Path) -> None:

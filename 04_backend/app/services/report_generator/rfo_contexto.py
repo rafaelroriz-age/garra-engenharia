@@ -1,0 +1,177 @@
+"""Monta o contexto do RFO (consumido por `rfo_pipeline`) a partir do banco (BL-13).
+
+Camada de montagem apenas: não gera arquivos nem baixa imagens. Cada foto sai
+com `storage_key` (e `url_publica`); o binário continua a cargo do
+`url_fetcher`/`foto_fetcher` do chamador. RF-03..RF-06, RN-01, RN-02.
+"""
+from __future__ import annotations
+
+import uuid
+from typing import Any
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.core.errors import ConflictError, NotFoundError
+from app.models import Contrato, ContratoExecutor, Foto, Inspecao, Ocorrencia, Visita
+from app.models.tipo_servico import TipoServico
+from app.services.report_generator.contexto_comum import data_br as _data_br
+from app.services.report_generator.contexto_comum import fotos_ordenadas
+from app.services.report_generator.contexto_comum import texto_ou_traco as _texto_ou_traco
+from app.services.report_generator.legenda_foto import legenda_para_relatorio
+
+TIPO_RFO = TipoServico.RFO.value
+
+# DEC-47 (2): campos que `rfo_template.html.j2` imprime SEM fallback (`or "—"`/`{% if %}`) e
+# cujas colunas aceitam NULL. Colunas NOT NULL (contrato.numero, edificacao.nome/endereco,
+# fiscal.nome, executor.cnpj/razao_social) ficam de fora: o banco já garante.
+CAMPOS_OBRIGATORIOS_RFO: tuple[tuple[str, str], ...] = (
+    ("fiscal", "crea"),
+    ("contrato", "art_fiscalizacao"),
+    ("contrato", "objeto"),
+    ("contrato", "data_inicio"),
+    ("contrato", "prazo_dias"),
+)
+
+
+def validar_contexto_rfo(contexto: dict[str, Any]) -> list[str]:
+    """Lista os caminhos (`contrato.objeto`) obrigatórios ausentes; vazia = contexto emitível.
+
+    Ausente = `None` ou texto em branco. `prazo_dias == 0` conta como preenchido.
+    """
+    faltantes: list[str] = []
+    for secao, campo in CAMPOS_OBRIGATORIOS_RFO:
+        valor = (contexto.get(secao) or {}).get(campo)
+        if valor is None or (isinstance(valor, str) and not valor.strip()):
+            faltantes.append(f"{secao}.{campo}")
+    return faltantes
+
+
+def _foto_ctx(foto: Foto) -> dict[str, Any]:
+    # DEC-37 DP-9 / DEC-47 (1): só `legenda` entra; a sugestão de IA nunca, qualquer status.
+    legenda = legenda_para_relatorio(foto) or None
+    return {
+        "id": str(foto.id),
+        "storage_key": foto.storage_key,
+        "url_publica": foto.url_publica,
+        "legenda": legenda,
+        "ordem": foto.ordem,
+    }
+
+
+def _fotos_ordenadas(fotos: list[Foto]) -> list[dict[str, Any]]:
+    return [_foto_ctx(f) for f in fotos_ordenadas(fotos)]
+
+
+def _executor_ctx(executor: ContratoExecutor) -> dict[str, Any]:
+    legal, rte = executor.responsavel_legal, executor.rte
+    return {
+        "razao_social": executor.razao_social,
+        "cnpj": executor.cnpj,
+        "endereco": executor.endereco,
+        "art_execucao": _texto_ou_traco(executor.art_execucao),
+        "responsavel_legal": {"nome": legal.nome, "cpf_cnpj": legal.cpf_cnpj, "crea": legal.crea} if legal else None,
+        "rte": {"nome": rte.nome, "crea": rte.crea} if rte else None,
+    }
+
+
+def _visita_ctx(visita: Visita) -> dict[str, Any]:
+    return {
+        "id": str(visita.id),
+        "seq_numero": visita.seq_numero,
+        "data": _data_br(visita.data),
+        "servicos_executados": visita.servicos_executados,
+        "observacoes": visita.observacoes,
+        "mao_obra": [{"funcao": m.funcao, "quantidade": m.quantidade} for m in sorted(visita.mao_obra, key=lambda m: (m.funcao, str(m.id)))],
+        "medicoes": [
+            {"descricao": m.descricao, "quantidade": m.quantidade, "unidade": m.unidade}
+            for m in sorted(visita.medicoes, key=lambda m: (m.descricao, str(m.id)))
+        ],
+        "fotos": _fotos_ordenadas(visita.fotos),
+    }
+
+
+def _ocorrencia_ctx(oc: Ocorrencia) -> dict[str, Any]:
+    return {
+        "id": str(oc.id),
+        "seq_numero": oc.seq_numero,
+        "sistema": oc.sistema.nome if oc.sistema else None,
+        "subsistema": oc.subsistema.nome if oc.subsistema else None,
+        "localizacao": oc.localizacao,
+        "situacao": oc.situacao,
+        "classificacao": oc.classificacao,
+        "tipo_anomalia": oc.tipo_anomalia,
+        "tipo_falha": oc.tipo_falha,
+        "grau_risco": oc.grau_risco,
+        "prioridade": oc.prioridade,
+        "descricao": oc.descricao,
+        "fotos": _fotos_ordenadas(oc.fotos),
+    }
+
+
+async def montar_contexto_rfo(db: AsyncSession, inspecao_id: uuid.UUID) -> dict[str, Any]:
+    """Retorna o dicionário aceito por `rfo_pipeline.normalizar_contexto`.
+
+    404 (`NotFoundError`) se a inspeção não existe; 409 (`ConflictError`) se
+    `tipo != 'RFO'`. Visitas e ocorrências saem por `seq_numero`, fotos por `ordem`.
+    """
+    resultado = await db.execute(
+        select(Inspecao)
+        .options(
+            selectinload(Inspecao.contrato).selectinload(Contrato.edificacao),
+            selectinload(Inspecao.contrato).selectinload(Contrato.fiscal),
+            selectinload(Inspecao.contrato)
+            .selectinload(Contrato.executores)
+            .options(selectinload(ContratoExecutor.responsavel_legal), selectinload(ContratoExecutor.rte)),
+            selectinload(Inspecao.contrato).selectinload(Contrato.nbrs),
+            selectinload(Inspecao.visitas).selectinload(Visita.mao_obra),
+            selectinload(Inspecao.visitas).selectinload(Visita.medicoes),
+            selectinload(Inspecao.visitas).selectinload(Visita.fotos),
+            selectinload(Inspecao.ocorrencias).selectinload(Ocorrencia.fotos),
+            selectinload(Inspecao.ocorrencias).selectinload(Ocorrencia.sistema),
+            selectinload(Inspecao.ocorrencias).selectinload(Ocorrencia.subsistema),
+        )
+        .where(Inspecao.id == inspecao_id)
+    )
+    inspecao = resultado.scalar_one_or_none()
+    if inspecao is None:
+        raise NotFoundError(f"Inspeção '{inspecao_id}' não encontrada.", type_suffix="inspecao-nao-encontrada")
+    if TipoServico.normalizar(inspecao.tipo) is not TipoServico.RFO:
+        raise ConflictError(
+            f"Inspeção '{inspecao_id}' é do tipo '{inspecao.tipo}'; o RFO só é gerado para inspeções do tipo 'RFO'.",
+            type_suffix="inspecao-nao-rfo",
+        )
+
+    contrato = inspecao.contrato
+    edificacao = contrato.edificacao
+    fiscal = contrato.fiscal
+    return {
+        "inspecao": {"id": str(inspecao.id), "tipo": inspecao.tipo, "status": inspecao.status},
+        "contrato": {
+            "numero": contrato.numero,
+            "tipo_servico": contrato.tipo_servico,
+            "objeto": contrato.objeto,
+            "data_inicio": _data_br(contrato.data_inicio),
+            "prazo_dias": contrato.prazo_dias,
+            "art_fiscalizacao": contrato.art_fiscalizacao,
+            "observacoes_gerais": contrato.observacoes_gerais,
+        },
+        "edificacao": {
+            "nome": edificacao.nome,
+            "endereco": edificacao.endereco,
+            "cep": edificacao.cep,
+            "tipologia": edificacao.tipologia,
+            "sistema_construtivo": edificacao.sistema_construtivo,
+            "descricao_pavimentos": edificacao.descricao_pavimentos,
+            "area_total_m2": edificacao.area_total_m2,
+        },
+        "fiscal": {"nome": fiscal.nome, "crea": fiscal.crea, "email": fiscal.email, "telefone": fiscal.telefone},
+        "executores": [_executor_ctx(e) for e in sorted(contrato.executores, key=lambda e: e.razao_social)],
+        "nbrs": [
+            {"codigo_nbr": n.codigo_nbr, "descricao": n.descricao}
+            for n in sorted(contrato.nbrs, key=lambda n: n.codigo_nbr)
+        ],
+        "visitas": [_visita_ctx(v) for v in sorted(inspecao.visitas, key=lambda v: v.seq_numero)],
+        "ocorrencias": [_ocorrencia_ctx(o) for o in sorted(inspecao.ocorrencias, key=lambda o: o.seq_numero)],
+    }

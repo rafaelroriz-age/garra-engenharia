@@ -2,10 +2,18 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Tabela de prancha: cabeçalho em rótulo técnico (caixa-alta espaçada),
+ * linhas em filete fino, números tabulares. Estrutura `<table>` intacta.
+ */
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
     <div className="relative w-full overflow-auto">
-      <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props} />
+      <table
+        ref={ref}
+        className={cn("w-full caption-bottom text-sm [font-variant-numeric:tabular-nums]", className)}
+        {...props}
+      />
     </div>
   )
 )
@@ -13,7 +21,11 @@ Table.displayName = "Table"
 
 const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
   ({ className, ...props }, ref) => (
-    <thead ref={ref} className={cn("[&_tr]:border-b", className)} {...props} />
+    <thead
+      ref={ref}
+      className={cn("[&_tr]:border-b [&_tr]:border-foreground/30 [&_tr:hover]:bg-transparent", className)}
+      {...props}
+    />
   )
 )
 TableHeader.displayName = "TableHeader"
@@ -29,7 +41,10 @@ const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTML
   ({ className, ...props }, ref) => (
     <tr
       ref={ref}
-      className={cn("border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted", className)}
+      className={cn(
+        "border-b border-border/80 transition-colors hover:bg-accent/60 data-[state=selected]:bg-accent",
+        className
+      )}
       {...props}
     />
   )
@@ -40,10 +55,7 @@ const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<
   ({ className, ...props }, ref) => (
     <th
       ref={ref}
-      className={cn(
-        "h-10 whitespace-nowrap px-3 text-left align-middle text-xs font-semibold uppercase tracking-wide text-muted-foreground",
-        className
-      )}
+      className={cn("rotulo h-10 whitespace-nowrap px-3 pb-2 text-left align-bottom", className)}
       {...props}
     />
   )

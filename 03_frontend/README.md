@@ -27,6 +27,7 @@ Aplicação **Next.js 14 (App Router) PWA** que funciona como interface web/mobi
 │   ├── layout/
 │   │   ├── nav-items.ts          # itens de navegação principal
 │   │   └── app-shell.tsx         # sidebar desktop + menu mobile (Sheet), a11y
+│   ├── legenda-ia-painel.tsx     # painel «Gerar legenda com IA»: rascunho editável, alertas, pendências e aprovação (BL-35)
 │   ├── page-header.tsx           # cabeçalho padrão de tela
 │   └── under-construction.tsx    # placeholder padrão para telas ainda não implementadas
 ├── public/
@@ -65,6 +66,8 @@ npm run build   # build de produção — valida todas as rotas
 npm run lint    # ESLint
 ```
 
+> **Vulnerabilidades (T03, 2026-11-04):** `npm audit` aponta 30 pacotes (2 críticos, 11 altos, 17 moderados), 13 deles em produção; o principal é `next` 14.2.35, cuja correção está só em 15.5.x/16.x. **Atualização (T07):** o `npm audit fix` sem `--force` já foi aplicado só ao `package-lock.json` (30 → 26 achados; produção 13 → 10); Next, fabric e `brace-expansion` 1.1.16 seguem pendentes, ver [npm-audit-fix.md](../00_docs/backlog-auto/npm-audit-fix.md). Não use `npm audit fix --force`. Análise e plano em [npm-audit.md](../00_docs/backlog-auto/npm-audit.md); ver R-12 e DEC-32 (proposta).
+
 ## Notas de implementação
 
 - **UI kit**: [shadcn/ui](https://ui.shadcn.com) (CLI clássica `2.10.0`, estilo `new-york`, Tailwind v3.4 — **não** a v4/"Nova" preset, incompatível com este projeto).
@@ -76,11 +79,24 @@ npm run lint    # ESLint
   Os 4 JPEGs originais do cliente permanecem em `public/brand/logos/` apenas como referência histórica (dimensões inconsistentes entre si e fundo/cores embutidos no arquivo) — **não são mais usados em nenhuma tela**; não importe esses arquivos diretamente em JSX/CSS. Desde 2026-09-17 (DEC-30/ADR-16), a marca completa também existe em vetor com fundo transparente em `public/brand/logo-garra.svg` (mais `logo-garra-negativa.svg` e `logo-garra-simbolo.svg`), gerada do JPEG oficial por `python -m app.scripts.build_brand_assets` — use esses arquivos quando precisar da marca com a tipografia original (ex.: documento impresso ou material enviado ao cliente); para a UI, prefira `<Logo />`, que recolore e escala melhor.
 - **Ícone/favicon/PWA**: `public/icon.svg` usa o mesmo traço de skyline do `GarraMark`, em fundo ardósia (`#253341`) — legível em tamanhos pequenos onde a logo completa não caberia. `theme_color` do `manifest.json` e do `viewport` em `app/layout.tsx` foram alinhados ao mesmo tom.
 - **Cores/fontes**: navy `#1e3a5f` (`--primary`) e laranja `#f97316` (`--brand-accent`) são a paleta funcional (botões, destaques, ícones dos cards da home) e agora também a paleta da marca vetorizada, via `text-primary`/`text-primary-foreground` — resolvendo a divergência de tom que antes existia entre os JPEGs (azul acinzentado/ardósia/creme) e o tema da aplicação. Fontes: Inter + Manrope.
+- **Legenda por IA (BL-35)**: `components/legenda-ia-painel.tsx` é aberto pelo botão «Legenda com IA» de cada foto em `foto-upload.tsx`, só para `auditor`/`auxiliar`. A IA gera um rascunho (`legendaIA.gerar`); a legenda só vale depois da aprovação em duas etapas (`legendaIA.aprovar`, `PUT` com `aprovar_legenda_ia`). Sem provedor de LLM o backend responde 503 e a UI orienta a escrever a legenda à mão. Testes: `e2e/legenda-ia.spec.ts` (API mockada, não precisa de backend). Detalhes: `00_docs/backlog-auto/legenda-ia-frontend.md`.
+- **Aprovação restrita ao auditor (DEC-42, T34)**: o painel só mostra «Aprovar legenda» para `auditor`; o `auxiliar` vê «A aprovação é feita pelo auditor responsável», mas gera e edita o rascunho. Se a legenda já está aprovada, o painel avisa que editar ou gerar nova sugestão desfaz a aprovação, e «Salvar edição (desfaz a aprovação)» envia `PUT { legenda }`. A checagem de papel é só usabilidade (o backend responde 403). Spec `e2e/legenda-ia-aprovacao.spec.ts` (API mockada). O campo «Legenda da foto» do card ainda não mostra o aviso.
+- **Anotação de foto e legenda IA (BL-39, T38)**: o botão «Anotar foto» no card abre o `PhotoAnnotationEditor` com selo do estado da legenda IA e campo de legenda; o editor não aprova (aprovação só do auditor, DEC-42). Alterar legenda aprovada a devolve a pendente conforme a resposta do backend. A imagem anotada é enviada como **foto nova** (não há API para substituir a imagem). Spec: `e2e/anotacao-legenda-ia.spec.ts`. Ver `00_docs/backlog-auto/anotacao-legenda-ia-frontend.md`.
+- **Origem da foto (BL-31)**: `OrigemFoto` em `lib/types.ts` é `upload_manual | lightshot | clipboard`; o editor converte `upload → upload_manual` e `clipboard → lightshot` só na chamada ao backend, que hoje não valida o campo (DEC-43, proposta). Spec `e2e/foto-origem.spec.ts` (API mockada).
 - **Rotas de `inspecoes/[id]/*`**: não aparecem na navegação global (`components/layout/nav-items.ts`) — são acessadas a partir do contexto de uma edificação/contrato.
+
+## Tela de relatório e responsáveis (T62, V1-06)
+
+- `/inspecoes/[id]/relatorio`: textos do relatório por tipo (agrupados), salvar (auditor), emitir nova versão (auditor), lista de versões e download de PDF e DOCX por URL pré-assinada. O auxiliar vê tudo em leitura. Um 422 de contexto incompleto aparece como lista de campos faltantes. Componentes em `components/relatorio/` (`conteudo-form.tsx`, `emissao-versoes.tsx`, `rotulos.ts`).
+- `/responsaveis`: lista e cadastro (só auditor), com título profissional, qualificações e imagem de assinatura. Ainda não edita responsável existente (falta rota no backend, R-20).
+- Helpers novos em `lib/api-client.ts`: `relatorios`, `conteudo`, `responsaveis`, `uploadImagem`.
+- `e2e/relatorio.spec.ts`: 9 testes com a API mockada, rodam sem backend. Doc: [v1-frontend-relatorio.md](../00_docs/backlog-auto/v1-frontend-relatorio.md).
 
 ## Testes E2E (Playwright, BL-21)
 
 Testes de ponta a ponta dos Fluxos 1 (RFO) e 2 (LTIP) de [00_docs/estudo-do-contexto.md](../00_docs/estudo-do-contexto.md#8-fluxos-principais), em `e2e/rfo.spec.ts` e `e2e/ltip.spec.ts`. Rodam contra uma instância local **já em execução** via `05_infra/docker-compose.yml` — não sobem a stack sozinhos.
+
+O Portal do Cliente tem E2E com API mockada em `e2e/portal.spec.ts` (T41, 8 testes via `page.route`; precisa do frontend em `localhost:3000`, sem backend). Lacuna conhecida: o portal não controla perfil na UI (ver [portal-e2e.md](../00_docs/backlog-auto/portal-e2e.md)).
 
 ### Pré-requisitos (stack local rodando e com dados mestre)
 

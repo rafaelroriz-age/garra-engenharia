@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/brand/logo";
 import { ApiErrorAlert } from "@/components/api-error-alert";
+import { RegistroMarks } from "@/components/prancha/registro-marks";
 
 interface TokenResponse {
   access_token: string;
@@ -41,19 +42,24 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader className="space-y-3 text-center">
-        <Logo variant="principal" className="mx-auto" />
-        <CardTitle className="font-display text-xl">Acessar sua conta</CardTitle>
+    <Card className="relative w-full max-w-sm border-foreground/25 animate-reveal">
+      <RegistroMarks inset={-7} size={10} className="text-foreground/50" />
+      <div aria-hidden="true" className="h-[3px] w-full bg-primary" />
+      <CardHeader className="space-y-3 pb-5">
+        <Logo variant="principal" className="mx-auto mb-2 lg:hidden" />
+        <div className="flex items-center justify-between gap-3">
+          <span className="rotulo">Folha 00 · Acesso</span>
+          <Badge variant="outline" className="w-fit">
+            RNF-05 · BL-06
+          </Badge>
+        </div>
+        <CardTitle className="display-wide text-2xl font-bold">Acessar sua conta</CardTitle>
         <CardDescription>Informe suas credenciais para continuar.</CardDescription>
-        <Badge variant="outline" className="mx-auto w-fit">
-          RNF-05 · BL-06
-        </Badge>
       </CardHeader>
       <CardContent>
-        <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+        <form className="space-y-5" onSubmit={handleSubmit} noValidate>
           <ApiErrorAlert error={error} />
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <Label htmlFor="email" required>
               E-mail
             </Label>
@@ -68,7 +74,7 @@ export default function LoginPage() {
               disabled={isSubmitting}
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <Label htmlFor="senha" required>
               Senha
             </Label>
@@ -83,7 +89,7 @@ export default function LoginPage() {
               disabled={isSubmitting}
             />
           </div>
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
+          <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? "Entrando..." : "Entrar"}
           </Button>
         </form>

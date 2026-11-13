@@ -28,7 +28,8 @@ import hashlib
 import json
 import sys
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from itertools import pairwise
 from pathlib import Path
 from typing import Any
 
@@ -164,7 +165,7 @@ def linha_de_corte(rotulos: list[list[int]]) -> int:
         raise MarcaError("Não há faixa vazia separando o símbolo do nome da marca.")
     melhor_inicio = inicio = vazias[0]
     melhor_tamanho = tamanho = 1
-    for anterior, atual in zip(vazias, vazias[1:]):
+    for anterior, atual in pairwise(vazias):
         if atual == anterior + 1:
             tamanho += 1
         else:
@@ -259,7 +260,7 @@ def gerar(origem: Path, tolerancia: float) -> dict[str, Any]:
           f"({(DESTINO_BACKEND / 'logo-garra.png').stat().st_size / 1024:.1f} KB)")
 
     return {
-        "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "gerado_em": datetime.now(UTC).isoformat(timespec="seconds"),
         "gerado_por": "app.scripts.build_brand_assets",
         "origem": {
             # Sem o nome/caminho do arquivo: o hash basta para provar a procedência.

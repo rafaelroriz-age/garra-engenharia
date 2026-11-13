@@ -4,7 +4,7 @@ type: cliente
 status: ativo
 owner: Garra Engenharia
 audience: cliente (para repassar a outra IA/LLM)
-last_updated: 2026-07-24
+last_updated: 2026-11-03
 ---
 
 # Briefing Técnico do Projeto — Sistema de Automação de Relatórios Prediais
@@ -91,26 +91,28 @@ Em resumo: **é a criação de um produto de software completo e funcional**, n�
 | Geração de PDF | WeasyPrint + Jinja2 (HTML → PDF) | Controle fino de layout para atingir fidelidade visual ao modelo atual. |
 | Geração de DOCX | docxtpl (python-docx + Jinja2) | Usa o próprio arquivo .docx do cliente como template, preservando a formatação original. |
 | Autenticação | JWT + bcrypt | Simples e seguro para uso individual/pequena equipe. |
-| Autorização (RBAC) | Papéis `auditor` e `cliente` | Dois perfis de acesso: equipe técnica (escrita total) e contratante (leitura restrita ao próprio contrato). |
+| Autorização (RBAC) | Papéis `auditor`, `auxiliar` e `cliente` | Três perfis de acesso: engenheiro responsável (escrita total), auxiliar de campo (registra visitas, ocorrências e fotos, sem cadastros-mestre) e contratante (leitura restrita ao próprio contrato). |
 | Anotação de imagens | Fabric.js (canvas no navegador) | Desenho de setas/formas/texto sobre a foto direto no navegador, sem backend adicional. |
-| Fila/cache | Redis 7 + Celery | Geração de relatórios grandes (até 200 páginas) roda em segundo plano, sem travar a API. |
+| Fila/cache (**previsto, ainda não implantado**) | Redis 7 + Celery | Previsto para que a geração de relatórios grandes (até 200 páginas) rode em segundo plano, sem travar a API. |
 
-**Fluxo arquitetural resumido:**
-Next.js (navegador/PWA) → FastAPI (API REST) → PostgreSQL (dados) + MinIO (arquivos/fotos) → fila Redis/Celery → gerador de PDF/DOCX → arquivo final disponível para download.
+**Fluxo arquitetural resumido (hoje):**
+Next.js (navegador/PWA) → FastAPI (API REST) → PostgreSQL (dados) + MinIO (arquivos/fotos). Os modelos de relatório do RFO e do LTIP já são gerados a partir dos originais do cliente, mas a geração do PDF/DOCX ainda não está disponível na interface.
+
+**Fluxo previsto:** … → fila Redis/Celery → gerador de PDF/DOCX → arquivo final disponível para download.
 
 ---
 
 ## 6. DevOps e Infraestrutura
 
 - **Hospedagem:** Render.com, usando arquivo `render.yaml` como Infraestrutura como Código (Blueprint).
-- **Modelo de branches:** repositório único (monorepo) com 4 branches dedicadas, uma por serviço/ambiente:
+- **Modelo de branches:** repositório único (monorepo) com uma branch de integração (`main`) e 2 branches de deploy:
   - `main_back` → produção do backend.
   - `main_front` → produção do frontend.
-  - `staging_back` → ambiente de testes do backend.
-  - `staging_front` → ambiente de testes do frontend.
-- **Deploy automático:** cada push na branch correspondente dispara o deploy automático apenas daquele serviço (backend ou frontend, produção ou staging), isoladamente.
-- **Migrations automáticas:** o schema do banco (Alembic) é sempre atualizado antes de cada deploy do backend.
-- **Bancos de dados:** um banco PostgreSQL de produção (`garra-db`) e um de staging (`garra-db-staging`), sendo o de staging um custo adicional opcional.
+  - Todo trabalho entra em `main`; um processo automático copia `main` para as duas branches de deploy. O ambiente de testes (staging) foi removido em 05/08/2026 por nunca ter sido usado.
+- **Deploy automático:** cada atualização de `main_back` ou `main_front` dispara o deploy automático apenas daquele serviço (backend ou frontend).
+- **Migrations automáticas:** o schema do banco (Alembic) é atualizado a cada deploy do backend.
+- **Banco de dados:** um banco PostgreSQL de produção (`garra-db`). Não há banco de staging.
+- **Armazenamento de fotos em produção:** ainda não configurado no Render (o arquivo `render.yaml` deixa essa parte de fora).
 - **Contêineres:** cada serviço (frontend e backend) tem seu próprio `Dockerfile` de produção (`Dockerfile.render`).
 - **Ambiente local de desenvolvimento:** Docker Compose (`05_infra/docker-compose.yml`), reproduzindo localmente banco, backend e frontend.
 
@@ -119,7 +121,8 @@ Next.js (navegador/PWA) → FastAPI (API REST) → PostgreSQL (dados) + MinIO (a
 ## 7. Status Atual do Projeto
 
 - Fase concluída: levantamento de contexto e documentação (estudo do domínio, arquitetura, escopo).
-- Estrutura de código já criada: `03_frontend/` (Next.js) e `04_backend/` (FastAPI), com componentes, rotas de API, modelos de dados e testes iniciais.
+- Sistema já em funcionamento em `03_frontend/` (Next.js) e `04_backend/` (FastAPI): login com três perfis, cadastro de edificações, contratos e responsáveis, visitas, ocorrências com classificação de risco e prioridade sugerida, fotos com anotação, dashboard da edificação e portal do cliente, com testes automatizados.
+- **Ainda não disponível:** a geração do relatório em PDF/DOCX pela interface (a tela de relatório está em construção). Os modelos do RFO e do LTIP já foram reproduzidos a partir dos originais do cliente; o relatório fotográfico (RFIP) e as legendas por IA estão pendentes.
 - Protótipos de tela (HTML navegável) já produzidos em `02_prototipos/`.
 - A validação de requisitos com o cliente foi **concluída**: uso offline, perfis de acesso da equipe e assinatura digital em 2026-09-10; periodicidade de re-inspeção, formato das medições do RFO, obrigatoriedade do DOCX, origem das fotos e integração com o CREA em 2026-09-17. Restam apenas duas escolhas operacionais, não de requisito: o provedor de IA para as legendas assistidas e o destino externo do backup.
 

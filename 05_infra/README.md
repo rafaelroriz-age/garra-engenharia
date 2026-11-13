@@ -12,7 +12,7 @@ Implementado: `docker-compose.yml` com `postgres` (PostgreSQL 16) e `minio` (arm
 
 ## Pré-requisitos
 
-- Docker Desktop (ou Docker Engine + Compose plugin) instalado e em execução.
+- Docker Desktop (ou Docker Engine + Compose plugin) instalado e em execução. (O diagnóstico T01 de 2026-11-04 achou a máquina de desenvolvimento sem Docker, com as portas 5433 e 9000 fechadas — ver [diagnostico.md](../00_docs/backlog-auto/diagnostico.md).)
 - Portas `5433`, `9000` e `9001` livres em `localhost` (o Postgres do container usa `5433` no host, e não `5432`, para não colidir com uma instalação nativa de PostgreSQL — ajuste `POSTGRES_PORT` no `.env` se necessário).
 
 ## Como rodar localmente
@@ -98,7 +98,8 @@ COMPOSE_FILE=docker-compose.yml ./backup/backup-db.sh   # ambiente de desenvolvi
 ```
 
 - `backup-db.sh` gera dump lógico (`pg_dump --format=custom`) em `backup/dumps/` e espelha o bucket MinIO em `backup/objetos/`. A retenção (`RETENCAO_DIAS`, default 30) só é aplicada **depois** de um dump válido, para nunca apagar o último backup bom por causa de uma execução que falhou.
-- `restore-db.sh` é destrutivo: exige digitar `RESTAURAR`, salva um dump `pre-restore-*` do estado atual e para `backend`/`frontend` durante a operação.
+- `restore-db.sh` é destrutivo: exige digitar `RESTAURAR`, salva um dump `pre-restore-*` do estado atual e para `backend`/`frontend` durante a operação. Se o dump `pre-restore` falhar ou sair vazio, o restore **aborta antes de qualquer `pg_restore`** (DEC-45, proposta). Os `pre-restore-*` expiram pela mesma `RETENCAO_DIAS` dos dumps normais (aplicada pelo `backup-db.sh`).
+- Override explícito, só para banco recém-criado/vazio sem cópia a preservar: `FORCAR_SEM_PRE_RESTORE=1 ./backup/restore-db.sh <dump>` (emite aviso e pula o pre-restore). Não é definido no `.env`, de propósito, para não ficar ativo por acidente.
 - `backup/dumps/` e `backup/objetos/` contêm dados reais de clientes e **nunca** são versionados (`backup/.gitignore`). Copie-os para fora do host — o destino externo definitivo continua `[A ESCLARECER]` (RNF-08).
 
 Agendamento sugerido no host (diário às 02:00):
@@ -106,6 +107,16 @@ Agendamento sugerido no host (diário às 02:00):
 ```cron
 0 2 * * * cd /home/deploy/garra-engenharia/05_infra && ./backup/backup-db.sh >> backup/backup.log 2>&1
 ```
+
+Verificação dos scripts (T42, 2026-11-07): `bash 05_infra/backup/tests/test_backup_scripts.sh` usa stubs de `docker` e não toca em banco real (45 ok). Detalhes e propostas em [backup-verificacao.md](../00_docs/backlog-auto/backup-verificacao.md) e DEC-45.
+
+Emissão de relatórios (T47, 2026-11-11): nenhuma variável de ambiente nova; `MAX_RELATORIO_SIZE_BYTES` (200 MB, DEC-48 P5) é constante de código, então nada muda em `.env.example`, compose ou `render.yaml` (ver [relatorio-env-deploy.md](../00_docs/backlog-auto/relatorio-env-deploy.md)).
+
+Variáveis `LEGENDA_IA_*` (T40, DEC-42): as 8 de limite e teto da legenda por IA estão no `environment:` do backend em `docker-compose.yml`, `docker-compose.prod.yml` e `render.yaml`. **Atenção:** `docker-compose.prod.yml` linha 89 tem YAML inválido (R-16) e precisa de correção antes do deploy por VPS.
+
+Variáveis `DEEPSEEK_*` (T63, 2026-11-11, DEC-49 proposta): `LEGENDA_IA_PROVEDOR` (`fake` ou `deepseek`), `DEEPSEEK_API_KEY` (segredo; no Render `sync: false`), `DEEPSEEK_BASE_URL`, `DEEPSEEK_MODELO` e `DEEPSEEK_TIMEOUT_S` estão nos `.env.example`, no `docker-compose.yml` e no `render.yaml`. Fora de desenvolvimento, `fake` e `deepseek` sem chave resultam em 503 (ou falha na inicialização). `DEEPSEEK_ENVIAR_IMAGEM` (padrão `false`) também está nos três. Ver [v1-legenda-ia-deepseek.md](../00_docs/backlog-auto/v1-legenda-ia-deepseek.md). O banco local ainda precisa de `alembic upgrade head` (head `a9c3e5f7b1d2`) e a imagem `05_infra-backend` de `docker compose build backend` (R-19).
+
+Variáveis do RAG da legenda IA (T69, DEC-53 proposta): `LEGENDA_IA_RAG_ATIVO` (padrão `true`) e `LEGENDA_IA_RAG_K` (padrão `3`) estão no `environment:` do backend em `docker-compose.yml`, em `render.yaml` e em `.env.example`. Depois do deploy, rode `alembic upgrade head` e, uma vez, `python -m app.scripts.ingerir_conhecimento_ia` (revise antes o `--dry-run --amostras 20`); sem isso as referências ficam vazias.
 
 ## Deploy em produção (Render)
 
@@ -152,3 +163,14 @@ Use [`.env.render.example`](.env.render.example) como checklist das variáveis d
 - Prompt de setup: [.github/prompts/14-setup-ambiente-desenvolvimento.prompt.md](../.github/prompts/14-setup-ambiente-desenvolvimento.prompt.md)
 - Prompt de DevOps: [.github/prompts/12-devops.prompt.md](../.github/prompts/12-devops.prompt.md)
 
+## Variáveis da telemetria da legenda IA (T68, 2026-11-12)
+
+`LEGENDA_IA_CACHE_TTL_H`, `DEEPSEEK_PRECO_ENTRADA_CACHE_HIT_USD`, `DEEPSEEK_PRECO_ENTRADA_CACHE_MISS_USD` e `DEEPSEEK_PRECO_SAIDA_USD` estão em `.env.example`, `docker-compose.yml` e `render.yaml`. Os preços reais dependem da tarefa humana IA-07. O banco de desenvolvimento precisa de `alembic upgrade head` (migration `b8d4f2a6c1e7`).
+
+## Dados de demonstração e amostras (T64, 2026-11-12)
+
+O seed `DEMO` roda dentro do container do backend, num banco separado, por exemplo `docker exec -e POSTGRES_DB=garra_demo_v1 garra-backend python -m app.scripts.seed_demo`. O gabarito exige `00_docs/convertidos/RFO_INSPECAO.md`, ausente da imagem (contexto de build é `../04_backend`). A migration `e5a1f0c2b7d4` falha no banco de desenvolvimento por duas linhas `BENCH-01` duplicadas em `relatorios` (R-21).
+
+## Dimensionamento do worker de relatórios (T17, 2026-11-04)
+
+O benchmark dos pipelines finais (`00_docs/backlog-auto/benchmark-pipelines-finais.md`) mediu pico de RSS de 320 a 420 MB para um PDF de ~200 páginas e ~500 MB com PDF e DOCX em paralelo. Uma instância de 512 MB não comporta isso com folga: o worker deve ter **≥ 1 GB de RAM** (proposta DEC-40). Os PDF/DOCX das vistorias passam de 25 MB (37–38 MB e 30–31 MB), então o limite de upload de artefatos precisa ser separado do limite de foto.

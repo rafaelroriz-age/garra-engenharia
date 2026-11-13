@@ -73,6 +73,17 @@ timeout = 1800                    # segundos
 # prompt = "..."                  # opcional: substitui o texto do BACKLOG.md
 proibidas_extensoes = ["py", "ipynb", "sql", "ts", "tsx", "js", "jsx", "j2", "sh", "ps1", "toml", "yml", "yaml"]
 
+[planejamento]
+# Quando o backlog acaba (nada em todo, doing ou blocked), `auto` roda uma sessão `claude -p` só de leitura que lê as
+# fontes de produto e cria as próximas tarefas no BACKLOG.md (validadas antes de gravar). Também: `backlog-auto planejar`.
+ativo = false
+model = "sonnet"
+effort = "medium"
+budget = 3
+timeout = 900
+max_tarefas = 5
+fontes = []                       # ex.: ["docs/backlog-produto.md"]; vazio = o planejador usa o BACKLOG.md e a documentação
+
 [lembrete]
 ativo = {{lembrete_ativo}}
 extensoes = ["py", "ipynb", "sql"]

@@ -14,7 +14,7 @@ branch_principal = "main"     # branch de integração (plano-gestao-configuraca
 backlog = "BACKLOG.md"
 progresso = "PROGRESSO.md"    # painel gerado por `backlog-auto status` (fora do git)
 prefixo_id = "T"              # T01, T02... (o backlog de produto continua usando BL-XX em 00_docs/projeto/backlog-tarefas.md)
-autocommit = false            # desligado: com trabalho manual em andamento na main, o commit automático (`git add -u`)
+autocommit = true           # desligado: com trabalho manual em andamento na main, o commit automático (`git add -u`)
                               # levaria arquivos modificados sem os arquivos novos (ex.: migration). O `colher` recusa
                               # rodar até a main estar commitada ou com `git stash`.
 # claude_exe = "C:\\caminho\\claude.exe"   # se o `claude` não estiver no PATH
@@ -92,6 +92,18 @@ budget = 3                        # teto de gasto em US$
 timeout = 1800                    # segundos
 # prompt = "..."                  # opcional: substitui o texto do BACKLOG.md
 proibidas_extensoes = ["py", "ipynb", "sql", "ts", "tsx", "js", "jsx", "j2", "sh", "ps1", "toml", "yml", "yaml"]
+
+[planejamento]
+# Quando o backlog acaba (nada em todo, doing ou blocked), `auto` roda uma sessão `claude -p` só de leitura que lê as
+# fontes de produto e cria as próximas tarefas no BACKLOG.md (via `backlog-auto nova`, com validação). Ver `planejar`.
+ativo = true
+model = "sonnet"
+effort = "medium"
+budget = 3                        # teto de gasto em US$
+timeout = 900                     # segundos
+max_tarefas = 5                   # no máximo quantas tarefas criar por planejamento
+fontes = ["00_docs/projeto/backlog-tarefas.md", "00_docs/projeto/status.md", "00_docs/projeto/decisoes.md"]
+# prompt = "..."                  # opcional: substitui a instrução padrão do planejador
 
 [lembrete]
 ativo = true

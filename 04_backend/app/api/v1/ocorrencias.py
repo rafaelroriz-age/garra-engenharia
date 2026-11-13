@@ -27,7 +27,7 @@ router = APIRouter(prefix="/api/v1", tags=["ocorrencias"])
 @router.get("/inspecoes/{inspecao_id}/ocorrencias", response_model=PaginatedResponse[OcorrenciaRead])
 async def listar_ocorrencias_da_inspecao(
     inspecao_id: uuid.UUID,
-    sistema_id: str | None = Query(None),
+    sistema_id: uuid.UUID | None = Query(None),
     grau_risco: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
     _usuario: Usuario = Depends(require_equipe),

@@ -1,14 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Clipboard, GripVertical, ImageUp, Loader2, Trash2 } from "lucide-react";
+import { Clipboard, GripVertical, ImageUp, Loader2, PencilRuler, Sparkles, Trash2 } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api-client";
-import type { Foto, FotoUploadResult } from "@/lib/types";
+import type { Foto, FotoUploadResult, OrigemFoto } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ApiErrorAlert } from "@/components/api-error-alert";
 import { PhotoAnnotationEditor } from "@/components/photo-annotation-editor";
+import { LegendaIAPainel } from "@/components/legenda-ia-painel";
+import { useUsuarioAtual } from "@/lib/use-usuario-atual";
 
 const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15MB — alinhado ao limite validado no backend (BL-11)
 const ACCEPTED_MIME_TYPES = ["image/png", "image/jpeg", "image/webp"];
@@ -51,13 +53,26 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<ApiError | Error | null>(null);
   const [clipboardUnsupported, setClipboardUnsupported] = useState(false);
-  const [annotationState, setAnnotationState] = useState<{ isOpen: boolean; source: Blob | File | null; origin: "upload" | "clipboard" | null }>({
+  const [annotationState, setAnnotationState] = useState<{
+    isOpen: boolean;
+    source: Blob | File | string | null;
+    origin: "upload" | "clipboard" | null;
+    /** Preenchido quando a anotação parte de uma foto já vinculada (BL-39). */
+    fotoId: string | null;
+  }>({
     isOpen: false,
     source: null,
     origin: null,
+    fotoId: null,
   });
+  const [avisoLegenda, setAvisoLegenda] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fotosRef = useRef(fotos);
+  // Legenda por IA (BL-35, RF-15): só a equipe (auditor/auxiliar) gera e aprova, como no backend
+  // (`require_equipe`). Enquanto o perfil carrega, o painel fica oculto (ver `useUsuarioAtual`).
+  const { isAuditor, isAuxiliar } = useUsuarioAtual();
+  const podeUsarLegendaIA = isAuditor || isAuxiliar;
+  const [fotoLegendaIAId, setFotoLegendaIAId] = useState<string | null>(null);
 
   useEffect(() => {
     fotosRef.current = fotos;
@@ -67,11 +82,11 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
   const linkEndpoint = ocorrenciaId ? `/ocorrencias/${ocorrenciaId}/fotos` : `/visitas/${visitaId}/fotos`;
 
   const linkFoto = useCallback(
-    async (upload: FotoUploadResult, origem: string) => {
+    async (upload: FotoUploadResult, origem: OrigemFoto, legenda = "") => {
       const foto = await api.post<Foto>(linkEndpoint, {
         storage_key: upload.storage_key,
         url_publica: upload.url,
-        legenda: "",
+        legenda,
         origem,
       });
       const nextFotos = [...fotosRef.current, foto];
@@ -82,25 +97,49 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
   );
 
   const uploadAnnotatedFile = useCallback(
-    async (file: File, origin: "upload" | "clipboard") => {
+    async (file: File, origin: "upload" | "clipboard", fotoId?: string | null, legenda?: string) => {
       setError(null);
       setIsUploading(true);
       try {
+        // BL-39: anotando uma foto existente, o texto da legenda é gravado na foto original.
+        // O backend (DEC-42 B) decide se a aprovação é invalidada; o aviso segue a RESPOSTA dele.
+        if (fotoId && legenda !== undefined) {
+          const original = fotosRef.current.find((item) => item.id === fotoId);
+          if (original && legenda !== (original.legenda ?? "").trim()) {
+            const atualizada = await api.put<Foto>(`/fotos/${fotoId}`, { legenda });
+            const proximas = fotosRef.current.map((item) => (item.id === fotoId ? atualizada : item));
+            fotosRef.current = proximas;
+            onChange(proximas);
+            if (original.status_validacao_ia === "aprovada" && atualizada.status_validacao_ia === "rascunho") {
+              setAvisoLegenda(
+                "Legenda alterada: a aprovação foi desfeita e a legenda voltou a pendente. Ela só entra no relatório depois de nova aprovação do auditor."
+              );
+            }
+          }
+        }
         const formData = new FormData();
         formData.append("arquivo", file);
         const upload = await api.post<FotoUploadResult>("/fotos/upload", formData, { raw: true });
-        await linkFoto(upload, origin === "clipboard" ? "lightshot" : "upload");
+        // Origem do editor → valor aceito pelo backend. Clipboard = captura Lightshot (integração da Opção A).
+        const origemBackend: OrigemFoto = origin === "clipboard" ? "lightshot" : "upload_manual";
+        await linkFoto(upload, origemBackend, legenda ?? "");
       } catch (err) {
         setError(err instanceof Error ? err : new Error("Falha ao enviar arquivo."));
       } finally {
         setIsUploading(false);
       }
     },
-    [linkFoto]
+    [linkFoto, onChange]
   );
 
   const openAnnotationEditor = useCallback((source: Blob | File, origin: "upload" | "clipboard") => {
-    setAnnotationState({ isOpen: true, source, origin });
+    setAnnotationState({ isOpen: true, source, origin, fotoId: null });
+  }, []);
+
+  const abrirAnotacaoDeFoto = useCallback((foto: Foto) => {
+    if (!foto.url_publica) return;
+    setAvisoLegenda(null);
+    setAnnotationState({ isOpen: true, source: foto.url_publica, origin: "upload", fotoId: foto.id });
   }, []);
 
   const uploadFiles = useCallback(
@@ -183,6 +222,15 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
     [onChange]
   );
 
+  const substituirFoto = useCallback(
+    (updated: Foto) => {
+      const nextFotos = fotosRef.current.map((item) => (item.id === updated.id ? updated : item));
+      fotosRef.current = nextFotos;
+      onChange(nextFotos);
+    },
+    [onChange]
+  );
+
   const removeFoto = useCallback(
     async (foto: Foto) => {
       try {
@@ -215,6 +263,11 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
     },
     [onChange]
   );
+
+  const annotationFoto = annotationState.fotoId
+    ? fotos.find((item) => item.id === annotationState.fotoId)
+    : undefined;
+  const fotoLegendaIA = podeUsarLegendaIA ? fotos.find((item) => item.id === fotoLegendaIAId) : undefined;
 
   if (!targetId) {
     return (
@@ -297,14 +350,30 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
       <PhotoAnnotationEditor
         isOpen={annotationState.isOpen}
         imageSource={annotationState.source}
-        onSave={(file) => {
-          setAnnotationState({ isOpen: false, source: null, origin: null });
-          void uploadAnnotatedFile(file, annotationState.origin ?? "upload");
+        legendaContexto={
+          annotationFoto
+            ? {
+                legenda: annotationFoto.legenda ?? "",
+                status: annotationFoto.status_validacao_ia,
+                temSugestaoIA: Boolean(annotationFoto.legenda_ia_sugerida),
+              }
+            : undefined
+        }
+        onSave={(file, legenda) => {
+          const { origin, fotoId } = annotationState;
+          setAnnotationState({ isOpen: false, source: null, origin: null, fotoId: null });
+          void uploadAnnotatedFile(file, origin ?? "upload", fotoId, legenda);
         }}
         onCancel={() => {
-          setAnnotationState({ isOpen: false, source: null, origin: null });
+          setAnnotationState({ isOpen: false, source: null, origin: null, fotoId: null });
         }}
       />
+
+      {avisoLegenda ? (
+        <p role="status" className="rounded-md border border-dashed p-2 text-xs text-muted-foreground">
+          {avisoLegenda}
+        </p>
+      ) : null}
 
       {fotos.length > 0 ? (
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
@@ -323,6 +392,7 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
                   Legenda da foto
                 </label>
                 <Input
+                  key={`legenda-${foto.id}-${foto.legenda ?? ""}`}
                   id={`legenda-${foto.id}`}
                   defaultValue={foto.legenda ?? ""}
                   placeholder="Legenda técnica"
@@ -333,6 +403,13 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
                     }
                   }}
                 />
+                {podeUsarLegendaIA && foto.status_validacao_ia ? (
+                  <p className="text-[11px] text-muted-foreground">
+                    {foto.status_validacao_ia === "aprovada"
+                      ? "Legenda IA: aprovada"
+                      : "Legenda IA: pendente de aprovação"}
+                  </p>
+                ) : null}
                 <div className="flex items-center justify-between">
                   <div className="flex gap-0.5">
                     <Button
@@ -347,6 +424,33 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
                       <GripVertical className="h-3.5 w-3.5 rotate-90" aria-hidden="true" />
                     </Button>
                   </div>
+                  {foto.url_publica ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => abrirAnotacaoDeFoto(foto)}
+                      aria-label="Anotar foto"
+                      title="Anotar foto"
+                    >
+                      <PencilRuler className="h-3.5 w-3.5" aria-hidden="true" />
+                    </Button>
+                  ) : null}
+                  {podeUsarLegendaIA ? (
+                    <Button
+                      type="button"
+                      variant={fotoLegendaIAId === foto.id ? "secondary" : "ghost"}
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => setFotoLegendaIAId((atual) => (atual === foto.id ? null : foto.id))}
+                      aria-label="Legenda com IA"
+                      aria-pressed={fotoLegendaIAId === foto.id}
+                      title="Legenda com IA"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                    </Button>
+                  ) : null}
                   <Button
                     type="button"
                     variant="ghost"
@@ -364,6 +468,8 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
       ) : (
         <p className="text-xs text-muted-foreground">Nenhuma foto vinculada ainda.</p>
       )}
+
+      {fotoLegendaIA ? <LegendaIAPainel foto={fotoLegendaIA} onFotoAtualizada={substituirFoto} /> : null}
     </div>
   );
 }

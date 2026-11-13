@@ -6,8 +6,9 @@ Em desenvolvimento local (fora de Docker), copie `04_backend/.env.example` para
 injetadas diretamente pelo serviço `backend` e este arquivo `.env` não é necessário.
 """
 from functools import lru_cache
+from typing import Literal
 
-from pydantic import model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -44,6 +45,46 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 60
 
+    # --- Legenda por IA: limites de geração e da saída do LLM (DEC-42 C) ----------
+    legenda_ia_limite_por_usuario: int = Field(default=10, ge=1)
+    legenda_ia_janela_usuario_segundos: int = Field(default=60, ge=1)
+    legenda_ia_limite_diario_por_usuario: int = Field(default=200, ge=1)
+    legenda_ia_limite_por_foto: int = Field(default=5, ge=1)
+    legenda_ia_janela_foto_segundos: int = Field(default=3600, ge=1)
+    # Até 500: a sugestão aprovada vira `legenda`, cujo teto é LEGENDA_MAX_LENGTH (schemas/foto.py).
+    legenda_ia_saida_max_caracteres: int = Field(default=500, ge=1, le=500)
+    legenda_ia_saida_max_itens: int = Field(default=20, ge=1)
+    legenda_ia_saida_max_caracteres_item: int = Field(default=300, ge=1)
+
+    # --- Legenda por IA: provedor (B-04 decidido: DeepSeek Platform API, V1-07) -----
+    legenda_ia_provedor: Literal["fake", "deepseek"] = "fake"
+    deepseek_api_key: SecretStr | None = None
+    deepseek_base_url: str = "https://api.deepseek.com"
+    deepseek_modelo: str = "deepseek-flash"
+    deepseek_timeout_s: float = Field(default=30.0, gt=0)
+    # A doc oficial não confirma modelo com visão: por padrão só texto (modo='texto').
+    deepseek_enviar_imagem: bool = False
+    # Telemetria e cache local da legenda IA (BL-34, R-10). TTL em horas; preços em USD por 1M de
+    # tokens (vazio = custo null; valores reais vêm da página oficial de preços, tarefa IA-07).
+    legenda_ia_cache_ttl_h: int = Field(default=720, ge=0)
+    deepseek_preco_entrada_cache_hit_usd: float | None = Field(default=None, ge=0)
+    deepseek_preco_entrada_cache_miss_usd: float | None = Field(default=None, ge=0)
+    deepseek_preco_saida_usd: float | None = Field(default=None, ge=0)
+    # RAG por busca textual (BL-34, IA-05): few-shots com legendas aprovadas parecidas + trechos de
+    # laudos anteriores (FTS 'portuguese' + pg_trgm). K = máximo de exemplos aprovados por chamada.
+    legenda_ia_rag_ativo: bool = True
+    legenda_ia_rag_k: int = Field(default=3, ge=0, le=10)
+
+    @field_validator(
+        "deepseek_preco_entrada_cache_hit_usd",
+        "deepseek_preco_entrada_cache_miss_usd",
+        "deepseek_preco_saida_usd",
+        mode="before",
+    )
+    @classmethod
+    def _preco_vazio_vira_none(cls, valor):
+        return None if isinstance(valor, str) and not valor.strip() else valor
+
     @property
     def database_url(self) -> str:
         """URL de conexão assíncrona do SQLAlchemy (driver `asyncpg`)."""
@@ -78,6 +119,12 @@ class Settings(BaseSettings):
                 )
             if "*" in self.cors_origins_list:
                 raise ValueError("BACKEND_CORS_ORIGINS não pode ser '*' fora de desenvolvimento.")
+            chave = self.deepseek_api_key.get_secret_value().strip() if self.deepseek_api_key else ""
+            if self.legenda_ia_provedor == "deepseek" and not chave:
+                raise ValueError(
+                    "LEGENDA_IA_PROVEDOR=deepseek exige DEEPSEEK_API_KEY em ENVIRONMENT="
+                    f"'{self.environment}'. Defina a chave ou use LEGENDA_IA_PROVEDOR=fake."
+                )
         return self
 
 

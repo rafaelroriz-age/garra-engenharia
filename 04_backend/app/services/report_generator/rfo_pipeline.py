@@ -21,8 +21,15 @@ from typing import Any
 from docx.shared import Mm
 from docxtpl import DocxTemplate
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from PIL import Image
 from weasyprint import HTML
+
+from app.services.report_generator.foto_fetcher import (
+    RegistroDeFotos,
+    criar_url_fetcher,
+    mime_da_imagem,
+)
+from app.services.report_generator.imagem import otimizar_imagem  # noqa: F401 — re-export (V1-02)
+from app.services.report_generator.legenda_foto import legenda_para_relatorio
 
 TEMPLATES_DIR = Path(__file__).resolve().parents[3] / "templates"
 RFO_TEMPLATES_DIR = TEMPLATES_DIR / "rfo"
@@ -63,24 +70,6 @@ def normalizar_contexto(contexto: dict[str, Any]) -> dict[str, Any]:
     return normalizado
 
 
-def otimizar_imagem(conteudo: bytes, *, max_lado: int = 1200, qualidade: int = 72) -> bytes:
-    """Redimensiona (se necessário) e recomprime uma foto para uso em relatório.
-
-    Mitiga o gargalo identificado no benchmark de BL-22: `app.services.image_processing`
-    (BL-11) recodifica a imagem no upload mas NUNCA a redimensiona — fotos de
-    câmera de celular em resolução total (vários MB) hoje são embutidas em
-    PDF/DOCX sem nenhuma redução prévia.
-    """
-    imagem = Image.open(io.BytesIO(conteudo)).convert("RGB")
-    if max(imagem.size) > max_lado:
-        escala = max_lado / max(imagem.size)
-        novo_tamanho = (max(1, int(imagem.width * escala)), max(1, int(imagem.height * escala)))
-        imagem = imagem.resize(novo_tamanho, Image.LANCZOS)
-    buffer = io.BytesIO()
-    imagem.save(buffer, format="JPEG", quality=qualidade, optimize=True)
-    return buffer.getvalue()
-
-
 def gerar_pdf(contexto: dict[str, Any], fotos_bytes: dict[str, bytes], destino: Path) -> dict[str, float]:
     """Renderiza o HTML (Jinja2) e converte para PDF (WeasyPrint).
 
@@ -94,18 +83,28 @@ def gerar_pdf(contexto: dict[str, Any], fotos_bytes: dict[str, bytes], destino: 
     template = env.get_template(HTML_TEMPLATE_NAME)
 
     # Cópia profunda: evita mutar o `contexto` original (reaproveitado depois
-    # para gerar o DOCX) ao anexar o data URI base64 de cada foto.
+    # para gerar o DOCX) ao anexar a referência de cada foto. As fotos vão ao
+    # WeasyPrint por `url_fetcher` (DEC-41); sem ele, caem para data URI base64.
+    registro = RegistroDeFotos()
+    fetcher = criar_url_fetcher(registro)
     contexto_html = normalizar_contexto(contexto)
     for visita in contexto_html["visitas"]:
         for foto in visita["fotos"]:
-            b64 = base64.b64encode(fotos_bytes[foto["storage_key"]]).decode("ascii")
-            foto["data_uri"] = f"data:image/jpeg;base64,{b64}"
+            conteudo = fotos_bytes[foto["storage_key"]]
+            if fetcher:
+                foto["data_uri"] = registro.registrar(conteudo)
+            else:
+                b64 = base64.b64encode(conteudo).decode("ascii")
+                foto["data_uri"] = f"data:{mime_da_imagem(conteudo)};base64,{b64}"
+            # DEC-37 DP-9: o template imprime `foto.legenda`; IA nunca entra.
+            foto["legenda"] = legenda_para_relatorio(foto)
 
     inicio_render = time.perf_counter()
     html_renderizado = template.render(**contexto_html)
     fim_render = time.perf_counter()
 
-    documento = HTML(string=html_renderizado, base_url=str(TEMPLATES_DIR)).render()
+    opcoes = {"url_fetcher": fetcher} if fetcher else {}
+    documento = HTML(string=html_renderizado, base_url=str(TEMPLATES_DIR), **opcoes).render()
     n_paginas = len(documento.pages)
     documento.write_pdf(str(destino))
     fim_pdf = time.perf_counter()
@@ -135,8 +134,9 @@ def gerar_docx(contexto: dict[str, Any], fotos_bytes: dict[str, bytes], destino:
         subdoc = tpl.new_subdoc()
         for foto in visita["fotos"]:
             subdoc.add_picture(io.BytesIO(fotos_bytes[foto["storage_key"]]), width=Mm(90))
-            if foto.get("legenda"):
-                subdoc.add_paragraph(foto["legenda"])
+            legenda = legenda_para_relatorio(foto)
+            if legenda:
+                subdoc.add_paragraph(legenda)
         visitas_ctx.append({**visita, "fotos_doc": subdoc})
     fim_subdocs = time.perf_counter()
 

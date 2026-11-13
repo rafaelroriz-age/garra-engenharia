@@ -5,12 +5,20 @@ Ver `00_docs/arquitetura.md` Seção 3 (Diagrama ER) e RN-06, RN-09
 """
 import uuid
 from datetime import date, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.contrato_executor import ContratoExecutor
+    from app.models.contrato_nbr import ContratoNbr
+    from app.models.edificacao import Edificacao
+    from app.models.inspecao import Inspecao
+    from app.models.responsavel import Responsavel
 
 
 class Contrato(Base):

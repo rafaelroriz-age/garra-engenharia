@@ -52,10 +52,17 @@
   figure.figura { margin: 0.3cm 0; text-align: center; }
   figure.figura img { max-width: 100%; }
   figure.figura figcaption { font-size: 9.0pt; font-style: italic; }
-  /* Relatório fotográfico por sistema (RN-11): uma ficha por ocorrência. */
+  /* Relatório fotográfico por sistema (RN-11): uma ficha por ocorrência, 2 por linha.
+     Cada linha é uma tabela fixa própria (e não um flex único por sistema): no WeasyPrint,
+     o flex que atravessa páginas refaz o layout de todas as fichas restantes a cada página
+     (custo quadrático, T20/DEC-40). A célula é a própria ficha, então as fichas de uma
+     linha ficam com a mesma altura, como no `align-items: stretch` anterior. */
   .sistema { page-break-before: always; }
-  .fichas { display: flex; flex-wrap: wrap; gap: 0.4cm; }
-  .ficha { width: 48.0%; page-break-inside: avoid; border: 0.5pt solid #999; }
+  table.fichas { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; margin-bottom: 0.4cm; page-break-inside: avoid; }
+  td.vao { width: 0.4cm; padding: 0; }
+  td.ficha-vazia { width: 48.0%; padding: 0; }
+  td.resto { padding: 0; }
+  .ficha { padding: 0; vertical-align: top; width: 48.0%; page-break-inside: avoid; border: 0.5pt solid #999; }
   .ficha .rotulo-foto {
     background: #D9D9D9;
     font-weight: bold;
@@ -117,11 +124,13 @@
   {% for sistema in sistemas %}
   <section class="sistema">
     <h2>7.{{ loop.index }}. {{ sistema.nome }}</h2>
-    <div class="fichas">
-      {% for ocorrencia in sistema.ocorrencias %}
-      <div class="ficha">
+    {% for linha in sistema.ocorrencias|batch(2) %}
+    <table class="fichas"><tr>
+      {% for ocorrencia in linha %}
+      {% if not loop.first %}<td class="vao"></td>{% endif %}
+      <td class="ficha">
         <div class="rotulo-foto">Foto nº {{ "%02d"|format(ocorrencia.seq_numero) }}</div>
-        {% if ocorrencia.foto_data_uri %}<img src="{{ ocorrencia.foto_data_uri }}" alt="Foto nº {{ ocorrencia.seq_numero }}">{% endif %}
+        {% if ocorrencia.foto_src %}<img src="{{ ocorrencia.foto_src }}" alt="Foto nº {{ ocorrencia.seq_numero }}">{% endif %}
         <table>
           <tr><th>SITUAÇÃO</th><td>{{ ocorrencia.situacao }}</td></tr>
           <tr><th>PRIORIDADE</th><td>{{ ocorrencia.prioridade if ocorrencia.prioridade is not none else "—" }}</td></tr>
@@ -136,9 +145,12 @@
           <tr><th>LOCALIZAÇÃO</th><td>{{ ocorrencia.localizacao or "—" }}</td></tr>
           <tr><th>OBSERVAÇÕES TÉCNICAS</th><td>{{ ocorrencia.descricao or "—" }}</td></tr>
         </table>
-      </div>
+      </td>
       {% endfor %}
-    </div>
+      {% for _ in range(2 - linha|length) %}<td class="vao"></td><td class="ficha-vazia"></td>{% endfor %}
+      <td class="resto"></td>
+    </tr></table>
+    {% endfor %}
   </section>
   {% endfor %}
 

@@ -8,9 +8,9 @@ não chegava a existir. Habilitado por `RUN_MIGRATIONS_ON_STARTUP=true`
 """
 from pathlib import Path
 
-from alembic import command
 from alembic.config import Config
 
+from alembic import command
 from app.core.config import get_settings
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]

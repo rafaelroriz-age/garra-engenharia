@@ -1,11 +1,15 @@
 """Modelo `VisitaMedicao` — medição de serviço executado registrada em uma Visita."""
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Float, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.visita import Visita
 
 
 class VisitaMedicao(Base):

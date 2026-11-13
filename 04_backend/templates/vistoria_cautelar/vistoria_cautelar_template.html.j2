@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+{#
+  ARQUIVO GERADO — não editar à mão. Produzido por `python -m app.scripts.build_vistoria_cautelar_templates` a partir de templates/vistoria_cautelar/layout.json (ADR-13/DEC-25).
+
+  Layout derivado do PDF original sha256 918804e1f2e5b0b8…
+  (148 páginas medidas). O nome do arquivo não é versionado:
+  identifica o cliente vistoriado (OWASP A02). Nenhum dado pessoal do exemplar entra
+  aqui — responsável, obra, edificação, local e datas são placeholders.
+#}
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>LAUDO TÉCNICO DE VISTORIA CAUTELAR PARA RECEBIMENTO DE OBRA — {{ edificacao.nome }}</title>
+<style>
+  @page {
+    size: A4 portrait;
+    margin: 2.58cm 2.03cm 1.95cm 3.0cm;
+    @top-right { content: element(cabecalho); vertical-align: top; }
+    @bottom-center { content: element(rodape); vertical-align: top; }
+    @bottom-right {
+      content: counter(page);
+      font-family: "Calibri", sans-serif;
+      font-size: 11.0pt;
+      vertical-align: bottom;
+    }
+  }
+  /* Capa sangrada, sem cabeçalho/rodapé e fora da contagem de páginas
+     (deslocamento medido: -1). */
+  @page capa {
+    margin: 0;
+    counter-increment: none;
+    @top-right { content: none; }
+    @bottom-center { content: none; }
+    @bottom-right { content: none; }
+  }
+  body {
+    font-family: "Times New Roman", "DejaVu Serif", serif;
+    font-size: 12.0pt;
+    line-height: 1.25;
+    color: #000000;
+    margin: 0;
+  }
+  p { margin: 0 0 6.0pt 0; text-align: justify; }
+  h1, h2, h3 { font-family: "Times New Roman", serif; font-weight: bold; margin: 12pt 0 8pt 0; }
+  h1 { font-size: 14.0pt; margin-left: -0.5cm; text-transform: uppercase; }
+  h2 { font-size: 14.0pt; margin-left: 0.0cm; }
+  h3 { font-size: 14.0pt; margin-left: 0.0cm; }
+  h1 { break-before: page; }
+
+  .cabecalho { position: running(cabecalho); text-align: right; padding-top: 12.8pt; }
+  .cabecalho img { width: 109.4pt; }
+  .rodape { position: running(rodape); text-align: center; }
+  .linha-rodape { font-family: "Times New Roman", serif; font-size: 10.0pt; line-height: 1.2; }
+  .linha-rodape.contato { color: #0563C1; }
+
+  .capa { page: capa; position: relative; width: 595.5pt; height: 842.25pt; overflow: hidden;
+           background: #49567F; }
+  .capa .fundo { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; }
+  .capa .logo, .capa .titulo, .capa .elemento, .capa .faixa { position: absolute; }
+  .capa .titulo {
+    font-family: "Montserrat", sans-serif;
+    font-size: 34.4pt;
+    font-weight: bold;
+    line-height: 41.0pt;
+    color: #FFFFFF;
+  }
+  .capa .faixa { background: #FFFFFF; }
+  .capa .e0 { font-family: "Montserrat", sans-serif; font-size: 15.4pt; font-weight: bold; color: #FFFFFF; }
+  .capa .e1 { font-family: "Montserrat", sans-serif; font-size: 15.0pt; font-weight: bold; color: #49567F; }
+  .capa .e2 { font-family: "Open Sans", sans-serif; font-size: 15.4pt; font-weight: bold; color: #FFFFFF; }
+
+  .folha-rosto { position: relative; height: 713.8pt; break-after: page; text-align: center; }
+  .folha-rosto > div { position: absolute; left: 0; right: 0; font-weight: bold; }
+  .folha-rosto .titulo { font-size: 36.0pt; line-height: 1.3; }
+  .folha-rosto .objeto { font-size: 36.0pt; line-height: 1.3; }
+  .folha-rosto .data { font-size: 18.0pt; }
+
+  .sumario { break-after: page; }
+  .sumario .titulo-sumario { font-size: 16.0pt; font-weight: bold; margin-bottom: 12pt; }
+  .sumario ul { list-style: none; margin: 0; padding: 0; }
+  .sumario li { font-family: "Times New Roman", serif; font-size: 11.0pt;
+                 font-weight: bold; margin: 0 0 6pt 0; }
+  .sumario li.n2 { margin-left: 0.39cm; }
+  .sumario li.n3 { margin-left: 0.77cm; }
+  .sumario a { color: inherit; text-decoration: none; }
+  .sumario a::after { content: leader('.') target-counter(attr(href), page); }
+
+  /* Relatório fotográfico: 2 fotos por página, na largura do texto. */
+  figure.figura { margin: 0 0 12pt 0; break-inside: avoid; }
+  figure.figura img { display: block; width: 452.9pt;
+                       height: 255.0pt; object-fit: contain; margin: 0 auto; }
+  figure.figura figcaption {
+    font-family: "Calibri", sans-serif;
+    font-size: 9.0pt;
+    font-style: italic;
+    color: #44546A;
+    margin-top: 8.0pt;
+    line-height: 1.2;
+    text-align: justify;
+  }
+
+  table.tabela { width: 100%; border-collapse: collapse; margin: 6pt 0 12pt 0; }
+  table.tabela th, table.tabela td { border: 0.5pt solid #000000; padding: 2pt 4pt; vertical-align: top; text-align: left; }
+  table.tabela-identificacao { font-family: "Times New Roman", serif; font-size: 12.0pt; }
+  table.tabela-identificacao th { background: #002060; color: #FFFFFF; font-size: 11.0pt; font-weight: bold; }
+  table.tabela-plano_de_correcoes_remanescentes { font-family: "Times New Roman", serif; font-size: 12.0pt; }
+  table.tabela-plano_de_correcoes_remanescentes th { background: #DEEAF6; color: #000000; font-size: 12.0pt; font-weight: bold; }
+
+  .assinatura { margin-top: 24pt; text-align: right; break-inside: avoid;
+                 font-family: "Calibri", sans-serif; font-size: 12.0pt; }
+  .assinatura .rubrica { width: 137.8pt; display: block; margin-left: auto; }
+  .assinatura .traco { border-top: 0.75pt solid #000000; width: 286.7pt; margin: 0 0 2pt auto; }
+  .assinatura .nome { font-weight: bold; }
+  .assinatura .local-data { margin-top: 85.0pt; }
+</style>
+</head>
+<body>
+  <div class="cabecalho">{% if logo_data_uri %}<img src="{{ logo_data_uri }}" alt="Garra Engenharia">{% endif %}</div>
+  <div class="rodape">
+    <div class="linha-rodape">{{ responsavel.nome }}</div>
+    <div class="linha-rodape">{{ responsavel.titulo_profissional }} - CREA nº {{ responsavel.crea }}</div>
+    <div class="linha-rodape contato">{{ responsavel.email }} / {{ responsavel.telefone }}</div>
+  </div>
+
+  <section class="capa">
+    {% if capa_fundo_data_uri %}<img class="fundo" src="{{ capa_fundo_data_uri }}" alt="">{% endif %}
+    {% if logo_data_uri %}<img class="logo" style="left: 160.2pt; top: 0pt; width: 275.4pt" src="{{ logo_data_uri }}" alt="Garra Engenharia">{% endif %}
+    <div class="titulo" style="left: 27.0pt; top: 188.0pt">VISTORIA TÉCNICA<br>CAUTELAR PARA<br>RECEBIMENTO<br>DE OBRA</div>
+    <div class="elemento elemento-subtitulo e0" style="left: 27.0pt; top: 357.0pt">{{ obra.descricao }}<br>{{ edificacao.nome }}</div>
+    <div class="faixa" style="left: 16.7pt; top: 676.1pt; width: 314.4pt; height: 138.1pt"></div>
+    <div class="elemento elemento-responsavel e1" style="left: 31.1pt; top: 751.0pt">RESP. TÉCNICO:<br>{{ (responsavel.titulo_profissional ~ ' ' ~ responsavel.nome)|upper }}<br>CREA: {{ responsavel.crea }}</div>
+    <div class="elemento elemento-data e2" style="right: 16.0pt; text-align: right; top: 804.0pt">{{ data_emissao_mes_ano|upper }}</div>
+  </section>
+
+  <section class="folha-rosto">
+    <div class="titulo" style="top: 65.9pt">LAUDO TÉCNICO DE<br>VISTORIA<br>CAUTELAR PARA<br>RECEBIMENTO DE OBRA</div>
+    <div class="objeto" style="top: 327.9pt">{{ obra.descricao }}</div>
+    <div class="data" style="top: 584.9pt">{{ data_emissao_mes_ano }}</div>
+  </section>
+
+  <nav class="sumario">
+    <div class="titulo-sumario">SUMÁRIO</div>
+    <ul>
+    <li class="n1"><a href="#s-1">1. INTRODUÇÃO</a></li>
+    <li class="n2"><a href="#s-1-1">1.1. Histórico e Contexto da Diligência</a></li>
+    <li class="n1"><a href="#s-2">2. CONSIDERAÇÕES PRELIMINARES</a></li>
+    <li class="n2"><a href="#s-2-1">2.1. Geral</a></li>
+    <li class="n2"><a href="#s-2-2">2.2. Pressupostos, ressalvas e fatores limitantes</a></li>
+    <li class="n1"><a href="#s-3">3. OBJETIVO</a></li>
+    <li class="n2"><a href="#s-3-1">3.1. Geral</a></li>
+    <li class="n2"><a href="#s-3-2">3.2. Específico</a></li>
+    <li class="n1"><a href="#s-4">4. OBJETO</a></li>
+    <li class="n2"><a href="#s-4-1">4.1. Geral</a></li>
+    <li class="n2"><a href="#s-4-2">4.2. Identificação</a></li>
+    <li class="n1"><a href="#s-5">5. DA REALIZAÇÃO DA INSPEÇÃO</a></li>
+    <li class="n2"><a href="#s-5-1">5.1. Apresentação do Responsável Técnico</a></li>
+    <li class="n2"><a href="#s-5-2">5.2. Datas das Vistorias</a></li>
+    <li class="n1"><a href="#s-6">6. METODOLOGIA</a></li>
+    <li class="n2"><a href="#s-6-1">6.1. Classificação da Inspeção quanto ao Nível</a></li>
+    <li class="n2"><a href="#s-6-2">6.2. Critério de classificação técnica dos achados</a></li>
+    <li class="n2"><a href="#s-6-3">6.3. Levantamento de Dados e Documentação</a></li>
+    <li class="n2"><a href="#s-6-4">6.4. Ensaios Técnicos Instrumentais Realizados</a></li>
+    <li class="n1"><a href="#s-7">7. DESENVOLVIMENTO DAS ATIVIDADES DA INSPEÇÃO</a></li>
+    <li class="n2"><a href="#s-7-1">7.1. Sistemas Construtivos Inspecionados</a></li>
+    <li class="n2"><a href="#s-7-2">7.2. Dinâmica de Campo e Correções em Tempo Real</a></li>
+    <li class="n1"><a href="#s-8">8. RELATÓRIO FOTOGRÁFICO</a></li>
+    <li class="n1"><a href="#s-9">9. ANÁLISE E CONSIDERAÇÕES TÉCNICAS</a></li>
+    {% for sistema in sistemas %}
+    <li class="n2"><a href="#s-9-{{ loop.index }}">9.{{ loop.index }}. {{ sistema.nome }}</a></li>
+    {% endfor %}
+    <li class="n2"><a href="#s-9-8">9.{{ sistemas|length + 1 }}. Correlação Técnica entre Origem Provável, Repercussão Funcional e Responsabilidade</a></li>
+    <li class="n1"><a href="#s-10">10. CONCLUSÃO E CONSIDERAÇÕES FINAIS</a></li>
+    <li class="n2"><a href="#s-10-1">10.1. Parecer Técnico</a></li>
+    <li class="n2"><a href="#s-10-2">10.2. Plano de Correções Remanescentes</a></li>
+    <li class="n2"><a href="#s-10-3">10.3. Prazos e Condicionantes para o Recebimento Definitivo</a></li>
+    <li class="n1"><a href="#s-11">11. ENCERRAMENTO</a></li>
+    <li class="n1"><a href="#s-12">12. REFERÊNCIAS BIBLIOGRÁFICAS</a></li>
+    </ul>
+  </nav>
+
+  <h1 id="s-1">1. INTRODUÇÃO</h1>
+  {% for paragrafo in conteudo.get('introducao', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h2 id="s-1-1">1.1. Histórico e Contexto da Diligência</h2>
+  {% for paragrafo in conteudo.get('historico_e_contexto_da_diligencia', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h1 id="s-2">2. CONSIDERAÇÕES PRELIMINARES</h1>
+  {% for paragrafo in conteudo.get('consideracoes_preliminares', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h2 id="s-2-1">2.1. Geral</h2>
+  {% for paragrafo in conteudo.get('consideracoes_preliminares_geral', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h2 id="s-2-2">2.2. Pressupostos, ressalvas e fatores limitantes</h2>
+  {% for paragrafo in conteudo.get('pressupostos_ressalvas_e_fatores_limitantes', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h1 id="s-3">3. OBJETIVO</h1>
+  {% for paragrafo in conteudo.get('objetivo', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h2 id="s-3-1">3.1. Geral</h2>
+  {% for paragrafo in conteudo.get('objetivo_geral', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h2 id="s-3-2">3.2. Específico</h2>
+  {% for paragrafo in conteudo.get('especifico', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h1 id="s-4">4. OBJETO</h1>
+  {% for paragrafo in conteudo.get('objeto', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h2 id="s-4-1">4.1. Geral</h2>
+  {% for paragrafo in conteudo.get('objeto_geral', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h2 id="s-4-2">4.2. Identificação</h2>
+  {% for paragrafo in conteudo.get('identificacao', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <table class="tabela tabela-identificacao">
+    <colgroup><col style="width: 24.6%"><col style="width: 75.3%"></colgroup>
+    <thead><tr><th>ASPECTO TÉCNICO</th><th>DESCRIÇÃO DETALHADA</th></tr></thead>
+    <tbody>
+      {% for linha in tabelas.get('identificacao', []) %}<tr><td>{{ linha.aspecto_tecnico }}</td><td>{{ linha.descricao_detalhada }}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  <h1 id="s-5">5. DA REALIZAÇÃO DA INSPEÇÃO</h1>
+  {% for paragrafo in conteudo.get('da_realizacao_da_inspecao', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h2 id="s-5-1">5.1. Apresentação do Responsável Técnico</h2>
+  {% for paragrafo in conteudo.get('apresentacao_do_responsavel_tecnico', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h2 id="s-5-2">5.2. Datas das Vistorias</h2>
+  {% for paragrafo in conteudo.get('datas_das_vistorias', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h1 id="s-6">6. METODOLOGIA</h1>
+  {% for paragrafo in conteudo.get('metodologia', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h2 id="s-6-1">6.1. Classificação da Inspeção quanto ao Nível</h2>
+  {% for paragrafo in conteudo.get('classificacao_da_inspecao_quanto_ao_nivel', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h2 id="s-6-2">6.2. Critério de classificação técnica dos achados</h2>
+  {% for paragrafo in conteudo.get('criterio_de_classificacao_tecnica_dos_achados', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h2 id="s-6-3">6.3. Levantamento de Dados e Documentação</h2>
+  {% for paragrafo in conteudo.get('levantamento_de_dados_e_documentacao', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h2 id="s-6-4">6.4. Ensaios Técnicos Instrumentais Realizados</h2>
+  {% for paragrafo in conteudo.get('ensaios_tecnicos_instrumentais_realizados', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h1 id="s-7">7. DESENVOLVIMENTO DAS ATIVIDADES DA INSPEÇÃO</h1>
+  {% for paragrafo in conteudo.get('desenvolvimento_das_atividades_da_inspecao', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h2 id="s-7-1">7.1. Sistemas Construtivos Inspecionados</h2>
+  {% for paragrafo in conteudo.get('sistemas_construtivos_inspecionados', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h2 id="s-7-2">7.2. Dinâmica de Campo e Correções em Tempo Real</h2>
+  {% for paragrafo in conteudo.get('dinamica_de_campo_e_correcoes_em_tempo_real', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h1 id="s-8">8. RELATÓRIO FOTOGRÁFICO</h1>
+  {% for paragrafo in conteudo.get('relatorio_fotografico', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  {% for figura in figuras %}
+  <figure class="figura">
+    {% if figura.foto_data_uri %}<img src="{{ figura.foto_data_uri }}" alt="Figura {{ figura.numero }}">{% endif %}
+    <figcaption>Figura {{ figura.numero }} - {{ figura.legenda }} Fonte: Autor.</figcaption>
+  </figure>
+  {% endfor %}
+  <h1 id="s-9">9. ANÁLISE E CONSIDERAÇÕES TÉCNICAS</h1>
+  {% for paragrafo in conteudo.get('analise_e_consideracoes_tecnicas', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  {% for sistema in sistemas %}
+  <h2 id="s-9-{{ loop.index }}">9.{{ loop.index }}. {{ sistema.nome }}</h2>
+  <h3>9.{{ loop.index }}.1. Constatações</h3>
+  {% for paragrafo in sistema.get('constatacoes', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h3>9.{{ loop.index }}.2. Fundamentação Técnica</h3>
+  {% for paragrafo in sistema.get('fundamentacao_tecnica', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  {% endfor %}
+  <h2 id="s-9-8">9.{{ sistemas|length + 1 }}. Correlação Técnica entre Origem Provável, Repercussão Funcional e Responsabilidade</h2>
+  {% for paragrafo in conteudo.get('correlacao_tecnica_entre_origem_provavel_repercussao_funcional_e_responsabilidade', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h1 id="s-10">10. CONCLUSÃO E CONSIDERAÇÕES FINAIS</h1>
+  {% for paragrafo in conteudo.get('conclusao_e_consideracoes_finais', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h2 id="s-10-1">10.1. Parecer Técnico{% if complementos.get('parecer_tecnico') %} — {{ complementos.get('parecer_tecnico') }}{% endif %}</h2>
+  {% for paragrafo in conteudo.get('parecer_tecnico', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h2 id="s-10-2">10.2. Plano de Correções Remanescentes</h2>
+  {% for paragrafo in conteudo.get('plano_de_correcoes_remanescentes', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <table class="tabela tabela-plano_de_correcoes_remanescentes">
+    <colgroup><col style="width: 5.8%"><col style="width: 19.2%"><col style="width: 31.2%"><col style="width: 43.5%"></colgroup>
+    <thead><tr><th>Item</th><th>Localização</th><th>Descrição da Pendência</th><th>Metodologia Corretiva Indicada</th></tr></thead>
+    <tbody>
+      {% for linha in tabelas.get('plano_de_correcoes_remanescentes', []) %}<tr><td>{{ linha.item }}</td><td>{{ linha.localizacao }}</td><td>{{ linha.descricao_da_pendencia }}</td><td>{{ linha.metodologia_corretiva_indicada }}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  <h2 id="s-10-3">10.3. Prazos e Condicionantes para o Recebimento Definitivo</h2>
+  {% for paragrafo in conteudo.get('prazos_e_condicionantes_para_o_recebimento_definitivo', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <h1 id="s-11">11. ENCERRAMENTO</h1>
+  {% for paragrafo in conteudo.get('encerramento', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+  <div class="assinatura">
+    {% if assinatura_data_uri %}<img class="rubrica" src="{{ assinatura_data_uri }}" alt="Assinatura">{% endif %}
+    <div class="traco"></div>
+    <div class="nome">{{ responsavel.nome }}</div>
+    <div>{{ responsavel.titulo_profissional }} - CREA nº {{ responsavel.crea }}</div>
+    {% for linha in responsavel.qualificacoes %}<div>{{ linha }}</div>{% endfor %}
+    <div class="local-data">{{ local_emissao }}, {{ data_emissao_extenso }}.</div>
+  </div>
+  <h1 id="s-12">12. REFERÊNCIAS BIBLIOGRÁFICAS</h1>
+  {% for paragrafo in conteudo.get('referencias_bibliograficas', []) %}<p>{{ paragrafo }}</p>{% endfor %}
+</body>
+</html>
