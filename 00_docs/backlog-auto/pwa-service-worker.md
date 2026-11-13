@@ -82,3 +82,9 @@ Não há runner unitário no projeto (só Playwright e2e). Usei `node --test` (N
 1. Registrar em `decisoes.md`, como detalhamento de DEC-26: contratos em cache com TTL de 5 min, chave por fingerprint do token e limpeza no logout; dados mestre com TTL 24 h.
 2. Adotar `node --test` como runner de testes unitários do frontend para lógica pura (alternativa: Vitest, a decidir se crescer a necessidade de testes de componente).
 3. Considerar spec Playwright (`e2e/`) para validar SW em build de produção, no fechamento de lote.
+
+## Integração com a main (conflito resolvido)
+
+O `colher` parou com conflito em `03_frontend/app/layout.tsx`: a main passou a envolver o `AppShell` no `ThemeProvider` (next-themes) e trocou as fontes. Resolução: `main` mesclada na branch da tarefa, mantendo os dois lados — `<SwRegister />` antes do `<ThemeProvider>`, que continua envolvendo o `AppShell`. Depois do merge: `npm run lint` sem avisos e `npm run test:unit` 9/9. O `npm run build` compila, mas falha no prerender de `/contratos/detalhe`, `/edificacoes/detalhe` e `/inspecoes/relatorio` por problema que já existe na main (páginas commitadas importam `lib/use-id-param.ts` e dependem de `layout.tsx` com Suspense que ainda não foram commitados), não por esta tarefa.
+
+Pendente para o fechamento: `components/sw-register.tsx` registra `/sw.js` sem `basePath`; se o deploy em GitHub Pages com `basePath` entrar, o registro precisa usar `withBasePath("/sw.js")` (e o `scope` correspondente).

@@ -1,11 +1,15 @@
 """Modelo `ContratoNbr` — norma NBR associada a um Contrato (RF-12)."""
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.contrato import Contrato
 
 
 class ContratoNbr(Base):

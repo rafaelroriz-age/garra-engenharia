@@ -95,6 +95,51 @@ services:
         value: HS256
       - key: JWT_ACCESS_TOKEN_EXPIRE_MINUTES
         value: "60"
+      # Legenda por IA (DEC-42 C): limites de geração e teto da saída. Não são segredos,
+      # então valor fixo igual ao default de config.py e de 04_backend/.env.example.
+      - key: LEGENDA_IA_LIMITE_POR_USUARIO
+        value: "10"
+      - key: LEGENDA_IA_JANELA_USUARIO_SEGUNDOS
+        value: "60"
+      - key: LEGENDA_IA_LIMITE_DIARIO_POR_USUARIO
+        value: "200"
+      - key: LEGENDA_IA_LIMITE_POR_FOTO
+        value: "5"
+      - key: LEGENDA_IA_JANELA_FOTO_SEGUNDOS
+        value: "3600"
+      - key: LEGENDA_IA_SAIDA_MAX_CARACTERES
+        value: "500"
+      - key: LEGENDA_IA_SAIDA_MAX_ITENS
+        value: "20"
+      - key: LEGENDA_IA_SAIDA_MAX_CARACTERES_ITEM
+        value: "300"
+      # Provedor de legenda por IA (B-04): DeepSeek. Chave é segredo: sync false.
+      - key: LEGENDA_IA_PROVEDOR
+        value: fake
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: DEEPSEEK_BASE_URL
+        value: https://api.deepseek.com
+      - key: DEEPSEEK_MODELO
+        value: deepseek-flash
+      - key: DEEPSEEK_TIMEOUT_S
+        value: "30"
+      - key: DEEPSEEK_ENVIAR_IMAGEM
+        value: "false"
+      # Telemetria/cache local (BL-34): preços por 1M de tokens vazios até a IA-07.
+      - key: LEGENDA_IA_CACHE_TTL_H
+        value: "720"
+      - key: DEEPSEEK_PRECO_ENTRADA_CACHE_HIT_USD
+        value: ""
+      - key: DEEPSEEK_PRECO_ENTRADA_CACHE_MISS_USD
+        value: ""
+      - key: DEEPSEEK_PRECO_SAIDA_USD
+        value: ""
+      # RAG por busca textual da legenda IA (BL-34, IA-05).
+      - key: LEGENDA_IA_RAG_ATIVO
+        value: "true"
+      - key: LEGENDA_IA_RAG_K
+        value: "3"
       # Armazenamento de fotos/documentos (MinIO/S3, DEC-02) FICOU FORA do
       # escopo deste Blueprint (só backend+frontend+banco foram pedidos).
       # Sem estas variáveis, a API sobe normalmente, mas os endpoints de

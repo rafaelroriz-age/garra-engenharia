@@ -1,11 +1,16 @@
 """Modelo `Subsistema` — gabarito de subsistemas dentro de um Sistema Predial (RF-10)."""
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.ocorrencia import Ocorrencia
+    from app.models.sistema_predial import SistemaPredial
 
 
 class Subsistema(Base):

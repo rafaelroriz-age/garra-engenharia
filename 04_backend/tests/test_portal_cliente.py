@@ -1,6 +1,6 @@
 """Testes do Portal do Cliente — dashboard, acompanhamento e documentos (BL-32/BL-33)."""
 import uuid
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 import pytest_asyncio
 from fastapi.testclient import TestClient
@@ -126,7 +126,7 @@ async def cenario_portal():
                     tipo="ltip",
                     status="emitido",
                     pdf_key=f"relatorios/{sufixo}.pdf",
-                    emitido_em=datetime(2026, 2, 1, tzinfo=timezone.utc),
+                    emitido_em=datetime(2026, 2, 1, tzinfo=UTC),
                 ),
             ]
         )

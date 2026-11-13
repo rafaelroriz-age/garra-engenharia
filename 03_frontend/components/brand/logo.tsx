@@ -15,14 +15,11 @@ interface LogoProps {
  * Marca oficial "Garra Perícias e Avaliações" (BL-41/BL-19).
  *
  * Vetorizada em SVG (`GarraMark`, `fill="currentColor"`) + texto real
- * (`font-display`) no lugar dos 4 JPEGs originais com fundo/cores embutidas:
- * escala sem perda em qualquer tamanho e herda a cor certa de cada
- * superfície via classe de texto — navy (`text-primary`) sobre fundo claro,
- * branco (`text-primary-foreground`) sobre o navy da marca (`bg-primary`).
+ * (`font-display`, Archivo expandida). Identidade "Prancha Técnica":
  *
- * `principal` (fundo claro, ex.: login) → ícone empilhado sobre o nome.
- * `horizontal` (fundo navy, ex.: header da landing) → ícone + nome em linha.
- * `compacta` (fundo navy, ex.: sidebar/topbar) → ícone + nome em 2 linhas.
+ * `principal` (sobre papel, ex.: login) → símbolo em cianotipia empilhado sobre o nome em tinta.
+ * `horizontal` (sobre superfície tinta, ex.: header da landing) → símbolo em sinal + nome em linha.
+ * `compacta` (sobre superfície tinta, ex.: sidebar/topbar) → símbolo em sinal + nome em 2 linhas.
  */
 export function Logo({ variant, className }: LogoProps) {
   if (variant === "principal") {
@@ -30,10 +27,10 @@ export function Logo({ variant, className }: LogoProps) {
       <span
         role="img"
         aria-label={LOGO_ALT}
-        className={cn("inline-flex flex-col items-center gap-2 text-primary", className)}
+        className={cn("inline-flex flex-col items-center gap-2 text-foreground", className)}
       >
-        <GarraMark className="h-14 w-14" />
-        <span className="text-center font-display text-base font-extrabold leading-tight tracking-tight sm:text-lg">
+        <GarraMark className="h-14 w-14 text-primary" />
+        <span className="display-wide text-center text-base font-bold uppercase leading-tight tracking-[0.06em] sm:text-lg">
           Garra Perícias
           <br />e Avaliações
         </span>
@@ -46,10 +43,10 @@ export function Logo({ variant, className }: LogoProps) {
       <span
         role="img"
         aria-label={LOGO_ALT}
-        className={cn("inline-flex items-center gap-3 text-primary-foreground", className)}
+        className={cn("inline-flex items-center gap-3 text-sidebar-foreground", className)}
       >
-        <GarraMark className="h-10 w-10 sm:h-12 sm:w-12" />
-        <span className="whitespace-nowrap font-display text-lg font-extrabold leading-tight tracking-tight sm:text-xl">
+        <GarraMark className="h-10 w-10 text-sinal sm:h-11 sm:w-11" />
+        <span className="display-wide whitespace-nowrap text-base font-bold uppercase leading-tight tracking-[0.06em] sm:text-lg">
           Garra Perícias e Avaliações
         </span>
       </span>
@@ -60,10 +57,10 @@ export function Logo({ variant, className }: LogoProps) {
     <span
       role="img"
       aria-label={LOGO_ALT}
-      className={cn("inline-flex items-center gap-2 text-primary-foreground", className)}
+      className={cn("inline-flex items-center gap-2.5 text-sidebar-foreground", className)}
     >
-      <GarraMark className="h-8 w-8" />
-      <span className="font-display text-xs font-bold leading-[1.15] tracking-tight">
+      <GarraMark className="h-8 w-8 text-sinal" />
+      <span className="display-wide text-[0.6875rem] font-bold uppercase leading-[1.2] tracking-[0.08em]">
         Garra Perícias
         <br />e Avaliações
       </span>

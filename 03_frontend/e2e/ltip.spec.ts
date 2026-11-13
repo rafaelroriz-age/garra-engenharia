@@ -112,9 +112,9 @@ test("Fluxo LTIP: edificação, contrato, ocorrências em múltiplos sistemas co
   // 5. Valida o dashboard de saúde da edificação (RF-07, BL-16)
   await page.goto(`/dashboard?edificacaoId=${edificacaoId}`);
   await expect(page.getByText("Total de ocorrências")).toBeVisible();
-  // `.rounded-xl.bg-card` restringe a busca ao componente `Card` em si (evita casar
-  // com divs ancestrais/wrappers que também contêm o mesmo texto em algum descendente).
-  const totalCard = page.locator(".rounded-xl.bg-card").filter({ hasText: "Total de ocorrências" });
+  // Cada indicador do dashboard é um `KpiTile` com `role="group"` nomeado pelo título —
+  // seleção semântica, sem depender de classes utilitárias de estilo.
+  const totalCard = page.getByRole("group", { name: "Total de ocorrências", exact: true });
   await expect(totalCard).toHaveCount(1);
   await expect(totalCard.getByText("2", { exact: true })).toBeVisible();
   await expect(page.getByText("Ocorrências em Grau Crítico")).toBeVisible();

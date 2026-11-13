@@ -6,12 +6,16 @@ de `Responsavel` (fiscal/RTE/responsável legal — apenas dado de referência d
 contrato, sem credenciais). Ver DEC-15 (`00_docs/projeto/decisoes.md`).
 """
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.responsavel import Responsavel
 
 
 class Usuario(Base):

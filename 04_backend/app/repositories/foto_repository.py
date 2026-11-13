@@ -2,13 +2,20 @@
 import uuid
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import ConflictError
 from app.models import Foto
 
 
 async def get_by_id(db: AsyncSession, foto_id: uuid.UUID) -> Foto | None:
     result = await db.execute(select(Foto).where(Foto.id == foto_id))
+    return result.scalar_one_or_none()
+
+
+async def get_by_storage_key(db: AsyncSession, storage_key: str) -> Foto | None:
+    result = await db.execute(select(Foto).where(Foto.storage_key == storage_key).limit(1))
     return result.scalar_one_or_none()
 
 
@@ -35,16 +42,25 @@ async def create(
         criado_por_id=criado_por_id,
     )
     db.add(foto)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError as exc:
+        await db.rollback()
+        if "uq_fotos_storage_key" in str(exc.orig):
+            raise ConflictError(
+                f"A chave de armazenamento '{storage_key}' já está vinculada a outra foto.",
+                type_suffix="storage-key-ja-vinculada",
+            ) from exc
+        raise
     await db.refresh(foto)
     return foto
 
 
-async def update(db: AsyncSession, foto: Foto, *, legenda: str | None, ordem: int | None) -> Foto:
-    if legenda is not None:
-        foto.legenda = legenda
-    if ordem is not None:
-        foto.ordem = ordem
+async def update(db: AsyncSession, foto: Foto, campos: dict) -> Foto:
+    """Aplica apenas as chaves presentes em `campos` (`legenda`, `ordem`); `None` explícito limpa o campo."""
+    for nome in ("legenda", "ordem"):
+        if nome in campos:
+            setattr(foto, nome, campos[nome])
     await db.commit()
     await db.refresh(foto)
     return foto

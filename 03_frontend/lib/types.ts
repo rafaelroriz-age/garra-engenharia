@@ -57,7 +57,16 @@ export interface Responsavel {
   crea?: string | null;
   email?: string | null;
   telefone?: string | null;
+  /** Bloco de assinatura dos laudos (V1-01): ex. "Engenheiro Civil". Até 120 caracteres. */
+  titulo_profissional?: string | null;
+  /** Qualificações impressas sob a assinatura (até 20 itens de 300 caracteres). */
+  qualificacoes?: string[] | null;
+  /** Chave no storage da imagem da assinatura (upload via `POST /fotos/upload`). */
+  assinatura_storage_key?: string | null;
 }
+
+/** Payload de `POST /responsaveis` (`ResponsavelCreate`). */
+export type ResponsavelInput = Omit<Responsavel, "id">;
 
 // ---------------------------------------------------------------------------
 // Contrato (RF-02, RF-12, RN-06, RN-09, BL-09)
@@ -182,7 +191,11 @@ export interface VisitaInput {
 // Foto (RF-05, RNF-02 parcial, BL-11)
 // ---------------------------------------------------------------------------
 
-export type OrigemFoto = "lightshot" | "upload" | "camera";
+/**
+ * Valores aceitos em `origem` ao vincular foto (`POST /visitas/{id}/fotos`, `POST /ocorrencias/{id}/fotos`).
+ * Único tipo de origem do frontend — o editor usa rótulos internos e os converte só na chamada ao backend.
+ */
+export type OrigemFoto = "upload_manual" | "lightshot" | "clipboard";
 
 export interface Foto {
   id: UUID;
@@ -194,6 +207,57 @@ export interface Foto {
   origem: string;
   ordem?: number | null;
   created_at: string;
+  criado_por_id?: UUID | null;
+  // Campos de legenda assistida por IA (`LegendaIARead`, BL-36/BL-34; RF-15, RN-16, RN-17).
+  // Somente leitura: gravados pelo servidor na geração e na aprovação. Todos nulos = sem sugestão.
+  legenda_bruta?: string | null;
+  legenda_ia_sugerida?: string | null;
+  nivel_certeza_ia?: NivelCertezaIA | null;
+  status_validacao_ia?: StatusValidacaoIA | null;
+  alertas_ia?: string[] | null;
+  pendencias_ia?: string[] | null;
+  prompt_ia_id?: UUID | null;
+  prompt_conteudo_hash?: string | null;
+  legenda_ia_gerada_em?: string | null;
+  aprovado_por_id?: UUID | null;
+  aprovado_em?: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Legenda de foto assistida por IA (RF-15, RN-16, RN-17, DEC-21/DEC-37, BL-35)
+// Contrato: 00_docs/backlog-auto/legenda-ia-endpoints.md §2.
+// ---------------------------------------------------------------------------
+
+/** `rascunho` = sugestão gerada e ainda não revisada; `aprovada` = humano aprovou (RN-17). */
+export type StatusValidacaoIA = "rascunho" | "aprovada";
+
+export type NivelCertezaIA =
+  | "constatacao_direta"
+  | "indicio_tecnico"
+  | "hipotese_tecnica"
+  | "causa_comprovada";
+
+/** Teto de `legenda` no backend (`LEGENDA_MAX_LENGTH`). */
+export const LEGENDA_MAX_LENGTH = 500;
+/** Teto de `legenda_bruta` no backend (`LEGENDA_BRUTA_MAX_LENGTH`). */
+export const LEGENDA_BRUTA_MAX_LENGTH = 5000;
+
+/**
+ * Corpo opcional de `POST /fotos/{id}/legenda-ia/gerar`. Ausente: o backend reaproveita a
+ * `legenda_bruta` gravada; enviado (inclusive `null`): substitui a gravada.
+ */
+export interface LegendaIAGerarInput {
+  legenda_bruta?: string | null;
+}
+
+/**
+ * Payload de `PUT /fotos/{id}`. Campo ausente preserva; `legenda: null` limpa.
+ * `aprovar_legenda_ia: true` aprova a sugestão de IA: o servidor grava aprovador e data pelo token.
+ */
+export interface FotoUpdateInput {
+  legenda?: string | null;
+  ordem?: number | null;
+  aprovar_legenda_ia?: boolean;
 }
 
 /** Resposta do upload bruto (`/fotos/upload` e `/fotos/upload-clipboard`), antes da vinculação. */
@@ -382,3 +446,71 @@ export interface PortalDownload {
   url: string;
   expira_em_segundos: number;
 }
+
+// ---------------------------------------------------------------------------
+// Relatório: conteúdo narrativo (V1-01) e emissão/versões (V1-02)
+// Contratos em `00_docs/backlog-auto/v1-fundacao-dados.md` e `v1-emissao-generica.md`.
+// ---------------------------------------------------------------------------
+
+/**
+ * `dados` de `GET/PUT /inspecoes/{id}/conteudo/{tipo}` (`ConteudoDados`, `extra="forbid"`).
+ * Todos opcionais; o `PUT` substitui o que estava salvo (campo ausente volta ao padrão).
+ */
+export interface ConteudoDados {
+  /** `chave → parágrafos`. As chaves aceitas dependem do tipo (RFO/RFIP não têm). */
+  textos?: Record<string, string[]>;
+  /** Data ISO `AAAA-MM-DD`. */
+  data_emissao?: string | null;
+  local_emissao?: string | null;
+  /** Vistoria cautelar: complemento do item 10.1. */
+  parecer?: string | null;
+  /** Vistoria residencial: ex. "Apartamento 101". */
+  unidade?: string | null;
+  /** Datas ISO das vistorias (cautelar e residencial), até 60. */
+  datas_vistorias?: string[] | null;
+  /** RFIP: inclui o resumo no relatório. */
+  incluir_resumo?: boolean | null;
+  /** Cautelar: `ocorrencia_id → texto`. Não editado nesta tela; preservado ao salvar. */
+  metodologia_corretiva?: Record<string, string> | null;
+  /** Cautelar/Residencial: `sistema_id → parágrafos`. Não editado nesta tela; preservado ao salvar. */
+  fundamentacao_tecnica?: Record<string, string[]> | null;
+}
+
+/** Resposta de `GET/PUT /inspecoes/{id}/conteudo/{tipo}`: padrões mesclados com o que foi salvo. */
+export interface RelatorioConteudo {
+  inspecao_id: UUID;
+  tipo: TipoServico;
+  dados: ConteudoDados;
+  /** Há conteúdo salvo (senão, só padrões). */
+  salvo: boolean;
+  atualizado_em?: string | null;
+  atualizado_por_id?: UUID | null;
+}
+
+/** Item de `GET /inspecoes/{id}/relatorios` (mais recente primeiro). */
+export interface RelatorioVersao {
+  id: UUID;
+  tipo: string;
+  versao: string;
+  status: string;
+  emitido_em?: string | null;
+  tem_pdf: boolean;
+  tem_docx: boolean;
+}
+
+/** Resposta (201) de `POST /inspecoes/{id}/relatorios/{tipo}`. */
+export interface RelatorioEmitido {
+  id: UUID;
+  inspecao_id: UUID;
+  tipo: string;
+  versao: string;
+  status: string;
+  tem_pdf: boolean;
+  tem_docx: boolean;
+  criado_em?: string | null;
+}
+
+export type FormatoRelatorio = "pdf" | "docx";
+
+/** Resposta de `GET /inspecoes/{id}/relatorios/{relatorio_id}/download/{formato}` (mesmo formato do portal). */
+export type RelatorioDownload = PortalDownload;

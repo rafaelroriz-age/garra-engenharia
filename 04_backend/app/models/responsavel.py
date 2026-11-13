@@ -4,12 +4,18 @@
 Ver `00_docs/arquitetura.md` Seção 3 (Diagrama ER).
 """
 import uuid
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import ForeignKey, String
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.contrato import Contrato
+    from app.models.contrato_executor import ContratoExecutor
+    from app.models.usuario import Usuario
 
 
 class Responsavel(Base):
@@ -24,6 +30,11 @@ class Responsavel(Base):
     crea: Mapped[str] = mapped_column(String, nullable=True)
     email: Mapped[str] = mapped_column(String, nullable=True)
     telefone: Mapped[str] = mapped_column(String, nullable=True)
+    # Bloco de assinatura dos laudos (V1-01): título ("Engenheiro Civil"), lista de
+    # qualificações (uma por linha na assinatura) e a imagem da assinatura no storage.
+    titulo_profissional: Mapped[str | None] = mapped_column(String, nullable=True)
+    qualificacoes: Mapped[list[Any] | None] = mapped_column(JSONB, nullable=True)
+    assinatura_storage_key: Mapped[str | None] = mapped_column(String, nullable=True)
     usuario_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True, unique=True
     )

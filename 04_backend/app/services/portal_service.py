@@ -221,6 +221,36 @@ async def listar_relatorios(
     ]
 
 
+def campo_do_formato(formato: str) -> str:
+    """Coluna de `Relatorio` com a chave do arquivo (`pdf_key`/`docx_key`), ou 404."""
+    campo_key = _FORMATOS.get(formato)
+    if campo_key is None:
+        raise NotFoundError(
+            f"Formato '{formato}' não suportado.", type_suffix="formato-nao-suportado"
+        )
+    return campo_key
+
+
+def url_assinada_do_relatorio(
+    relatorio: Relatorio, campo_key: str, formato: str, storage: StorageClient
+) -> PortalDownloadRead:
+    """URL pré-assinada do arquivo do relatório já autorizado pelo chamador (portal ou equipe, V1-02)."""
+    storage_key = getattr(relatorio, campo_key)
+    if not storage_key:
+        raise NotFoundError(
+            f"Relatório '{relatorio.id}' não possui arquivo {formato.upper()} disponível.",
+            type_suffix="arquivo-nao-disponivel",
+        )
+
+    url = storage.generate_presigned_url(storage_key, DEFAULT_PRESIGNED_URL_EXPIRES_IN_SECONDS)
+    return PortalDownloadRead(
+        relatorio_id=relatorio.id,
+        formato=formato,
+        url=url,
+        expira_em_segundos=DEFAULT_PRESIGNED_URL_EXPIRES_IN_SECONDS,
+    )
+
+
 async def gerar_url_download(
     db: AsyncSession,
     responsavel_id: uuid.UUID,
@@ -228,11 +258,7 @@ async def gerar_url_download(
     formato: str,
     storage: StorageClient,
 ) -> PortalDownloadRead:
-    campo_key = _FORMATOS.get(formato)
-    if campo_key is None:
-        raise NotFoundError(
-            f"Formato '{formato}' não suportado.", type_suffix="formato-nao-suportado"
-        )
+    campo_key = campo_do_formato(formato)
 
     result = await db.execute(
         select(Relatorio)
@@ -247,17 +273,4 @@ async def gerar_url_download(
             type_suffix="relatorio-nao-encontrado",
         )
 
-    storage_key = getattr(relatorio, campo_key)
-    if not storage_key:
-        raise NotFoundError(
-            f"Relatório '{relatorio_id}' não possui arquivo {formato.upper()} disponível.",
-            type_suffix="arquivo-nao-disponivel",
-        )
-
-    url = storage.generate_presigned_url(storage_key, DEFAULT_PRESIGNED_URL_EXPIRES_IN_SECONDS)
-    return PortalDownloadRead(
-        relatorio_id=relatorio.id,
-        formato=formato,
-        url=url,
-        expira_em_segundos=DEFAULT_PRESIGNED_URL_EXPIRES_IN_SECONDS,
-    )
+    return url_assinada_do_relatorio(relatorio, campo_key, formato, storage)

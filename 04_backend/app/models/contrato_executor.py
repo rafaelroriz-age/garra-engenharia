@@ -4,12 +4,17 @@ Um Contrato pode ter mais de uma empresa executora, cada uma com Responsável
 Legal e RTE próprios (RN-06, RN-09 em `00_docs/estudo-do-contexto.md` Seção 5).
 """
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.contrato import Contrato
+    from app.models.responsavel import Responsavel
 
 
 class ContratoExecutor(Base):

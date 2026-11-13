@@ -1,6 +1,6 @@
 """Schemas Pydantic v2 de `Usuario` (autenticação, BL-06)."""
-from typing import Literal
 import uuid
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 

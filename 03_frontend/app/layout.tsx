@@ -1,22 +1,37 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Manrope } from "next/font/google";
+import { Archivo, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { SwRegister } from "@/components/sw-register";
+import { ThemeProvider } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 
 import "./globals.css";
 
-const inter = Inter({
+/*
+ * Tipografia "Prancha Técnica":
+ * - Archivo (variável, eixo `wdth`): títulos e rótulos de seção, usada expandida.
+ * - IBM Plex Sans: texto corrido e interface.
+ * - IBM Plex Mono: dados — KPIs, nº de contrato, códigos, datas (tabular-nums).
+ */
+const archivo = Archivo({
   subsets: ["latin"],
+  axes: ["wdth"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const plexSans = IBM_Plex_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
   display: "swap",
 });
 
-const manrope = Manrope({
+const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
-  variable: "--font-display",
+  weight: ["400", "500", "600"],
+  variable: "--font-mono",
   display: "swap",
 });
 
@@ -41,7 +56,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#253341",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F3F0E8" },
+    { media: "(prefers-color-scheme: dark)", color: "#0E1114" },
+  ],
 };
 
 export default function RootLayout({
@@ -50,10 +68,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={cn(inter.variable, manrope.variable)}>
+    <html
+      lang="pt-BR"
+      className={cn(archivo.variable, plexSans.variable, plexMono.variable)}
+      suppressHydrationWarning
+    >
       <body className="font-sans antialiased">
         <SwRegister />
-        <AppShell>{children}</AppShell>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <AppShell>{children}</AppShell>
+        </ThemeProvider>
       </body>
     </html>
   );
