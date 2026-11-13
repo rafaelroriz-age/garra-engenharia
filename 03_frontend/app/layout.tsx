@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Archivo, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 
 import { AppShell } from "@/components/layout/app-shell";
+import { SwRegister } from "@/components/sw-register";
 import { ThemeProvider } from "@/components/theme-provider";
 import { cn, withBasePath } from "@/lib/utils";
 
@@ -73,6 +74,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="font-sans antialiased">
+        <SwRegister />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AppShell>{children}</AppShell>
         </ThemeProvider>
