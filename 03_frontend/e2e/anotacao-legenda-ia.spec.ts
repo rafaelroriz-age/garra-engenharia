@@ -100,7 +100,7 @@ async function prepararPagina(page: Page, role: Role, foto: Estado) {
 }
 
 async function abrirEditor(page: Page) {
-  await page.goto(`/inspecoes/${INSPECAO_ID}/visitas`);
+  await page.goto(`/inspecoes/visitas/?id=${INSPECAO_ID}`);
   await page.getByRole("button", { name: "Anotar foto" }).click();
   const dialog = page.getByRole("dialog").filter({ hasText: "Editar e marcar foto" });
   await expect(dialog.locator("canvas").first()).toBeVisible({ timeout: 15_000 });

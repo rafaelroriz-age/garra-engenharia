@@ -99,7 +99,7 @@ test.describe("Legenda por IA (BL-35)", () => {
       )
     );
 
-    await page.goto(`/inspecoes/${INSPECAO_ID}/visitas`);
+    await page.goto(`/inspecoes/visitas/?id=${INSPECAO_ID}`);
     await page.getByRole("button", { name: "Legenda com IA" }).click();
 
     await expect(page.getByText("só entra no relatório depois que você revisar o texto e aprovar")).toBeVisible();
@@ -142,7 +142,7 @@ test.describe("Legenda por IA (BL-35)", () => {
       });
     });
 
-    await page.goto(`/inspecoes/${INSPECAO_ID}/visitas`);
+    await page.goto(`/inspecoes/visitas/?id=${INSPECAO_ID}`);
     await page.getByRole("button", { name: "Legenda com IA" }).click();
     await page.getByLabel("Anotação de campo (opcional)").fill("fissura fachada norte");
     await page.getByRole("button", { name: "Gerar legenda com IA" }).click();
@@ -175,7 +175,7 @@ test.describe("Legenda por IA (BL-35)", () => {
 
   test("perfil cliente não vê o painel de legenda por IA", async ({ page }) => {
     await prepararPagina(page, "cliente");
-    await page.goto(`/inspecoes/${INSPECAO_ID}/visitas`);
+    await page.goto(`/inspecoes/visitas/?id=${INSPECAO_ID}`);
     await expect(page.getByAltText("Foto vinculada à visita")).toBeVisible();
     await page.waitForLoadState("networkidle"); // garante que `/auth/me` já respondeu
     await expect(page.getByRole("button", { name: "Legenda com IA" })).toHaveCount(0);

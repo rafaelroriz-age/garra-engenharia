@@ -217,7 +217,7 @@ export default function ContratosPage() {
                     <TableRow key={contrato.id}>
                       <TableCell className="font-medium">
                         <Link
-                          href={`/contratos/${contrato.id}`}
+                          href={`/contratos/detalhe?id=${contrato.id}`}
                           className="text-primary underline-offset-4 hover:underline"
                         >
                           {contrato.numero}
@@ -230,7 +230,7 @@ export default function ContratosPage() {
                       </TableCell>
                       <TableCell>
                         <Link
-                          href={`/contratos/${contrato.id}`}
+                          href={`/contratos/detalhe?id=${contrato.id}`}
                           className="text-sm font-medium text-primary underline-offset-4 hover:underline"
                         >
                           Ver detalhes

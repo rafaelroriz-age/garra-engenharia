@@ -54,7 +54,7 @@ test.describe("Portal do Cliente — controle de perfil na UI (BL-32)", () => {
 
     await page.goto("/portal");
 
-    await expect(page).toHaveURL(/\/dashboard$/);
+    await expect(page).toHaveURL(/\/dashboard\/?$/);
     // seletor específico do portal (o dashboard também tem um campo "Edificação")
     await expect(page.locator("#portal-edificacao")).toHaveCount(0);
     await expect(page.getByText("Visitas realizadas", { exact: true })).toHaveCount(0);
@@ -67,7 +67,7 @@ test.describe("Portal do Cliente — controle de perfil na UI (BL-32)", () => {
 
     await page.goto("/portal/documentos");
 
-    await expect(page).toHaveURL(/\/dashboard$/);
+    await expect(page).toHaveURL(/\/dashboard\/?$/);
     await expect(page.locator("#portal-edificacao")).toHaveCount(0);
     await expect(page.getByText("Nenhum documento emitido até o momento.")).toHaveCount(0);
     expect(chamadasPortal).toHaveLength(0);
@@ -91,7 +91,7 @@ test.describe("Portal do Cliente — controle de perfil na UI (BL-32)", () => {
 
     await page.goto("/portal");
 
-    await expect(page).toHaveURL(new RegExp(`/portal\\?edificacaoId=${ED_A}`));
+    await expect(page).toHaveURL(new RegExp(`/portal/?\\?edificacaoId=${ED_A}`));
     await expect(page.getByText("Nenhum contrato em andamento para esta edificação.")).toBeVisible();
     await expect(page.getByLabel("Edificação")).toHaveValue(ED_A);
     await expect(page.getByLabel("Edificação").locator("option")).toHaveText(["Edifício Alfa"]);
@@ -103,6 +103,6 @@ test.describe("Portal do Cliente — controle de perfil na UI (BL-32)", () => {
 
     await page.goto("/portal");
 
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(/\/login\/?$/);
   });
 });

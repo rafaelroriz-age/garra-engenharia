@@ -139,7 +139,7 @@ test.describe("Portal do Cliente (API mockada)", () => {
     const seletor = page.getByLabel("Edificação");
     await expect(seletor.locator("option")).toHaveText(["Edifício Alfa", "Edifício Beta"]);
     // a primeira edificação é selecionada automaticamente via redirect
-    await expect(page).toHaveURL(new RegExp(`/portal\\?edificacaoId=${ED_A}`));
+    await expect(page).toHaveURL(new RegExp(`/portal/?\\?edificacaoId=${ED_A}`));
     await expect(seletor).toHaveValue(ED_A);
     // navegação específica do portal
     const nav = page.getByRole("navigation", { name: "Navegação principal" });
@@ -295,7 +295,7 @@ test.describe("Portal do Cliente (API mockada)", () => {
       problema(route, 403, "Acesso negado", "Perfil sem acesso ao portal.")
     );
     await page.goto("/portal");
-    await expect(page).toHaveURL(/\/portal$/);
+    await expect(page).toHaveURL(/\/portal\/?$/);
     await expect(alertaApi(page)).toContainText("Perfil sem acesso ao portal.");
   });
 });

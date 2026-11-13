@@ -14,7 +14,7 @@ import { apagarRecursos, prepararInspecao } from "./inspecao-helpers";
 test.describe("Visitas (RFO)", () => {
   test("cria visita; rejeita data futura e segunda visita no mesmo dia; edita", async ({ page, request }) => {
     const { inspecaoId } = await prepararInspecao(page, request, "RFO");
-    await expect(page).toHaveURL(new RegExp(`/inspecoes/${inspecaoId}/visitas$`));
+    await expect(page).toHaveURL(new RegExp(`/inspecoes/visitas/\\?id=${inspecaoId}$`));
 
     const servicos = `Concretagem E2E ${Date.now()}`;
     const abrirNovaVisita = async () => {

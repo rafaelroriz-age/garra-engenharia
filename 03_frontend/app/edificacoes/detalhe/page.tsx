@@ -265,7 +265,7 @@ export default function EdificacaoDetailPage() {
                     </TableCell>
                     <TableCell>
                       <Link
-                        href={`/contratos/${contrato.id}`}
+                        href={`/contratos/detalhe?id=${contrato.id}`}
                         className="text-sm font-medium text-primary underline-offset-4 hover:underline"
                       >
                         Ver contrato

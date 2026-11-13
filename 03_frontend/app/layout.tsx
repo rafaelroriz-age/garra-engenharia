@@ -3,7 +3,7 @@ import { Archivo, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { ThemeProvider } from "@/components/theme-provider";
-import { cn } from "@/lib/utils";
+import { cn, withBasePath } from "@/lib/utils";
 
 import "./globals.css";
 
@@ -41,9 +41,9 @@ export const metadata: Metadata = {
   },
   description:
     "Sistema de automação de relatórios de inspeção predial (RFO, LTIP, vistorias cautelares) da Garra Perícias e Avaliações.",
-  manifest: "/manifest.json",
+  manifest: withBasePath("/manifest.json"),
   icons: {
-    icon: "/icon.svg",
+    icon: withBasePath("/icon.svg"),
   },
   appleWebApp: {
     capable: true,

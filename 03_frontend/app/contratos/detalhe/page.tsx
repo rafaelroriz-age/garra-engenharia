@@ -121,19 +121,19 @@ export default function ContratoDetailPage() {
               </CardHeader>
               <CardContent className="flex flex-wrap gap-4 text-sm">
                 <Link
-                  href={`/inspecoes/${contrato.inspecao.id}/visitas`}
+                  href={`/inspecoes/visitas?id=${contrato.inspecao.id}`}
                   className="font-medium text-primary underline-offset-4 hover:underline"
                 >
                   Visitas (RF-03)
                 </Link>
                 <Link
-                  href={`/inspecoes/${contrato.inspecao.id}/ocorrencias`}
+                  href={`/inspecoes/ocorrencias?id=${contrato.inspecao.id}`}
                   className="font-medium text-primary underline-offset-4 hover:underline"
                 >
                   Ocorrências (RF-04)
                 </Link>
                 <Link
-                  href={`/inspecoes/${contrato.inspecao.id}/relatorio`}
+                  href={`/inspecoes/relatorio?id=${contrato.inspecao.id}`}
                   className="font-medium text-primary underline-offset-4 hover:underline"
                 >
                   Relatório (RF-06)

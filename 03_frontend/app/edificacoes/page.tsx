@@ -146,7 +146,7 @@ export default function EdificacoesPage() {
                     <TableRow key={edificacao.id}>
                       <TableCell className="font-medium">
                         <Link
-                          href={`/edificacoes/${edificacao.id}`}
+                          href={`/edificacoes/detalhe?id=${edificacao.id}`}
                           className="text-primary underline-offset-4 hover:underline"
                         >
                           {edificacao.nome}
@@ -157,7 +157,7 @@ export default function EdificacoesPage() {
                       <TableCell>{edificacao.area_total_m2 ?? "—"}</TableCell>
                       <TableCell>
                         <Link
-                          href={`/edificacoes/${edificacao.id}`}
+                          href={`/edificacoes/detalhe?id=${edificacao.id}`}
                           className="text-sm font-medium text-primary underline-offset-4 hover:underline"
                         >
                           Ver detalhes

@@ -118,7 +118,20 @@ Variáveis `DEEPSEEK_*` (T63, 2026-11-11, DEC-49 proposta): `LEGENDA_IA_PROVEDOR
 
 Variáveis do RAG da legenda IA (T69, DEC-53 proposta): `LEGENDA_IA_RAG_ATIVO` (padrão `true`) e `LEGENDA_IA_RAG_K` (padrão `3`) estão no `environment:` do backend em `docker-compose.yml`, em `render.yaml` e em `.env.example`. Depois do deploy, rode `alembic upgrade head` e, uma vez, `python -m app.scripts.ingerir_conhecimento_ia` (revise antes o `--dry-run --amostras 20`); sem isso as referências ficam vazias.
 
+## Frontend no GitHub Pages (DEC-55)
+
+Desde a DEC-55 o frontend não precisa mais do Render: é exportado como site estático (`output: "export"`) e publicado pelo workflow [`deploy-pages.yml`](../.github/workflows/deploy-pages.yml) em **https://rafaelroriz-age.github.io/garra-engenharia/** a cada push em `main` que toque `03_frontend/` (ou manualmente em Actions → *Deploy frontend (GitHub Pages)* → *Run workflow*).
+
+Configuração (ação humana, uma vez):
+
+1. GitHub → Settings → Pages → Build and deployment → **Source = GitHub Actions**. Repositório privado exige plano pago do GitHub para usar Pages.
+2. No Render, serviço `garra-backend` → Environment: `BACKEND_CORS_ORIGINS` deve conter `https://rafaelroriz-age.github.io` (sem o path). Salve e redeploy.
+3. Se a URL do backend mudar, edite `NEXT_PUBLIC_API_URL` em `deploy-pages.yml` (é embutida no bundle em build time).
+4. Depois de validar o Pages: remova o bloco `garra-frontend` do `render.yaml`, suspenda/apague o serviço no Dashboard do Render, tire `main_front` da matrix de `sync-deploy-branches.yml` e apague `03_frontend/Dockerfile.render`.
+
 ## Deploy em produção (Render)
+
+> O serviço `garra-frontend` abaixo está sendo substituído pelo GitHub Pages (seção anterior, DEC-55).
 
 Resolve o bloqueio B-03/HT-03 (hospedagem) com Render como provedor de nuvem. Toda a infraestrutura é definida como código em [`../render.yaml`](../render.yaml) (Render Blueprint) — os recursos abaixo são criados e conectados automaticamente, sem segredo hardcoded no repositório. Desde a DEC-17 (2026-07-21), cada serviço observa uma branch dedicada do monorepo como gatilho de auto-deploy; desde a DEC-22 (2026-08-05), as branches de staging foram removidas e `main` é sincronizada automaticamente para `main_back`/`main_front` pelo workflow `sync-deploy-branches.yml`:
 

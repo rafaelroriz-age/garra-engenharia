@@ -58,6 +58,14 @@ cd 05_infra
 docker compose up -d --build frontend
 ```
 
+## Deploy (GitHub Pages, DEC-55)
+
+O build é um **export estático** (`output: "export"` → pasta `out/`), publicado pelo workflow `.github/workflows/deploy-pages.yml` em https://rafaelroriz-age.github.io/garra-engenharia/. Regras que isso impõe:
+
+- Nada de rotas dinâmicas `[id]`, API routes, middleware ou `next/headers`. Telas de detalhe recebem o ID por query string e leem com `useIdParam()` (`lib/use-id-param.ts`), sob um `<Suspense>` (ver os `layout.tsx` de `contratos/detalhe`, `edificacoes/detalhe` e `inspecoes`).
+- Links internos sempre via `next/link`/`useRouter` (aplicam o `basePath`). URL em string crua (metadata, `<img src>`) passa por `withBasePath()` (`lib/utils.ts`).
+- Simular o build do Pages localmente: `$env:NEXT_PUBLIC_BASE_PATH="/garra-engenharia"; npm run build; npx serve out` e abrir `http://localhost:3000/garra-engenharia/` (o `serve` precisa servir `out` sob esse prefixo; alternativa: build sem `NEXT_PUBLIC_BASE_PATH` e `npx serve out`).
+
 ## Como validar
 
 ```powershell

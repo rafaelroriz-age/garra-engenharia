@@ -53,7 +53,7 @@ export default function RelatorioPage() {
   }, [carregar]);
 
   const tipo = inspecao?.tipo.trim().toUpperCase() ?? "";
-  const voltarHref = inspecao ? `/contratos/${inspecao.contrato_id}` : "/contratos";
+  const voltarHref = inspecao ? `/contratos/detalhe?id=${inspecao.contrato_id}` : "/contratos";
 
   return (
     <div className="min-w-0 space-y-6">

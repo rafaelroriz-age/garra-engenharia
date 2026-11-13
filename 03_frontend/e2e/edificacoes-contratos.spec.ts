@@ -63,7 +63,7 @@ test.describe("Edificações e contratos (auditor)", () => {
     // Detalhe da edificação.
     await busca.fill(nome);
     await page.getByRole("link", { name: nome }).click();
-    await expect(page).toHaveURL(/\/edificacoes\/[0-9a-f-]+$/);
+    await expect(page).toHaveURL(/\/edificacoes\/detalhe\/\?id=[0-9a-f-]+$/);
     await expect(page.getByText(nome).first()).toBeVisible();
   });
 
@@ -277,8 +277,8 @@ test.describe("Edificações e contratos (auditor)", () => {
     }
 
     // Detalhe: as duas executoras e as duas NBRs aparecem (RN-06, RF-12).
-    await page.goto(`/contratos/${contratoId}`);
-    await expect(page).toHaveURL(/\/contratos\/[0-9a-f-]+$/);
+    await page.goto(`/contratos/detalhe/?id=${contratoId}`);
+    await expect(page).toHaveURL(/\/contratos\/detalhe\/\?id=[0-9a-f-]+$/);
     await expect(page.getByText(razao1)).toBeVisible();
     await expect(page.getByText(razao2)).toBeVisible();
     await expect(page.getByText("NBR 16747")).toBeVisible();

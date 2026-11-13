@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api-client";
+import { useIdParam } from "@/lib/use-id-param";
 import { normalizePaginated } from "@/lib/types";
 import type {
   Localizacao,
@@ -32,8 +33,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 /** Ocorrências por sistema/subsistema, localização e classificação CMM (RF-04, RN-03, RN-05, RN-10, BL-14). */
-export default function OcorrenciasPage({ params }: { params: { id: string } }) {
-  const inspecaoId = params.id;
+export default function OcorrenciasPage() {
+  const inspecaoId = useIdParam();
 
   const [sistemas, setSistemas] = useState<SistemaPredialComSubsistemas[]>([]);
   const [tiposAnomalia, setTiposAnomalia] = useState<TipoAnomalia[]>([]);

@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, Building2, CheckCircle2, ClipboardList, XCircle } from "lucide-react";
 
@@ -157,9 +158,9 @@ function DashboardContent() {
       {!loadingEdificacoes && edificacoes.length === 0 ? (
         <EmptyState icon={Building2}>
           Nenhuma edificação cadastrada ainda. Cadastre em{" "}
-          <a href="/edificacoes" className="font-medium text-primary underline underline-offset-4">
+          <Link href="/edificacoes" className="font-medium text-primary underline underline-offset-4">
             Edificações
-          </a>
+          </Link>
           .
         </EmptyState>
       ) : (
@@ -333,15 +334,15 @@ function DashboardContent() {
       <p className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-foreground/15 pt-4 text-sm text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
           <Building2 className="h-4 w-4" aria-hidden="true" /> Ver{" "}
-          <a href="/edificacoes" className="font-medium text-primary underline-offset-4 hover:underline">
+          <Link href="/edificacoes" className="font-medium text-primary underline-offset-4 hover:underline">
             edificações
-          </a>
+          </Link>
         </span>
         <span className="inline-flex items-center gap-1.5">
           <ClipboardList className="h-4 w-4" aria-hidden="true" /> Ver exemplo de{" "}
-          <a href="/inspecoes/1/ocorrencias" className="font-medium text-primary underline-offset-4 hover:underline">
+          <Link href="/inspecoes/ocorrencias?id=1" className="font-medium text-primary underline-offset-4 hover:underline">
             ocorrências de inspeção
-          </a>
+          </Link>
         </span>
       </p>
     </div>
