@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useIdParam } from "@/lib/use-id-param";
 import { ArrowLeft } from "lucide-react";
 
 import { ApiErrorAlert } from "@/components/api-error-alert";
@@ -24,7 +24,7 @@ import { useUsuarioAtual } from "@/lib/use-usuario-atual";
  * tipo igual ao da inspeção (409 `inspecao-nao-{tipo}` caso contrário).
  */
 export default function RelatorioPage() {
-  const params = useParams<{ id: string }>();
+  const params = { id: useIdParam() };
   const inspecaoId = params.id;
   const { isAuditor } = useUsuarioAtual();
 

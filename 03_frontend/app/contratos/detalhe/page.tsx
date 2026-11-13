@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useIdParam } from "@/lib/use-id-param";
 import Link from "next/link";
 import { ArrowLeft, Pencil } from "lucide-react";
 
@@ -20,7 +20,7 @@ import { ContratoForm } from "../contrato-form";
 
 /** Detalhe de Contrato com executoras e NBRs (RF-02, RF-12, BL-09) — `GET /contratos/{id}`. */
 export default function ContratoDetailPage() {
-  const params = useParams<{ id: string }>();
+  const params = { id: useIdParam() };
   const [contrato, setContrato] = useState<ContratoDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<ApiError | Error | null>(null);

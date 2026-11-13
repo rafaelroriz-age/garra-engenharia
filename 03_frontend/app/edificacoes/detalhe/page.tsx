@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useIdParam } from "@/lib/use-id-param";
 import Link from "next/link";
 import { ArrowLeft, FileUp, Paperclip, Pencil } from "lucide-react";
 
@@ -28,7 +29,7 @@ interface DocumentoTecnico {
 
 /** Detalhe de Edificação com histórico de contratos (RF-01, BL-08) — `GET /edificacoes/{id}`. */
 export default function EdificacaoDetailPage() {
-  const params = useParams<{ id: string }>();
+  const params = { id: useIdParam() };
   const router = useRouter();
   const [edificacao, setEdificacao] = useState<EdificacaoDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
