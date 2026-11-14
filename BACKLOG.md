@@ -1360,7 +1360,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T77 · PWA: Service Worker de cache só de leitura e página de fallback sem rede (DEC-26)
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-26
 - **Papel:** Engenheiro Frontend
 - **Depende:** —
@@ -1387,7 +1387,7 @@ Commit em Conventional Commits, ex.: `feat(frontend): service worker de leitura 
 ```
 
 ### T78 · E2E Playwright: escrita sem rede falha com erro explícito e sem fila local (DEC-26)
-- **Status:** todo
+- **Status:** done
 - **Origem:** DEC-26
 - **Papel:** Engenheiro Frontend
 - **Depende:** T77

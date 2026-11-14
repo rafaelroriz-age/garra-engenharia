@@ -74,12 +74,12 @@ test("Fluxo RFO: edificação, contrato, visita com equipe/medições/foto", asy
   const linkContrato = page.getByRole("link", { name: numeroContrato });
   await expect(linkContrato).toBeVisible();
   await linkContrato.click();
-  await expect(page).toHaveURL(/\/contratos\/[0-9a-f-]+$/);
+  await expect(page).toHaveURL(/\/contratos\/detalhe\/\?id=[0-9a-f-]+$/);
 
   // 3. Navega para a Inspeção (1:1 com o Contrato) recém-criada
   await expect(page.getByText("Inspeção", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Visitas (RF-03)" }).click();
-  await expect(page).toHaveURL(/\/inspecoes\/[0-9a-f-]+\/visitas$/);
+  await expect(page).toHaveURL(/\/inspecoes\/visitas\/\?id=[0-9a-f-]+$/);
 
   // 4. Cria visita com equipe, serviços e medições (RF-03, RN-01, RN-02, BL-10)
   await page.getByRole("button", { name: "Nova visita" }).click();

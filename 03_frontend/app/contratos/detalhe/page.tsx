@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useIdParam } from "@/lib/use-id-param";
 import Link from "next/link";
 import { ArrowLeft, Pencil } from "lucide-react";
 
@@ -20,7 +20,7 @@ import { ContratoForm } from "../contrato-form";
 
 /** Detalhe de Contrato com executoras e NBRs (RF-02, RF-12, BL-09) — `GET /contratos/{id}`. */
 export default function ContratoDetailPage() {
-  const params = useParams<{ id: string }>();
+  const params = { id: useIdParam() };
   const [contrato, setContrato] = useState<ContratoDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<ApiError | Error | null>(null);
@@ -121,19 +121,19 @@ export default function ContratoDetailPage() {
               </CardHeader>
               <CardContent className="flex flex-wrap gap-4 text-sm">
                 <Link
-                  href={`/inspecoes/${contrato.inspecao.id}/visitas`}
+                  href={`/inspecoes/visitas?id=${contrato.inspecao.id}`}
                   className="font-medium text-primary underline-offset-4 hover:underline"
                 >
                   Visitas (RF-03)
                 </Link>
                 <Link
-                  href={`/inspecoes/${contrato.inspecao.id}/ocorrencias`}
+                  href={`/inspecoes/ocorrencias?id=${contrato.inspecao.id}`}
                   className="font-medium text-primary underline-offset-4 hover:underline"
                 >
                   Ocorrências (RF-04)
                 </Link>
                 <Link
-                  href={`/inspecoes/${contrato.inspecao.id}/relatorio`}
+                  href={`/inspecoes/relatorio?id=${contrato.inspecao.id}`}
                   className="font-medium text-primary underline-offset-4 hover:underline"
                 >
                   Relatório (RF-06)

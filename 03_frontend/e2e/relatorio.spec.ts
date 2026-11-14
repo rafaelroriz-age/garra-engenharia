@@ -120,7 +120,7 @@ test.describe("Relatório da inspeção (V1-06)", () => {
     await autenticar(page, "auditor");
     await mockRelatorio(page);
 
-    await page.goto(`/inspecoes/${INSPECAO}/relatorio`);
+    await page.goto(`/inspecoes/relatorio/?id=${INSPECAO}`);
 
     await expect(page.getByText("Laudo Técnico de Inspeção Predial (LTIP)", { exact: false })).toBeVisible();
     await expect(page.getByText("Usando os textos padrão (ainda não salvos).")).toBeVisible();
@@ -139,7 +139,7 @@ test.describe("Relatório da inspeção (V1-06)", () => {
     await autenticar(page, "auditor");
     const { chamadas } = await mockRelatorio(page);
 
-    await page.goto(`/inspecoes/${INSPECAO}/relatorio`);
+    await page.goto(`/inspecoes/relatorio/?id=${INSPECAO}`);
     await abrirGrupo(page, "Objetivo");
     await page.getByLabel("Objetivo", { exact: true }).fill("Primeiro parágrafo.\n\nSegundo parágrafo.");
     await page.getByLabel("Local de emissão").fill("Goiânia-GO");
@@ -177,7 +177,7 @@ test.describe("Relatório da inspeção (V1-06)", () => {
       );
     });
 
-    await page.goto(`/inspecoes/${INSPECAO}/relatorio`);
+    await page.goto(`/inspecoes/relatorio/?id=${INSPECAO}`);
     const tabela = page.getByRole("table", { name: "Versões do relatório" });
     await expect(tabela.getByRole("row")).toHaveCount(2); // cabeçalho + V01
 
@@ -196,7 +196,7 @@ test.describe("Relatório da inspeção (V1-06)", () => {
     await autenticar(page, "auxiliar");
     await mockRelatorio(page);
 
-    await page.goto(`/inspecoes/${INSPECAO}/relatorio`);
+    await page.goto(`/inspecoes/relatorio/?id=${INSPECAO}`);
 
     await expect(page.getByRole("button", { name: "Baixar PDF da versão V01" })).toBeVisible();
     await expect(page.getByText("Somente o auditor pode alterar os textos do relatório.")).toBeVisible();
@@ -226,7 +226,7 @@ test.describe("Relatório da inspeção (V1-06)", () => {
       })
     );
 
-    await page.goto(`/inspecoes/${INSPECAO}/relatorio`);
+    await page.goto(`/inspecoes/relatorio/?id=${INSPECAO}`);
     await page.getByRole("button", { name: "Emitir nova versão" }).click();
 
     await expect(page.getByText("Contexto do LTIP incompleto")).toBeVisible();
@@ -249,7 +249,7 @@ test.describe("Relatório da inspeção (V1-06)", () => {
     });
     const { chamadas } = await mockRelatorio(page);
 
-    await page.goto(`/inspecoes/${INSPECAO}/relatorio`);
+    await page.goto(`/inspecoes/relatorio/?id=${INSPECAO}`);
     await page.getByRole("button", { name: "Baixar DOCX da versão V01" }).click();
     await expect.poll(() => chamadas.download.length).toBe(1);
     await page.getByRole("button", { name: "Baixar PDF da versão V01" }).click();
@@ -292,7 +292,7 @@ test.describe("Relatório da inspeção (V1-06)", () => {
       },
     });
 
-    await page.goto(`/inspecoes/${INSPECAO}/relatorio`);
+    await page.goto(`/inspecoes/relatorio/?id=${INSPECAO}`);
     await expect(page.getByLabel(/Parecer técnico \(complemento/)).toHaveValue("Recebimento com ressalvas.");
     await expect(page.getByLabel("Data da vistoria 2", { exact: true })).toHaveValue("2026-10-15");
     await expect(page.getByLabel("Unidade vistoriada")).toHaveCount(0);
@@ -327,7 +327,7 @@ test.describe("Relatório da inspeção (V1-06)", () => {
       },
     });
 
-    await page.goto(`/inspecoes/${INSPECAO}/relatorio`);
+    await page.goto(`/inspecoes/relatorio/?id=${INSPECAO}`);
     await page.getByLabel("Unidade vistoriada").fill("Apartamento 101");
     await page.getByRole("button", { name: "Adicionar data" }).click();
     await page.getByLabel("Data da vistoria 1", { exact: true }).fill("2026-09-30");

@@ -103,7 +103,7 @@ async function prepararPagina(page: Page, role: Role, foto: Estado) {
 }
 
 async function abrirPainel(page: Page) {
-  await page.goto(`/inspecoes/${INSPECAO_ID}/visitas`);
+  await page.goto(`/inspecoes/visitas/?id=${INSPECAO_ID}`);
   await page.getByRole("button", { name: "Legenda com IA" }).click();
   await expect(page.getByLabel("Legenda sugerida (editável)")).toBeVisible();
 }

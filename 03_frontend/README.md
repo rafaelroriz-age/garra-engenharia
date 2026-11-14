@@ -35,7 +35,9 @@ Aplicação **Next.js 14 (App Router) PWA** que funciona como interface web/mobi
 │   │   ├── logo-garra*.svg        # marca vetorizada do JPEG oficial (gerada por `app.scripts.build_brand_assets`, DEC-30)
 │   │   └── logos/                # JPEGs originais do cliente — referência histórica, ver convenção de uso abaixo
 │   ├── manifest.json             # manifest da PWA (display: standalone)
-│   └── icon.svg                  # símbolo derivado do skyline oficial (favicon/PWA, BL-41)
+│   ├── icon.svg                  # símbolo derivado do skyline oficial (favicon/PWA, BL-41)
+│   ├── sw.js                     # Service Worker de leitura (DEC-26, T77)
+│   └── offline.html              # fallback de navegação sem rede
 ├── Dockerfile                    # imagem de desenvolvimento (`next dev`)
 ├── components.json               # config shadcn/ui (style "new-york", Tailwind v3)
 └── tailwind.config.ts / app/globals.css  # tema (cores da marca + tokens shadcn)
@@ -58,6 +60,14 @@ cd 05_infra
 docker compose up -d --build frontend
 ```
 
+## Deploy (GitHub Pages, DEC-55)
+
+O build é um **export estático** (`output: "export"` → pasta `out/`), publicado pelo workflow `.github/workflows/deploy-pages.yml` em https://rafaelroriz-age.github.io/garra-engenharia/. Regras que isso impõe:
+
+- Nada de rotas dinâmicas `[id]`, API routes, middleware ou `next/headers`. Telas de detalhe recebem o ID por query string e leem com `useIdParam()` (`lib/use-id-param.ts`), sob um `<Suspense>` (ver os `layout.tsx` de `contratos/detalhe`, `edificacoes/detalhe` e `inspecoes`).
+- Links internos sempre via `next/link`/`useRouter` (aplicam o `basePath`). URL em string crua (metadata, `<img src>`) passa por `withBasePath()` (`lib/utils.ts`).
+- Simular o build do Pages localmente: `$env:NEXT_PUBLIC_BASE_PATH="/garra-engenharia"; npm run build; npx serve out` e abrir `http://localhost:3000/garra-engenharia/` (o `serve` precisa servir `out` sob esse prefixo; alternativa: build sem `NEXT_PUBLIC_BASE_PATH` e `npx serve out`).
+
 ## Como validar
 
 ```powershell
@@ -67,6 +77,10 @@ npm run lint    # ESLint
 ```
 
 > **Vulnerabilidades (T03, 2026-11-04):** `npm audit` aponta 30 pacotes (2 críticos, 11 altos, 17 moderados), 13 deles em produção; o principal é `next` 14.2.35, cuja correção está só em 15.5.x/16.x. **Atualização (T07):** o `npm audit fix` sem `--force` já foi aplicado só ao `package-lock.json` (30 → 26 achados; produção 13 → 10); Next, fabric e `brace-expansion` 1.1.16 seguem pendentes, ver [npm-audit-fix.md](../00_docs/backlog-auto/npm-audit-fix.md). Não use `npm audit fix --force`. Análise e plano em [npm-audit.md](../00_docs/backlog-auto/npm-audit.md); ver R-12 e DEC-32 (proposta).
+
+## PWA / Service Worker (T77, DEC-26)
+
+`public/sw.js` (registrado por `components/sw-register.tsx` só em produção) cacheia apenas GETs de leitura: dados mestre (24 h) e contratos (5 min, por usuário); entrada vencida não é servida. Escritas não são interceptadas e falham sem rede, sem fila. Navegação sem rede cai em `/offline.html`; o logout limpa o cache. Regras puras em `lib/sw-cache.ts`, testadas com `npm run test:unit` (`node --test`). Detalhes e limitações: [pwa-service-worker.md](../00_docs/backlog-auto/pwa-service-worker.md). Pendente: `basePath` do GitHub Pages no registro e teste em navegador real (R-22).
 
 ## Notas de implementação
 

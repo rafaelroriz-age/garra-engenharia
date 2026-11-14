@@ -55,8 +55,8 @@ test("Fluxo LTIP: edificação, contrato, ocorrências em múltiplos sistemas co
   const linkEdificacao = page.getByRole("link", { name: nomeEdificacao });
   await expect(linkEdificacao).toBeVisible();
   await linkEdificacao.click();
-  await expect(page).toHaveURL(/\/edificacoes\/[0-9a-f-]+$/);
-  const edificacaoId = page.url().match(/\/edificacoes\/([0-9a-f-]+)$/)?.[1];
+  await expect(page).toHaveURL(/\/edificacoes\/detalhe\/\?id=[0-9a-f-]+$/);
+  const edificacaoId = page.url().match(/\/edificacoes\/detalhe\/\?id=([0-9a-f-]+)$/)?.[1];
   if (!edificacaoId) throw new Error("Não foi possível extrair o id da edificação da URL.");
 
   // 2. Cadastra contrato LTIP (RF-02, RN-06, RN-09, BL-09)
@@ -85,8 +85,8 @@ test("Fluxo LTIP: edificação, contrato, ocorrências em múltiplos sistemas co
 
   // 3. Navega para Ocorrências da Inspeção (1:1 com o Contrato)
   await page.getByRole("link", { name: "Ocorrências (RF-04)" }).click();
-  await expect(page).toHaveURL(/\/inspecoes\/[0-9a-f-]+\/ocorrencias$/);
-  const inspecaoId = page.url().match(/\/inspecoes\/([0-9a-f-]+)\/ocorrencias$/)?.[1];
+  await expect(page).toHaveURL(/\/inspecoes\/ocorrencias\/\?id=[0-9a-f-]+$/);
+  const inspecaoId = page.url().match(/\/inspecoes\/ocorrencias\/\?id=([0-9a-f-]+)$/)?.[1];
   if (!inspecaoId) throw new Error("Não foi possível extrair o id da inspeção da URL.");
 
   // 4. Registra ocorrências em 2 sistemas prediais diferentes, cada uma com foto (RF-04, RN-03, RN-05, RN-10, BL-14)
@@ -122,7 +122,7 @@ test("Fluxo LTIP: edificação, contrato, ocorrências em múltiplos sistemas co
   // 6. Dispara geração de laudo — bloqueada por B-02 (BL-17, RN-11): valida
   // que o sistema informa corretamente o estado "em construção" em vez de
   // simular um job de geração que ainda não existe no backend.
-  await page.goto(`/inspecoes/${inspecaoId}/relatorio`);
+  await page.goto(`/inspecoes/relatorio/?id=${inspecaoId}`);
   await expect(page.getByText(/em construção/i)).toBeVisible();
   await expect(page.getByText(/BL-12\/BL-13/i)).toBeVisible();
 });

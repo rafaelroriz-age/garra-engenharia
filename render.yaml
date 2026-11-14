@@ -61,10 +61,12 @@ services:
       # para o `alembic upgrade head` rodar no boot (app/core/migrations.py).
       - key: RUN_MIGRATIONS_ON_STARTUP
         value: "false"
-      # URL pública do frontend — ajuste se o Render atribuir outro hostname
+      # URLs públicas do frontend: GitHub Pages (DEC-55; origem CORS não leva o
+      # path /garra-engenharia) e o antigo serviço do Render, mantido até ser
+      # desligado. Ajuste se o Render atribuir outro hostname
       # (ver comentário no topo do arquivo).
       - key: BACKEND_CORS_ORIGINS
-        value: https://garra-frontend.onrender.com
+        value: https://garra-frontend.onrender.com,https://rafaelroriz-age.github.io
       # Credenciais do Postgres, lidas diretamente do banco gerenciado abaixo
       # (nunca hardcoded).
       - key: POSTGRES_HOST

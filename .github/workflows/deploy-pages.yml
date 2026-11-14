@@ -1,0 +1,65 @@
+# Deploy do frontend (03_frontend) no GitHub Pages — DEC-55.
+# Substitui o serviço `garra-frontend` do Render: o Next.js é exportado como
+# site estático (`output: "export"` em next.config.mjs) e publicado em
+# https://rafaelroriz-age.github.io/garra-engenharia/. O backend continua no
+# Render (render.yaml).
+#
+# Pré-requisito (uma vez, ação humana): Settings → Pages → Build and deployment
+# → Source = "GitHub Actions".
+name: Deploy frontend (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "03_frontend/**"
+      - ".github/workflows/deploy-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Um deploy por vez; não cancela um deploy em andamento.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build estático do Next.js
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 03_frontend
+    env:
+      # Embutidas no bundle em build time (variáveis NEXT_PUBLIC_*).
+      NEXT_PUBLIC_API_URL: https://garra-backend.onrender.com/api/v1
+      NEXT_PUBLIC_BASE_PATH: /garra-engenharia
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: 03_frontend/package-lock.json
+
+      - run: npm ci
+      - run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: 03_frontend/out
+
+  deploy:
+    name: Publicar no GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

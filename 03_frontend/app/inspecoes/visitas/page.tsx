@@ -16,12 +16,14 @@ import {
 } from "@/components/ui/dialog";
 import { ApiErrorAlert } from "@/components/api-error-alert";
 import { api, ApiError } from "@/lib/api-client";
+import { useIdParam } from "@/lib/use-id-param";
 import type { Inspecao, Visita, VisitaInput } from "@/lib/types";
 import { VisitaForm } from "./visita-form";
 import { VisitaCard } from "./visita-card";
 
 /** Registro de Visitas do RFO (RF-03, RN-01, RN-02, BL-10) — `GET /inspecoes/{id}`. */
-export default function VisitasPage({ params }: { params: { id: string } }) {
+export default function VisitasPage() {
+  const params = { id: useIdParam() };
   const [visitas, setVisitas] = useState<Visita[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<ApiError | Error | null>(null);

@@ -68,12 +68,12 @@ export async function prepararInspecao(
   const linkContrato = page.getByRole("link", { name: numeroContrato });
   await expect(linkContrato).toBeVisible();
   await linkContrato.click();
-  await expect(page).toHaveURL(/\/contratos\/[0-9a-f-]+$/);
+  await expect(page).toHaveURL(/\/contratos\/detalhe\/\\?id=[0-9a-f-]+$/);
 
   const alvo = tipo === "RFO" ? "visitas" : "ocorrencias";
   await page.getByRole("link", { name: tipo === "RFO" ? "Visitas (RF-03)" : "Ocorrências (RF-04)" }).click();
-  await expect(page).toHaveURL(new RegExp(`/inspecoes/[0-9a-f-]+/${alvo}$`));
-  const inspecaoId = page.url().match(new RegExp(`/inspecoes/([0-9a-f-]+)/${alvo}$`))?.[1];
+  await expect(page).toHaveURL(new RegExp(`/inspecoes/${alvo}/\\?id=[0-9a-f-]+$`));
+  const inspecaoId = page.url().match(new RegExp(`/inspecoes/${alvo}/\\?id=([0-9a-f-]+)$`))?.[1];
   if (!inspecaoId) throw new Error("Não foi possível extrair o id da inspeção da URL.");
   return { auth, inspecaoId };
 }

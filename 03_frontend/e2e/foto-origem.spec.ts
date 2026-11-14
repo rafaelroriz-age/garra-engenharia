@@ -83,7 +83,7 @@ test.describe("Origem da foto no vínculo (BL-31)", () => {
       return route.fulfill({ status: 200, json: {} });
     });
 
-    await page.goto(`/inspecoes/${INSPECAO_ID}/visitas`);
+    await page.goto(`/inspecoes/visitas/?id=${INSPECAO_ID}`);
 
     // Uma única visita no mock: o botão "Enviar arquivo" e o input de arquivo são únicos na página.
     await page.getByRole("button", { name: "Enviar arquivo" }).click();
