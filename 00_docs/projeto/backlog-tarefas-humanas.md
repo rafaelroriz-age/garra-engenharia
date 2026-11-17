@@ -43,7 +43,7 @@ last_updated: 2026-09-17
 | [HT-10](#ht-10--coleta-de-dados-e-fotos-em-campo-durante-a-vistoriainspeção) | Coleta de dados e fotos em campo durante a vistoria/inspeção | Atividade física de engenharia, fora do escopo de software | Alimenta BL-10/BL-11 (dados de entrada) | 🔴 Recorrente | Não |
 | [HT-11](#ht-11--negociar-e-assinar-o-contrato-de-prestação-de-serviços) | Negociar e assinar o contrato de prestação de serviços/aditivos | Assinatura com validade jurídica | Formalização comercial | 🔴 Pendente | Parcial (minuta/revisão do contrato) |
 | [HT-12](#ht-12--autenticar-o-servidor-mcp-do-notion) | Autenticar o servidor MCP do Notion (OAuth) e selecionar o workspace/página de destino | Login/OAuth e escolha de workspace são atos do próprio usuário; credencial não deve passar por chat/agente | Criação do board `backlog-kanban.md` real dentro do Notion (DEC-20) | ✅ Concluída (2026-08-07) — board criado, ver [HT-12](#ht-12--autenticar-o-servidor-mcp-do-notion) | Sim (board criado integralmente pelo agente após a autenticação) |
-| [HT-13](#ht-13--criar-o-repositório-público-garra-app-e-o-token-de-deploy-dec-57) | Criar o repo público `garra-app` + PAT `PAGES_DEPLOY_TOKEN` | Criação de conta/token | T83 deploy, T82 publicação | 🔴 Pendente | Não (token) |
+| [HT-13](#ht-13--habilitar-o-github-pages-do-repositório-dec-57) | Habilitar o GitHub Pages (Source = GitHub Actions) | Configuração do repositório | Deploy do front | 🟡 Repo público em 2026-11-17; confirmar Source | Não |
 | [HT-14](#ht-14--definir-a-senha-da-equipe-do-snapshot-dec-57) | Definir a senha da equipe do snapshot | Segredo | Modo leitura (DEC-57) | 🔴 Pendente | Não |
 | [HT-15](#ht-15--instalar-o-agente-de-inicialização-e-importar-os-dados-do-render-dec-57) | Instalar o agente no PC e importar o banco do Render | Credencial de produção / tarefa no Windows | Desligar o Render | 🔴 Pendente | Parcial (scripts prontos por T79–T84) |
 | [HT-16](#ht-16--apagar-os-serviços-do-render-dec-57) | Apagar os serviços do Render | Ato irreversível na conta paga | — | 🔴 Pendente | Não |
@@ -319,16 +319,13 @@ Registro completo em [ata-validacao-lacunas.md](ata-validacao-lacunas.md).
 
 ---
 
-## HT-13 — Criar o repositório público `garra-app` e o token de deploy (DEC-57)
+## HT-13 — Habilitar o GitHub Pages do repositório (DEC-57)
 
-**Por que só um humano:** criação de repositório e de token pessoal (PAT) são atos da conta do dono; o token nunca deve passar por chat/agente.
+**Por que só um humano:** configuração administrativa do repositório.
 
-**Passo a passo:**
-1. Em https://github.com/new criar `rafaelroriz-age/garra-app`, **Public**, com README (para existir a branch padrão).
-2. Criar um fine-grained PAT em https://github.com/settings/personal-access-tokens/new: Repository access = só `garra-app`; Permissions → Contents = Read and write; validade 1 ano.
-3. No repositório **privado** `garra-engenharia` → Settings → Secrets and variables → Actions → New secret `PAGES_DEPLOY_TOKEN` = o token.
-4. No PC, colocar o mesmo token em `05_infra/local/.env` como `GARRA_PUBLIC_TOKEN=` (arquivo fora do git).
-5. Depois do primeiro deploy (T83 integrada e push na `main`), em `garra-app` → Settings → Pages → Source = "Deploy from a branch", branch `gh-pages`, pasta `/`.
+**Situação:** repositório tornado público pelo dono em 2026-11-17 (o repositório público separado `garra-app` deixou de ser necessário). O workflow-modelo `nextjs.yml` criado pela tela do Pages foi removido: ele roda na raiz (sem `package.json`) e duplicava `deploy-pages.yml`.
+
+**Passo a passo:** Settings → Pages → Build and deployment → Source = **GitHub Actions**. Depois, Actions → "Deploy frontend (GitHub Pages)" deve ficar verde e o site abrir em https://rafaelroriz-age.github.io/garra-engenharia/.
 
 ---
 
