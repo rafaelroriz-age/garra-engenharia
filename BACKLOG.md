@@ -1412,7 +1412,7 @@ Commit em Conventional Commits: `test(frontend): e2e de escrita sem rede (DEC-26
 Contexto comum (DEC-57 em 00_docs/projeto/decisoes.md): o repositório `garra-engenharia` é **público** (desde 2026-11-17). O site estático continua no GitHub Pages do próprio repositório (`https://rafaelroriz-age.github.io/garra-engenharia/`, `deploy-pages.yml` com `GITHUB_TOKEN`), e a branch órfã `snapshot` do mesmo repositório guarda com `api.json` (URL atual do túnel + heartbeat) e `snapshot.enc` (dados de leitura da equipe cifrados com AES-256-GCM). Backend FastAPI, PostgreSQL e arquivos rodam no PC do dono, com dados fora do git; sobe sozinho no logon do Windows e é exposto por `cloudflared tunnel --url` (URL aleatória por boot, publicada em `api.json`). PC desligado → site abre em modo leitura com o snapshot; nenhuma gravação.
 
 ### T79 · Runtime local de produção no PC sem Docker (PostgreSQL portátil + venv + .env)
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-57
 - **Papel:** devops
 - **Depende:** —
