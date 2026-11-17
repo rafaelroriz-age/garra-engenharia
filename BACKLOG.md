@@ -1604,7 +1604,7 @@ Siga a 'Regra de pronto' do BACKLOG.md. Papel: devops. Leia DEC-57, 00_docs/back
 ```
 
 ### T89 · Backup do Neon e documentação do banco gerenciado (DEC-58)
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-58
 - **Papel:** devops
 - **Depende:** T87, T88
