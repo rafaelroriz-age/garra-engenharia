@@ -25,8 +25,18 @@
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [ValidateSet('setup', 'start', 'stop', 'status', 'backup', 'help')]
+    [ValidateSet('setup', 'start', 'stop', 'status', 'backup', 'install', 'uninstall', 'agente', 'help')]
     [string]$Comando = 'help',
+
+    # install/uninstall: aceita -Dry ou --dry (imprime o que seria registrado/removido e sai).
+    [switch]$Dry,
+
+    # install: registra a tarefa mas nao a inicia agora.
+    [switch]$SemIniciar,
+
+    # Sobras da linha de comando (aceita `--dry` e repassa o resto ao agente).
+    [Parameter(ValueFromRemainingArguments = $true)]
+    [string[]]$Resto = @(),
 
     # setup: nao instala o MSYS2/Pango (PDF fica indisponivel; DOCX continua funcionando).
     [switch]$PularPango,
@@ -686,15 +696,102 @@ function Invoke-Backup {
     Write-Log '=== backup concluido ==='
 }
 
+# ----------------------------------------------------------------------------------------------
+# install / uninstall / agente (T82, DEC-57)
+# ----------------------------------------------------------------------------------------------
+$NomeTarefa = 'Garra Local'
+$AgenteScript = Join-Path $LocalDir 'garra-agente.ps1'
+
+function Get-ArgumentoAgente {
+    $psExe = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+    $arg = '-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "{0}"' -f $AgenteScript
+    return [pscustomobject]@{ Exe = $psExe; Argumentos = $arg }
+}
+
+function Invoke-Install {
+    $usuario = '{0}\{1}' -f $env:USERDOMAIN, $env:USERNAME
+    $a = Get-ArgumentoAgente
+    $acao = New-ScheduledTaskAction -Execute $a.Exe -Argument $a.Argumentos -WorkingDirectory $LocalDir
+    $gatilho = New-ScheduledTaskTrigger -AtLogOn -User $usuario
+    # Reinicio automatico em falha; sem limite de duracao; roda na bateria; sem segunda instancia.
+    $config = New-ScheduledTaskSettingsSet -RestartCount 5 -RestartInterval (New-TimeSpan -Minutes 1) `
+        -ExecutionTimeLimit ([TimeSpan]::Zero) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
+        -StartWhenAvailable -MultipleInstances IgnoreNew
+    # Interactive + Limited: roda como o usuario atual, sem elevacao (nao pede admin para rodar).
+    $principal = New-ScheduledTaskPrincipal -UserId $usuario -LogonType Interactive -RunLevel Limited
+    $dryRun = $Dry -or ($Resto -contains '--dry')
+    if ($dryRun) {
+        Write-Host "[dry] Register-ScheduledTask -TaskName '$NomeTarefa' -Force"
+        Write-Host "[dry]   Acao      : $($a.Exe) $($a.Argumentos)"
+        Write-Host "[dry]   Diretorio : $LocalDir"
+        Write-Host "[dry]   Gatilho   : AtLogOn, usuario $usuario"
+        Write-Host "[dry]   Execucao  : usuario $usuario, LogonType Interactive, RunLevel Limited (sem admin)"
+        Write-Host "[dry]   Falha     : RestartCount 5, RestartInterval 1 min; sem limite de duracao; MultipleInstances IgnoreNew"
+        Write-Host "[dry] Start-ScheduledTask -TaskName '$NomeTarefa'  (omitido com -SemIniciar)"
+        Write-Host "[dry] Nada foi registrado."
+        return
+    }
+    if (-not (Test-Path -LiteralPath $AgenteScript)) { Stop-ComErro "Falta $AgenteScript" }
+    try {
+        Register-ScheduledTask -TaskName $NomeTarefa -Action $acao -Trigger $gatilho -Settings $config -Principal $principal `
+            -Description 'Garra Local: backend + tunel cloudflared + publicacao do snapshot (DEC-57)' -Force | Out-Null
+    }
+    catch {
+        Stop-ComErro ("Register-ScheduledTask falhou: {0}. Se for 'acesso negado', rode install uma vez num PowerShell 'Como administrador'." -f $_.Exception.Message)
+    }
+    Write-Log "tarefa agendada '$NomeTarefa' registrada (logon de $usuario)"
+    if (-not $SemIniciar) {
+        Start-ScheduledTask -TaskName $NomeTarefa
+        Write-Log "tarefa '$NomeTarefa' iniciada; acompanhe em $LogDir\garra-agente.log"
+    }
+}
+
+function Invoke-Uninstall {
+    $dryRun = $Dry -or ($Resto -contains '--dry')
+    if ($dryRun) {
+        Write-Host "[dry] Stop-ScheduledTask -TaskName '$NomeTarefa'"
+        Write-Host "[dry] Unregister-ScheduledTask -TaskName '$NomeTarefa' -Confirm:`$false"
+        Write-Host "[dry] Nada foi removido."
+        return
+    }
+    $t = Get-ScheduledTask -TaskName $NomeTarefa -ErrorAction SilentlyContinue
+    if (-not $t) { Write-Log "tarefa '$NomeTarefa' nao existe; nada a remover"; return }
+    Stop-ScheduledTask -TaskName $NomeTarefa -ErrorAction SilentlyContinue
+    Unregister-ScheduledTask -TaskName $NomeTarefa -Confirm:$false
+    # O cloudflared e filho do agente e pode sobreviver a um Stop forcado.
+    $pidArq = Join-Path $RunDir 'cloudflared.pid'
+    if (Test-Path -LiteralPath $pidArq) {
+        $id = 0
+        [int]::TryParse(([IO.File]::ReadAllText($pidArq)).Trim(), [ref]$id) | Out-Null
+        $p = if ($id -gt 0) { Get-Process -Id $id -ErrorAction SilentlyContinue } else { $null }
+        if ($p -and $p.ProcessName -eq 'cloudflared') { $p.Kill(); Write-Log "cloudflared (PID $id) encerrado" }
+        Remove-Item -LiteralPath $pidArq -Force -ErrorAction SilentlyContinue
+    }
+    Write-Log "tarefa '$NomeTarefa' removida (Postgres/uvicorn seguem no ar; use stop se quiser parar)"
+}
+
+function Invoke-Agente {
+    # Roda o agente em primeiro plano (depuracao); repassa o resto da linha de comando.
+    $extra = @($Resto | Where-Object { $_ -ne '--dry' })
+    & (Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe') -NoProfile -ExecutionPolicy Bypass -File $AgenteScript @extra
+    if ($LASTEXITCODE -ne 0) { Stop-ComErro "agente terminou com codigo $LASTEXITCODE" }
+}
+
 try {
     switch ($Comando) {
+        'install'   { Invoke-Install }
+        'uninstall' { Invoke-Uninstall }
+        'agente'    { Invoke-Agente }
         'setup'  { Invoke-Setup }
         'start'  { Invoke-Start }
         'stop'   { Invoke-Stop }
         'status' { Invoke-Status }
         'backup' { Invoke-Backup }
         default  {
-            Write-Host 'Uso: garra-local.ps1 setup|start|stop|status|backup [-PularPango] [-PularSeeds]'
+            Write-Host 'Uso: garra-local.ps1 setup|start|stop|status|backup|install|uninstall|agente [-PularPango] [-PularSeeds] [--dry]'
+            Write-Host '  install   registra a tarefa agendada "Garra Local" (logon, sem admin) que roda garra-agente.ps1'
+            Write-Host '  uninstall remove a tarefa agendada; --dry imprime sem registrar/remover'
+            Write-Host '  agente    roda o agente em primeiro plano (depuracao)'
             Write-Host '  setup   PostgreSQL 16 portatil + initdb + banco + venv-prod + Pango + .env (idempotente)'
             Write-Host '  start   Postgres + alembic upgrade head + seeds idempotentes + uvicorn em 2o plano'
             Write-Host '  stop    encerra uvicorn (PID em run/) e pg_ctl stop -m fast'
