@@ -4,6 +4,11 @@
 
 .DESCRIPTION
     Subcomandos:
+      Modo de banco (POSTGRES_MODO no .env): `local` (padrao) = Postgres portatil abaixo;
+      `neon` (DEC-58) = Postgres gerenciado do Neon (conexao direta, sem -pooler, TLS via POSTGRES_SSL=true).
+      No modo neon, setup/start/stop NAO baixam, sobem nem derrubam o Postgres portatil; start roda
+      `alembic upgrade head` contra o Neon; status testa a conexao; a senha fica so no .env local.
+
       setup   Baixa o PostgreSQL 16 portatil (zip EDB) para 05_infra/local/bin/pgsql, faz initdb em
               %LOCALAPPDATA%\garra\pgdata (scram-sha-256, porta do .env), cria o banco, cria o venv
               04_backend/.venv-prod com requirements.txt, instala o Pango (MSYS2 portatil) para o
@@ -226,6 +231,10 @@ function Initialize-EnvLocal {
         }
     }
     $gerados = [ordered]@{ POSTGRES_PASSWORD = 24; JWT_SECRET_KEY = 48; ADMIN_SENHA = 12 }
+    if ((Read-EnvLocal)['POSTGRES_MODO'] -eq 'neon') {
+        # A senha do banco e a do Neon: o dono cola no .env; nunca gerar uma aleatoria por cima.
+        $gerados.Remove('POSTGRES_PASSWORD')
+    }
     foreach ($k in $gerados.Keys) {
         if (Set-EnvSeVazio $k (New-Segredo $gerados[$k])) { Write-Log "$k gerada (aleatoria)" }
         else { Write-Log "$k ja definida: mantida" }
@@ -245,13 +254,27 @@ function Get-Config {
         BACKUP_RETENCAO = '14'; ENVIRONMENT = 'production'
     }
     foreach ($k in $padroes.Keys) { if (-not $cfg.Contains($k) -or -not $cfg[$k]) { $cfg[$k] = $padroes[$k] } }
-    if (-not $cfg['POSTGRES_PASSWORD']) { Stop-ComErro 'POSTGRES_PASSWORD vazia no .env. Rode setup.' }
+    if (-not $cfg.Contains('POSTGRES_MODO') -or -not $cfg['POSTGRES_MODO']) { $cfg['POSTGRES_MODO'] = 'local' }
+    $cfg['POSTGRES_MODO'] = ([string]$cfg['POSTGRES_MODO']).ToLowerInvariant()
+    if ($cfg['POSTGRES_MODO'] -notin @('local', 'neon')) { Stop-ComErro "POSTGRES_MODO invalido ('$($cfg['POSTGRES_MODO'])'): use local ou neon" }
+    if ($cfg['POSTGRES_MODO'] -eq 'neon') {
+        # Neon (DEC-58): host, usuario e senha vem so do .env local e nunca vao para log.
+        $h = [string]$cfg['POSTGRES_HOST']
+        if (-not $h -or $h -in @('localhost', '127.0.0.1')) { Stop-ComErro 'POSTGRES_MODO=neon exige POSTGRES_HOST do Neon no .env (conexao direta, sem -pooler)' }
+        if ($h -match '-pooler') { Stop-ComErro 'POSTGRES_HOST aponta para o pooler (-pooler): use a conexao DIRETA do Neon (asyncpg nao funciona com o pooler PgBouncer)' }
+        if (-not $cfg['POSTGRES_PASSWORD']) { Stop-ComErro 'POSTGRES_PASSWORD vazia no .env: cole a senha do Neon (so no .env local)' }
+        if ($cfg['POSTGRES_PORT'] -eq '5434') { $cfg['POSTGRES_PORT'] = '5432' }
+        if (-not $cfg.Contains('POSTGRES_SSL') -or -not $cfg['POSTGRES_SSL']) { $cfg['POSTGRES_SSL'] = 'true' }
+        if ($cfg['POSTGRES_SSL'] -ne 'true') { Write-Log 'POSTGRES_MODO=neon com POSTGRES_SSL diferente de true: o Neon recusa conexao sem TLS' 'WARN' }
+    }
+    elseif (-not $cfg['POSTGRES_PASSWORD']) { Stop-ComErro 'POSTGRES_PASSWORD vazia no .env. Rode setup.' }
     if (-not $cfg['STORAGE_LOCAL_DIR']) { $cfg['STORAGE_LOCAL_DIR'] = $StorageDir }
     if (-not $cfg['WEASYPRINT_DLL_DIRECTORIES']) {
         $dll = Find-Pango
         if ($dll) { $cfg['WEASYPRINT_DLL_DIRECTORIES'] = $dll }
     }
     $script:Segredos = @($cfg['POSTGRES_PASSWORD'], $cfg['JWT_SECRET_KEY'], $cfg['ADMIN_SENHA'], $cfg['DEEPSEEK_API_KEY'], $cfg['SNAPSHOT_SENHA'])
+    if ($cfg['POSTGRES_MODO'] -eq 'neon') { $script:Segredos += @($cfg['POSTGRES_HOST'], $cfg['POSTGRES_USER']) }
     return $cfg
 }
 
@@ -274,6 +297,33 @@ function Get-PgExe([string]$Nome) {
     $exe = Join-Path $PgBin ($Nome + '.exe')
     if (-not (Test-Path -LiteralPath $exe)) { Stop-ComErro "Nao achei $exe. Rode setup." }
     return $exe
+}
+
+function Test-ModoNeon($cfg) { return ($cfg['POSTGRES_MODO'] -eq 'neon') }
+
+function Invoke-PythonBanco([string[]]$Linhas, [int]$TimeoutSeg = 90) {
+    # Roda um trecho Python no venv-prod usando a mesma database_url do backend (TLS incluido).
+    return Invoke-Nativo $VenvPython @('-c', ($Linhas -join "`n")) -PermitirFalha -Silencioso -TimeoutSeg $TimeoutSeg
+}
+
+function Test-ConexaoNeon($cfg) {
+    # SELECT 1 + confere TLS ativo. Nada de host/usuario/senha na saida.
+    $r = Invoke-PythonBanco @(
+        'import asyncio',
+        'from sqlalchemy import text',
+        'from sqlalchemy.ext.asyncio import create_async_engine',
+        'from app.core.config import get_settings',
+        'async def main():',
+        '    e = create_async_engine(get_settings().database_url, connect_args={"timeout": 30})',
+        '    async with e.connect() as c:',
+        '        await c.execute(text("SELECT 1"))',
+        '        ssl = (await c.execute(text("SELECT coalesce(bool_or(ssl), false) FROM pg_stat_ssl WHERE pid = pg_backend_pid()"))).scalar()',
+        '    await e.dispose()',
+        '    print("neon-ok tls=" + str(ssl))',
+        'asyncio.run(main())'
+    )
+    $ultima = (($r.Saida -split "`r?`n") | Where-Object { $_ } | Select-Object -Last 1)
+    return [pscustomobject]@{ Ok = ($r.Codigo -eq 0 -and $ultima -like 'neon-ok*'); Detalhe = (Hide-Segredos ([string]$ultima)) }
 }
 
 function Test-PgRodando {
@@ -600,7 +650,23 @@ function Invoke-Seeds($cfg) {
         Write-Log ("{0}: {1}" -f $m, (($r.Saida -split "`r?`n") | Where-Object { $_ } | Select-Object -Last 1))
     }
     # Base do RAG: idempotente (ON CONFLICT DO NOTHING), mas le todos os convertidos; so roda vazia.
-    $n = Invoke-Psql $cfg 'SELECT count(*) FROM trechos_conhecimento_ia' $cfg['POSTGRES_DB']
+    if (Test-ModoNeon $cfg) {
+        $r = Invoke-PythonBanco @(
+            'import asyncio',
+            'from sqlalchemy import text',
+            'from sqlalchemy.ext.asyncio import create_async_engine',
+            'from app.core.config import get_settings',
+            'async def m():',
+            '    e = create_async_engine(get_settings().database_url)',
+            '    async with e.connect() as c:',
+            '        print((await c.execute(text("SELECT count(*) FROM trechos_conhecimento_ia"))).scalar())',
+            '    await e.dispose()',
+            'asyncio.run(m())'
+        )
+        if ($r.Codigo -ne 0) { Stop-ComErro 'nao consegui contar trechos_conhecimento_ia no Neon' }
+        $n = (($r.Saida -split "`r?`n") | Where-Object { $_ } | Select-Object -Last 1).Trim()
+    }
+    else { $n = Invoke-Psql $cfg 'SELECT count(*) FROM trechos_conhecimento_ia' $cfg['POSTGRES_DB'] }
     if ($n -eq '0') {
         $r = Invoke-Nativo $VenvPython @('-m', 'app.scripts.ingerir_conhecimento_ia') -TimeoutSeg 1800
         Write-Log ("ingerir_conhecimento_ia: " + (($r.Saida -split "`r?`n") | Where-Object { $_ } | Select-Object -Last 1))
@@ -618,11 +684,16 @@ function Invoke-Setup {
     Initialize-EnvLocal
     $cfg = Get-Config
     Set-AmbienteProcesso $cfg
-    Install-PgBinarios $cfg
-    Initialize-Cluster $cfg
-    $subiu = Start-Pg $cfg
-    try { New-Banco $cfg }
-    finally { if ($subiu) { Stop-Pg } }
+    if (Test-ModoNeon $cfg) {
+        Write-Log 'POSTGRES_MODO=neon: Postgres portatil, initdb e criacao do banco pulados (o banco e o do Neon)'
+    }
+    else {
+        Install-PgBinarios $cfg
+        Initialize-Cluster $cfg
+        $subiu = Start-Pg $cfg
+        try { New-Banco $cfg }
+        finally { if ($subiu) { Stop-Pg } }
+    }
     Install-Venv
     if ($PularPango) { Write-Log 'Pango pulado (-PularPango): PDF ficara indisponivel' 'WARN' }
     else {
@@ -642,7 +713,12 @@ function Invoke-Start {
     Set-AmbienteProcesso $cfg
     # Falha cedo, antes de migrations/seeds, se a porta do uvicorn estiver com outro processo.
     if (-not (Get-UvicornPid)) { Assert-PortaLivre ([int]$cfg['UVICORN_PORT']) }
-    Start-Pg $cfg | Out-Null
+    if (Test-ModoNeon $cfg) {
+        $t = Test-ConexaoNeon $cfg
+        if (-not $t.Ok) { Stop-ComErro 'Nao consegui conectar ao Neon (confira POSTGRES_* e POSTGRES_SSL=true no .env, conexao direta sem -pooler; o projeto pode estar acordando: tente de novo)' }
+        Write-Log ("Neon: " + $t.Detalhe)
+    }
+    else { Start-Pg $cfg | Out-Null }
     Invoke-Migrations
     if ($PularSeeds) { Write-Log 'seeds pulados (-PularSeeds)' } else { Invoke-Seeds $cfg }
     Start-Uvicorn $cfg
@@ -652,13 +728,23 @@ function Invoke-Start {
 function Invoke-Stop {
     Write-Log '=== stop ==='
     Stop-Uvicorn
-    Stop-Pg
+    if (Test-ModoNeon (Get-Config)) { Write-Log 'POSTGRES_MODO=neon: nada a parar no banco (o Neon e gerenciado)' }
+    else { Stop-Pg }
     Write-Log '=== stop concluido ==='
 }
 
 function Invoke-Status {
     $cfg = Get-Config
-    $pg = Test-PgRodando
+    $neon = Test-ModoNeon $cfg
+    if ($neon) {
+        Set-AmbienteProcesso $cfg
+        $t = Test-ConexaoNeon $cfg
+        $pgTxt = 'neon: ' + $(if ($t.Ok) { 'conectado (' + $t.Detalhe + ')' } else { 'SEM CONEXAO' })
+    }
+    else {
+        $pg = Test-PgRodando
+        $pgTxt = 'postgres=' + $(if ($pg) { 'no ar' } else { 'parado' }) + " (porta $($cfg['POSTGRES_PORT']), dados $PgData)"
+    }
     $uv = Get-UvicornPid
     $porta = [int]$cfg['UVICORN_PORT']
     $h = Get-Health $cfg
@@ -667,8 +753,8 @@ function Invoke-Status {
         if ($uv -and (Test-PortaDoRuntime $porta $uv)) { $saude = "$($h.Codigo) $($h.Corpo)" }
         else { $saude = "responde, mas a porta $porta e de " + (Get-DescricaoProcesso (Get-DonoPorta $porta)) + " (nao e este runtime)" }
     }
-    Write-Log ("status: postgres={0} (porta {1}, dados {2}); uvicorn={3}; GET {4} -> {5}" -f `
-        ($(if ($pg) { 'no ar' } else { 'parado' })), $cfg['POSTGRES_PORT'], $PgData, `
+    Write-Log ("status: {0}; uvicorn={1}; GET {2} -> {3}" -f `
+        $pgTxt, `
         ($(if ($uv) { "no ar (PID $uv)" } else { 'parado' })), $h.Url, $saude)
 }
 
@@ -676,6 +762,7 @@ function Invoke-Backup {
     Write-Log '=== backup ==='
     $cfg = Get-Config
     Set-AmbienteProcesso $cfg
+    if (Test-ModoNeon $cfg) { Stop-ComErro 'POSTGRES_MODO=neon: o backup do Neon (PITR do projeto e dump com pg_dump compativel) e outra tarefa (T89); este comando so cobre o Postgres local' }
     if (-not (Test-PgRodando)) { Stop-ComErro 'Postgres parado: rode start antes do backup' }
     if (-not (Test-Path -LiteralPath $BackupDir)) { New-Item -ItemType Directory -Path $BackupDir | Out-Null }
     $arquivo = Join-Path $BackupDir ('garra-' + (Get-Date -Format 'yyyyMMdd-HHmm') + '.dump')
@@ -792,6 +879,7 @@ try {
             Write-Host '  install   registra a tarefa agendada "Garra Local" (logon, sem admin) que roda garra-agente.ps1'
             Write-Host '  uninstall remove a tarefa agendada; --dry imprime sem registrar/remover'
             Write-Host '  agente    roda o agente em primeiro plano (depuracao)'
+            Write-Host '  POSTGRES_MODO=neon no .env: usa o Neon (TLS) e nao sobe o Postgres portatil'
             Write-Host '  setup   PostgreSQL 16 portatil + initdb + banco + venv-prod + Pango + .env (idempotente)'
             Write-Host '  start   Postgres + alembic upgrade head + seeds idempotentes + uvicorn em 2o plano'
             Write-Host '  stop    encerra uvicorn (PID em run/) e pg_ctl stop -m fast'

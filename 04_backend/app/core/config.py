@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     postgres_db: str = "garra_engenharia"
     postgres_host: str = "localhost"
     postgres_port: int = 5432
+    # TLS no Postgres gerenciado (Neon, DEC-58): acrescenta `?ssl=require` (parametro do asyncpg)
+    # a `database_url`. Falso no Postgres local/Docker. Alembic e o boot usam a mesma URL.
+    postgres_ssl: bool = False
 
     # --- MinIO (DEC-02) ---------------------------------------------------------
     minio_root_user: str = ""
@@ -94,10 +97,11 @@ class Settings(BaseSettings):
     @property
     def database_url(self) -> str:
         """URL de conexão assíncrona do SQLAlchemy (driver `asyncpg`)."""
-        return (
+        url = (
             f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}"
             f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
         )
+        return f"{url}?ssl=require" if self.postgres_ssl else url
 
     @property
     def minio_endpoint_url(self) -> str:
