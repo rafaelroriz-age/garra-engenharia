@@ -1529,7 +1529,7 @@ Rode npm run lint, npm run build, os testes unitários existentes e o novo; conf
 ```
 
 ### T84 · Script de importação dos dados do Render para o Postgres local
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-57
 - **Papel:** devops
 - **Depende:** T82
@@ -1559,7 +1559,7 @@ Siga a 'Regra de pronto' do BACKLOG.md. Papel: devops. Leia DEC-57 em 00_docs/pr
 ```
 
 ### T86 · Teste ponta a ponta: online pelo túnel e modo leitura com o PC desligado
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-57
 - **Papel:** frontend
 - **Depende:** T80, T83, T82
