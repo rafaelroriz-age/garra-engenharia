@@ -1,6 +1,4 @@
-import { cn } from "@/lib/utils";
-
-import { GarraMark } from "./garra-mark";
+import { cn, withBasePath } from "@/lib/utils";
 
 export type LogoVariant = "principal" | "horizontal" | "compacta";
 
@@ -12,58 +10,24 @@ interface LogoProps {
 }
 
 /**
- * Marca oficial "Garra Perícias e Avaliações" (BL-41/BL-19).
+ * Marca oficial "Garra Perícias e Avaliações": SVGs vetorizados em `public/brand/`
+ * (gerados da marca oficial). Proporção 814×737 (símbolo + nome).
  *
- * Vetorizada em SVG (`GarraMark`, `fill="currentColor"`) + texto real
- * (`font-display`, Archivo expandida). Identidade "Prancha Técnica":
- *
- * `principal` (sobre papel, ex.: login) → símbolo em cianotipia empilhado sobre o nome em tinta.
- * `horizontal` (sobre superfície tinta, ex.: header da landing) → símbolo em sinal + nome em linha.
- * `compacta` (sobre superfície tinta, ex.: sidebar/topbar) → símbolo em sinal + nome em 2 linhas.
+ * `principal` (sobre fundo claro, ex.: login mobile) → `logo-garra.svg`.
+ * `horizontal` (sobre superfície escura, ex.: painel do login e header da landing) e
+ * `compacta` (sidebar) → `logo-garra-negativa.svg`, versão branca.
  */
 export function Logo({ variant, className }: LogoProps) {
-  if (variant === "principal") {
-    return (
-      <span
-        role="img"
-        aria-label={LOGO_ALT}
-        className={cn("inline-flex flex-col items-center gap-2 text-foreground", className)}
-      >
-        <GarraMark className="h-14 w-14 text-primary" />
-        <span className="display-wide text-center text-base font-bold uppercase leading-tight tracking-[0.06em] sm:text-lg">
-          Garra Perícias
-          <br />e Avaliações
-        </span>
-      </span>
-    );
-  }
-
-  if (variant === "horizontal") {
-    return (
-      <span
-        role="img"
-        aria-label={LOGO_ALT}
-        className={cn("inline-flex items-center gap-3 text-sidebar-foreground", className)}
-      >
-        <GarraMark className="h-10 w-10 text-sinal sm:h-11 sm:w-11" />
-        <span className="display-wide whitespace-nowrap text-base font-bold uppercase leading-tight tracking-[0.06em] sm:text-lg">
-          Garra Perícias e Avaliações
-        </span>
-      </span>
-    );
-  }
-
+  const negativa = variant !== "principal";
+  const tamanho = variant === "principal" ? "h-24" : variant === "horizontal" ? "h-20 sm:h-24" : "h-16";
   return (
-    <span
-      role="img"
-      aria-label={LOGO_ALT}
-      className={cn("inline-flex items-center gap-2.5 text-sidebar-foreground", className)}
-    >
-      <GarraMark className="h-8 w-8 text-sinal" />
-      <span className="display-wide text-[0.6875rem] font-bold uppercase leading-[1.2] tracking-[0.08em]">
-        Garra Perícias
-        <br />e Avaliações
-      </span>
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element -- export estático (unoptimized)
+    <img
+      src={withBasePath(negativa ? "/brand/logo-garra-negativa.svg" : "/brand/logo-garra.svg")}
+      alt={LOGO_ALT}
+      width={814}
+      height={737}
+      className={cn("w-auto select-none", tamanho, className)}
+    />
   );
 }

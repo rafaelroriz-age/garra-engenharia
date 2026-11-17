@@ -1505,7 +1505,7 @@ Rode o que for seguro localmente (túnel cloudflared real por alguns segundos pa
 ```
 
 ### T83 · Front: descoberta da API por api.json, modo leitura com snapshot e deploy no repo público
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-57
 - **Papel:** frontend
 - **Depende:** T81
