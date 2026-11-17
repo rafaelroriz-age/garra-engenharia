@@ -1559,7 +1559,7 @@ Siga a 'Regra de pronto' do BACKLOG.md. Papel: devops. Leia DEC-57 em 00_docs/pr
 ```
 
 ### T86 · Teste ponta a ponta: online pelo túnel e modo leitura com o PC desligado
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-57
 - **Papel:** frontend
 - **Depende:** T80, T83, T82
