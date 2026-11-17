@@ -1482,7 +1482,7 @@ pytest (garra_engenharia_test) e ruff verdes. Doc com formato do arquivo, lista 
 ```
 
 ### T82 · Agente de inicialização: túnel, publicação de api.json/snapshot e tarefa agendada
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-57
 - **Papel:** devops
 - **Depende:** T79, T81
