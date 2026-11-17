@@ -213,3 +213,8 @@ O seed `DEMO` roda dentro do container do backend, num banco separado, por exemp
 ## Dimensionamento do worker de relatórios (T17, 2026-11-04)
 
 O benchmark dos pipelines finais (`00_docs/backlog-auto/benchmark-pipelines-finais.md`) mediu pico de RSS de 320 a 420 MB para um PDF de ~200 páginas e ~500 MB com PDF e DOCX em paralelo. Uma instância de 512 MB não comporta isso com folga: o worker deve ter **≥ 1 GB de RAM** (proposta DEC-40). Os PDF/DOCX das vistorias passam de 25 MB (37–38 MB e 30–31 MB), então o limite de upload de artefatos precisa ser separado do limite de foto.
+
+## Runtime local no PC (DEC-57) — estado em 2026-11-17
+
+- Entregues: `local/garra-local.ps1` (runtime, `install`/`uninstall`/`agente`) e `local/garra-agente.ps1` (túnel, `api.json`, snapshot, backup) — [agente-inicializacao.md](../00_docs/backlog-auto/agente-inicializacao.md); storage em disco com download assinado (`STORAGE_PROVEDOR`, T80) — [storage-local.md](../00_docs/backlog-auto/storage-local.md).
+- Pendentes: importação do Render (T84, `importar-render.ps1` ainda inexistente), aposentadoria de `render.yaml` e da seção "Deploy em produção (Render)" (T85), E2E do modo leitura (T86), Neon (T87/T88, sem DEC-58 registrada). Até lá a seção do Render acima continua vigente.
