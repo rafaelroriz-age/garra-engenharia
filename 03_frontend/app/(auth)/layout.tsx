@@ -17,7 +17,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <Logo variant="horizontal" />
 
         <div className="max-w-xl">
-          <p className="rotulo text-sidebar-muted">Folha 00 · Acesso</p>
+          <p className="rotulo text-sidebar-muted">Acesso restrito</p>
           <p className="display-wide mt-4 text-4xl font-bold uppercase leading-[1.02] tracking-tight xl:text-5xl">
             Sistema de Automação de Relatórios Prediais
           </p>
@@ -31,17 +31,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               <dt className="rotulo text-[0.625rem] text-sidebar-muted">Escopo</dt>
               <dd className="dado mt-0.5 text-sm">RFO · LTIP · Vistoria cautelar</dd>
             </div>
-            <div className="px-3 py-2">
-              <dt className="rotulo text-[0.625rem] text-sidebar-muted">Folha</dt>
-              <dd className="dado mt-0.5 text-sm">00</dd>
-            </div>
-            <div className="border-l border-sidebar-border px-3 py-2">
-              <dt className="rotulo text-[0.625rem] text-sidebar-muted">Escala</dt>
-              <dd className="dado mt-0.5 text-sm">1:1</dd>
-            </div>
-            <div className="border-l border-sidebar-border px-3 py-2">
-              <dt className="rotulo text-[0.625rem] text-sidebar-muted">Rev.</dt>
-              <dd className="dado mt-0.5 text-sm">A</dd>
+            <div className="col-span-3 border-t border-sidebar-border px-3 py-2">
+              <dt className="rotulo text-[0.625rem] text-sidebar-muted">Entrega</dt>
+              <dd className="dado mt-0.5 text-sm">Relatório em PDF e DOCX editável</dd>
             </div>
           </dl>
           <Stamp tone="sinal" className="shrink-0">

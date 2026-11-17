@@ -5,6 +5,7 @@ import { Pencil, Plus, Users2, Ruler, Camera } from "lucide-react";
 
 import type { Visita, VisitaMaoObra, VisitaMedicao } from "@/lib/types";
 import { api } from "@/lib/api-client";
+import { useModoLeitura } from "@/lib/modo-leitura";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +33,7 @@ interface VisitaCardProps {
  * (RF-03, BL-10) e upload de fotos vinculadas (RF-05, BL-11).
  */
 export function VisitaCard({ visita, onUpdate }: VisitaCardProps) {
+  const { bloquearEscrita } = useModoLeitura();
   const [funcao, setFuncao] = useState("");
   const [quantidade, setQuantidade] = useState("");
   const [maoObraError, setMaoObraError] = useState<Error | null>(null);
@@ -126,7 +128,7 @@ export function VisitaCard({ visita, onUpdate }: VisitaCardProps) {
             <p className="mt-1 text-xs text-muted-foreground">Obs.: {visita.observacoes}</p>
           ) : null}
         </div>
-        <Button type="button" variant="outline" size="sm" className="gap-1.5 self-start" onClick={() => setIsEditing(true)}>
+        <Button type="button" variant="outline" size="sm" className="gap-1.5 self-start" onClick={() => setIsEditing(true)} disabled={bloquearEscrita}>
           <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
           Editar visita
         </Button>
@@ -204,7 +206,7 @@ export function VisitaCard({ visita, onUpdate }: VisitaCardProps) {
                 className="h-8 text-sm"
               />
             </div>
-            <Button type="submit" size="sm" variant="outline" className="gap-1.5" disabled={isAddingMaoObra}>
+            <Button type="submit" size="sm" variant="outline" className="gap-1.5" disabled={isAddingMaoObra || bloquearEscrita}>
               <Plus className="h-3.5 w-3.5" aria-hidden="true" />
               Adicionar
             </Button>
@@ -279,7 +281,7 @@ export function VisitaCard({ visita, onUpdate }: VisitaCardProps) {
                 className="h-8 text-sm"
               />
             </div>
-            <Button type="submit" size="sm" variant="outline" className="gap-1.5" disabled={isAddingMedicao}>
+            <Button type="submit" size="sm" variant="outline" className="gap-1.5" disabled={isAddingMedicao || bloquearEscrita}>
               <Plus className="h-3.5 w-3.5" aria-hidden="true" />
               Adicionar
             </Button>

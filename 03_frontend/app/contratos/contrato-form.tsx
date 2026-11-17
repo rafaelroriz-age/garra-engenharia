@@ -98,7 +98,7 @@ export function ContratoForm({ initialValue, submitLabel, onSubmit, onCancel }: 
     if (!edificacaoId) errors.edificacao_id = "Selecione a edificação.";
     if (!fiscalId.trim()) errors.fiscal_id = "Informe o identificador do engenheiro fiscal.";
     if (!numero.trim()) errors.numero = "Informe o número do contrato.";
-    if (!artFiscalizacao.trim()) errors.art_fiscalizacao = "ART de Fiscalização é obrigatória (RN-09).";
+    if (!artFiscalizacao.trim()) errors.art_fiscalizacao = "ART de Fiscalização é obrigatória.";
 
     executores.forEach((executor, index) => {
       if (!executor.razao_social.trim()) errors[`executor.${index}.razao_social`] = "Informe a razão social.";
@@ -295,7 +295,7 @@ export function ContratoForm({ initialValue, submitLabel, onSubmit, onCancel }: 
 
       <fieldset className="space-y-3">
         <legend className="text-sm font-semibold text-foreground">
-          Empresas executoras <span className="font-normal text-muted-foreground">(RN-06)</span>
+          Empresas executoras
         </legend>
         {executores.map((executor, index) => (
           <div key={index} className="space-y-3 rounded-md border p-3">

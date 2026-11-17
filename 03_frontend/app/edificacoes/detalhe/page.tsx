@@ -19,6 +19,7 @@ import { api, ApiError } from "@/lib/api-client";
 import { humanizeStatus } from "@/lib/utils";
 import type { Contrato, EdificacaoDetail, EdificacaoInput } from "@/lib/types";
 import { useUsuarioAtual } from "@/lib/use-usuario-atual";
+import { useModoLeitura } from "@/lib/modo-leitura";
 import { EdificacaoForm } from "../edificacao-form";
 
 interface DocumentoTecnico {
@@ -40,6 +41,7 @@ export default function EdificacaoDetailPage() {
   const [documentoError, setDocumentoError] = useState<ApiError | Error | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { isAuditor } = useUsuarioAtual();
+  const { bloquearEscrita } = useModoLeitura();
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -124,7 +126,7 @@ export default function EdificacaoDetailPage() {
           <PageHeader title={edificacao.nome} description={edificacao.endereco} />
         </div>
         {!isEditing && isAuditor ? (
-          <Button variant="outline" className="gap-1.5" onClick={() => setIsEditing(true)}>
+          <Button variant="outline" className="gap-1.5" onClick={() => setIsEditing(true)} disabled={bloquearEscrita}>
             <Pencil className="h-4 w-4" aria-hidden="true" />
             Editar
           </Button>
@@ -216,7 +218,7 @@ export default function EdificacaoDetailPage() {
                 type="button"
                 variant="outline"
                 className="gap-1.5"
-                disabled={isUploadingDocumento}
+                disabled={isUploadingDocumento || bloquearEscrita}
                 onClick={() => fileInputRef.current?.click()}
               >
                 <FileUp className="h-4 w-4" aria-hidden="true" />

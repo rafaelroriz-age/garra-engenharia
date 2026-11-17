@@ -152,6 +152,14 @@ Variáveis opcionais (default já apontam para o `docker-compose.yml` local): `E
 - **Sem forma de criar/consultar `Responsavel` via API**: o formulário de Contrato exige UUIDs de `Responsavel` (fiscal/executor) já existentes, mas não havia nenhum endpoint para isso — só era possível inserir via fixture de teste do backend. Criado `GET/POST /api/v1/responsaveis` (ver DEC-23 em [decisoes.md](../00_docs/projeto/decisoes.md)).
 - **Sem navegação de Contrato para a Inspeção**: a página de detalhe do Contrato não tinha nenhum link para Visitas/Ocorrências/Relatório da Inspeção 1:1 associada (`ContratoDetail.inspecao` já vinha da API, mas não era usado). Adicionados os 3 links na tela.
 
+## Identidade visual (redesenho "Prancha Técnica")
+
+- **Layout**: prancha de engenharia — filetes de 1px, malha milimetrada, rótulos técnicos em caixa-alta, barra lateral escura, breadcrumb e alternância de tema claro/escuro/sistema. Componentes em `components/prancha/` e `components/ui/`.
+- **Paleta**: a da marca (navy `--primary`, laranja `--sinal`/`--brand-accent` como único acento quente). Tokens em `app/globals.css`; o redesenho inicial havia usado papel/cianotipia e foi revertido para esta paleta.
+- **Texto das telas**: sem códigos de requisito (RF/RN/BL/RNF) nem numeração decorativa (índice da sidebar, "Folha 00", "01 —"). As referências ficam só em comentários de código.
+- **Logos**: `components/brand/logo.tsx` usa os SVGs oficiais de `public/brand/` (`logo-garra.svg` em fundo claro, `logo-garra-negativa.svg` em fundo escuro) via `<img>` com `withBasePath`. O favicon `public/icon.svg` é o símbolo oficial. O antigo `garra-mark.tsx` (desenho em código) foi removido.
+- **Rotas públicas** (`/`, `/login`): o `AppShell` ignora a barra final da URL (`trailingSlash: true` no export estático), para não exibir a navegação no login.
+
 ## Referências
 
 - Stack, arquitetura de frontend e contratos de API: [00_docs/arquitetura.md](../00_docs/arquitetura.md) (Seções 7, 9-11)

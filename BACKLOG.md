@@ -1412,7 +1412,7 @@ Commit em Conventional Commits: `test(frontend): e2e de escrita sem rede (DEC-26
 Contexto comum (DEC-57 em 00_docs/projeto/decisoes.md): o repositório `garra-engenharia` é **público** (desde 2026-11-17). O site estático continua no GitHub Pages do próprio repositório (`https://rafaelroriz-age.github.io/garra-engenharia/`, `deploy-pages.yml` com `GITHUB_TOKEN`), e a branch órfã `snapshot` do mesmo repositório guarda com `api.json` (URL atual do túnel + heartbeat) e `snapshot.enc` (dados de leitura da equipe cifrados com AES-256-GCM). Backend FastAPI, PostgreSQL e arquivos rodam no PC do dono, com dados fora do git; sobe sozinho no logon do Windows e é exposto por `cloudflared tunnel --url` (URL aleatória por boot, publicada em `api.json`). PC desligado → site abre em modo leitura com o snapshot; nenhuma gravação.
 
 ### T79 · Runtime local de produção no PC sem Docker (PostgreSQL portátil + venv + .env)
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-57
 - **Papel:** devops
 - **Depende:** —
@@ -1439,7 +1439,7 @@ Não use o banco garra_engenharia de dev nem o Docker. Não toque no Render. Rod
 ```
 
 ### T80 · Storage em disco local com download assinado pelo próprio FastAPI
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-57
 - **Papel:** backend
 - **Depende:** —
@@ -1461,7 +1461,7 @@ Rode pytest (banco garra_engenharia_test, Regra de pronto item 6) e ruff. Doc co
 ```
 
 ### T81 · Gerador de snapshot cifrado da leitura da equipe
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-57
 - **Papel:** backend
 - **Depende:** —
@@ -1482,7 +1482,7 @@ pytest (garra_engenharia_test) e ruff verdes. Doc com formato do arquivo, lista 
 ```
 
 ### T82 · Agente de inicialização: túnel, publicação de api.json/snapshot e tarefa agendada
-- **Status:** todo
+- **Status:** done
 - **Origem:** DEC-57
 - **Papel:** devops
 - **Depende:** T79, T81
@@ -1505,7 +1505,7 @@ Rode o que for seguro localmente (túnel cloudflared real por alguns segundos pa
 ```
 
 ### T83 · Front: descoberta da API por api.json, modo leitura com snapshot e deploy no repo público
-- **Status:** todo
+- **Status:** done
 - **Origem:** DEC-57
 - **Papel:** frontend
 - **Depende:** T81
@@ -1529,7 +1529,7 @@ Rode npm run lint, npm run build, os testes unitários existentes e o novo; conf
 ```
 
 ### T84 · Script de importação dos dados do Render para o Postgres local
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-57
 - **Papel:** devops
 - **Depende:** T82
@@ -1559,7 +1559,7 @@ Siga a 'Regra de pronto' do BACKLOG.md. Papel: devops. Leia DEC-57 em 00_docs/pr
 ```
 
 ### T86 · Teste ponta a ponta: online pelo túnel e modo leitura com o PC desligado
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-57
 - **Papel:** frontend
 - **Depende:** T80, T83, T82

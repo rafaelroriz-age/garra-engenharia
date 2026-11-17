@@ -1,10 +1,14 @@
 # Deploy do frontend (03_frontend) no GitHub Pages — DEC-55.
 # Substitui o serviço `garra-frontend` do Render: o Next.js é exportado como
 # site estático (`output: "export"` em next.config.mjs) e publicado em
-# https://rafaelroriz-age.github.io/garra-engenharia/. O backend continua no
-# Render (render.yaml) até a migração para o PC do dono (DEC-57, T83 troca a
-# URL fixa pela descoberta via api.json da branch `snapshot`).
+# https://rafaelroriz-age.github.io/garra-engenharia/. O backend roda no PC do
+# dono atrás de um túnel com URL aleatória (DEC-57): o front descobre a URL lendo
+# `api.json` da branch `snapshot` (NEXT_PUBLIC_API_DISCOVERY_URL, T83) e, com o PC
+# desligado, abre em modo leitura com `snapshot.enc` da mesma branch.
 # Repositório público desde 2026-11-17: Pages grátis no próprio repositório.
+#
+# Só dispara em push na `main`: o force-push do agente do PC na branch órfã
+# `snapshot` (api.json/snapshot.enc a cada heartbeat) nunca aciona este workflow.
 #
 # Pré-requisito (uma vez, ação humana): Settings → Pages → Build and deployment
 # → Source = "GitHub Actions".
@@ -37,7 +41,7 @@ jobs:
         working-directory: 03_frontend
     env:
       # Embutidas no bundle em build time (variáveis NEXT_PUBLIC_*).
-      NEXT_PUBLIC_API_URL: https://garra-backend.onrender.com/api/v1
+      NEXT_PUBLIC_API_DISCOVERY_URL: https://raw.githubusercontent.com/rafaelroriz-age/garra-engenharia/snapshot/api.json
       NEXT_PUBLIC_BASE_PATH: /garra-engenharia
     steps:
       - uses: actions/checkout@v4

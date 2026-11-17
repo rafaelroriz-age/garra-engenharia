@@ -53,9 +53,9 @@ function DashboardSkeleton() {
   return (
     <div>
       <PageHeader
-        eyebrow="Folha 01 · Visão geral"
+        eyebrow="Visão geral"
         title="Dashboard"
-        description="Indicadores de saúde por edificação e sistema predial (RF-07)."
+        description="Indicadores de saúde por edificação e sistema predial."
       />
       <KpiSkeletonGrid />
     </div>
@@ -132,10 +132,10 @@ function DashboardContent() {
     <div>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <PageHeader
-          eyebrow="Folha 01 · Visão geral"
+          eyebrow="Visão geral"
           className="mb-0"
           title="Dashboard"
-          description="Indicadores de saúde por edificação e sistema predial (RF-07): proporção Conforme/Não Conforme, distribuição por Grau de Risco e gravidade GUT média por subsistema."
+          description="Indicadores de saúde por edificação e sistema predial: proporção Conforme/Não Conforme, distribuição por Grau de Risco e gravidade GUT média por subsistema."
         />
         <div className="w-full space-y-2 sm:w-auto sm:min-w-64">
           <Label htmlFor="dashboard-edificacao">Edificação</Label>

@@ -144,7 +144,7 @@ function PortalContent() {
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <PageHeader
           title="Acompanhamento"
-          description="Situação atual da auditoria contratada: visitas realizadas, ocorrências registradas e distribuição por grau de risco (RF-13)."
+          description="Situação atual da auditoria contratada: visitas realizadas, ocorrências registradas e distribuição por grau de risco."
         />
         <div className="min-w-56 space-y-1.5">
           <Label htmlFor="portal-edificacao">Edificação</Label>

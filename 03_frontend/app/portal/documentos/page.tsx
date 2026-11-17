@@ -72,7 +72,7 @@ export default function PortalDocumentosPage() {
     <div>
       <PageHeader
         title="Meus documentos"
-        description="Relatórios e laudos já emitidos para as suas edificações (RF-11). Os links de download expiram em poucos minutos por segurança."
+        description="Relatórios e laudos já emitidos para as suas edificações. Os links de download expiram em poucos minutos por segurança."
       />
 
       <ApiErrorAlert error={error} />

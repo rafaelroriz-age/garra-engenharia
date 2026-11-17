@@ -5,6 +5,7 @@ import { AlertTriangle, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api-client";
 import { useIdParam } from "@/lib/use-id-param";
+import { useModoLeitura } from "@/lib/modo-leitura";
 import { normalizePaginated } from "@/lib/types";
 import type {
   Localizacao,
@@ -35,6 +36,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 /** Ocorrências por sistema/subsistema, localização e classificação CMM (RF-04, RN-03, RN-05, RN-10, BL-14). */
 export default function OcorrenciasPage() {
   const inspecaoId = useIdParam();
+  const { bloquearEscrita } = useModoLeitura();
 
   const [sistemas, setSistemas] = useState<SistemaPredialComSubsistemas[]>([]);
   const [tiposAnomalia, setTiposAnomalia] = useState<TipoAnomalia[]>([]);
@@ -83,7 +85,7 @@ export default function OcorrenciasPage() {
     };
   }, []);
 
-  // Lista completa (sem filtro) para o painel de cobertura por sistema (RN-10).
+  // Lista completa (sem filtro) para o painel de cobertura por sistema.
   const carregarTodasOcorrencias = useCallback(async () => {
     try {
       const data = await api.get<Paginated<Ocorrencia> | Ocorrencia[]>(
@@ -160,9 +162,9 @@ export default function OcorrenciasPage() {
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <PageHeader
           title={`Ocorrências · Inspeção #${inspecaoId}`}
-          description="Ocorrências por sistema/subsistema, localização e classificação CMM (RF-04)."
+          description="Ocorrências por sistema/subsistema, localização e classificação CMM."
         />
-        <Button className="gap-1.5" onClick={abrirCriacao} disabled={loadingGabarito}>
+        <Button className="gap-1.5" onClick={abrirCriacao} disabled={loadingGabarito || bloquearEscrita}>
           <Plus className="h-4 w-4" aria-hidden="true" />
           Nova ocorrência
         </Button>
@@ -173,7 +175,7 @@ export default function OcorrenciasPage() {
           <CardHeader className="flex-row items-center gap-2 space-y-0 pb-2">
             <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-500" aria-hidden="true" />
             <CardTitle className="text-sm font-semibold">
-              {sistemasNaoAvaliados.length} sistema(s) predial(is) ainda não avaliado(s) (RN-10)
+              {sistemasNaoAvaliados.length} sistema(s) predial(is) ainda não avaliado(s)
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-1.5 pt-0">
@@ -269,7 +271,7 @@ export default function OcorrenciasPage() {
                       <TableCell>
                         {ocorrencia.fotos?.length ?? 0}
                         {semFoto ? (
-                          <span className="ml-1.5 text-xs text-destructive" title="Exigida ao menos 1 foto antes da emissão (RN-03)">
+                          <span className="ml-1.5 text-xs text-destructive" title="Exigida ao menos 1 foto antes da emissão">
                             sem foto
                           </span>
                         ) : null}
@@ -279,6 +281,7 @@ export default function OcorrenciasPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => abrirEdicao(ocorrencia)}
+                          disabled={bloquearEscrita}
                           aria-label={`Editar ocorrência de ${sistema?.nome ?? "sistema"}`}
                         >
                           <Pencil className="h-4 w-4" aria-hidden="true" />
@@ -288,6 +291,7 @@ export default function OcorrenciasPage() {
                           size="icon"
                           className="text-destructive hover:text-destructive"
                           onClick={() => void handleExcluir(ocorrencia)}
+                          disabled={bloquearEscrita}
                           aria-label={`Excluir ocorrência de ${sistema?.nome ?? "sistema"}`}
                         >
                           <Trash2 className="h-4 w-4" aria-hidden="true" />

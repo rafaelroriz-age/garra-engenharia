@@ -17,6 +17,7 @@ import {
 import { ApiErrorAlert } from "@/components/api-error-alert";
 import { api, ApiError } from "@/lib/api-client";
 import { useIdParam } from "@/lib/use-id-param";
+import { useModoLeitura } from "@/lib/modo-leitura";
 import type { Inspecao, Visita, VisitaInput } from "@/lib/types";
 import { VisitaForm } from "./visita-form";
 import { VisitaCard } from "./visita-card";
@@ -24,6 +25,7 @@ import { VisitaCard } from "./visita-card";
 /** Registro de Visitas do RFO (RF-03, RN-01, RN-02, BL-10) — `GET /inspecoes/{id}`. */
 export default function VisitasPage() {
   const params = { id: useIdParam() };
+  const { bloquearEscrita } = useModoLeitura();
   const [visitas, setVisitas] = useState<Visita[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<ApiError | Error | null>(null);
@@ -62,10 +64,10 @@ export default function VisitasPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <PageHeader
           title={`Visitas · Inspeção #${params.id}`}
-          description="Registro de visitas do RFO: equipe, serviços executados e medições (RF-03)."
+          description="Registro de visitas do RFO: equipe, serviços executados e medições."
         />
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <Button className="gap-1.5" onClick={() => setIsCreateOpen(true)}>
+          <Button className="gap-1.5" onClick={() => setIsCreateOpen(true)} disabled={bloquearEscrita}>
             <Plus className="h-4 w-4" aria-hidden="true" />
             Nova visita
           </Button>
@@ -73,7 +75,7 @@ export default function VisitasPage() {
             <DialogHeader>
               <DialogTitle>Nova visita</DialogTitle>
               <DialogDescription>
-                O número sequencial da visita é atribuído automaticamente (RN-01).
+                O número sequencial da visita é atribuído automaticamente.
               </DialogDescription>
             </DialogHeader>
             <VisitaForm

@@ -32,6 +32,7 @@ import {
   type Paginated,
 } from "@/lib/types";
 import { useUsuarioAtual } from "@/lib/use-usuario-atual";
+import { useModoLeitura } from "@/lib/modo-leitura";
 import { ContratoForm } from "./contrato-form";
 
 const PAGE_SIZE = 10;
@@ -62,6 +63,7 @@ export default function ContratosPage() {
   const [error, setError] = useState<ApiError | Error | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const { isAuditor } = useUsuarioAtual();
+  const { bloquearEscrita } = useModoLeitura();
 
   useEffect(() => {
     api
@@ -107,12 +109,12 @@ export default function ContratosPage() {
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <PageHeader
           title="Contratos"
-          description="Contratos com múltiplas empresas executoras e NBRs aplicáveis (RF-02, RF-12)."
+          description="Contratos com múltiplas empresas executoras e NBRs aplicáveis."
         />
         {/* Contrato é ato administrativo: só auditor (RN-18). O backend rejeita de qualquer forma. */}
         {isAuditor && (
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <Button className="gap-1.5" onClick={() => setIsCreateOpen(true)}>
+            <Button className="gap-1.5" onClick={() => setIsCreateOpen(true)} disabled={bloquearEscrita}>
               <Plus className="h-4 w-4" aria-hidden="true" />
               Novo contrato
             </Button>
@@ -120,7 +122,7 @@ export default function ContratosPage() {
               <DialogHeader>
                 <DialogTitle>Novo contrato</DialogTitle>
                 <DialogDescription>
-                  Empresas executoras (RN-06) e ART de Fiscalização (RN-09) obrigatória.
+                  Empresas executoras e ART de Fiscalização obrigatória.
                 </DialogDescription>
               </DialogHeader>
               <ContratoForm

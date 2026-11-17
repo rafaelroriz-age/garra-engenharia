@@ -11,6 +11,7 @@ import { ApiErrorAlert } from "@/components/api-error-alert";
 import { PhotoAnnotationEditor } from "@/components/photo-annotation-editor";
 import { LegendaIAPainel } from "@/components/legenda-ia-painel";
 import { useUsuarioAtual } from "@/lib/use-usuario-atual";
+import { TEXTO_INDISPONIVEL, useModoLeitura } from "@/lib/modo-leitura";
 
 const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15MB — alinhado ao limite validado no backend (BL-11)
 const ACCEPTED_MIME_TYPES = ["image/png", "image/jpeg", "image/webp"];
@@ -71,6 +72,7 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
   // Legenda por IA (BL-35, RF-15): só a equipe (auditor/auxiliar) gera e aprova, como no backend
   // (`require_equipe`). Enquanto o perfil carrega, o painel fica oculto (ver `useUsuarioAtual`).
   const { isAuditor, isAuxiliar } = useUsuarioAtual();
+  const { bloquearEscrita } = useModoLeitura();
   const podeUsarLegendaIA = isAuditor || isAuxiliar;
   const [fotoLegendaIAId, setFotoLegendaIAId] = useState<string | null>(null);
 
@@ -273,7 +275,7 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
     return (
       <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
         Salve o registro para anexar fotos. Ao menos uma foto é exigida antes da emissão do
-        relatório para ocorrências Não Conformes (RN-03).
+        relatório para ocorrências Não Conformes.
       </p>
     );
   }
@@ -286,7 +288,7 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
           variant="outline"
           size="sm"
           onClick={handleClipboardPaste}
-          disabled={isUploading}
+          disabled={isUploading || bloquearEscrita}
           className="gap-1.5"
         >
           {isUploading ? (
@@ -301,7 +303,7 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
           variant="outline"
           size="sm"
           onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
+          disabled={isUploading || bloquearEscrita}
           className="gap-1.5"
         >
           <ImageUp className="h-4 w-4" aria-hidden="true" />
@@ -382,12 +384,19 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
             .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0))
             .map((foto, index) => (
               <li key={foto.id} className="space-y-1.5 rounded-md border p-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={foto.url_publica ?? undefined}
-                  alt={foto.legenda || "Foto vinculada à visita"}
-                  className="h-24 w-full rounded object-cover"
-                />
+                {bloquearEscrita ? (
+                  // Modo leitura (DEC-57): o snapshot não traz os bytes das fotos.
+                  <div className="flex h-24 w-full items-center justify-center rounded bg-muted px-2 text-center text-xs text-muted-foreground">
+                    {TEXTO_INDISPONIVEL}
+                  </div>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={foto.url_publica ?? undefined}
+                    alt={foto.legenda || "Foto vinculada à visita"}
+                    className="h-24 w-full rounded object-cover"
+                  />
+                )}
                 <label className="sr-only" htmlFor={`legenda-${foto.id}`}>
                   Legenda da foto
                 </label>
@@ -397,6 +406,7 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
                   defaultValue={foto.legenda ?? ""}
                   placeholder="Legenda técnica"
                   className="h-7 text-xs"
+                  disabled={bloquearEscrita}
                   onBlur={(event) => {
                     if (event.target.value !== (foto.legenda ?? "")) {
                       void updateLegenda(foto, event.target.value);
@@ -418,7 +428,7 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
                       size="icon"
                       className="h-6 w-6"
                       onClick={() => void moveFoto(index, -1)}
-                      disabled={index === 0}
+                      disabled={index === 0 || bloquearEscrita}
                       aria-label="Mover foto para cima na ordem"
                     >
                       <GripVertical className="h-3.5 w-3.5 rotate-90" aria-hidden="true" />
@@ -431,6 +441,7 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
                       size="icon"
                       className="h-6 w-6"
                       onClick={() => abrirAnotacaoDeFoto(foto)}
+                      disabled={bloquearEscrita}
                       aria-label="Anotar foto"
                       title="Anotar foto"
                     >
@@ -444,6 +455,7 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
                       size="icon"
                       className="h-6 w-6"
                       onClick={() => setFotoLegendaIAId((atual) => (atual === foto.id ? null : foto.id))}
+                      disabled={bloquearEscrita}
                       aria-label="Legenda com IA"
                       aria-pressed={fotoLegendaIAId === foto.id}
                       title="Legenda com IA"
@@ -457,6 +469,7 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
                     size="icon"
                     className="h-6 w-6 text-destructive hover:text-destructive"
                     onClick={() => void removeFoto(foto)}
+                    disabled={bloquearEscrita}
                     aria-label="Remover foto"
                   >
                     <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />

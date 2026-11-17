@@ -4,11 +4,12 @@
  * As regras abaixo duplicam lib/sw-cache.ts (fonte testada em sw-cache.test.ts,
  * que confere a igualdade dos padrões). Altere os dois juntos.
  */
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2"; // v2: OFFLINE_URL relativo ao scope (T83)
 const CACHE_PREFIX = "garra-sw-";
 const DATA_CACHE = CACHE_PREFIX + "data-" + CACHE_VERSION;
 const SHELL_CACHE = CACHE_PREFIX + "shell-" + CACHE_VERSION;
-const OFFLINE_URL = "/offline.html";
+// Relativo ao scope: no Pages o app vive em /garra-engenharia/ (registro em sw-register.tsx).
+const OFFLINE_URL = new URL("offline.html", self.registration.scope).href;
 const STORED_AT_HEADER = "x-sw-stored-at";
 
 const RULES = [
@@ -17,6 +18,8 @@ const RULES = [
   { pattern: "^/api/v1/contratos/?$", ttlMs: 300000, perUser: true },
   { pattern: "^/api/v1/contratos/[0-9]+/?$", ttlMs: 300000, perUser: true },
 ];
+// DEC-57: api.json/snapshot.enc da branch `snapshot` nunca passam pelo SW.
+const NEVER_HOSTS = [{ host: "raw.githubusercontent.com" }];
 const NEVER = [
   { never: "/auth(/|$)" },
   { never: "/portal(/|$)" },
@@ -117,6 +120,8 @@ self.addEventListener("message", (event) => {
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return; // escritas: não interceptar.
+  const host = new URL(request.url).hostname;
+  if (NEVER_HOSTS.some((n) => n.host === host)) return; // descoberta/snapshot: sempre rede.
 
   if (request.mode === "navigate") {
     event.respondWith(

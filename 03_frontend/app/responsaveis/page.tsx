@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError, responsaveis as responsaveisApi } from "@/lib/api-client";
 import type { Responsavel, ResponsavelInput } from "@/lib/types";
 import { useUsuarioAtual } from "@/lib/use-usuario-atual";
+import { useModoLeitura } from "@/lib/modo-leitura";
 import { ResponsavelForm, TIPOS_RESPONSAVEL } from "./responsavel-form";
 
 const rotuloTipo = (tipo: string) => TIPOS_RESPONSAVEL.find((t) => t.value === tipo)?.label ?? tipo;
@@ -33,6 +34,7 @@ export default function ResponsaveisPage() {
   const [erro, setErro] = useState<ApiError | Error | null>(null);
   const [criando, setCriando] = useState(false);
   const { isAuditor } = useUsuarioAtual();
+  const { bloquearEscrita } = useModoLeitura();
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -65,7 +67,7 @@ export default function ResponsaveisPage() {
         />
         {isAuditor ? (
           <Dialog open={criando} onOpenChange={setCriando}>
-            <Button className="gap-1.5" onClick={() => setCriando(true)}>
+            <Button className="gap-1.5" onClick={() => setCriando(true)} disabled={bloquearEscrita}>
               <Plus className="h-4 w-4" aria-hidden="true" />
               Novo responsável
             </Button>

@@ -6,8 +6,10 @@ import { test } from "node:test";
 import {
   ALLOWLIST,
   NEVER_CACHE_PATTERNS,
+  NEVER_INTERCEPT_HOSTS,
   cacheKeyUrl,
   isCacheableRequest,
+  isNeverIntercepted,
   isCacheableResponse,
   isFresh,
   matchCacheRule,
@@ -90,10 +92,29 @@ test("TTL", () => {
   assert.equal(isFresh(2000, 1000, 1000), false);
 });
 
+test("api.json e snapshot.enc (raw.githubusercontent.com) nunca são interceptados nem cacheados", () => {
+  const raw = "https://raw.githubusercontent.com/rafaelroriz-age/garra-engenharia/snapshot";
+  for (const arq of ["api.json", "snapshot.enc", "api.json?t=1"]) {
+    assert.equal(isNeverIntercepted(`${raw}/${arq}`), true, arq);
+    assert.equal(isCacheableRequest({ method: "GET", url: `${raw}/${arq}` }), false, arq);
+  }
+  // Mesmo um caminho que casaria a allowlist não é cacheado nesse host.
+  assert.equal(isCacheableRequest({ method: "GET", url: "https://raw.githubusercontent.com/api/v1/contratos" }), false);
+  assert.equal(isNeverIntercepted(`${API}/contratos`), false);
+});
+
 test("public/sw.js duplica exatamente as regras deste módulo", () => {
   const sw = readFileSync(new URL("../public/sw.js", import.meta.url), "utf8");
   const swPatterns = (sw.match(/pattern: "[^"]*"/g) ?? []).map((s) => s.slice(10, -1));
   const swNever = (sw.match(/never: "[^"]*"/g) ?? []).map((s) => s.slice(8, -1));
+  const swHosts = (sw.match(/host: "[^"]*"/g) ?? []).map((s) => s.slice(7, -1));
   assert.deepEqual(swPatterns, ALLOWLIST.map((r) => r.pattern));
   assert.deepEqual(swNever, [...NEVER_CACHE_PATTERNS]);
+  assert.deepEqual(swHosts, [...NEVER_INTERCEPT_HOSTS]);
+});
+
+test("public/sw.js resolve a página offline pelo scope (basePath do Pages)", () => {
+  const sw = readFileSync(new URL("../public/sw.js", import.meta.url), "utf8");
+  assert.match(sw, /new URL\("offline\.html", self\.registration\.scope\)/);
+  assert.doesNotMatch(sw, /OFFLINE_URL = "\//);
 });
