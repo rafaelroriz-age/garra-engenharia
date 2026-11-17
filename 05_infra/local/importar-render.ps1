@@ -25,6 +25,14 @@
   Banco local de destino (padrao garra_producao). Criado se nao existir.
 .PARAMETER Forcar
   Nao pede a confirmacao "SIM" antes de sobrescrever o destino.
+.PARAMETER DestinoUrl
+  Modo Neon (DEC-58, T88): restaura num Postgres REMOTO (ex.: Neon) em vez do local. Aceita a URL
+  postgres://usuario:senha@host:porta/banco?sslmode=require; se o parametro for passado sem valor util
+  (ou com -DestinoPrompt) pede de forma segura (Read-Host -AsSecureString). Nunca de arquivo versionado.
+  Neste modo o .env local nao e usado, o banco ja deve existir (criado pelo Neon), o host nao pode ter
+  `-pooler` (asyncpg/alembic nao funcionam no PgBouncer) e o alembic roda com POSTGRES_SSL conforme o sslmode.
+.PARAMETER DestinoPrompt
+  Pede a URL de destino de forma segura (sem aparecer no historico do shell). Implica modo Neon.
 .PARAMETER EnvLocal
   Caminho alternativo do .env local (padrao 05_infra/local/.env). Usado nos testes.
 .PARAMETER Python
@@ -34,6 +42,8 @@
 param(
     [string]$OrigemUrl,
     [string]$DestinoDb = 'garra_producao',
+    [string]$DestinoUrl,
+    [switch]$DestinoPrompt,
     [switch]$Forcar,
     [string]$EnvLocal,
     [string]$Python
@@ -143,17 +153,19 @@ function ConvertFrom-PgUrl([string]$Url) {
     if ($Url -notmatch '^postgres(?:ql)?://(?<u>[^:@/]*)(?::(?<p>[^@]*))?@(?<h>[^:/?]+)(?::(?<port>\d+))?/(?<d>[^?]+)(?:\?(?<q>.*))?$') {
         Stop-ComErro 'URL de origem invalida. Formato: postgres://usuario:senha@host:porta/banco'
     }
-    $dec = { param($t) [Uri]::UnescapeDataString([string]$t) }
+    # Captura tudo de $Matches ANTES de qualquer outro -match (que o sobrescreveria).
+    $uUrl = $Matches['u']; $pUrl = [string]$Matches['p']; $hostOrigem = $Matches['h']; $dUrl = $Matches['d']
     $porta = '5432'; if ($Matches['port']) { $porta = $Matches['port'] }
+    $qUrl = [string]$Matches['q']
+    $dec = { param($t) [Uri]::UnescapeDataString([string]$t) }
     $ssl = $null
-    if ($Matches['q'] -and $Matches['q'] -match '(?:^|&)sslmode=([a-z-]+)') { $ssl = $Matches[1] }
-    $hostOrigem = $Matches['h']
+    if ($qUrl -match '(?:^|&)sslmode=([a-z-]+)') { $ssl = $Matches[1] }
     if (-not $ssl) { if ($hostOrigem -in @('localhost', '127.0.0.1')) { $ssl = 'prefer' } else { $ssl = 'require' } }
-    $senha = & $dec $Matches['p']
-    $script:Segredos += @($senha, [string]$Matches['p'])
+    $senha = & $dec $pUrl
+    $script:Segredos += @($senha, $pUrl)
     return @{
-        PGHOST = $hostOrigem; PGPORT = $porta; PGUSER = (& $dec $Matches['u']); PGPASSWORD = $senha
-        PGDATABASE = (& $dec $Matches['d']); PGSSLMODE = $ssl; PGCONNECT_TIMEOUT = '20'
+        PGHOST = $hostOrigem; PGPORT = $porta; PGUSER = (& $dec $uUrl); PGPASSWORD = $senha
+        PGDATABASE = (& $dec $dUrl); PGSSLMODE = $ssl; PGCONNECT_TIMEOUT = '20'
     }
 }
 
@@ -194,28 +206,72 @@ $OrigemUrl = $null
 Write-Log ("origem: {0}:{1}/{2} (usuario {3}, sslmode {4})" -f $amOrigem.PGHOST, $amOrigem.PGPORT, $amOrigem.PGDATABASE, $amOrigem.PGUSER, $amOrigem.PGSSLMODE)
 
 # --- 2. Destino -----------------------------------------------------------------------------------
-$cfg = Read-EnvArquivo $EnvLocal
-foreach ($k in @('POSTGRES_USER', 'POSTGRES_PASSWORD')) { if (-not $cfg[$k]) { Stop-ComErro "$k vazio em $EnvLocal" } }
-$script:Segredos += @($cfg['POSTGRES_PASSWORD'])
-$hostLocal = 'localhost'; if ($cfg['POSTGRES_HOST']) { $hostLocal = $cfg['POSTGRES_HOST'] }
-$portaLocal = '5434'; if ($cfg['POSTGRES_PORT']) { $portaLocal = $cfg['POSTGRES_PORT'] }
-if ($hostLocal -notin @('localhost', '127.0.0.1', '::1')) { Stop-ComErro "Destino precisa ser local (POSTGRES_HOST=$hostLocal)." }
-if ($amOrigem.PGHOST -in @('localhost', '127.0.0.1') -and $amOrigem.PGPORT -eq $portaLocal -and $amOrigem.PGDATABASE -eq $DestinoDb) {
-    Stop-ComErro 'Origem e destino sao o mesmo banco. Abortando.'
+$modoRemoto = [bool]($DestinoUrl -or $DestinoPrompt)
+$amAlembic = $null
+if ($modoRemoto) {
+    # Modo Neon: destino remoto informado por URL (nunca gravada em disco nem no log).
+    if (-not $DestinoUrl) {
+        $sec = Read-Host -Prompt 'Cole a connection string DIRETA do Neon (a digitacao fica oculta)' -AsSecureString
+        $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec)
+        try { $DestinoUrl = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr) }
+        finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) }
+    }
+    if (-not $DestinoUrl) { Stop-ComErro 'Nenhuma URL de destino informada.' }
+    $amDestino = ConvertFrom-PgUrl $DestinoUrl.Trim()
+    $DestinoUrl = $null
+    $DestinoDb = $amDestino.PGDATABASE
+    $script:Segredos += @($amDestino.PGHOST)
+    if ($amDestino.PGHOST -match '-pooler') { Stop-ComErro 'Host de destino com -pooler: use a conexao DIRETA (desligue "Pooled connection" no Neon).' }
+    if ($amDestino.PGHOST -eq $amOrigem.PGHOST -and $amDestino.PGPORT -eq $amOrigem.PGPORT -and $amDestino.PGDATABASE -eq $amOrigem.PGDATABASE) {
+        Stop-ComErro 'Origem e destino sao o mesmo banco. Abortando.'
+    }
+    $amDestinoAdmin = $amDestino
+    $hostLocal = $amDestino.PGHOST; $portaLocal = $amDestino.PGPORT
+    $cfg = @{}
+    Write-Log ("destino REMOTO (modo Neon): banco {0}, sslmode {1}" -f $DestinoDb, $amDestino.PGSSLMODE)
+    $r = Invoke-Nativo (Get-PgExe 'psql') @('-X', '-A', '-t', '-c', "select 'conectado tls=' || coalesce((select ssl::text from pg_stat_ssl where pid = pg_backend_pid()), 'n/d')") -Ambiente $amDestino -PermitirFalha
+    if ($r.Codigo -ne 0) { Stop-ComErro 'Nao foi possivel conectar ao destino (o Neon escala a zero: tente de novo em alguns segundos; confira a URL).' }
+    Write-Log ("destino: {0}" -f $r.Saida)
+    $existe = '1'
+    $temTabelas = ((Invoke-Psql $amDestino "select count(*) from pg_tables where schemaname='public'") -ne '0')
+    $sslFlag = 'true'; if ($amDestino.PGSSLMODE -in @('disable', 'allow', 'prefer')) { $sslFlag = 'false' }
+    $amAlembicBase = @{
+        POSTGRES_USER = $amDestino.PGUSER; POSTGRES_PASSWORD = $amDestino.PGPASSWORD; POSTGRES_DB = $DestinoDb
+        POSTGRES_HOST = $amDestino.PGHOST; POSTGRES_PORT = $amDestino.PGPORT; POSTGRES_SSL = $sslFlag
+        PYTHONPATH = $BackendDir; PYTHONUTF8 = '1'
+    }
+} else {
+    $cfg = Read-EnvArquivo $EnvLocal
+    foreach ($k in @('POSTGRES_USER', 'POSTGRES_PASSWORD')) { if (-not $cfg[$k]) { Stop-ComErro "$k vazio em $EnvLocal" } }
+    $script:Segredos += @($cfg['POSTGRES_PASSWORD'])
+    $hostLocal = 'localhost'; if ($cfg['POSTGRES_HOST']) { $hostLocal = $cfg['POSTGRES_HOST'] }
+    $portaLocal = '5434'; if ($cfg['POSTGRES_PORT']) { $portaLocal = $cfg['POSTGRES_PORT'] }
+    if ($hostLocal -notin @('localhost', '127.0.0.1', '::1')) { Stop-ComErro "Destino precisa ser local (POSTGRES_HOST=$hostLocal). Para o Neon use -DestinoUrl." }
+    if ($amOrigem.PGHOST -in @('localhost', '127.0.0.1') -and $amOrigem.PGPORT -eq $portaLocal -and $amOrigem.PGDATABASE -eq $DestinoDb) {
+        Stop-ComErro 'Origem e destino sao o mesmo banco. Abortando.'
+    }
+    $amDestinoAdmin = @{ PGHOST = $hostLocal; PGPORT = $portaLocal; PGUSER = $cfg['POSTGRES_USER']; PGPASSWORD = $cfg['POSTGRES_PASSWORD']; PGDATABASE = 'postgres'; PGCONNECT_TIMEOUT = '10' }
+    $amDestino = @{} + $amDestinoAdmin; $amDestino['PGDATABASE'] = $DestinoDb
+    $amAlembicBase = @{
+        POSTGRES_USER = $cfg['POSTGRES_USER']; POSTGRES_PASSWORD = $cfg['POSTGRES_PASSWORD']; POSTGRES_DB = $DestinoDb
+        POSTGRES_HOST = $hostLocal; POSTGRES_PORT = $portaLocal; PYTHONPATH = $BackendDir; PYTHONUTF8 = '1'
+    }
+
+    $ready = Invoke-Nativo (Get-PgExe 'pg_isready') @('-h', $hostLocal, '-p', $portaLocal) -PermitirFalha
+    if ($ready.Codigo -ne 0) { Stop-ComErro "Postgres local nao responde em ${hostLocal}:${portaLocal}. Rode 05_infra\local\garra-local.ps1 start." }
+
+    $existe = Invoke-Psql $amDestinoAdmin "select 1 from pg_database where datname='$DestinoDb'"
+    $temTabelas = $false
+    if ($existe -eq '1') { $temTabelas = ((Invoke-Psql $amDestino "select count(*) from pg_tables where schemaname='public'") -ne '0') }
 }
-$amDestinoAdmin = @{ PGHOST = $hostLocal; PGPORT = $portaLocal; PGUSER = $cfg['POSTGRES_USER']; PGPASSWORD = $cfg['POSTGRES_PASSWORD']; PGDATABASE = 'postgres'; PGCONNECT_TIMEOUT = '10' }
-$amDestino = @{} + $amDestinoAdmin; $amDestino['PGDATABASE'] = $DestinoDb
-
-$ready = Invoke-Nativo (Get-PgExe 'pg_isready') @('-h', $hostLocal, '-p', $portaLocal) -PermitirFalha
-if ($ready.Codigo -ne 0) { Stop-ComErro "Postgres local nao responde em ${hostLocal}:${portaLocal}. Rode 05_infra\local\garra-local.ps1 start." }
-
-$existe = Invoke-Psql $amDestinoAdmin "select 1 from pg_database where datname='$DestinoDb'"
-$temTabelas = $false
-if ($existe -eq '1') { $temTabelas = ((Invoke-Psql $amDestino "select count(*) from pg_tables where schemaname='public'") -ne '0') }
 
 if (-not $Forcar) {
     Write-Host ''
-    Write-Host ("Vai SOBRESCREVER o banco local '{0}' em {1}:{2} com os dados da origem." -f $DestinoDb, $hostLocal, $portaLocal) -ForegroundColor Yellow
+    if ($modoRemoto) {
+        Write-Host ("Vai SOBRESCREVER o banco REMOTO '{0}' (Neon) com os dados da origem." -f $DestinoDb) -ForegroundColor Yellow
+    } else {
+        Write-Host ("Vai SOBRESCREVER o banco local '{0}' em {1}:{2} com os dados da origem." -f $DestinoDb, $hostLocal, $portaLocal) -ForegroundColor Yellow
+    }
     if ($temTabelas) { Write-Host 'O destino ja tem tabelas: um backup dele sera feito antes.' -ForegroundColor Yellow }
     $resp = Read-Host -Prompt 'Digite SIM para continuar'
     if ($resp -ne 'SIM') { Stop-ComErro 'Cancelado pelo usuario.' }
@@ -232,7 +288,7 @@ Write-Log ("dump da origem ok: {0:N1} MB" -f ($tam / 1MB))
 $null = Invoke-Nativo (Get-PgExe 'pg_restore') @('--list', $dumpOrigem)
 
 # --- 4. Backup do local e restauracao ------------------------------------------------------------------
-if ($existe -ne '1') {
+if ($existe -ne '1' -and -not $modoRemoto) {
     Write-Log "banco $DestinoDb nao existe: criando"
     Invoke-Psql $amDestinoAdmin "create database $DestinoDb encoding 'UTF8'" | Out-Null
 } elseif ($temTabelas) {
@@ -241,6 +297,13 @@ if ($existe -ne '1') {
     Invoke-Nativo (Get-PgExe 'pg_dump') @('-Fc', '--no-owner', '-f', $dumpLocal) -Ambiente $amDestino | Out-Null
 }
 
+if ($temTabelas) {
+    # O destino pode ja estar numa revisao MAIS NOVA que o dump (ex.: garra-local.ps1 start no Neon aplicou o
+    # alembic antes da importacao): o --clean sozinho falha em dependencias que o dump nao conhece (FK de tabelas
+    # novas). O backup acima ja foi feito e o usuario confirmou: zera o schema public antes de restaurar.
+    Write-Log "destino com tabelas: recriando o schema public (backup ja feito)"
+    Invoke-Psql $amDestino 'drop schema public cascade; create schema public;' | Out-Null
+}
 Write-Log "pg_restore --clean --if-exists --no-owner em $DestinoDb"
 Invoke-Nativo (Get-PgExe 'pg_restore') @('--clean', '--if-exists', '--no-owner', '--no-privileges', '--exit-on-error', '-d', $DestinoDb, $dumpOrigem) -Ambiente $amDestino | Out-Null
 
@@ -251,10 +314,7 @@ if (-not $Python) {
     }
 }
 if (-not $Python -or -not (Test-Path -LiteralPath $Python)) { Stop-ComErro 'Python do backend nao encontrado (04_backend\.venv-prod). Rode garra-local.ps1 setup ou passe -Python.' }
-$amAlembic = @{
-    POSTGRES_USER = $cfg['POSTGRES_USER']; POSTGRES_PASSWORD = $cfg['POSTGRES_PASSWORD']; POSTGRES_DB = $DestinoDb
-    POSTGRES_HOST = $hostLocal; POSTGRES_PORT = $portaLocal; PYTHONPATH = $BackendDir; PYTHONUTF8 = '1'
-}
+$amAlembic = $amAlembicBase
 Write-Log 'alembic upgrade head'
 Invoke-Nativo $Python @('-m', 'alembic', '-c', (Join-Path $BackendDir 'alembic.ini'), 'upgrade', 'head') -Ambiente $amAlembic | Out-Null
 
