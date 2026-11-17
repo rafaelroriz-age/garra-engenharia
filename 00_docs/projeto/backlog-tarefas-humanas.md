@@ -43,6 +43,10 @@ last_updated: 2026-09-17
 | [HT-10](#ht-10--coleta-de-dados-e-fotos-em-campo-durante-a-vistoriainspeção) | Coleta de dados e fotos em campo durante a vistoria/inspeção | Atividade física de engenharia, fora do escopo de software | Alimenta BL-10/BL-11 (dados de entrada) | 🔴 Recorrente | Não |
 | [HT-11](#ht-11--negociar-e-assinar-o-contrato-de-prestação-de-serviços) | Negociar e assinar o contrato de prestação de serviços/aditivos | Assinatura com validade jurídica | Formalização comercial | 🔴 Pendente | Parcial (minuta/revisão do contrato) |
 | [HT-12](#ht-12--autenticar-o-servidor-mcp-do-notion) | Autenticar o servidor MCP do Notion (OAuth) e selecionar o workspace/página de destino | Login/OAuth e escolha de workspace são atos do próprio usuário; credencial não deve passar por chat/agente | Criação do board `backlog-kanban.md` real dentro do Notion (DEC-20) | ✅ Concluída (2026-08-07) — board criado, ver [HT-12](#ht-12--autenticar-o-servidor-mcp-do-notion) | Sim (board criado integralmente pelo agente após a autenticação) |
+| [HT-13](#ht-13--criar-o-repositório-público-garra-app-e-o-token-de-deploy-dec-57) | Criar o repo público `garra-app` + PAT `PAGES_DEPLOY_TOKEN` | Criação de conta/token | T83 deploy, T82 publicação | 🔴 Pendente | Não (token) |
+| [HT-14](#ht-14--definir-a-senha-da-equipe-do-snapshot-dec-57) | Definir a senha da equipe do snapshot | Segredo | Modo leitura (DEC-57) | 🔴 Pendente | Não |
+| [HT-15](#ht-15--instalar-o-agente-de-inicialização-e-importar-os-dados-do-render-dec-57) | Instalar o agente no PC e importar o banco do Render | Credencial de produção / tarefa no Windows | Desligar o Render | 🔴 Pendente | Parcial (scripts prontos por T79–T84) |
+| [HT-16](#ht-16--apagar-os-serviços-do-render-dec-57) | Apagar os serviços do Render | Ato irreversível na conta paga | — | 🔴 Pendente | Não |
 
 ---
 
@@ -312,6 +316,48 @@ Registro completo em [ata-validacao-lacunas.md](ata-validacao-lacunas.md).
 **Alternativa via agente/MCP (parcial):**
 - O agente "Especialista em Contratos Jurídicos" pode **revisar/redigir cláusulas**, identificar riscos e sugerir ajustes na minuta.
 - A **negociação e a assinatura em si** permanecem exclusivamente humanas.
+
+---
+
+## HT-13 — Criar o repositório público `garra-app` e o token de deploy (DEC-57)
+
+**Por que só um humano:** criação de repositório e de token pessoal (PAT) são atos da conta do dono; o token nunca deve passar por chat/agente.
+
+**Passo a passo:**
+1. Em https://github.com/new criar `rafaelroriz-age/garra-app`, **Public**, com README (para existir a branch padrão).
+2. Criar um fine-grained PAT em https://github.com/settings/personal-access-tokens/new: Repository access = só `garra-app`; Permissions → Contents = Read and write; validade 1 ano.
+3. No repositório **privado** `garra-engenharia` → Settings → Secrets and variables → Actions → New secret `PAGES_DEPLOY_TOKEN` = o token.
+4. No PC, colocar o mesmo token em `05_infra/local/.env` como `GARRA_PUBLIC_TOKEN=` (arquivo fora do git).
+5. Depois do primeiro deploy (T83 integrada e push na `main`), em `garra-app` → Settings → Pages → Source = "Deploy from a branch", branch `gh-pages`, pasta `/`.
+
+---
+
+## HT-14 — Definir a senha da equipe do snapshot (DEC-57)
+
+**Por que só um humano:** é o segredo que protege os dados cifrados publicados.
+
+**Passo a passo:** escolher uma senha com 16+ caracteres, colocar em `05_infra/local/.env` como `SNAPSHOT_SENHA=` e repassar à equipe por canal privado. Trocar a senha invalida o acesso ao snapshot antigo no próximo ciclo.
+
+---
+
+## HT-15 — Instalar o agente de inicialização e importar os dados do Render (DEC-57)
+
+**Por que só um humano:** registra uma tarefa no Windows do dono e lê o banco de produção do Render (bloqueado para agentes pelo guard).
+
+**Passo a passo (PowerShell, na pasta do repo, depois de T79–T84 integradas):**
+1. `05_infra\local\garra-local.ps1 setup`
+2. `05_infra\local\importar-render.ps1` → colar a *External Database URL* do Render quando pedir → conferir "OK" nas contagens.
+3. `05_infra\local\garra-local.ps1 install` (registra a tarefa "Garra Local" no logon) e reiniciar o PC para validar.
+
+---
+
+## HT-16 — Apagar os serviços do Render (DEC-57)
+
+**Por que só um humano:** exclusão irreversível na conta paga.
+
+**Quando:** só depois do aviso "pode apagar o Render" (PC reiniciado sobe sozinho, dados importados com contagens iguais, modo leitura validado com o PC desligado, nenhum `onrender.com` no build).
+
+**Passo a passo:** no painel do Render, apagar `garra-frontend`, `garra-backend` e `garra-db` (guardar antes o dump `05_infra/local/backups/render-final-*.dump`).
 
 ---
 
