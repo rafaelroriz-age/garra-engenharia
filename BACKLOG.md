@@ -1589,7 +1589,7 @@ Siga a 'Regra de pronto' do BACKLOG.md. Papel: devops. Leia DEC-57 em 00_docs/pr
 ```
 
 ### T88 · Migrar os dados do `garra-db` (Render) para o Neon
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-58
 - **Papel:** devops
 - **Depende:** T84, T87
