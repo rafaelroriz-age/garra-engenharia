@@ -1482,7 +1482,7 @@ pytest (garra_engenharia_test) e ruff verdes. Doc com formato do arquivo, lista 
 ```
 
 ### T82 · Agente de inicialização: túnel, publicação de api.json/snapshot e tarefa agendada
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-57
 - **Papel:** devops
 - **Depende:** T79, T81
@@ -1505,7 +1505,7 @@ Rode o que for seguro localmente (túnel cloudflared real por alguns segundos pa
 ```
 
 ### T83 · Front: descoberta da API por api.json, modo leitura com snapshot e deploy no repo público
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-57
 - **Papel:** frontend
 - **Depende:** T81
