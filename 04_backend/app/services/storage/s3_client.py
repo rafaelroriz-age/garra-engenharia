@@ -13,7 +13,7 @@ from botocore.client import Config as BotoConfig
 from botocore.exceptions import ClientError
 
 from app.core.config import Settings, get_settings
-from app.services.storage.base import StorageClient
+from app.services.storage.base import StorageClient, validate_key
 
 logger = logging.getLogger(__name__)
 
@@ -67,8 +67,7 @@ class S3StorageClient(StorageClient):
 
     @staticmethod
     def _validate_key(key: str) -> None:
-        if not key or not key.strip():
-            raise ValueError("A chave (key) do objeto não pode ser vazia.")
+        validate_key(key)
 
     def upload(
         self, key: str, file_bytes: bytes, content_type: str, *, max_size_bytes: int | None = None
@@ -152,4 +151,8 @@ def get_storage_client() -> StorageClient:
     checagem de existência do bucket — a cada requisição. Em testes, substitua
     via `app.dependency_overrides[get_storage_client] = lambda: fake_client`.
     """
+    if get_settings().storage_provedor == "local":
+        from app.services.storage.local_client import LocalStorageClient  # evita import circular
+
+        return LocalStorageClient()
     return S3StorageClient()

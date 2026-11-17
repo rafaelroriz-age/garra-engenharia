@@ -10,6 +10,12 @@ from collections.abc import Iterable
 from datetime import datetime
 
 
+def validate_key(key: str) -> None:
+    """Validação de chave comum a todos os provedores."""
+    if not key or not key.strip():
+        raise ValueError("A chave (key) do objeto não pode ser vazia.")
+
+
 class StorageClient(ABC):
     """Interface de armazenamento de objetos (arquivos binários)."""
 

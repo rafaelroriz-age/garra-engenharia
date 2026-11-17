@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
+from app.api.v1.arquivos import router as arquivos_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.conteudos import router as conteudos_router
 from app.api.v1.contratos import router as contratos_router
@@ -29,7 +30,11 @@ from app.api.v1.visitas import router as visitas_router
 from app.core.config import get_settings
 from app.core.database import engine
 from app.core.exception_handlers import register_exception_handlers
-from app.core.middleware import RequestIdMiddleware, SecurityHeadersMiddleware
+from app.core.middleware import (
+    RequestBaseUrlMiddleware,
+    RequestIdMiddleware,
+    SecurityHeadersMiddleware,
+)
 from app.core.migrations import aplicar_migrations
 
 logging.basicConfig(level=logging.INFO)
@@ -61,6 +66,7 @@ app = FastAPI(
 
 app.add_middleware(SecurityHeadersMiddleware, hsts=not settings.is_development)
 app.add_middleware(RequestIdMiddleware)
+app.add_middleware(RequestBaseUrlMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -74,6 +80,7 @@ register_exception_handlers(app)
 
 app.include_router(dados_mestre_router)
 app.include_router(auth_router)
+app.include_router(arquivos_router)
 app.include_router(edificacoes_router)
 app.include_router(contratos_router)
 app.include_router(responsaveis_router)

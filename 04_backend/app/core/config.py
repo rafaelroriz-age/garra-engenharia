@@ -40,6 +40,12 @@ class Settings(BaseSettings):
     minio_api_port: int = 9000
     minio_use_ssl: bool = False
 
+    # --- Storage (DEC-57): s3 (MinIO/AWS) ou disco local --------------------------
+    storage_provedor: Literal["s3", "local"] = "s3"
+    storage_local_dir: str = "../05_infra/local/storage"
+    # URL pública do backend (ex.: túnel). Vazio = deriva do request (X-Forwarded-*) ou relativa.
+    public_base_url: str = ""
+
     # --- JWT (RNF-05, DEC-05) ----------------------------------------------------
     jwt_secret_key: str = "changeme"
     jwt_algorithm: str = "HS256"
