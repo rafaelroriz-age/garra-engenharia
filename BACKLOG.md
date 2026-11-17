@@ -1439,7 +1439,7 @@ Não use o banco garra_engenharia de dev nem o Docker. Não toque no Render. Rod
 ```
 
 ### T80 · Storage em disco local com download assinado pelo próprio FastAPI
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-57
 - **Papel:** backend
 - **Depende:** —
