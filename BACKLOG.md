@@ -1461,7 +1461,7 @@ Rode pytest (banco garra_engenharia_test, Regra de pronto item 6) e ruff. Doc co
 ```
 
 ### T81 · Gerador de snapshot cifrado da leitura da equipe
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-57
 - **Papel:** backend
 - **Depende:** —
