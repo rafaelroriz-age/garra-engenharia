@@ -127,6 +127,9 @@ Variáveis novas (detalhes e padrões em [runtime-local-pc.md](backlog-auto/runt
 | `SNAPSHOT_SENHA` | vazia (obrigatória, ≥ 16 caracteres) | `gerar_snapshot` (T81) |
 | `WEASYPRINT_DLL_DIRECTORIES` | vazio → detectado | WeasyPrint (PDF) |
 | `BACKUP_RETENCAO` | `14` | `backup` |
+| `POSTGRES_MODO` | `local` | `garra-local.ps1`: `local` = Postgres portátil do PC (DEC-57 P1, opcional/fallback); `neon` = banco Neon (DEC-58, produção) |
+| `POSTGRES_SSL` | `false` | `Settings` (`database_url` acrescenta `?ssl=require`); **obrigatório `true` no Neon** (T87) |
+| `POSTGRES_HOST` / `POSTGRES_PORT` / `POSTGRES_USER` / `POSTGRES_DB` / `POSTGRES_PASSWORD` (modo `neon`) | valores do projeto Neon | `garra-local.ps1`: host **direto**, sem `-pooler`; senha só no `.env` local. Passo a passo em [05_infra/README.md](../05_infra/README.md) (seção "Banco no Neon (DEC-58)") |
 | `GARRA_PUBLIC_REPO` / `GARRA_PUBLIC_TOKEN` | vazios | publicação de `api.json` e `snapshot.enc` (T82); token é PAT só com Contents read/write |
 | `AGENTE_HEARTBEAT_MIN` / `AGENTE_SNAPSHOT_MIN` / `AGENTE_TICK_SEG` | `10` / `30` / `15` | `garra-agente.ps1` |
 | `LEGENDA_IA_PROVEDOR` / `DEEPSEEK_API_KEY` | `fake` / vazia | legenda IA (com `deepseek` em produção a chave é obrigatória) |
