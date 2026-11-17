@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Archivo, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 
 import { AppShell } from "@/components/layout/app-shell";
+import { ModoLeituraBanner } from "@/components/modo-leitura-banner";
 import { SwRegister } from "@/components/sw-register";
 import { ThemeProvider } from "@/components/theme-provider";
 import { cn, withBasePath } from "@/lib/utils";
@@ -77,6 +78,7 @@ export default function RootLayout({
         <SwRegister />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AppShell>{children}</AppShell>
+          <ModoLeituraBanner />
         </ThemeProvider>
       </body>
     </html>

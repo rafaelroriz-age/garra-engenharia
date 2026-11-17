@@ -23,6 +23,7 @@ import { ApiErrorAlert } from "@/components/api-error-alert";
 import { api, ApiError } from "@/lib/api-client";
 import { normalizePaginated, type Edificacao, type EdificacaoInput, type Paginated } from "@/lib/types";
 import { useUsuarioAtual } from "@/lib/use-usuario-atual";
+import { useModoLeitura } from "@/lib/modo-leitura";
 import { EdificacaoForm } from "./edificacao-form";
 
 const PAGE_SIZE = 10;
@@ -36,6 +37,7 @@ export default function EdificacoesPage() {
   const [error, setError] = useState<ApiError | Error | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const { isAuditor } = useUsuarioAtual();
+  const { bloquearEscrita } = useModoLeitura();
 
   const loadEdificacoes = useCallback(async () => {
     setIsLoading(true);
@@ -78,7 +80,7 @@ export default function EdificacoesPage() {
         {/* Cadastro é ato administrativo: só auditor (RN-18). O backend rejeita de qualquer forma. */}
         {isAuditor && (
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <Button className="gap-1.5" onClick={() => setIsCreateOpen(true)}>
+            <Button className="gap-1.5" onClick={() => setIsCreateOpen(true)} disabled={bloquearEscrita}>
               <Plus className="h-4 w-4" aria-hidden="true" />
               Nova edificação
             </Button>

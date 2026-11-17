@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ApiError, relatorios as relatoriosApi } from "@/lib/api-client";
 import type { FormatoRelatorio, RelatorioVersao } from "@/lib/types";
 import { humanizeStatus } from "@/lib/utils";
+import { TEXTO_INDISPONIVEL, useModoLeitura } from "@/lib/modo-leitura";
 
 const emitidaEm = (versao: RelatorioVersao) =>
   versao.emitido_em ? new Date(versao.emitido_em).toLocaleDateString("pt-BR") : "—";
@@ -43,6 +44,7 @@ export function EmissaoVersoes({ inspecaoId, tipo, podeEmitir, textosNaoSalvos }
   const [emitida, setEmitida] = useState<string | null>(null);
   const [baixando, setBaixando] = useState<string | null>(null);
   const [erroDownload, setErroDownload] = useState<ApiError | Error | null>(null);
+  const { bloquearEscrita } = useModoLeitura();
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -104,7 +106,7 @@ export function EmissaoVersoes({ inspecaoId, tipo, podeEmitir, textosNaoSalvos }
       <CardContent className="space-y-4 px-4 sm:px-6">
         {podeEmitir ? (
           <div className="space-y-2">
-            <Button type="button" onClick={() => void emitir()} disabled={emitindo} aria-busy={emitindo}>
+            <Button type="button" onClick={() => void emitir()} disabled={emitindo || bloquearEscrita} aria-busy={emitindo}>
               {emitindo ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Send aria-hidden="true" />}
               {emitindo ? "Emitindo..." : "Emitir nova versão"}
             </Button>
@@ -194,7 +196,8 @@ export function EmissaoVersoes({ inspecaoId, tipo, podeEmitir, textosNaoSalvos }
                         variant="outline"
                         className="px-2"
                         aria-label={`Baixar PDF da versão ${versao.versao}`}
-                        disabled={!versao.tem_pdf || baixando === `${versao.id}:pdf`}
+                        disabled={!versao.tem_pdf || baixando === `${versao.id}:pdf` || bloquearEscrita}
+                        title={bloquearEscrita ? TEXTO_INDISPONIVEL : undefined}
                         onClick={() => void baixar(versao.id, "pdf")}
                       >
                         <Download aria-hidden="true" />
@@ -205,7 +208,8 @@ export function EmissaoVersoes({ inspecaoId, tipo, podeEmitir, textosNaoSalvos }
                         variant="outline"
                         className="px-2"
                         aria-label={`Baixar DOCX da versão ${versao.versao}`}
-                        disabled={!versao.tem_docx || baixando === `${versao.id}:docx`}
+                        disabled={!versao.tem_docx || baixando === `${versao.id}:docx` || bloquearEscrita}
+                        title={bloquearEscrita ? TEXTO_INDISPONIVEL : undefined}
                         onClick={() => void baixar(versao.id, "docx")}
                       >
                         <Download aria-hidden="true" />

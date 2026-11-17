@@ -16,6 +16,7 @@ import { api, ApiError } from "@/lib/api-client";
 import { humanizeStatus } from "@/lib/utils";
 import type { ContratoDetail, ContratoInput } from "@/lib/types";
 import { useUsuarioAtual } from "@/lib/use-usuario-atual";
+import { useModoLeitura } from "@/lib/modo-leitura";
 import { ContratoForm } from "../contrato-form";
 
 /** Detalhe de Contrato com executoras e NBRs (RF-02, RF-12, BL-09) — `GET /contratos/{id}`. */
@@ -26,6 +27,7 @@ export default function ContratoDetailPage() {
   const [error, setError] = useState<ApiError | Error | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const { isAuditor } = useUsuarioAtual();
+  const { bloquearEscrita } = useModoLeitura();
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -91,7 +93,7 @@ export default function ContratoDetailPage() {
           />
         </div>
         {!isEditing && isAuditor ? (
-          <Button variant="outline" className="gap-1.5" onClick={() => setIsEditing(true)}>
+          <Button variant="outline" className="gap-1.5" onClick={() => setIsEditing(true)} disabled={bloquearEscrita}>
             <Pencil className="h-4 w-4" aria-hidden="true" />
             Editar
           </Button>

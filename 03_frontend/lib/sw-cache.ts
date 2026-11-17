@@ -49,6 +49,21 @@ export const NEVER_CACHE_PATTERNS: readonly string[] = [
   "/upload",
 ];
 
+/**
+ * Hosts nunca interceptados pelo SW (DEC-57): `api.json` e `snapshot.enc` vêm da
+ * branch `snapshot` via raw.githubusercontent.com e precisam estar sempre frescos.
+ */
+export const NEVER_INTERCEPT_HOSTS: readonly string[] = ["raw.githubusercontent.com"];
+
+/** O SW deve deixar a requisição seguir direto para a rede, sem `respondWith`? */
+export function isNeverIntercepted(url: string): boolean {
+  try {
+    return NEVER_INTERCEPT_HOSTS.includes(new URL(url).hostname);
+  } catch {
+    return false;
+  }
+}
+
 export interface RequestInfo {
   method: string;
   url: string;
@@ -65,6 +80,7 @@ function pathnameOf(url: string): string | null {
 }
 
 export function isNeverCacheable(url: string): boolean {
+  if (isNeverIntercepted(url)) return true;
   const path = pathnameOf(url);
   if (path === null) return true;
   return NEVER_CACHE_PATTERNS.some((p) => new RegExp(p).test(path));
