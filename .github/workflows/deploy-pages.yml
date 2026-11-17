@@ -2,7 +2,9 @@
 # Substitui o serviço `garra-frontend` do Render: o Next.js é exportado como
 # site estático (`output: "export"` em next.config.mjs) e publicado em
 # https://rafaelroriz-age.github.io/garra-engenharia/. O backend continua no
-# Render (render.yaml).
+# Render (render.yaml) até a migração para o PC do dono (DEC-57, T83 troca a
+# URL fixa pela descoberta via api.json da branch `snapshot`).
+# Repositório público desde 2026-11-17: Pages grátis no próprio repositório.
 #
 # Pré-requisito (uma vez, ação humana): Settings → Pages → Build and deployment
 # → Source = "GitHub Actions".

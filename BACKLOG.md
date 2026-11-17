@@ -1406,3 +1406,169 @@ Passo a passo: (1) Descubra como os E2E existentes (tarefas T74/T75, Playwright)
 
 Commit em Conventional Commits: `test(frontend): e2e de escrita sem rede (DEC-26)` com rodapé `Refs DEC-26`. Nunca commite .env/chaves; nunca faça push nem toque em main_back, main_front, staging_back, staging_front. Siga a "Regra de pronto" do BACKLOG.md.
 ```
+
+## Bloco G — Sair do Render: backend no PC, front no Pages público, snapshot cifrado (DEC-57)
+
+Contexto comum (DEC-57 em 00_docs/projeto/decisoes.md): o repositório `garra-engenharia` é **público** (desde 2026-11-17). O site estático continua no GitHub Pages do próprio repositório (`https://rafaelroriz-age.github.io/garra-engenharia/`, `deploy-pages.yml` com `GITHUB_TOKEN`), e a branch órfã `snapshot` do mesmo repositório guarda com `api.json` (URL atual do túnel + heartbeat) e `snapshot.enc` (dados de leitura da equipe cifrados com AES-256-GCM). Backend FastAPI, PostgreSQL e arquivos rodam no PC do dono, com dados fora do git; sobe sozinho no logon do Windows e é exposto por `cloudflared tunnel --url` (URL aleatória por boot, publicada em `api.json`). PC desligado → site abre em modo leitura com o snapshot; nenhuma gravação.
+
+### T79 · Runtime local de produção no PC sem Docker (PostgreSQL portátil + venv + .env)
+- **Status:** doing
+- **Origem:** DEC-57
+- **Papel:** devops
+- **Depende:** —
+- **Ambiente:** offline
+- **Dificuldade:** alta
+- **Toca:** 05_infra/local/, .gitignore, 00_docs/backlog-auto/runtime-local-pc.md
+- **Doc:** 00_docs/backlog-auto/runtime-local-pc.md
+- **Pronto:** Existe `05_infra/local/garra-local.ps1` (Windows PowerShell 5.1) com os subcomandos `setup`, `start`, `stop`, `status` e `backup`, e `05_infra/local/.env.example`. `setup` baixa o PostgreSQL 16 portátil (zip de binários EDB) para `05_infra/local/bin/`, faz `initdb` em `%LOCALAPPDATA%\garra\pgdata` (porta 5434, fora do OneDrive), cria o banco `garra_producao`, cria o venv `04_backend/.venv-prod` e instala `requirements.txt`. `start` sobe Postgres e uvicorn (porta 8000, sem reload), roda `alembic upgrade head` e os seeds idempotentes; `stop` encerra limpo; `status` mostra o que está no ar; `backup` faz `pg_dump -Fc` para `05_infra/local/backups/` com retenção de 14. Os dados (bin, backups, storage, logs, run, .env) estão no .gitignore. O Doc traz os comandos realmente executados e a saída, ou diz o que não rodou e por quê.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md. Papel: devops (.github/agents/devops.agent.md). Leia DEC-57 em 00_docs/projeto/decisoes.md e o contexto do Bloco G do BACKLOG.md. Objetivo: rodar o backend de produção no PC Windows do dono, sem Docker e sem Render, com os dados fora do git.
+
+Leia antes: 04_backend/app/core/config.py, 04_backend/.env.example, 05_infra/.env.render.example, 05_infra/README.md, os scripts de seed em 04_backend/app/scripts/ (descubra quais são idempotentes e a ordem usada em .github/workflows/ci.yml ou na documentação) e o Dockerfile.render do backend (dependências de sistema do WeasyPrint: no Windows confira se GTK/Pango é necessário e como o projeto resolve isso hoje em dev; se precisar de instalação extra, deixe o passo em `setup` e no Doc).
+
+Crie em 05_infra/local/ (não crie pastas na raiz):
+1. garra-local.ps1 compatível com Windows PowerShell 5.1 (sem `&&`, sem `??`), com subcomandos setup|start|stop|status|backup e uma função de log em 05_infra/local/logs/garra-local.log. Caminhos sempre relativos ao próprio script ($PSScriptRoot), pois o repo fica numa pasta com espaços e acentos.
+2. setup: baixa o zip de binários do PostgreSQL 16 para Windows x64 (EDB) para 05_infra/local/bin/pgsql (pule se já existir), initdb em $env:LOCALAPPDATA\garra\pgdata com auth scram e senha vinda do .env, porta 5434, cria o banco garra_producao; cria 04_backend/.venv-prod e instala 04_backend/requirements.txt; copia .env.example para .env se não existir e gera JWT_SECRET_KEY e senhas aleatórias só se ausentes (nunca sobrescreva valores existentes; SNAPSHOT_SENHA fica vazia para o dono definir, HT-14).
+3. start: pg_ctl start (se não estiver no ar), espera aceitar conexão, `alembic upgrade head` e seeds idempotentes com o venv-prod e as variáveis do .env local (POSTGRES_HOST=localhost, POSTGRES_PORT=5434, POSTGRES_DB=garra_producao, BACKEND_CORS_ORIGINS incluindo https://rafaelroriz-age.github.io e http://localhost:3000, RUN_MIGRATIONS_ON_STARTUP=false, STORAGE_PROVEDOR=local, STORAGE_LOCAL_DIR=05_infra/local/storage absoluto), depois uvicorn app.main:app --host 127.0.0.1 --port 8000 em segundo plano, gravando o PID em 05_infra/local/run/. Saída do uvicorn em logs/.
+4. stop: encerra uvicorn pelo PID e pg_ctl stop -m fast. status: mostra Postgres/uvicorn e GET http://127.0.0.1:8000/health.
+5. backup: pg_dump -Fc para 05_infra/local/backups/garra-AAAAMMDD-HHmm.dump e apaga os mais antigos que os 14 mais recentes.
+6. 05_infra/local/.env.example documentado (sem segredos reais) e entradas no .gitignore: 05_infra/local/bin/, backups/, storage/, logs/, run/ (o padrão `.env` já cobre o .env, confirme).
+
+Não use o banco garra_engenharia de dev nem o Docker. Não toque no Render. Rode de verdade `setup`, `start`, `status`, `backup` e `stop` no PC (o banco garra_producao é novo e vazio, é seguro); se o download ou algo falhar, registre no Doc em vez de inventar. Registre no Doc: arquitetura, variáveis, comandos, saídas e limitações. Commit: `feat(infra): runtime local de producao no PC sem Docker (DEC-57)` com rodapé `Refs DEC-57`.
+```
+
+### T80 · Storage em disco local com download assinado pelo próprio FastAPI
+- **Status:** doing
+- **Origem:** DEC-57
+- **Papel:** backend
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** media
+- **Toca:** 04_backend/app/services/storage/, 04_backend/app/core/config.py, 04_backend/app/api/v1/arquivos.py, 04_backend/app/main.py, 04_backend/.env.example, 04_backend/tests/test_storage_local.py, 00_docs/backlog-auto/storage-local.md
+- **Doc:** 00_docs/backlog-auto/storage-local.md
+- **Pronto:** Existe `LocalStorageClient` que implementa a mesma interface de `app/services/storage/base.py` gravando em `STORAGE_LOCAL_DIR`, selecionado por `STORAGE_PROVEDOR=local` (padrão continua `s3`, nada muda para quem usa MinIO). `generate_presigned_url` devolve URL absoluta para `GET /api/v1/arquivos/{token}` com token HMAC (chave derivada de JWT_SECRET_KEY) contendo a chave e a expiração; o endpoint serve o arquivo com Content-Type correto, recusa token adulterado/vencido (403) e path traversal. Testes novos passam; `pytest` e `ruff check .` verdes.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md. Papel: backend (.github/agents/backend.agent.md). Leia DEC-57 em 00_docs/projeto/decisoes.md. Com o backend saindo do Render para o PC do dono (exposto por um único túnel cloudflared), não haverá MinIO/S3: fotos, documentos e relatórios gerados vão para disco local fora do git.
+
+Leia 04_backend/app/services/storage/base.py, s3_client.py (incl. get_storage_client), app/core/config.py e todos os usos de generate_presigned_url (grep) para entender como as URLs de download chegam ao front. Implemente:
+1. app/services/storage/local_client.py: LocalStorageClient(StorageClient) com upload/download/exists/delete/list_keys/list_objects/generate_presigned_url, mesma validação de chave do S3 (reuse _validate_key ou extraia para base), gravação atômica (arquivo temporário + replace), proteção contra path traversal (a chave resolvida tem de ficar dentro de STORAGE_LOCAL_DIR). Guarde o content-type num arquivo lateral `.meta.json` ou infira por extensão; documente a escolha.
+2. Config: STORAGE_PROVEDOR (s3|local, padrão s3), STORAGE_LOCAL_DIR, PUBLIC_BASE_URL (URL pública do backend para montar a URL absoluta). O túnel muda a cada boot: prefira montar a URL a partir do request (cabeçalhos X-Forwarded-Host/Proto do cloudflared) quando PUBLIC_BASE_URL estiver vazia — veja o que é viável dado onde generate_presigned_url é chamado (ou devolva URL relativa à API e documente o ajuste necessário no front). get_storage_client escolhe pelo provedor.
+3. app/api/v1/arquivos.py: GET /api/v1/arquivos/{token} sem autenticação JWT (o token assinado é a autorização, como uma presigned URL), HMAC-SHA256 com chave derivada de JWT_SECRET_KEY, expiração respeitada, 403 para token inválido/vencido, 404 se não existir; FileResponse com Content-Disposition coerente com o que o S3 devolve hoje. Registre o router em app/main.py.
+4. Variáveis novas em 04_backend/.env.example. Testes em tests/test_storage_local.py (tmp_path): ida e volta de upload/download, exists/delete/list, traversal recusado, URL assinada válida baixa, adulterada e vencida dão 403.
+Rode pytest (banco garra_engenharia_test, Regra de pronto item 6) e ruff. Doc com decisões, variáveis e saídas. Commit: `feat(backend): storage em disco local com download assinado (DEC-57)` com rodapé `Refs DEC-57`.
+```
+
+### T81 · Gerador de snapshot cifrado da leitura da equipe
+- **Status:** doing
+- **Origem:** DEC-57
+- **Papel:** backend
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** alta
+- **Toca:** 04_backend/app/scripts/gerar_snapshot.py, 04_backend/app/services/snapshot/, 04_backend/tests/test_snapshot.py, 04_backend/requirements.txt, 00_docs/backlog-auto/snapshot-cifrado.md
+- **Doc:** 00_docs/backlog-auto/snapshot-cifrado.md
+- **Pronto:** `python -m app.scripts.gerar_snapshot --saida <arq>` gera um arquivo JSON `{v:1, kdf:{alg:"PBKDF2-SHA256", iter:600000, salt}, iv, ct, gerado_em}` com AES-256-GCM cuja chave vem de `SNAPSHOT_SENHA`. O texto claro é `{gerado_em, rotas: {"/api/v1/...?query": corpo_json}}` com as respostas reais de todos os GETs de leitura da equipe (listas e detalhes), obtidas em processo pelo app FastAPI (httpx ASGITransport) autenticado como um auditor de serviço. Fotos, documentos, downloads de relatório, /auth/login e /portal ficam fora. Há uma função de decifrar usada no teste e um vetor de teste (senha, salt, iv, texto) gravado no Doc para o front validar a mesma cifra. Testes verdes.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md. Papel: backend. Leia DEC-57 em 00_docs/projeto/decisoes.md. Com o PC desligado, o site estático precisa mostrar os dados em modo leitura a partir de um snapshot cifrado público. Esta tarefa gera o snapshot; o front (T83) decifra com WebCrypto.
+
+1. Leia app/main.py, app/api/v1/*.py (todos os GET) e 03_frontend/lib/api-client.ts + as telas em 03_frontend/app/ para saber exatamente quais URLs GET (com as query strings padrão de paginação/filtro) o front chama ao navegar. Monte a lista de rotas a capturar: dados mestre/gabarito, edificações (lista + detalhe + dashboard), contratos (lista + detalhe), responsáveis, inspeções (detalhe), visitas (detalhe + mão de obra + medições), ocorrências (lista por inspeção + detalhe), conteúdo de relatórios por tipo, lista de relatórios, /auth/me do auditor, /ia/uso. Descubra os IDs iterando as listas. Não inclua bytes de fotos/documentos/relatórios nem /portal.
+2. app/services/snapshot/: coletor que usa httpx.AsyncClient(transport=ASGITransport(app)) com token JWT de um usuário auditor de serviço (crie-o se não existir, e-mail configurável `SNAPSHOT_USUARIO_EMAIL`, senha aleatória; não altere outros usuários). Chave da rota = path+query exatamente como o front chamará (sem host). Cifrador: PBKDF2-HMAC-SHA256 600000 iterações, salt 16 bytes, AES-256-GCM iv 12 bytes, texto gzip+JSON UTF-8 (o front usará DecompressionStream). Use a lib `cryptography` (adicione a requirements.txt se faltar).
+3. app/scripts/gerar_snapshot.py com --saida e --somente-se-mudou (compara hash do texto claro, sem o gerado_em, com um .sha256 ao lado e sai com código 3 se nada mudou).
+4. tests/test_snapshot.py: cifrar/decifrar ida e volta, senha errada falha, a coleta contra o banco de teste com dados semeados contém rotas esperadas e não contém /portal nem downloads. Gere um vetor de teste fixo e grave no Doc.
+pytest (garra_engenharia_test) e ruff verdes. Doc com formato do arquivo, lista de rotas, tamanho típico e vetor de teste. Commit: `feat(backend): snapshot cifrado da leitura da equipe (DEC-57)` com rodapé `Refs DEC-57`.
+```
+
+### T82 · Agente de inicialização: túnel, publicação de api.json/snapshot e tarefa agendada
+- **Status:** todo
+- **Origem:** DEC-57
+- **Papel:** devops
+- **Depende:** T79, T81
+- **Ambiente:** offline
+- **Dificuldade:** media
+- **Toca:** 05_infra/local/garra-local.ps1, 05_infra/local/garra-agente.ps1, 05_infra/local/.env.example, 00_docs/backlog-auto/agente-inicializacao.md
+- **Doc:** 00_docs/backlog-auto/agente-inicializacao.md
+- **Pronto:** `garra-local.ps1 install` registra a tarefa agendada "Garra Local" (no logon do usuário, sem admin se possível, reinício automático em falha) que roda `garra-agente.ps1`. O agente: `git pull --ff-only` em `main` (só se a árvore estiver limpa), reinstala dependências se requirements.txt mudou, `start`, sobe `cloudflared tunnel --url http://127.0.0.1:8000`, extrai a URL `https://*.trycloudflare.com` do log, publica `api.json` `{url, api_base, online:true, desde, heartbeat}` na branch `snapshot` de `GARRA_PUBLIC_REPO`, gera e publica `snapshot.enc` (T81), e em laço: heartbeat a cada 10 min, snapshot a cada 30 min só se mudou, backup diário. Ao encerrar (stop/desligamento) publica `online:false`. `uninstall` remove a tarefa. Publicação usa um clone raso dedicado fora do repo (`%LOCALAPPDATA%\garra\publico`) e force-push de um commit único na branch órfã, com a credencial git já configurada no PC (Git Credential Manager) ou, se definido, o token `GARRA_PUBLIC_TOKEN` do .env local. Nenhum workflow do Actions dispara em push na branch `snapshot` (confira os filtros de branch de ci.yml, sync-deploy-branches.yml e deploy-pages.yml). Testado de verdade, ou o Doc explica o que faltou.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md. Papel: devops. Leia DEC-57 em 00_docs/projeto/decisoes.md, o Bloco G do BACKLOG.md, e os Docs de T79 (00_docs/backlog-auto/runtime-local-pc.md) e T81 (00_docs/backlog-auto/snapshot-cifrado.md). cloudflared já está instalado em C:\Program Files (x86)\cloudflared\cloudflared.exe (aceite também do PATH).
+
+Implemente 05_infra/local/garra-agente.ps1 (PowerShell 5.1) e os subcomandos install|uninstall|agente em garra-local.ps1 conforme o campo Pronto desta tarefa. Detalhes:
+- Variáveis novas no .env.example: GARRA_PUBLIC_REPO (padrão rafaelroriz-age/garra-engenharia), GARRA_PUBLIC_TOKEN (opcional; fine-grained PAT só com Contents read/write; nunca logar; sem ele usa a credencial git do PC), SNAPSHOT_SENHA, intervalos.
+- Publicação: clone/fetch raso em $env:LOCALAPPDATA\garra\publico, checkout --orphan snapshot, escreve api.json e snapshot.enc, commit único e push forçado via URL com token montada em memória (não grave o token no .git/config). Este push é do script do PC, não de um agente; não faça push para o GitHub nesta sessão (o guard bloqueia e o repo público pode não existir ainda): teste a publicação contra um remoto bare local em pasta temporária (parâmetro de remoto alternativo) e documente.
+- Atualizações: `git -C <repo> pull --ff-only origin main` só se `git status --porcelain` vazio e branch atual main; senão loga e segue com o código atual.
+- Robustez: se o cloudflared cair, reinicia e republica a nova URL; se o backend cair, `start` de novo; tudo logado em 05_infra/local/logs/ com rotação simples.
+- Tarefa agendada via Register-ScheduledTask (gatilho AtLogOn do usuário atual, RestartCount/RestartInterval, sem janela visível: powershell -WindowStyle Hidden -ExecutionPolicy Bypass -File ...). Não registre a tarefa nesta sessão; implemente e valide com um modo --dry que imprime o que seria registrado. O dono roda `install` (HT-15).
+Rode o que for seguro localmente (túnel cloudflared real por alguns segundos para validar a extração da URL, publicação no remoto bare). Doc com fluxos, variáveis, comandos e saídas. Commit: `feat(infra): agente de inicializacao com tunel e snapshot (DEC-57)` com rodapé `Refs DEC-57`.
+```
+
+### T83 · Front: descoberta da API por api.json, modo leitura com snapshot e deploy no repo público
+- **Status:** todo
+- **Origem:** DEC-57
+- **Papel:** frontend
+- **Depende:** T81
+- **Ambiente:** offline
+- **Dificuldade:** alta
+- **Toca:** 03_frontend/lib/api-client.ts, 03_frontend/lib/api-descoberta.ts, 03_frontend/lib/modo-leitura.ts, 03_frontend/lib/modo-leitura.test.ts, 03_frontend/components/modo-leitura-banner.tsx, 03_frontend/components/sw-register.tsx, 03_frontend/public/sw.js, 03_frontend/lib/sw-cache.ts, 03_frontend/lib/sw-cache.test.ts, 03_frontend/app/, 03_frontend/next.config.mjs, .github/workflows/deploy-pages.yml, 00_docs/backlog-auto/front-modo-leitura.md
+- **Doc:** 00_docs/backlog-auto/front-modo-leitura.md
+- **Pronto:** A URL da API deixa de ser fixa no build: o front lê `api.json` de `NEXT_PUBLIC_API_DISCOVERY_URL` (cache em memória 60 s; em dev cai em `NEXT_PUBLIC_API_URL`). Com `online:false`, heartbeat > 20 min, ou falha de rede/502/503/530 do túnel, entra em modo leitura: pede a senha da equipe (guardada só em sessionStorage), baixa e decifra `snapshot.enc` com WebCrypto (formato e vetor de teste do Doc de T81), responde os GETs de `apiFetch` pelo mapa de rotas e qualquer escrita lança erro claro "Servidor desligado — modo leitura". Faixa fixa "Modo leitura — dados de <data>" e hook `useModoLeitura()` usado para desabilitar ações de gravação nas telas principais. SW registrado com basePath (fecha R-22) e nunca cacheia api.json/snapshot.enc. `deploy-pages.yml` continua publicando no Pages do próprio repositório (basePath `/garra-engenharia`), sem nenhuma referência a onrender.com. Teste unitário (node --test) decifra o vetor de T81. `npm run lint`, `npm run build` e os testes unitários passam.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md. Papel: frontend (.github/agents/frontend.agent.md). Leia DEC-57 em 00_docs/projeto/decisoes.md, o Bloco G do BACKLOG.md e 00_docs/backlog-auto/snapshot-cifrado.md (formato e vetor de teste do snapshot). Leia 03_frontend/lib/api-client.ts, lib/sw-cache.ts, public/sw.js, components/sw-register.tsx, app/layout.tsx, next.config.mjs e .github/workflows/deploy-pages.yml.
+
+Implemente conforme o campo Pronto desta tarefa:
+1. lib/api-descoberta.ts: obtém {url, api_base, online, heartbeat} de NEXT_PUBLIC_API_DISCOVERY_URL (https://raw.githubusercontent.com/rafaelroriz-age/garra-engenharia/snapshot/api.json), com cache-buster e cache em memória de 60 s; fallback NEXT_PUBLIC_API_URL (dev). api-client passa a resolver a base de forma assíncrona antes de cada fetch, sem mudar a assinatura pública de apiFetch/uploadImagem nem das funções exportadas usadas pelas telas (grep os usos). Confira em 00_docs/backlog-auto/storage-local.md (T80) se as URLs de download vêm relativas e ajuste a montagem se preciso.
+2. lib/modo-leitura.ts: estado global (store simples + evento) com entrar/sair, decifrar (PBKDF2 600000 + AES-GCM via crypto.subtle; DecompressionStream('gzip')), resolver GET pela chave path+query igual à do T81, e erro tipado para escrita. Senha só em sessionStorage; pedido de senha num diálogo simples com os componentes ui/ já existentes. A cada 60 s tenta a API de novo e sai do modo leitura sozinho quando o PC voltar.
+3. components/modo-leitura-banner.tsx no layout; hook useModoLeitura() aplicado para desabilitar botões de criar/editar/excluir/upload/emitir nas telas principais (edificações, contratos, inspeções, visitas, ocorrências, fotos, relatórios). Imagens/downloads em modo leitura mostram placeholder "disponível com o servidor ligado". Não mude o visual além disso.
+4. SW: registrar `${basePath}/sw.js` com scope `${basePath}/`, OFFLINE_URL relativo ao scope, nunca interceptar raw.githubusercontent.com; mantenha a paridade sw.js ⇔ sw-cache.ts e o teste de paridade.
+5. deploy-pages.yml: manter o deploy atual no Pages do próprio repositório (basePath /garra-engenharia), trocar NEXT_PUBLIC_API_URL do Render por NEXT_PUBLIC_API_DISCOVERY_URL e garantir que não dispara em push na branch `snapshot`.
+6. lib/modo-leitura.test.ts com node --test: decifra o vetor de teste de T81 e resolve rota; senha errada falha.
+Rode npm run lint, npm run build, os testes unitários existentes e o novo; confirme com grep que out/ não contém onrender.com. Doc com o fluxo, decisões e saídas. Commit: `feat(frontend): descoberta da API e modo leitura com snapshot cifrado (DEC-57)` com rodapé `Refs DEC-57`.
+```
+
+### T84 · Script de importação dos dados do Render para o Postgres local
+- **Status:** todo
+- **Origem:** DEC-57
+- **Papel:** devops
+- **Depende:** T82
+- **Ambiente:** offline
+- **Dificuldade:** media
+- **Toca:** 05_infra/local/importar-render.ps1, 00_docs/backlog-auto/importar-render.md
+- **Doc:** 00_docs/backlog-auto/importar-render.md
+- **Pronto:** Existe `05_infra/local/importar-render.ps1`, para o **dono** rodar (o guard bloqueia agentes na produção), que lê a External Database URL do Render de um prompt seguro (`Read-Host -AsSecureString`, nunca de arquivo versionado), faz `pg_dump -Fc` com os binários de 05_infra/local/bin para 05_infra/local/backups/render-final-*.dump, faz backup do local, restaura com `pg_restore --clean --if-exists --no-owner` no garra_producao local, roda `alembic upgrade head` e imprime a contagem por tabela dos dois lados lado a lado, terminando com OK/DIVERGENTE. A sessão do agente NÃO executa o script contra o Render; testa o fluxo com um banco de dev como origem e um banco descartável como destino, e registra no Doc.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md. Papel: devops. Leia DEC-57 em 00_docs/projeto/decisoes.md e 00_docs/backlog-auto/runtime-local-pc.md (T79). Escreva 05_infra/local/importar-render.ps1 (PowerShell 5.1) conforme o campo Pronto desta tarefa, com parâmetros -OrigemUrl (opcional; sem ele pede de forma segura) e -DestinoDb (padrão garra_producao). Nunca conecte ao Render nesta sessão nem escreva hosts ou URLs reais do Render no código ou no Doc (o guard bloqueia). Teste o fluxo com origem = banco de dev garra_engenharia (localhost:5433, só leitura via pg_dump; suba o Postgres de 05_infra se precisar) e destino = um banco descartável garra_import_teste no Postgres local da porta 5434; depois apague só esse banco descartável. Fotos: confirme lendo render.yaml se o Render tinha storage configurado e registre no Doc se há algo a migrar além do banco. Doc com passo a passo para o dono e saídas do teste. Commit: `feat(infra): importacao do banco do Render para o PC (DEC-57)` com rodapé `Refs DEC-57`.
+```
+
+### T85 · Documentação do novo deploy e aposentadoria dos artefatos do Render
+- **Status:** todo
+- **Origem:** DEC-57
+- **Papel:** devops
+- **Depende:** T80, T82, T83, T84
+- **Ambiente:** offline
+- **Dificuldade:** baixa
+- **Toca:** 05_infra/README.md, 00_docs/configuracao.md, render.yaml, 03_frontend/Dockerfile.render, 04_backend/Dockerfile.render, .github/workflows/sync-deploy-branches.yml, 00_docs/backlog-auto/aposentar-render.md
+- **Doc:** 00_docs/backlog-auto/aposentar-render.md
+- **Pronto:** `05_infra/README.md` tem a seção "Produção no PC (DEC-57)" com arquitetura, instalação do zero (setup → .env → install), operação diária, restauração de backup em outro PC e o que acontece com o PC desligado; a seção antiga do Render vira nota histórica curta. `00_docs/configuracao.md` lista as variáveis novas. `render.yaml` e os `Dockerfile.render` são removidos; `sync-deploy-branches.yml` deixa de sincronizar `main_front`/`main_back` (desativado com comentário, não apagado). `grep -ri onrender` no repo só encontra notas históricas em 00_docs/. `npm run build` e `pytest` continuam verdes.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md. Papel: devops. Leia DEC-57 em 00_docs/projeto/decisoes.md e os Docs de T79 a T84 em 00_docs/backlog-auto/ (runtime-local-pc.md, storage-local.md, snapshot-cifrado.md, agente-inicializacao.md, front-modo-leitura.md, importar-render.md). Faça o que o campo Pronto desta tarefa pede, sem alterar código de aplicação. Confira com grep todas as referências a render.yaml, Dockerfile.render, onrender.com e main_front/main_back em .github/, 03_frontend/, 04_backend/ e 05_infra/ e trate cada uma (ajuste ou registre por que fica). Não edite decisoes.md, status.md, riscos.md (fechamento de lote). Commit: `docs(infra): producao no PC e aposentadoria do Render (DEC-57)` com rodapé `Refs DEC-57`.
+```
+
+### T86 · Teste ponta a ponta: online pelo túnel e modo leitura com o PC desligado
+- **Status:** todo
+- **Origem:** DEC-57
+- **Papel:** frontend
+- **Depende:** T80, T83, T82
+- **Ambiente:** docker
+- **Dificuldade:** media
+- **Toca:** 03_frontend/e2e/modo-leitura-dec57.spec.ts, 03_frontend/playwright.modo-leitura.config.ts, 00_docs/backlog-auto/e2e-modo-leitura.md
+- **Doc:** 00_docs/backlog-auto/e2e-modo-leitura.md
+- **Pronto:** Um spec Playwright, com config próprio que serve o build estático (`out/`, basePath de produção) e um `api.json`/`snapshot.enc` locais (servidor estático de teste, sem depender do GitHub), prova: (1) com api.json online apontando para o backend local, login e criação de uma ocorrência funcionam; (2) com api.json `online:false` e um snapshot gerado por `gerar_snapshot` depois da criação, ao recarregar aparece a faixa de modo leitura, a senha é pedida, a ocorrência criada aparece e os botões de gravação estão desabilitados; (3) uma escrita forçada mostra o erro "Servidor desligado — modo leitura". Saída real registrada no Doc.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md. Papel: frontend. Leia DEC-57 em 00_docs/projeto/decisoes.md, 00_docs/backlog-auto/front-modo-leitura.md e snapshot-cifrado.md, e os specs/helpers existentes em 03_frontend/e2e/ (reuse login e criação via API). Escreva o spec e o config conforme o campo Pronto desta tarefa, sem alterar os specs nem o playwright.config.ts existentes. Use o backend e o Postgres de dev de 05_infra (banco de teste da Regra de pronto, item 6) e `python -m app.scripts.gerar_snapshot` com uma SNAPSHOT_SENHA de teste. Se algo não subir por ambiente, registre no Doc em vez de inventar. Se achar bug real no modo leitura, corrija o mínimo em 03_frontend/lib/modo-leitura.ts ou api-descoberta.ts e explique no Doc. npm run lint e build verdes. Commit: `test(frontend): e2e do modo leitura com snapshot (DEC-57)` com rodapé `Refs DEC-57`.
+```
