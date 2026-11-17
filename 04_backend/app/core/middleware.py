@@ -32,6 +32,30 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
         return response
 
 
+class RequestBaseUrlMiddleware(BaseHTTPMiddleware):
+    """Expõe a base URL pública do request (DEC-57) a `LocalStorageClient`.
+
+    O túnel cloudflared muda de URL a cada boot e envia `X-Forwarded-Proto` /
+    `X-Forwarded-Host`; usados para montar URLs absolutas de download quando
+    `PUBLIC_BASE_URL` está vazia. Sem esses cabeçalhos, usa a URL do próprio request.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        proto = (request.headers.get("x-forwarded-proto") or request.url.scheme).split(",")[0].strip()
+        host = (request.headers.get("x-forwarded-host") or request.headers.get("host") or "")
+        host = host.split(",")[0].strip()
+        token = None
+        if proto in {"http", "https"} and host:
+            from app.services.storage.local_client import request_base_url
+
+            token = (request_base_url, request_base_url.set(f"{proto}://{host}"))
+        try:
+            return await call_next(request)
+        finally:
+            if token:
+                token[0].reset(token[1])
+
+
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, *, hsts: bool = False):
         super().__init__(app)
