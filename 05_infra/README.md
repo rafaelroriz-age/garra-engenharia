@@ -51,7 +51,6 @@ Não há migração de schema nesta etapa (BL-01 é somente infraestrutura), por
 ├── docker-compose.yml      # ✅ PostgreSQL + MinIO + backend + frontend (dev)
 ├── docker-compose.prod.yml # ✅ Stack de produção em VPS próprio (BL-27)
 ├── .env.example             # ✅ Todas as variáveis sem valores reais — implementado
-├── .env.render.example       # ✅ Checklist de variáveis do deploy no Render
 ├── nginx/
 │   └── nginx.conf           # ✅ Reverse proxy + HTTPS (BL-27)
 ├── backup/
@@ -60,9 +59,9 @@ Não há migração de schema nesta etapa (BL-01 é somente infraestrutura), por
 └── README.md                # Pré-requisitos, como rodar localmente, deploy e rollback
 ```
 
-## Deploy em VPS próprio (alternativa ao Render — BL-27)
+## Deploy em VPS próprio (alternativa à produção no PC — BL-27)
 
-A hospedagem oficial é o Render (seção abaixo). `docker-compose.prod.yml` + `nginx/nginx.conf` cobrem o cenário alternativo de VPS próprio previsto em DEC-14/DEC-17 e consumido pelos workflows de fallback `cd-staging.yml`/`cd-production.yml`.
+A produção oficial roda no PC do dono (seção "Produção no PC (DEC-57)"). `docker-compose.prod.yml` + `nginx/nginx.conf` ficam como caminho alternativo de VPS próprio (DEC-14/DEC-17), usado pelos workflows manuais `cd-staging.yml`/`cd-production.yml`.
 
 Diferenças em relação ao compose de desenvolvimento:
 
@@ -110,13 +109,13 @@ Agendamento sugerido no host (diário às 02:00):
 
 Verificação dos scripts (T42, 2026-11-07): `bash 05_infra/backup/tests/test_backup_scripts.sh` usa stubs de `docker` e não toca em banco real (45 ok). Detalhes e propostas em [backup-verificacao.md](../00_docs/backlog-auto/backup-verificacao.md) e DEC-45.
 
-Emissão de relatórios (T47, 2026-11-11): nenhuma variável de ambiente nova; `MAX_RELATORIO_SIZE_BYTES` (200 MB, DEC-48 P5) é constante de código, então nada muda em `.env.example`, compose ou `render.yaml` (ver [relatorio-env-deploy.md](../00_docs/backlog-auto/relatorio-env-deploy.md)).
+Emissão de relatórios (T47, 2026-11-11): nenhuma variável de ambiente nova; `MAX_RELATORIO_SIZE_BYTES` (200 MB, DEC-48 P5) é constante de código, então nada muda em `.env.example`, compose (ver [relatorio-env-deploy.md](../00_docs/backlog-auto/relatorio-env-deploy.md)).
 
-Variáveis `LEGENDA_IA_*` (T40, DEC-42): as 8 de limite e teto da legenda por IA estão no `environment:` do backend em `docker-compose.yml`, `docker-compose.prod.yml` e `render.yaml`. **Atenção:** `docker-compose.prod.yml` linha 89 tem YAML inválido (R-16) e precisa de correção antes do deploy por VPS.
+Variáveis `LEGENDA_IA_*` (T40, DEC-42): as 8 de limite e teto da legenda por IA estão no `environment:` do backend em `docker-compose.yml`, `docker-compose.prod.yml`. **Atenção:** `docker-compose.prod.yml` linha 89 tem YAML inválido (R-16) e precisa de correção antes do deploy por VPS.
 
-Variáveis `DEEPSEEK_*` (T63, 2026-11-11, DEC-49 proposta): `LEGENDA_IA_PROVEDOR` (`fake` ou `deepseek`), `DEEPSEEK_API_KEY` (segredo; no Render `sync: false`), `DEEPSEEK_BASE_URL`, `DEEPSEEK_MODELO` e `DEEPSEEK_TIMEOUT_S` estão nos `.env.example`, no `docker-compose.yml` e no `render.yaml`. Fora de desenvolvimento, `fake` e `deepseek` sem chave resultam em 503 (ou falha na inicialização). `DEEPSEEK_ENVIAR_IMAGEM` (padrão `false`) também está nos três. Ver [v1-legenda-ia-deepseek.md](../00_docs/backlog-auto/v1-legenda-ia-deepseek.md). O banco local ainda precisa de `alembic upgrade head` (head `a9c3e5f7b1d2`) e a imagem `05_infra-backend` de `docker compose build backend` (R-19).
+Variáveis `DEEPSEEK_*` (T63, 2026-11-11, DEC-49 proposta): `LEGENDA_IA_PROVEDOR` (`fake` ou `deepseek`), `DEEPSEEK_API_KEY` (segredo), `DEEPSEEK_BASE_URL`, `DEEPSEEK_MODELO` e `DEEPSEEK_TIMEOUT_S` estão nos `.env.example`, no `docker-compose.yml`. Fora de desenvolvimento, `fake` e `deepseek` sem chave resultam em 503 (ou falha na inicialização). `DEEPSEEK_ENVIAR_IMAGEM` (padrão `false`) também está nos três. Ver [v1-legenda-ia-deepseek.md](../00_docs/backlog-auto/v1-legenda-ia-deepseek.md). O banco local ainda precisa de `alembic upgrade head` (head `a9c3e5f7b1d2`) e a imagem `05_infra-backend` de `docker compose build backend` (R-19).
 
-Variáveis do RAG da legenda IA (T69, DEC-53 proposta): `LEGENDA_IA_RAG_ATIVO` (padrão `true`) e `LEGENDA_IA_RAG_K` (padrão `3`) estão no `environment:` do backend em `docker-compose.yml`, em `render.yaml` e em `.env.example`. Depois do deploy, rode `alembic upgrade head` e, uma vez, `python -m app.scripts.ingerir_conhecimento_ia` (revise antes o `--dry-run --amostras 20`); sem isso as referências ficam vazias.
+Variáveis do RAG da legenda IA (T69, DEC-53 proposta): `LEGENDA_IA_RAG_ATIVO` (padrão `true`) e `LEGENDA_IA_RAG_K` (padrão `3`) estão no `environment:` do backend em `docker-compose.yml`, em `.env.example`. Depois do deploy, rode `alembic upgrade head` e, uma vez, `python -m app.scripts.ingerir_conhecimento_ia` (revise antes o `--dry-run --amostras 20`); sem isso as referências ficam vazias.
 
 ## Frontend no GitHub Pages (DEC-55)
 
@@ -125,49 +124,76 @@ Desde a DEC-55 o frontend não precisa mais do Render: é exportado como site es
 Configuração (ação humana, uma vez):
 
 1. GitHub → Settings → Pages → Build and deployment → **Source = GitHub Actions**. Repositório privado exige plano pago do GitHub para usar Pages.
-2. No Render, serviço `garra-backend` → Environment: `BACKEND_CORS_ORIGINS` deve conter `https://rafaelroriz-age.github.io` (sem o path). Salve e redeploy.
+2. Em `05_infra/local/.env`, `BACKEND_CORS_ORIGINS` deve conter `https://rafaelroriz-age.github.io` (sem o path). Reinicie com `garra-local.ps1 stop` e depois `start`.
 3. Se a URL do backend mudar, edite `NEXT_PUBLIC_API_URL` em `deploy-pages.yml` (é embutida no bundle em build time).
-4. Depois de validar o Pages: remova o bloco `garra-frontend` do `render.yaml`, suspenda/apague o serviço no Dashboard do Render, tire `main_front` da matrix de `sync-deploy-branches.yml` e apague `03_frontend/Dockerfile.render`.
+4. Render aposentado (T85, DEC-57): `render.yaml`, `03_frontend/Dockerfile.render` e `04_backend/Dockerfile.render` foram removidos, e `sync-deploy-branches.yml` foi desativado. Os serviços no Dashboard do Render devem ser apagados por um humano depois que o app for validado no PC (HT-16).
 
-## Deploy em produção (Render)
+## Render (histórico — aposentado pela DEC-57, T85)
 
-> O serviço `garra-frontend` abaixo está sendo substituído pelo GitHub Pages (seção anterior, DEC-55).
+Até 2026-11-17 o backend e o banco rodaram no Render (`garra-backend`, `garra-frontend`, `garra-db`), definidos no Blueprint `render.yaml` e nos `Dockerfile.render`, com auto-deploy pelas branches `main_back`/`main_front`. Isso foi aposentado: `render.yaml`, `03_frontend/Dockerfile.render`, `04_backend/Dockerfile.render` e `05_infra/.env.render.example` foram removidos, e `sync-deploy-branches.yml` foi desativado. O que existia continua no histórico do git anterior ao T85. A migração dos dados do Render para o PC está em [importar-render.md](../00_docs/backlog-auto/importar-render.md) (T84). Nada aqui é mais executado; a produção atual é a seção abaixo.
 
-Resolve o bloqueio B-03/HT-03 (hospedagem) com Render como provedor de nuvem. Toda a infraestrutura é definida como código em [`../render.yaml`](../render.yaml) (Render Blueprint) — os recursos abaixo são criados e conectados automaticamente, sem segredo hardcoded no repositório. Desde a DEC-17 (2026-07-21), cada serviço observa uma branch dedicada do monorepo como gatilho de auto-deploy; desde a DEC-22 (2026-08-05), as branches de staging foram removidas e `main` é sincronizada automaticamente para `main_back`/`main_front` pelo workflow `sync-deploy-branches.yml`:
+## Produção no PC (DEC-57)
 
-| Serviço | Tipo Render | Origem | Branch |
-|---|---|---|---|
-| `garra-backend` | Web Service (Docker) | `04_backend/Dockerfile.render` | `main_back` |
-| `garra-frontend` | Web Service (Docker) | `03_frontend/Dockerfile.render` | `main_front` |
-| `garra-db` | PostgreSQL gerenciado (produção) | plano `basic-256mb` | — |
+Desde a DEC-57 a produção roda no PC do dono, sem Docker e sem Render. Detalhes: [runtime-local-pc.md](../00_docs/backlog-auto/runtime-local-pc.md) (T79), [storage-local.md](../00_docs/backlog-auto/storage-local.md) (T80), [snapshot-cifrado.md](../00_docs/backlog-auto/snapshot-cifrado.md) (T81), [agente-inicializacao.md](../00_docs/backlog-auto/agente-inicializacao.md) (T82) e [front-modo-leitura.md](../00_docs/backlog-auto/front-modo-leitura.md) (T83).
 
-Não há ambiente de staging no Render (removido na DEC-22 — nunca chegou a ser provisionado). Para recriá-lo, adicione novamente o bloco correspondente em `render.yaml` e as branches a partir de `main`.
+### Arquitetura
 
-As imagens `Dockerfile.render` (uma por serviço) são versões de **produção** dos Dockerfiles de desenvolvimento — sem `--reload`/`next dev`, escutando na porta `$PORT` do Render, com build multi-stage no frontend (`output: "standalone"`). Os Dockerfiles de dev usados pelo `docker-compose.yml` local **não foram alterados**.
+- **Backend e banco no PC**: FastAPI (`uvicorn` em `127.0.0.1:UVICORN_PORT`, padrão 8000) e PostgreSQL 16 portátil (porta 5434; cluster em `%LOCALAPPDATA%\garra\pgdata`, fora do OneDrive). Arquivos em `05_infra/local/storage/`.
+- **Exposição**: `cloudflared tunnel --url` aponta para o uvicorn. A URL `https://*.trycloudflare.com` muda a cada boot e é publicada em `api.json` na branch órfã `snapshot` deste repositório.
+- **Front**: site estático no GitHub Pages (`https://rafaelroriz-age.github.io/garra-engenharia/`, `deploy-pages.yml`, DEC-55). Ele lê `api.json` e aponta para a API atual.
+- **Modo leitura**: `snapshot.enc` (AES-256-GCM; chave PBKDF2-SHA256 a partir de `SNAPSHOT_SENHA`) é publicado junto com as respostas de leitura. Sem PC online, o site abre em modo leitura, pede a senha da equipe e bloqueia gravações.
+- **Agente**: tarefa agendada `Garra Local` (logon do Windows, `garra-agente.ps1`). Faz `git pull --ff-only` em `main` (só com o worktree limpo), sobe o backend e o túnel, publica `api.json` e `snapshot.enc`, e faz heartbeat e backup diário.
 
-### Passo a passo (ação humana — requer conta Render + acesso ao GitHub do projeto)
+Versionados: `05_infra/local/garra-local.ps1`, `garra-agente.ps1`, `importar-render.ps1` e `.env.example`. Fora do git (`.gitignore`): `05_infra/local/.env`, `bin/`, `backups/`, `storage/`, `logs/`, `run/` e `04_backend/.venv-prod/`.
 
-1. Acesse [dashboard.render.com](https://dashboard.render.com/) → **New** → **Blueprint**.
-2. Conecte o repositório GitHub `rafaelroriz-age/garra-engenharia`. Como cada serviço já declara sua própria `branch:` em `render.yaml` (`main_back`/`main_front`/`staging_back`/`staging_front`), a branch selecionada nesta tela serve apenas de branch padrão do Blueprint — não precisa coincidir com nenhuma delas.
-3. O Render detecta `render.yaml` automaticamente e mostra um preview dos recursos (4 serviços web + 2 bancos, ou 2 serviços + 1 banco se o bloco de staging tiver sido removido). Nenhum campo pede preenchimento manual nesta versão (todos os segredos usam `generateValue`/`fromDatabase`).
-4. Clique em **Apply**. O Render provisiona o banco primeiro, depois builda e sobe backend e frontend (a migration `alembic upgrade head` roda automaticamente via `preDeployCommand` antes de cada deploy do backend).
-5. Ao final, cada serviço tem uma URL pública `https://<nome>.onrender.com` — confira em **Dashboard → serviço → Settings → URL**.
+### Instalação do zero (PC novo ou reinstalação)
 
-### Depois do 1º deploy — confirme os links reais
+Pré-requisitos: Windows 10/11, Python 3.12 (`py -3.12`), Git, `cloudflared` no PATH e acesso ao repositório. Comandos a partir da raiz do repositório, em PowerShell:
 
-`render.yaml` assume que os hostnames ficam exatamente `garra-backend.onrender.com` e `garra-frontend.onrender.com`. Se o Render tiver atribuído um nome diferente (sufixo aleatório, caso o nome já estivesse em uso por outra conta):
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\05_infra\local\garra-local.ps1 setup
+# editar 05_infra\local\.env: definir SNAPSHOT_SENHA (>= 16 caracteres, senha da equipe)
+powershell -NoProfile -ExecutionPolicy Bypass -File .\05_infra\local\garra-local.ps1 start
+powershell -NoProfile -ExecutionPolicy Bypass -File .\05_infra\local\garra-local.ps1 install --dry
+powershell -NoProfile -ExecutionPolicy Bypass -File .\05_infra\local\garra-local.ps1 install
+```
 
-1. Copie a URL real de cada serviço no Dashboard.
-2. Atualize a env var `NEXT_PUBLIC_API_URL` do `garra-frontend` e `BACKEND_CORS_ORIGINS` do `garra-backend` com os valores corretos.
-3. Dispare **Manual Deploy** nos dois serviços (o frontend precisa rebuildar, pois `NEXT_PUBLIC_API_URL` é embutida no bundle em build time).
+- `setup` cria o `.env` (gera `POSTGRES_PASSWORD`, `JWT_SECRET_KEY` e `ADMIN_SENHA` só se estiverem vazias), baixa o PostgreSQL, cria o cluster e o venv `04_backend\.venv-prod`, e instala o Pango para o WeasyPrint (PDF). `setup -PularPango` pula o Pango: o PDF fica indisponível e o DOCX funciona.
+- Se `pgdata` já existe e `.env` não, o `setup` aborta de propósito, para não gerar senha nova para um cluster existente.
+- Para trazer o banco do Render (HT-15), rode `importar-render.ps1` depois de `start` (T84).
+- `install --dry` mostra o que será registrado sem registrar nada. `install` pode exigir PowerShell como administrador na primeira vez, se o Windows negar o registro da tarefa.
 
-Use [`.env.render.example`](.env.render.example) como checklist das variáveis de cada serviço.
+### Operação diária
 
-### Limitações conhecidas desta primeira versão
+| Ação | Comando |
+|---|---|
+| Ver estado (Postgres, uvicorn, `/health`) | `garra-local.ps1 status` |
+| Subir manualmente (sem a tarefa agendada) | `garra-local.ps1 start` |
+| Backup manual | `garra-local.ps1 backup` (`05_infra\local\backups\garra-AAAAMMDD-HHmm.dump`; retenção `BACKUP_RETENCAO`, padrão 14) |
+| Parar backend e banco | `garra-local.ps1 stop` |
+| Agente em primeiro plano (depuração) | `garra-local.ps1 agente` |
+| Remover a tarefa agendada | `garra-local.ps1 uninstall` (não para o Postgres; use `stop`) |
 
-- **Storage de fotos/documentos (MinIO/S3, DEC-02) não está incluído** — só os 3 serviços pedidos (frontend, backend, banco) foram provisionados. A API sobe e o `/health` funciona normalmente, mas os endpoints de upload de foto (BL-11) falham até alguém configurar `MINIO_*` manualmente no Dashboard apontando para um provedor S3-compatível externo (Cloudflare R2, AWS S3, Backblaze B2) ou provisionar um serviço `pserv` adicional rodando a imagem oficial do MinIO com disco persistente.
-- Planos `starter` (web services) e `basic-256mb` (Postgres) são pagos (sem tier perpétuo gratuito) — confirme com o responsável pelo orçamento antes de aplicar o Blueprint, e ajuste `plan:` em `render.yaml` se preferir outro tier.
-- HTTPS, health checks e deploy automático a cada `git push` na branch conectada já vêm prontos por padrão do Render (não precisa configurar Nginx/Let's Encrypt manualmente como em VPS próprio).
+Logs em `05_infra\local\logs\`: `garra-local.log`, `garra-agente.log`, `postgres.log` e `uvicorn-*.out/err.log`.
+
+**Porta 8000:** se o Docker Desktop de desenvolvimento estiver publicando a 8000, o `start` recusa subir e informa quem ocupa a porta. Pare o compose de dev ou defina outra `UVICORN_PORT` no `.env`; o agente usa a mesma variável no túnel.
+
+### Restaurar backup em outro PC
+
+Procedimento não executado de ponta a ponta nesta versão; validar no primeiro uso.
+
+1. Espere o OneDrive sincronizar e escolha o dump mais recente em `05_infra\local\backups\` (`garra-*.dump`; `render-final-*.dump` é o retrato do Render).
+2. No PC novo, rode `setup`. Se o `.env` foi copiado do PC antigo, mantenha as senhas dele.
+3. Com o Postgres no ar, restaure no banco `garra_producao` vazio, usando o `pg_restore` de `05_infra\local\bin\pgsql\bin`: `pg_restore -h localhost -p 5434 -U garra -d garra_producao --clean --if-exists <arquivo.dump>`. A senha vem de `PGPASSWORD` (`.env`).
+4. Rode `start` e confira com `status`. As migrações do `start` completam o schema se o dump for de uma versão anterior.
+5. Rode `install` para reativar a tarefa agendada e o túnel.
+
+### PC desligado
+
+- O site abre em **modo leitura** com o último `snapshot.enc`: pede a senha da equipe, mostra os dados do snapshot e desabilita todas as gravações. O snapshot não tem fotos, documentos nem portal do cliente.
+- Quando o PC volta e o agente publica de novo, o front sai do modo leitura sozinho.
+- Se o processo do agente morrer à força, `online:false` não é publicado. Por isso o front trata um `heartbeat` mais antigo que ~25 min como offline.
+- O portal do cliente só funciona com o PC ligado.
 
 ## Referências
 
@@ -178,7 +204,7 @@ Use [`.env.render.example`](.env.render.example) como checklist das variáveis d
 
 ## Variáveis da telemetria da legenda IA (T68, 2026-11-12)
 
-`LEGENDA_IA_CACHE_TTL_H`, `DEEPSEEK_PRECO_ENTRADA_CACHE_HIT_USD`, `DEEPSEEK_PRECO_ENTRADA_CACHE_MISS_USD` e `DEEPSEEK_PRECO_SAIDA_USD` estão em `.env.example`, `docker-compose.yml` e `render.yaml`. Os preços reais dependem da tarefa humana IA-07. O banco de desenvolvimento precisa de `alembic upgrade head` (migration `b8d4f2a6c1e7`).
+`LEGENDA_IA_CACHE_TTL_H`, `DEEPSEEK_PRECO_ENTRADA_CACHE_HIT_USD`, `DEEPSEEK_PRECO_ENTRADA_CACHE_MISS_USD` e `DEEPSEEK_PRECO_SAIDA_USD` estão em `.env.example`, `docker-compose.yml`. Os preços reais dependem da tarefa humana IA-07. O banco de desenvolvimento precisa de `alembic upgrade head` (migration `b8d4f2a6c1e7`).
 
 ## Dados de demonstração e amostras (T64, 2026-11-12)
 

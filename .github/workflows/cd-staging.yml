@@ -1,8 +1,6 @@
 # Deploy contínuo em Staging via SSH/VPS — DESATIVADO por padrão (DEC-17).
-# Desde que a hospedagem foi decidida como Render (BL-20/DEC-16-área infra),
-# o deploy de staging passou a ser nativo via git: um push em `staging_back`
-# ou `staging_front` já dispara o auto-deploy do serviço correspondente em
-# `render.yaml` (autoDeployTrigger: commit), sem precisar deste workflow.
+# HISTÓRICO (T85, DEC-57): o Render (render.yaml) foi aposentado; não há mais
+# auto-deploy por branch.
 # Mantido apenas como fallback manual (workflow_dispatch) para um cenário
 # futuro de VPS próprio — ver 00_docs/projeto/plano-gestao-configuracao.md
 # (Seção 3.2) e decisoes.md DEC-14/DEC-17. BL-28 reavalia se este arquivo

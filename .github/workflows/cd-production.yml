@@ -1,11 +1,7 @@
 # Deploy em Produção via SSH/VPS — fallback manual (DEC-17).
-# Desde a hospedagem no Render (BL-20), o deploy de produção é nativo via git:
-# um push em `main_back`/`main_front` já dispara o auto-deploy do serviço
-# correspondente em `render.yaml` (autoDeployTrigger: commit), SEM o gate de
-# aprovação manual que este workflow implementa. Se o gate de aprovação
-# (DEC-14) for obrigatório, ajuste `autoDeployTrigger` para `off` nos serviços
-# de produção do `render.yaml` e use este workflow (ou um deploy manual via
-# Render Dashboard/API) como o único caminho real de publicação. Continua
+# HISTÓRICO (T85, DEC-57): o Render foi aposentado (render.yaml removido). A
+# produção agora roda no PC do dono (05_infra/local, garra-local.ps1). Este
+# workflow é só o caminho de VPS (docker-compose.prod.yml) e segue manual. Continua
 # disparado por tag `vX.Y.Z`, mantendo o esquema de versionamento (Seção 1.3
 # de plano-gestao-configuracao.md), independente do host usado.
 # Ver 00_docs/projeto/plano-gestao-configuracao.md (Seção 3.3) e decisoes.md DEC-14/DEC-17.

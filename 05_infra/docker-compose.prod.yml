@@ -4,7 +4,7 @@
 #
 # ATENÇÃO — quando este arquivo é (e não é) usado:
 #   A hospedagem oficial do projeto é o Render (DEC-16/BL-20), definida como
-#   código em `render.yaml` na raiz. Este compose é o caminho ALTERNATIVO,
+#   código em `render.yaml` (aposentado no T85, DEC-57). Este compose é o caminho ALTERNATIVO,
 #   para o cenário de VPS próprio previsto em DEC-14/DEC-17 e consumido pelos
 #   workflows de fallback `cd-staging.yml`/`cd-production.yml`.
 #

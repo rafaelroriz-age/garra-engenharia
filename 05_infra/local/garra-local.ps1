@@ -444,7 +444,7 @@ function Install-Venv {
 
 # ----------------------------------------------------------------------------------------------
 # Pango para o WeasyPrint (PDF). No Windows o WeasyPrint carrega libpango/libgobject via
-# WEASYPRINT_DLL_DIRECTORIES; o Dockerfile.render usa apt (libpango-1.0-0 etc.).
+# WEASYPRINT_DLL_DIRECTORIES; a imagem Docker do Render (aposentada no T85) usava apt (libpango-1.0-0 etc.).
 # ----------------------------------------------------------------------------------------------
 function Find-Pango {
     foreach ($d in @((Join-Path $MsysDir 'ucrt64\bin'), 'C:\msys64\ucrt64\bin', 'C:\msys64\mingw64\bin')) {
