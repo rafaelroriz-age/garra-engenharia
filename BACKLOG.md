@@ -1572,3 +1572,48 @@ Siga a 'Regra de pronto' do BACKLOG.md. Papel: devops. Leia DEC-57 em 00_docs/pr
 ```text
 Siga a 'Regra de pronto' do BACKLOG.md. Papel: frontend. Leia DEC-57 em 00_docs/projeto/decisoes.md, 00_docs/backlog-auto/front-modo-leitura.md e snapshot-cifrado.md, e os specs/helpers existentes em 03_frontend/e2e/ (reuse login e criação via API). Escreva o spec e o config conforme o campo Pronto desta tarefa, sem alterar os specs nem o playwright.config.ts existentes. Use o backend e o Postgres de dev de 05_infra (banco de teste da Regra de pronto, item 6) e `python -m app.scripts.gerar_snapshot` com uma SNAPSHOT_SENHA de teste. Se algo não subir por ambiente, registre no Doc em vez de inventar. Se achar bug real no modo leitura, corrija o mínimo em 03_frontend/lib/modo-leitura.ts ou api-descoberta.ts e explique no Doc. npm run lint e build verdes. Commit: `test(frontend): e2e do modo leitura com snapshot (DEC-57)` com rodapé `Refs DEC-57`.
 ```
+
+### T87 · Neon como banco de produção (opção C): runtime local aponta para o Neon com TLS (DEC-58)
+- **Status:** todo
+- **Origem:** DEC-58 (proposta; ajusta DEC-57 P1)
+- **Papel:** devops
+- **Depende:** T79
+- **Ambiente:** offline
+- **Dificuldade:** media
+- **Toca:** 05_infra/local/garra-local.ps1, 05_infra/local/garra-agente.ps1, 05_infra/local/.env.example, 04_backend/app/core/config.py, 04_backend/tests/, 00_docs/backlog-auto/neon-banco.md
+- **Doc:** 00_docs/backlog-auto/neon-banco.md
+- **Pronto:** O backend continua rodando no PC do dono (túnel, `api.json`, snapshot, front no Pages: DEC-57 intacto), mas o PostgreSQL passa a ser o **Neon** (projeto do dono, conexão **direta**, sem `-pooler`, por causa do asyncpg). `config.py` já tem `POSTGRES_SSL` (acrescenta `?ssl=require` à `database_url`); esta tarefa adiciona teste unitário cobrindo `POSTGRES_SSL=true/false` e confirma que `alembic/env.py` e `core/migrations.py` usam a mesma URL. `garra-local.ps1` ganha o modo `POSTGRES_MODO=neon` (ou equivalente documentado): `setup`/`start`/`stop` não sobem nem derrubam o Postgres portátil, `status` testa a conexão ao Neon, e o `.env.example` documenta `POSTGRES_HOST/PORT/USER/DB`, `POSTGRES_SSL=true` (a senha só no `.env` local, que está no .gitignore). `start` roda `alembic upgrade head` contra o Neon. O agente (T82) continua igual. O Doc registra o que rodou de verdade e o que dependeu do dono.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md. Papel: devops. Leia DEC-57 em 00_docs/projeto/decisoes.md, 00_docs/backlog-auto/runtime-local-pc.md (T79), 04_backend/app/core/config.py (campo `postgres_ssl` já existe) e 05_infra/local/garra-local.ps1. Objetivo: o dono quer o Neon (Postgres gerenciado, grátis, escala a zero e não expira) como banco, mantendo backend no PC. Implemente o campo Pronto desta tarefa. Nunca escreva host, usuário ou senha reais do Neon em arquivo versionado, no Doc ou em log: o repositório é público e o guard bloqueia. Para testar sem o Neon real, use o Postgres de dev de 05_infra com POSTGRES_SSL=false e prove com teste unitário que a URL com TLS sai correta; o teste contra o Neon real é do dono (HT). Se faltar a connection string, registre no Doc e pare, sem inventar. Commit: `feat(infra): neon como banco de producao com backend no PC (DEC-58)` com rodapé `Refs DEC-58`.
+```
+
+### T88 · Migrar os dados do `garra-db` (Render) para o Neon
+- **Status:** todo
+- **Origem:** DEC-58
+- **Papel:** devops
+- **Depende:** T84, T87
+- **Ambiente:** offline
+- **Dificuldade:** media
+- **Toca:** 05_infra/local/importar-render.ps1, 00_docs/backlog-auto/migrar-render-neon.md
+- **Doc:** 00_docs/backlog-auto/migrar-render-neon.md
+- **Pronto:** `importar-render.ps1` (T84) aceita `-DestinoUrl` (prompt seguro, `Read-Host -AsSecureString`, nunca arquivo versionado) para restaurar o dump do `garra-db` do Render **no Neon** em vez do Postgres local, com `pg_restore --clean --if-exists --no-owner`, `alembic upgrade head` e a contagem por tabela dos dois lados terminando em OK/DIVERGENTE. A execução contra o Render e o Neon reais é do **dono** (o guard bloqueia agentes); a sessão do agente testa o fluxo com bancos de dev descartáveis e registra a saída no Doc, incluindo o passo manual alternativo (Import Data Assistant do console do Neon) e a recomendação de só apagar o `garra-db` no Render depois do OK. A tabela `usuarios` e os hashes devem chegar intactos (login do admin funciona contra o Neon).
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md. Papel: devops. Leia DEC-57, 00_docs/backlog-auto/importar-render.md (T84) e 00_docs/backlog-auto/neon-banco.md (T87). Estenda 05_infra/local/importar-render.ps1 conforme o campo Pronto desta tarefa, sem remover o modo de destino local. Nunca conecte ao Render nem ao Neon reais nesta sessão e nunca escreva hosts, URLs ou senhas reais em arquivo ou Doc. Teste com origem = banco de dev e destino = banco descartável (apague só o descartável). O Doc tem o passo a passo para o dono, com a ordem: dump final do Render, restauração no Neon, conferência, login de teste, e só então desligar o Render. Commit: `feat(infra): importar banco do Render no Neon (DEC-58)` com rodapé `Refs DEC-58`.
+```
+
+### T89 · Backup do Neon e documentação do banco gerenciado (DEC-58)
+- **Status:** todo
+- **Origem:** DEC-58
+- **Papel:** devops
+- **Depende:** T87, T88
+- **Ambiente:** offline
+- **Dificuldade:** baixa
+- **Toca:** 05_infra/local/garra-local.ps1, 05_infra/README.md, 00_docs/configuracao.md, 00_docs/backlog-auto/neon-backup.md
+- **Doc:** 00_docs/backlog-auto/neon-backup.md
+- **Pronto:** O subcomando `backup` e a rotina diária do agente fazem `pg_dump -Fc` contra o Neon (com `PGSSLMODE=require`) para `05_infra/local/backups/`, com retenção de 14, porque o plano gratuito do Neon não substitui backup próprio. `05_infra/README.md` ganha a seção "Banco no Neon (DEC-58)" (criação do projeto, conexão direta × pooled, `POSTGRES_SSL`, cold start de ~1-2 s após 5 min ocioso, restauração em outro banco) e `00_docs/configuracao.md` lista `POSTGRES_SSL` e `POSTGRES_MODO`. Registra em nota que DEC-57 P1 (Postgres portátil) passa a ser opcional/fallback. `pytest` continua verde.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md. Papel: devops. Leia DEC-57, os Docs de T79, T82, T87 e T88. Faça o que o campo Pronto desta tarefa pede. Não edite decisoes.md, status.md, riscos.md (fechamento de lote: a DEC-58 será registrada lá pelo dono). Nunca escreva credenciais reais. Commit: `docs(infra): backup e documentacao do banco no Neon (DEC-58)` com rodapé `Refs DEC-58`.
+```
