@@ -73,7 +73,7 @@ export default function EdificacoesPage() {
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <PageHeader
           title="Edificações"
-          description="Cadastro das edificações inspecionadas, com histórico de contratos (RF-01)."
+          description="Cadastro das edificações inspecionadas, com histórico de contratos."
         />
         {/* Cadastro é ato administrativo: só auditor (RN-18). O backend rejeita de qualquer forma. */}
         {isAuditor && (
@@ -85,7 +85,7 @@ export default function EdificacoesPage() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Nova edificação</DialogTitle>
-                <DialogDescription>Preencha os dados da edificação (RF-01).</DialogDescription>
+                <DialogDescription>Preencha os dados da edificação.</DialogDescription>
               </DialogHeader>
               <EdificacaoForm
                 submitLabel="Criar edificação"

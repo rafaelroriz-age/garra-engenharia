@@ -158,7 +158,7 @@ export function OcorrenciaFormDialog({
         <DialogHeader>
           <DialogTitle>{savedOcorrencia ? "Editar ocorrência" : "Nova ocorrência"}</DialogTitle>
           <DialogDescription>
-            Classificação completa exigida pela RN-05: Situação, Classificação, Tipo de
+            Classificação completa: Situação, Classificação, Tipo de
             Anomalia/Falha (quando aplicável), Grau de Risco e Prioridade.
           </DialogDescription>
         </DialogHeader>
@@ -337,8 +337,7 @@ export function OcorrenciaFormDialog({
                 aria-describedby="prioridade-hint"
               />
               <p id="prioridade-hint" className="text-xs text-muted-foreground">
-                Informada manualmente até a automação por Grau de Risco (RN-04, BL-15) ser
-                destravada.
+                Informada manualmente.
               </p>
             </div>
 

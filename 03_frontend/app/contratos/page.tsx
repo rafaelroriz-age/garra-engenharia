@@ -107,7 +107,7 @@ export default function ContratosPage() {
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <PageHeader
           title="Contratos"
-          description="Contratos com múltiplas empresas executoras e NBRs aplicáveis (RF-02, RF-12)."
+          description="Contratos com múltiplas empresas executoras e NBRs aplicáveis."
         />
         {/* Contrato é ato administrativo: só auditor (RN-18). O backend rejeita de qualquer forma. */}
         {isAuditor && (
@@ -120,7 +120,7 @@ export default function ContratosPage() {
               <DialogHeader>
                 <DialogTitle>Novo contrato</DialogTitle>
                 <DialogDescription>
-                  Empresas executoras (RN-06) e ART de Fiscalização (RN-09) obrigatória.
+                  Empresas executoras e ART de Fiscalização obrigatória.
                 </DialogDescription>
               </DialogHeader>
               <ContratoForm

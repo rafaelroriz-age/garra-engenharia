@@ -11,7 +11,6 @@ import {
   LogIn,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/brand/logo";
 import { RegistroMarks } from "@/components/prancha/registro-marks";
 
@@ -26,42 +25,42 @@ interface HubCard {
 const hubCards: HubCard[] = [
   {
     href: "/dashboard",
-    label: "01 · VISÃO GERAL",
+    label: "VISÃO GERAL",
     title: "Dashboard Principal",
     description: "Indicadores, saúde por sistema predial e últimas vistorias.",
     icon: LayoutDashboard,
   },
   {
     href: "/edificacoes",
-    label: "02 · CADASTRO",
+    label: "CADASTRO",
     title: "Edificações",
     description: "Todas as obras cadastradas, com badge de saúde e última inspeção.",
     icon: Building2,
   },
   {
     href: "/contratos",
-    label: "03 · CADASTRO",
+    label: "CADASTRO",
     title: "Contratos",
     description: "Empresas executoras, NBRs aplicáveis e vínculo com edificações.",
     icon: FileText,
   },
   {
     href: "/inspecoes/visitas?id=1",
-    label: "04 · CAMPO",
+    label: "CAMPO",
     title: "Visitas de Inspeção",
     description: "Registro de visitas do RFO em campo: equipe, serviços e medições.",
     icon: ClipboardList,
   },
   {
     href: "/inspecoes/ocorrencias?id=1",
-    label: "05 · REGISTRO",
+    label: "REGISTRO",
     title: "Ocorrências",
     description: "Classificação por sistema predial, CMM e matriz GUT.",
     icon: AlertTriangle,
   },
   {
     href: "/inspecoes/relatorio?id=1",
-    label: "06 · ENTREGA",
+    label: "ENTREGA",
     title: "Relatório",
     description: "Geração e download do relatório em PDF e DOCX editável.",
     icon: FileDown,
@@ -92,26 +91,20 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <Badge className="mb-5 border-sidebar-foreground/30 text-sidebar-foreground" variant="outline">
-            Scaffold Next.js 14 PWA · BL-03
-          </Badge>
           <h1 className="display-wide max-w-4xl text-4xl font-bold uppercase leading-[1.02] tracking-tight sm:text-6xl">
             Sistema de Automação de Relatórios Prediais
           </h1>
           <div aria-hidden="true" className="mt-6 h-[3px] w-16 bg-sinal" />
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-sidebar-foreground/80">
-            Navegue pelas telas do sistema. Cada card abaixo abre uma rota do
-            App Router — do dashboard ao relatório de inspeção.
+            Cadastre edificações e contratos, registre visitas e ocorrências em campo
+            e emita o relatório de inspeção em PDF e DOCX.
           </p>
         </div>
       </header>
 
       <main id="hub-content" className="mx-auto max-w-6xl px-6 py-14">
         <div className="mb-6 flex items-baseline gap-3 border-b border-foreground/25 pb-2">
-          <span aria-hidden="true" className="dado text-xs font-medium text-sinal-ink">
-            00 —
-          </span>
-          <h2 className="display-wide text-xl font-bold tracking-tight text-foreground">Rotas do sistema</h2>
+          <h2 className="display-wide text-xl font-bold tracking-tight text-foreground">Acesso rápido</h2>
         </div>
         <ul className="grid grid-cols-1 border-l border-t border-foreground/20 sm:grid-cols-2 lg:grid-cols-3">
           {hubCards.map((card, index) => {

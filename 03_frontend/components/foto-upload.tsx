@@ -273,7 +273,7 @@ export function FotoUpload({ visitaId, ocorrenciaId, fotos, onChange }: FotoUplo
     return (
       <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
         Salve o registro para anexar fotos. Ao menos uma foto é exigida antes da emissão do
-        relatório para ocorrências Não Conformes (RN-03).
+        relatório para ocorrências Não Conformes.
       </p>
     );
   }

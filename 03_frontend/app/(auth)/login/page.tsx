@@ -4,7 +4,6 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import { api, ApiError, setAuthToken } from "@/lib/api-client";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -47,12 +46,7 @@ export default function LoginPage() {
       <div aria-hidden="true" className="h-[3px] w-full bg-primary" />
       <CardHeader className="space-y-3 pb-5">
         <Logo variant="principal" className="mx-auto mb-2 lg:hidden" />
-        <div className="flex items-center justify-between gap-3">
-          <span className="rotulo">Folha 00 · Acesso</span>
-          <Badge variant="outline" className="w-fit">
-            RNF-05 · BL-06
-          </Badge>
-        </div>
+        <span className="rotulo">Acesso restrito</span>
         <CardTitle className="display-wide text-2xl font-bold">Acessar sua conta</CardTitle>
         <CardDescription>Informe suas credenciais para continuar.</CardDescription>
       </CardHeader>

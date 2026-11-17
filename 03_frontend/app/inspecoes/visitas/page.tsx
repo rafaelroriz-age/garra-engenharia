@@ -62,7 +62,7 @@ export default function VisitasPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <PageHeader
           title={`Visitas · Inspeção #${params.id}`}
-          description="Registro de visitas do RFO: equipe, serviços executados e medições (RF-03)."
+          description="Registro de visitas do RFO: equipe, serviços executados e medições."
         />
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <Button className="gap-1.5" onClick={() => setIsCreateOpen(true)}>
@@ -73,7 +73,7 @@ export default function VisitasPage() {
             <DialogHeader>
               <DialogTitle>Nova visita</DialogTitle>
               <DialogDescription>
-                O número sequencial da visita é atribuído automaticamente (RN-01).
+                O número sequencial da visita é atribuído automaticamente.
               </DialogDescription>
             </DialogHeader>
             <VisitaForm

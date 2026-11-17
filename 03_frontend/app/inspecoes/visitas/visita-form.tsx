@@ -40,8 +40,8 @@ export function VisitaForm({ initialValue, submitLabel, onSubmit, onCancel }: Vi
 
   function validate(): boolean {
     const errors: Record<string, string> = {};
-    if (!data) errors.data = "Informe a data da visita (RN-02).";
-    if (!servicosExecutados?.trim()) errors.servicos_executados = "Descreva os serviços executados (RN-02).";
+    if (!data) errors.data = "Informe a data da visita.";
+    if (!servicosExecutados?.trim()) errors.servicos_executados = "Descreva os serviços executados.";
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   }

@@ -48,7 +48,7 @@ function trilhaDe(pathname: string): { label: string; isId: boolean }[] {
       if (conhecido) return { label: conhecido, isId: false };
       // IDs (numéricos ou UUID) aparecem abreviados, em mono, como nº de folha.
       const curto = segmento.length > 8 ? segmento.slice(0, 8) : segmento;
-      return { label: `Nº ${curto}`, isId: true };
+      return { label: curto, isId: true };
     });
 }
 
@@ -68,7 +68,7 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
   const items = pathname.startsWith("/portal") ? portalNavItems : navItems;
   return (
     <nav aria-label="Navegação principal" className="flex flex-col">
-      {items.map((item, index) => {
+      {items.map((item) => {
         // Itens-raiz (ex.: `/portal`) só ficam ativos em match exato — senão ficariam
         // ativos junto com todos os seus filhos (`/portal/documentos`).
         const isRoot = items.some((outro) => outro !== item && outro.href.startsWith(`${item.href}/`));
@@ -94,15 +94,6 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
                 isActive ? "opacity-100" : "opacity-0"
               )}
             />
-            <span
-              aria-hidden="true"
-              className={cn(
-                "dado w-5 text-[0.6875rem] text-sidebar-muted",
-                isActive && "text-sidebar-primary"
-              )}
-            >
-              {String(index + 1).padStart(2, "0")}
-            </span>
             <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
             {item.label}
           </Link>
@@ -162,7 +153,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
+  const isPublicRoute = PUBLIC_ROUTES.includes(pathname.replace(/(.)\/+$/, "$1"));
 
   // Guarda de rota (RNF-05, BL-06): sem token salvo, redireciona ao login.
   useEffect(() => {
@@ -194,7 +185,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="px-5 pb-6 pt-5">
           <BrandMark />
         </div>
-        <p className="rotulo px-5 pb-2 text-sidebar-muted">Índice</p>
+        <p className="rotulo px-5 pb-2 text-sidebar-muted">Menu</p>
         <NavLinks pathname={pathname} />
         <div className="mt-auto border-t border-sidebar-border p-3">
           <Button

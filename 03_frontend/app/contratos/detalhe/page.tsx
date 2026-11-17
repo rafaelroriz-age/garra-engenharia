@@ -124,19 +124,19 @@ export default function ContratoDetailPage() {
                   href={`/inspecoes/visitas?id=${contrato.inspecao.id}`}
                   className="font-medium text-primary underline-offset-4 hover:underline"
                 >
-                  Visitas (RF-03)
+                  Visitas
                 </Link>
                 <Link
                   href={`/inspecoes/ocorrencias?id=${contrato.inspecao.id}`}
                   className="font-medium text-primary underline-offset-4 hover:underline"
                 >
-                  Ocorrências (RF-04)
+                  Ocorrências
                 </Link>
                 <Link
                   href={`/inspecoes/relatorio?id=${contrato.inspecao.id}`}
                   className="font-medium text-primary underline-offset-4 hover:underline"
                 >
-                  Relatório (RF-06)
+                  Relatório
                 </Link>
               </CardContent>
             </Card>
@@ -175,7 +175,7 @@ export default function ContratoDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">
-                Empresas executoras <span className="font-normal text-muted-foreground">(RN-06)</span>
+                Empresas executoras
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
