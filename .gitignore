@@ -43,6 +43,16 @@ tmp_benchmark/
 # saídas descartáveis do pipeline, regeradas a qualquer momento pelo script.
 01_output-context/_amostras_ht09/
 
+# Runtime local de producao no PC do dono (DEC-57, T79): binarios do PostgreSQL, dumps,
+# arquivos enviados, logs e PIDs ficam fora do git. O 05_infra/local/.env ja e coberto pelo
+# padrao `.env` acima; o venv de producao do backend tambem fica fora.
+05_infra/local/bin/
+05_infra/local/backups/
+05_infra/local/storage/
+05_infra/local/logs/
+05_infra/local/run/
+04_backend/.venv-prod/
+
 # OS / editor
 .DS_Store
 Thumbs.db
