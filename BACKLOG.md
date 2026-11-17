@@ -1544,7 +1544,7 @@ Siga a 'Regra de pronto' do BACKLOG.md. Papel: devops. Leia DEC-57 em 00_docs/pr
 ```
 
 ### T85 · Documentação do novo deploy e aposentadoria dos artefatos do Render
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-57
 - **Papel:** devops
 - **Depende:** T80, T82, T83, T84
