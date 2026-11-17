@@ -2,7 +2,11 @@
  * Cliente HTTP fino para consumir a API FastAPI (`00_docs/arquitetura.md` Seção 4).
  *
  * Responsabilidades:
- * - Montar a URL base (`NEXT_PUBLIC_API_URL`, default `http://localhost:8000/api/v1`).
+ * - Resolver a URL base antes de cada requisição (DEC-57): em produção lê `api.json`
+ *   (`lib/api-descoberta.ts`, cache de 60 s); em dev usa `NEXT_PUBLIC_API_URL`.
+ * - Com o PC desligado (api.json offline, heartbeat velho, falha de rede ou 502/503/530
+ *   do túnel), entrar em modo leitura (`lib/modo-leitura.ts`): GET pelo snapshot
+ *   cifrado e erro `ModoLeituraError` em qualquer escrita.
  * - Anexar o token de autenticação (BL-06) quando presente em `localStorage`.
  * - Converter erros 4xx/5xx no formato RFC 7807 (`application/problem+json`, DEC-11)
  *   em uma exceção tipada `ApiError`, para tratamento consistente nas telas.
@@ -25,6 +29,28 @@ import type {
   ResponsavelInput,
 } from "@/lib/types";
 
+import {
+  comCacheBuster,
+  descobertaConfigurada,
+  descobrirApi,
+  invalidarDescoberta,
+  urlSnapshot,
+} from "@/lib/api-descoberta";
+import {
+  MENSAGEM_MODO_LEITURA,
+  ModoLeituraErro,
+  configurarModoLeitura,
+  entrarModoLeitura,
+  obterEstadoModoLeitura,
+  responderModoLeitura,
+  type EnvelopeSnapshot,
+  type MotivoErroModoLeitura,
+} from "@/lib/modo-leitura";
+
+/**
+ * Base fixa de dev/docker-compose. Em produção (Pages, DEC-57) a base real vem de
+ * `api.json` a cada requisição; esta constante fica só como fallback.
+ */
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
@@ -65,6 +91,20 @@ export class ApiError extends Error {
   /** Retorna a mensagem de erro do campo informado, se existir. */
   fieldError(field: string): string | undefined {
     return this.errors.find((error) => error.field === field)?.message;
+  }
+}
+
+/**
+ * Requisição recusada ou não respondida porque o servidor está desligado (modo leitura).
+ * Subclasse de `ApiError` para as telas exibirem com o `ApiErrorAlert` de sempre.
+ */
+export class ModoLeituraError extends ApiError {
+  readonly motivo: MotivoErroModoLeitura;
+
+  constructor(erro: ModoLeituraErro) {
+    super({ type: "modo-leitura", title: MENSAGEM_MODO_LEITURA, status: 503, detail: erro.message });
+    this.name = "ModoLeituraError";
+    this.motivo = erro.motivo;
   }
 }
 
@@ -122,9 +162,71 @@ async function parseErrorResponse(response: Response): Promise<ApiError> {
   });
 }
 
+// Transporte do modo leitura: baixar `snapshot.enc` e testar se o PC voltou.
+configurarModoLeitura({
+  baixarEnvelope: async () => {
+    const url = urlSnapshot();
+    if (!url) throw new Error("snapshot não configurado");
+    const resp = await fetch(comCacheBuster(url), { cache: "no-store" });
+    if (!resp.ok) throw new Error(`snapshot.enc: HTTP ${resp.status}`);
+    return (await resp.json()) as EnvelopeSnapshot;
+  },
+  servidorVoltou: async () => {
+    const alvo = await descobrirApi({ forcar: true });
+    if (!alvo.online || !alvo.raiz) return false;
+    try {
+      const resp = await fetch(`${alvo.raiz}/health`, { cache: "no-store" });
+      return resp.ok;
+    } catch {
+      return false;
+    }
+  },
+});
+
+/**
+ * Checagem na abertura do app (faixa do modo leitura): se o `api.json` já diz que o
+ * PC está desligado, entra em modo leitura antes da primeira tela pedir dados.
+ */
+export async function verificarServidorAoIniciar(): Promise<void> {
+  if (!descobertaConfigurada()) return;
+  const alvo = await descobrirApi();
+  if (!alvo.online) await entrarModoLeitura(alvo.motivo ?? "servidor desligado");
+}
+
+/** Respostas do túnel (cloudflared/Cloudflare) quando o PC não responde — não são da API. */
+function falhaDoTunel(response: Response): boolean {
+  if (response.status === 502 || response.status === 530) return true;
+  if (response.status !== 503) return false;
+  // 503 da própria API (ex.: legenda-ia-indisponivel) vem em problem+json; o do túnel não.
+  return !(response.headers.get("content-type") ?? "").includes("json");
+}
+
+async function lerDoSnapshot<T>(path: string, metodo: string): Promise<T> {
+  try {
+    return (await responderModoLeitura(path, metodo)) as T;
+  } catch (erro) {
+    if (erro instanceof ModoLeituraErro) throw new ModoLeituraError(erro);
+    throw erro;
+  }
+}
+
+async function entrarELer<T>(motivo: string, path: string, metodo: string): Promise<T> {
+  invalidarDescoberta();
+  await entrarModoLeitura(motivo);
+  return lerDoSnapshot<T>(path, metodo);
+}
+
 /** Executa uma requisição à API e retorna o corpo já desserializado como `T`. */
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
   const { body, raw, headers, ...rest } = options;
+  const metodo = (rest.method ?? "GET").toUpperCase();
+
+  if (obterEstadoModoLeitura().ativo) return lerDoSnapshot<T>(path, metodo);
+  const alvo = await descobrirApi();
+  if (!alvo.online || !alvo.apiBase) {
+    return entrarELer<T>(alvo.motivo ?? "servidor desligado", path, metodo);
+  }
+
   const token = getAuthToken();
 
   const finalHeaders = new Headers(headers);
@@ -137,12 +239,14 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
 
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
+    response = await fetch(`${alvo.apiBase}${path}`, {
       ...rest,
       headers: finalHeaders,
       body: body === undefined ? undefined : raw ? (body as BodyInit) : JSON.stringify(body),
     });
   } catch {
+    // Produção: túnel fora do ar = PC desligado ⇒ modo leitura. Dev: erro de conexão.
+    if (alvo.descoberta) return entrarELer<T>("sem conexão com o servidor", path, metodo);
     throw new ApiError({
       title: "Falha de conexão",
       status: 0,
@@ -151,6 +255,9 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
   }
 
   if (!response.ok) {
+    if (alvo.descoberta && falhaDoTunel(response)) {
+      return entrarELer<T>("servidor não respondeu pelo túnel", path, metodo);
+    }
     throw await parseErrorResponse(response);
   }
 

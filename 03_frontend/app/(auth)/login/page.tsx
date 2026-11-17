@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/brand/logo";
 import { ApiErrorAlert } from "@/components/api-error-alert";
 import { RegistroMarks } from "@/components/prancha/registro-marks";
+import { pedirSenha, useModoLeitura } from "@/lib/modo-leitura";
 
 interface TokenResponse {
   access_token: string;
@@ -25,6 +26,7 @@ export default function LoginPage() {
   const [senha, setSenha] = useState("");
   const [error, setError] = useState<ApiError | Error | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const modoLeitura = useModoLeitura();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -89,9 +91,21 @@ export default function LoginPage() {
               disabled={isSubmitting}
             />
           </div>
-          <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+          <Button type="submit" size="lg" className="w-full" disabled={isSubmitting || modoLeitura.bloquearEscrita}>
             {isSubmitting ? "Entrando..." : "Entrar"}
           </Button>
+          {modoLeitura.ativo ? (
+            // DEC-57: servidor desligado — o login não funciona; a senha da equipe abre o snapshot.
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="w-full"
+              onClick={() => (modoLeitura.desbloqueado ? router.push("/dashboard") : pedirSenha())}
+            >
+              Ver dados em modo leitura
+            </Button>
+          ) : null}
         </form>
       </CardContent>
     </Card>

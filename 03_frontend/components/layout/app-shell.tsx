@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { clearAuthToken, isAuthenticated } from "@/lib/api-client";
+import { useModoLeitura } from "@/lib/modo-leitura";
 
 /** Rotas públicas que não usam o shell autenticado (sidebar/topbar). */
 const PUBLIC_ROUTES = ["/", "/login"];
@@ -163,13 +164,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
+  // Modo leitura (DEC-57): a senha da equipe que abre o snapshot faz o papel do login.
+  const { desbloqueado: leituraDesbloqueada } = useModoLeitura();
 
   // Guarda de rota (RNF-05, BL-06): sem token salvo, redireciona ao login.
   useEffect(() => {
-    if (!isPublicRoute && !isAuthenticated()) {
+    if (!isPublicRoute && !isAuthenticated() && !leituraDesbloqueada) {
       router.replace("/login");
     }
-  }, [isPublicRoute, pathname, router]);
+  }, [isPublicRoute, pathname, router, leituraDesbloqueada]);
 
   function handleLogout() {
     clearAuthToken();

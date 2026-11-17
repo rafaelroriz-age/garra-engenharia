@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ApiError, conteudo as conteudoApi } from "@/lib/api-client";
 import type { ConteudoDados, RelatorioConteudo } from "@/lib/types";
+import { useModoLeitura } from "@/lib/modo-leitura";
 import { agruparTextos } from "./rotulos";
 
 /** Parágrafos (API) ↔ texto do textarea: um parágrafo por bloco, separados por linha em branco. */
@@ -68,6 +69,7 @@ export function ConteudoForm({ inspecaoId, tipo, inicial, podeEditar, onDirtyCha
   const [campos, setCampos] = useState<CamposSimples>(() => camposIniciais(inicial.dados));
   const [dirty, setDirtyState] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  const { bloquearEscrita } = useModoLeitura();
   const [erro, setErro] = useState<ApiError | Error | null>(null);
   const [salvoEm, setSalvoEm] = useState<string | null>(null);
 
@@ -303,7 +305,7 @@ export function ConteudoForm({ inspecaoId, tipo, inicial, podeEditar, onDirtyCha
 
       {podeEditar ? (
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" disabled={salvando}>
+          <Button type="submit" disabled={salvando || bloquearEscrita}>
             {salvando ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Save aria-hidden="true" />}
             {salvando ? "Salvando..." : "Salvar textos"}
           </Button>

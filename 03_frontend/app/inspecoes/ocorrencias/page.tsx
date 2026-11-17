@@ -5,6 +5,7 @@ import { AlertTriangle, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { api, ApiError } from "@/lib/api-client";
 import { useIdParam } from "@/lib/use-id-param";
+import { useModoLeitura } from "@/lib/modo-leitura";
 import { normalizePaginated } from "@/lib/types";
 import type {
   Localizacao,
@@ -35,6 +36,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 /** Ocorrências por sistema/subsistema, localização e classificação CMM (RF-04, RN-03, RN-05, RN-10, BL-14). */
 export default function OcorrenciasPage() {
   const inspecaoId = useIdParam();
+  const { bloquearEscrita } = useModoLeitura();
 
   const [sistemas, setSistemas] = useState<SistemaPredialComSubsistemas[]>([]);
   const [tiposAnomalia, setTiposAnomalia] = useState<TipoAnomalia[]>([]);
@@ -162,7 +164,7 @@ export default function OcorrenciasPage() {
           title={`Ocorrências · Inspeção #${inspecaoId}`}
           description="Ocorrências por sistema/subsistema, localização e classificação CMM (RF-04)."
         />
-        <Button className="gap-1.5" onClick={abrirCriacao} disabled={loadingGabarito}>
+        <Button className="gap-1.5" onClick={abrirCriacao} disabled={loadingGabarito || bloquearEscrita}>
           <Plus className="h-4 w-4" aria-hidden="true" />
           Nova ocorrência
         </Button>
@@ -279,6 +281,7 @@ export default function OcorrenciasPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => abrirEdicao(ocorrencia)}
+                          disabled={bloquearEscrita}
                           aria-label={`Editar ocorrência de ${sistema?.nome ?? "sistema"}`}
                         >
                           <Pencil className="h-4 w-4" aria-hidden="true" />
@@ -288,6 +291,7 @@ export default function OcorrenciasPage() {
                           size="icon"
                           className="text-destructive hover:text-destructive"
                           onClick={() => void handleExcluir(ocorrencia)}
+                          disabled={bloquearEscrita}
                           aria-label={`Excluir ocorrência de ${sistema?.nome ?? "sistema"}`}
                         >
                           <Trash2 className="h-4 w-4" aria-hidden="true" />
