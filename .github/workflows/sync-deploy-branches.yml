@@ -14,17 +14,22 @@
 # hotfix aplicado diretamente em `main_back`/`main_front` (cenário
 # excepcional) não é descartado — só passa a existir também em `main` no
 # próximo merge manual de volta.
-name: Sync deploy branches (main -> main_back/main_front)
+# DESATIVADO (T85, DEC-57): o deploy no Render foi aposentado. Produção roda no
+# PC do dono (05_infra/local) e o front no GitHub Pages (deploy-pages.yml), que
+# não usa main_back/main_front. O gatilho `push` foi removido e o job abaixo
+# está com `if: false`, para não empurrar nada para main_back/main_front.
+# Mantido sem apagar, como registro histórico do modelo anterior (DEC-17/DEC-22).
+name: Sync deploy branches (main -> main_back/main_front) [DESATIVADO, T85]
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   sync:
+    if: false
     name: Merge main em ${{ matrix.branch }}
     runs-on: ubuntu-latest
     strategy:

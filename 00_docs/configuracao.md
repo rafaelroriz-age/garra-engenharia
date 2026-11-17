@@ -7,8 +7,7 @@ related:
   - 04_backend/app/core/config.py
   - 04_backend/.env.example
   - 05_infra/.env.example
-  - 05_infra/.env.render.example
-  - render.yaml
+  - 05_infra/local/.env.example
   - 00_docs/guia-desenvolvimento.md
 tags: [configuracao, env, deploy, render, docker]
 last_updated: 2026-11-03
@@ -107,3 +106,29 @@ São arquivos de configuração, fora do escopo de uma tarefa de documentação.
 2. `04_backend/.env.example` usa `POSTGRES_PORT=5432`; o compose publica 5433 (P-01).
 3. Não há `03_frontend/.env.example`; `NEXT_PUBLIC_API_URL` só aparece no `05_infra/.env.example` e no Render.
 4. `render.yaml` sem `MINIO_*` para o backend (P-03).
+
+## 7. Runtime local de produção no PC (DEC-57, T85)
+
+Desde a DEC-57 a produção roda no PC do dono, sem Render. O `render.yaml` e o `05_infra/.env.render.example` foram removidos no T85, então as colunas `R` e `RE` das tabelas acima são **históricas** (descrevem o que existia até 2026-11-17). Não há mais checklist de Render; a referência vigente é o arquivo `05_infra/local/.env.example`, lido pelo `garra-local.ps1` e exportado para o processo do backend.
+
+Variáveis novas (detalhes e padrões em [runtime-local-pc.md](backlog-auto/runtime-local-pc.md) §3 e [agente-inicializacao.md](backlog-auto/agente-inicializacao.md) §1):
+
+| Variável | Padrão | Consumida por |
+|---|---|---|
+| `ENVIRONMENT` | `production` | `Settings` (travas fail-closed) |
+| `BACKEND_CORS_ORIGINS` | `https://rafaelroriz-age.github.io,http://localhost:3000` | `Settings` (Pages público + front local) |
+| `UVICORN_HOST` / `UVICORN_PORT` | `127.0.0.1` / `8000` | `garra-local.ps1` e o túnel do agente |
+| `POSTGRES_USER` / `POSTGRES_DB` / `POSTGRES_HOST` / `POSTGRES_PORT` / `POSTGRES_PASSWORD` | `garra` / `garra_producao` / `localhost` / `5434` / gerada | `garra-local.ps1`, `Settings` |
+| `PG_VERSION` | `16.16` | `setup` |
+| `JWT_SECRET_KEY` / `JWT_ALGORITHM` / `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` | gerada / `HS256` / `60` | `Settings` |
+| `ADMIN_EMAIL` / `ADMIN_NOME` / `ADMIN_SENHA` | `admin@garra-engenharia.com.br` / `Administrador` / gerada | `seed_admin` |
+| `STORAGE_PROVEDOR` / `STORAGE_LOCAL_DIR` | `local` / `05_infra/local/storage` | storage local (T80) |
+| `PUBLIC_BASE_URL` | vazio | URL do túnel (T80/T82) |
+| `SNAPSHOT_SENHA` | vazia (obrigatória, ≥ 16 caracteres) | `gerar_snapshot` (T81) |
+| `WEASYPRINT_DLL_DIRECTORIES` | vazio → detectado | WeasyPrint (PDF) |
+| `BACKUP_RETENCAO` | `14` | `backup` |
+| `GARRA_PUBLIC_REPO` / `GARRA_PUBLIC_TOKEN` | vazios | publicação de `api.json` e `snapshot.enc` (T82); token é PAT só com Contents read/write |
+| `AGENTE_HEARTBEAT_MIN` / `AGENTE_SNAPSHOT_MIN` / `AGENTE_TICK_SEG` | `10` / `30` / `15` | `garra-agente.ps1` |
+| `LEGENDA_IA_PROVEDOR` / `DEEPSEEK_API_KEY` | `fake` / vazia | legenda IA (com `deepseek` em produção a chave é obrigatória) |
+
+Regras: `.env` nunca é versionado (`.gitignore`); `SNAPSHOT_SENHA`, `POSTGRES_PASSWORD`, `JWT_SECRET_KEY`, `ADMIN_SENHA` e `GARRA_PUBLIC_TOKEN` são segredos. `05_infra/.env.example` continua sendo o do `docker compose` de desenvolvimento.

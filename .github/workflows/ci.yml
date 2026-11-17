@@ -1,6 +1,6 @@
 # Integração Contínua — roda em todo Pull Request e em push para o trunk
-# (`main`) e para as branches de deploy de produção (`main_back`/`main_front`,
-# DEC-17). Staging (staging_back/staging_front/staging) foi removida em
+# (`main`). As branches `main_back`/`main_front` (DEC-17) foram aposentadas com o
+# Render (T85, DEC-57). Staging (staging_back/staging_front/staging) foi removida em
 # 2026-08-05 (DEC-22) por nunca ter sido de fato provisionada no Render.
 # Ver 00_docs/projeto/plano-gestao-configuracao.md (Seção 3.1) e decisoes.md
 # DEC-14/DEC-17/DEC-22.
@@ -8,7 +8,7 @@
 # Este workflow é o "status check" obrigatório para merge em `main`
 # (branch protection, configurado manualmente em Settings > Branches do
 # repositório GitHub — ver HT-05 em backlog-tarefas-humanas.md). Push em
-# main_back/main_front só acontece via .github/workflows/sync-deploy-branches.yml,
+# (main_back/main_front foram aposentadas no T85; sync-deploy-branches.yml está desativado),
 # nunca commit direto — mas o CI roda igual nelas por segurança.
 #
 # Job `e2e` (BL-21): sobe a stack de dev via 05_infra/docker-compose.yml e roda
@@ -20,7 +20,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main_front, main_back, main]
+    branches: [main]
 
 # Cancela execuções antigas do mesmo PR/branch quando um novo push chega.
 concurrency:
