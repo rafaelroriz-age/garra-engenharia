@@ -18,6 +18,8 @@
       stop    Encerra o uvicorn pelo PID e para o Postgres (pg_ctl stop -m fast).
       status  Mostra Postgres, uvicorn e GET /health.
       backup  pg_dump -Fc para 05_infra/local/backups/garra-AAAAMMDD-HHmm.dump, retencao BACKUP_RETENCAO.
+              No modo neon (DEC-58/T89) faz o mesmo contra o Neon com PGSSLMODE=require; exige pg_dump
+              de versao >= a do servidor (setup instala o PG 16 portatil).
 
     Compativel com Windows PowerShell 5.1. O texto do script e so ASCII de proposito: o PS 5.1 le
     .ps1 sem BOM como ANSI e corromperia acentos. Todos os caminhos derivam de $PSScriptRoot, pois o
@@ -685,7 +687,8 @@ function Invoke-Setup {
     $cfg = Get-Config
     Set-AmbienteProcesso $cfg
     if (Test-ModoNeon $cfg) {
-        Write-Log 'POSTGRES_MODO=neon: Postgres portatil, initdb e criacao do banco pulados (o banco e o do Neon)'
+        Write-Log 'POSTGRES_MODO=neon: initdb e criacao do banco pulados (o banco e o do Neon); so os binarios pg_dump/pg_restore/psql (backup)'
+        Install-PgBinarios $cfg
     }
     else {
         Install-PgBinarios $cfg
@@ -762,8 +765,13 @@ function Invoke-Backup {
     Write-Log '=== backup ==='
     $cfg = Get-Config
     Set-AmbienteProcesso $cfg
-    if (Test-ModoNeon $cfg) { Stop-ComErro 'POSTGRES_MODO=neon: o backup do Neon (PITR do projeto e dump com pg_dump compativel) e outra tarefa (T89); este comando so cobre o Postgres local' }
-    if (-not (Test-PgRodando)) { Stop-ComErro 'Postgres parado: rode start antes do backup' }
+    $neon = Test-ModoNeon $cfg
+    if ($neon) {
+        # DEC-58 (T89): dump do Neon com TLS obrigatorio. A senha vem do .env (PGPASSWORD, em Set-AmbienteProcesso).
+        $env:PGSSLMODE = 'require'
+        Write-Log ("backup do Neon: pg_dump {0} (versao {1})" -f (Get-PgExe 'pg_dump'), ((Invoke-Nativo (Get-PgExe 'pg_dump') @('--version') -Silencioso).Saida).Trim())
+    }
+    elseif (-not (Test-PgRodando)) { Stop-ComErro 'Postgres parado: rode start antes do backup' }
     if (-not (Test-Path -LiteralPath $BackupDir)) { New-Item -ItemType Directory -Path $BackupDir | Out-Null }
     $arquivo = Join-Path $BackupDir ('garra-' + (Get-Date -Format 'yyyyMMdd-HHmm') + '.dump')
     $parcial = $arquivo + '.parcial'
@@ -884,7 +892,7 @@ try {
             Write-Host '  start   Postgres + alembic upgrade head + seeds idempotentes + uvicorn em 2o plano'
             Write-Host '  stop    encerra uvicorn (PID em run/) e pg_ctl stop -m fast'
             Write-Host '  status  Postgres, uvicorn e GET /health'
-            Write-Host '  backup  pg_dump -Fc em backups/ com retencao BACKUP_RETENCAO (padrao 14)'
+            Write-Host '  backup  pg_dump -Fc em backups/ com retencao BACKUP_RETENCAO (padrao 14); no modo neon, dump do Neon com TLS'
             Write-Host "Log: $LogFile"
         }
     }
