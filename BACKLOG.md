@@ -1574,7 +1574,7 @@ Siga a 'Regra de pronto' do BACKLOG.md. Papel: frontend. Leia DEC-57 em 00_docs/
 ```
 
 ### T87 · Neon como banco de produção (opção C): runtime local aponta para o Neon com TLS (DEC-58)
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-58 (proposta; ajusta DEC-57 P1)
 - **Papel:** devops
 - **Depende:** T79
