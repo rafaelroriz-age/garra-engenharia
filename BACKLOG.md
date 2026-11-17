@@ -1529,7 +1529,7 @@ Rode npm run lint, npm run build, os testes unitários existentes e o novo; conf
 ```
 
 ### T84 · Script de importação dos dados do Render para o Postgres local
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-57
 - **Papel:** devops
 - **Depende:** T82
