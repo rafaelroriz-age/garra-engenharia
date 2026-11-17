@@ -1412,7 +1412,7 @@ Commit em Conventional Commits: `test(frontend): e2e de escrita sem rede (DEC-26
 Contexto comum (DEC-57 em 00_docs/projeto/decisoes.md): o repositório `garra-engenharia` é **privado** e continua privado. O site estático vai para um repositório **público** separado `rafaelroriz-age/garra-app` (GitHub Pages grátis), que só contém o build do front (branch `gh-pages`) e a branch órfã `snapshot` com `api.json` (URL atual do túnel + heartbeat) e `snapshot.enc` (dados de leitura da equipe cifrados com AES-256-GCM). Backend FastAPI, PostgreSQL e arquivos rodam no PC do dono, com dados fora do git; sobe sozinho no logon do Windows e é exposto por `cloudflared tunnel --url` (URL aleatória por boot, publicada em `api.json`). PC desligado → site abre em modo leitura com o snapshot; nenhuma gravação.
 
 ### T79 · Runtime local de produção no PC sem Docker (PostgreSQL portátil + venv + .env)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-57
 - **Papel:** devops
 - **Depende:** —
@@ -1439,7 +1439,7 @@ Não use o banco garra_engenharia de dev nem o Docker. Não toque no Render. Rod
 ```
 
 ### T80 · Storage em disco local com download assinado pelo próprio FastAPI
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-57
 - **Papel:** backend
 - **Depende:** —
@@ -1461,7 +1461,7 @@ Rode pytest (banco garra_engenharia_test, Regra de pronto item 6) e ruff. Doc co
 ```
 
 ### T81 · Gerador de snapshot cifrado da leitura da equipe
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-57
 - **Papel:** backend
 - **Depende:** —
