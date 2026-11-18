@@ -508,6 +508,8 @@ export interface RelatorioEmitido {
   tem_pdf: boolean;
   tem_docx: boolean;
   criado_em?: string | null;
+  /** Ids das fotos com legenda IA ainda em rascunho (BL-38); alerta, não bloqueio. Ausente em respostas antigas. */
+  fotos_ia_em_rascunho?: UUID[];
 }
 
 export type FormatoRelatorio = "pdf" | "docx";
