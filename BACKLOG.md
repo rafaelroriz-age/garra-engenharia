@@ -1664,7 +1664,7 @@ Siga a 'Regra de pronto' do BACKLOG.md. Papel: devops. Leia DEC-57, os Docs de T
 ```
 
 ### T93 · Exercitar backup e restauração contra o Neon real antes de desligar o garra-db (R-24)
-- **Status:** doing
+- **Status:** done
 - **Origem:** R-24
 - **Papel:** Engenheiro DevOps
 - **Depende:** T89
