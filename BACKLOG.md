@@ -1202,7 +1202,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T91 · Embutir o gabarito de sistemas prediais na imagem do backend (seed sem depender de 00_docs/)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-51
 - **Papel:** Engenheiro Backend
 - **Depende:** —
@@ -1217,7 +1217,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T92 · Cabeçalho corrido das Vistorias (Cautelar e Residencial) com logo raster em vez de SVG (DEC-54)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-54
 - **Papel:** Engenheiro Backend
 - **Depende:** —
@@ -1438,7 +1438,7 @@ Commit em Conventional Commits: `test(frontend): e2e de escrita sem rede (DEC-26
 ```
 
 ### T90 · E2E do Service Worker no export estático com basePath do Pages (fecha R-22)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** R-22
 - **Papel:** Engenheiro Frontend
 - **Depende:** T77, T83
@@ -1664,7 +1664,7 @@ Siga a 'Regra de pronto' do BACKLOG.md. Papel: devops. Leia DEC-57, os Docs de T
 ```
 
 ### T93 · Exercitar backup e restauração contra o Neon real antes de desligar o garra-db (R-24)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** R-24
 - **Papel:** Engenheiro DevOps
 - **Depende:** T89
