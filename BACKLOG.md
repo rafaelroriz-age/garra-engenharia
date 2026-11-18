@@ -1872,7 +1872,7 @@ Tarefa: faça a atualização distinguir 'campo ausente' de 'campo enviado como 
 ```
 
 ### T105 · Telemetria da IA: gravar SQL NULL (não JSON null) em chamadas_ia.resposta
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-59
 - **Papel:** Engenheiro Backend
 - **Depende:** —
