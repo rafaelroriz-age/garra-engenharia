@@ -1804,7 +1804,7 @@ Contexto: a T97 (migration `d3e7a1c5f9b2`) adicionou `cidade` (str|None, máx. 1
 ```
 
 ### T99 · Backend: alertar na geração do relatório quando há fotos com legenda IA em rascunho
-- **Status:** doing
+- **Status:** done
 - **Origem:** T36
 - **Papel:** Engenheiro Backend
 - **Depende:** —
