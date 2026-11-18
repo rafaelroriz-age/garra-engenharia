@@ -65,7 +65,18 @@ ruff check .  -> All checks passed!
 
 Antes da correção, na mesma execução: `2 failed, 7 passed` nos meus testes (idempotência e cache). Foi essa falha que levou ao achado do JSON `null`.
 
-**Não concluído nesta sessão:** `tests/test_legenda_ia_endpoints.py` travou (mais de 25 min sem sair da primeira linha de saída, sem conexão ativa de lock no banco). Interrompi com `TaskStop`. `test_legenda_ia_limites.py` e `test_legenda_ia_aprovacao.py` não foram executados, porque a rodada parou no primeiro arquivo. A causa do travamento não foi investigada: é teste existente, fora do escopo, e parece ligado ao cliente HTTP de teste. Esses três arquivos ficam como verificação pendente. Não há número inventado aqui.
+**Relacionados (rodada `run-rel.sh`, banco `garra_engenharia_test_t94`):**
+
+```text
+tests/test_legenda_ia_limites.py      54 passed in 10.10s
+tests/test_legenda_ia_endpoints.py    1 failed, 1 passed, 12 errors in 72.36s
+tests/test_legenda_ia_aprovacao.py    6 errors in 33.97s
+```
+
+- **limites:** verde.
+- **endpoints e aprovação: não validados neste ambiente.** Os erros vêm da importação de `boto3`/`s3transfer` no venv (`OSError: [Errno 22] Invalid argument` em `s3transfer/subscribers`), antes de qualquer teste de regra de negócio. É falha de ambiente Windows/OneDrive, não da mudança desta tarefa. O único teste que passou no endpoints (e o FAILED `test_gerar_foto_inexistente_404`) não foram investigados.
+- Esses dois arquivos ficam como **verificação pendente**, a rodar em ambiente com o venv íntegro (ou em CI). Nenhum número foi estimado.
+- Observação de processo: uma primeira leitura desta rodada, feita antes de terminar, me levou a registrar "travamento". Essa leitura estava errada; o arquivo terminou em 72 s.
 
 ## Proposta de agendamento semanal (não é decisão)
 
