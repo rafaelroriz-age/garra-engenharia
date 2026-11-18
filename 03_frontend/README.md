@@ -80,6 +80,10 @@ npm run lint    # ESLint
 
 ## PWA / Service Worker (T77, DEC-26)
 
+E2E offline (T101): `npx playwright test -c playwright.offline.config.ts` (a partir de `03_frontend/`) faz o build de produção, serve `out/` com `e2e/servir-out.mjs` e roda `e2e/offline-dec26.spec.ts` (leitura do cache e escrita sem rede com erro explícito, sem fila local). API mockada; fora do CI. Doc: [e2e-offline-dec26.md](../00_docs/backlog-auto/e2e-offline-dec26.md).
+
+Edificação (T98, DEC-50): o formulário envia `cidade` e `uf` (UF com 2 letras, em maiúsculas); lista e detalhe exibem. Tela de relatório (T100, BL-38): `emissao-versoes.tsx` avisa quando `fotos_ia_em_rascunho` vem preenchido.
+
 `public/sw.js` (registrado por `components/sw-register.tsx` só em produção) cacheia apenas GETs de leitura: dados mestre (24 h) e contratos (5 min, por usuário); entrada vencida não é servida. Escritas não são interceptadas e falham sem rede, sem fila. Navegação sem rede cai em `/offline.html`; o logout limpa o cache. Regras puras em `lib/sw-cache.ts`, testadas com `npm run test:unit` (`node --test`). Detalhes e limitações: [pwa-service-worker.md](../00_docs/backlog-auto/pwa-service-worker.md). Pendente: `basePath` do GitHub Pages no registro e teste em navegador real (R-22).
 
 Logout em uma aba limpa o cache de dados do SW nas demais (T96): `sw-register.tsx` ouve o evento `storage` da chave do token (`isLogoutStorageEvent` em `lib/sw-cache.ts`). Aba fechada no logout não é limpa; vale o TTL.
