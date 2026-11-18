@@ -42,6 +42,7 @@ export function EmissaoVersoes({ inspecaoId, tipo, podeEmitir, textosNaoSalvos }
   const [emitindo, setEmitindo] = useState(false);
   const [erroEmissao, setErroEmissao] = useState<ApiError | Error | null>(null);
   const [emitida, setEmitida] = useState<string | null>(null);
+  const [fotosRascunho, setFotosRascunho] = useState(0);
   const [baixando, setBaixando] = useState<string | null>(null);
   const [erroDownload, setErroDownload] = useState<ApiError | Error | null>(null);
   const { bloquearEscrita } = useModoLeitura();
@@ -66,9 +67,11 @@ export function EmissaoVersoes({ inspecaoId, tipo, podeEmitir, textosNaoSalvos }
     setEmitindo(true);
     setErroEmissao(null);
     setEmitida(null);
+    setFotosRascunho(0);
     try {
       const nova = await relatoriosApi.emitir(inspecaoId, tipo);
       setEmitida(nova.versao);
+      setFotosRascunho(nova.fotos_ia_em_rascunho?.length ?? 0);
       await carregar();
     } catch (err) {
       setErroEmissao(err instanceof Error ? err : new Error("Falha ao emitir o relatório."));
@@ -127,6 +130,17 @@ export function EmissaoVersoes({ inspecaoId, tipo, podeEmitir, textosNaoSalvos }
               ) : null}
             </div>
           </div>
+        ) : null}
+
+        {fotosRascunho > 0 ? (
+          <Alert variant="warning">
+            <AlertTriangle aria-hidden="true" />
+            <AlertTitle>Legendas IA em rascunho</AlertTitle>
+            <AlertDescription>
+              {fotosRascunho} foto(s) com legenda IA ainda em rascunho; só legendas aprovadas aparecem no
+              relatório.
+            </AlertDescription>
+          </Alert>
         ) : null}
 
         {faltantes.length > 0 && erroEmissao instanceof ApiError ? (
