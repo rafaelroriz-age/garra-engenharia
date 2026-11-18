@@ -1853,7 +1853,7 @@ Tarefa: faça o POST se comportar como o PUT nesse ponto, reutilizando a mesma v
 ```
 
 ### T104 · PUT /edificacoes/{id} não pode zerar cidade/uf quando o corpo não os envia
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-59
 - **Papel:** Engenheiro Backend
 - **Depende:** —
