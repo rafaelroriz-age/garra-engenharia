@@ -1740,7 +1740,7 @@ Faça: faça as outras abas apagarem o cache de dados ao detectar o logout (remo
 ```
 
 ### T97 · Edificação com `cidade` e `uf` próprios e uso na cidade da emissão dos relatórios
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-50
 - **Papel:** backend
 - **Depende:** —
