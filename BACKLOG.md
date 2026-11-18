@@ -1683,7 +1683,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Esta tarefa exige
 ## Bloco H — Acabamento das consequências abertas das decisões propostas (DEC-50/51/52/56)
 
 ### T94 · Legenda IA: expurgo de `resposta` expirada em `chamadas_ia` (script com dry-run)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-52
 - **Papel:** backend
 - **Depende:** —
@@ -1702,7 +1702,7 @@ Faça: crie 04_backend/app/scripts/limpar_chamadas_ia.py, seguindo o estilo dos 
 ```
 
 ### T95 · Rota `PUT /responsaveis/{id}` usando o `ResponsavelUpdate` já existente
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-50
 - **Papel:** backend
 - **Depende:** —
@@ -1721,7 +1721,7 @@ Faça: adicione `PUT /api/v1/responsaveis/{responsavel_id}` em responsaveis.py. 
 ```
 
 ### T96 · Service Worker: logout em uma aba limpa o cache de dados nas outras abas
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-56
 - **Papel:** frontend
 - **Depende:** —
@@ -1740,7 +1740,7 @@ Faça: faça as outras abas apagarem o cache de dados ao detectar o logout (remo
 ```
 
 ### T97 · Edificação com `cidade` e `uf` próprios e uso na cidade da emissão dos relatórios
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-50
 - **Papel:** backend
 - **Depende:** —
