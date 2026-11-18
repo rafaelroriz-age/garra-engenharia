@@ -1468,7 +1468,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T101 · Reabrir E2E da DEC-26: escrita sem rede falha com erro explícito
-- **Status:** doing
+- **Status:** done
 - **Origem:** T78
 - **Papel:** Engenheiro Frontend
 - **Depende:** —
