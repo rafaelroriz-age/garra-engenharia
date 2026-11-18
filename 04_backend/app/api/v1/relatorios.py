@@ -58,6 +58,7 @@ def _emitido(relatorio: Relatorio) -> RelatorioEmitidoRead:
         tem_pdf=bool(relatorio.pdf_key),
         tem_docx=bool(relatorio.docx_key),
         criado_em=relatorio.emitido_em,
+        fotos_ia_em_rascunho=list(getattr(relatorio, "fotos_ia_em_rascunho", [])),
     )
 
 
