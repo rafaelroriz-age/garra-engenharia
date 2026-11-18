@@ -1438,7 +1438,7 @@ Commit em Conventional Commits: `test(frontend): e2e de escrita sem rede (DEC-26
 ```
 
 ### T90 · E2E do Service Worker no export estático com basePath do Pages (fecha R-22)
-- **Status:** doing
+- **Status:** done
 - **Origem:** R-22
 - **Papel:** Engenheiro Frontend
 - **Depende:** T77, T83
