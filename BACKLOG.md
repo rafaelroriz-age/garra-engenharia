@@ -1834,7 +1834,7 @@ Contexto: a tarefa B (Doc 00_docs/backlog-auto/relatorio-alerta-ia-rascunho.md) 
 ```
 
 ### T103 · POST /responsaveis com usuario_id já vinculado deve devolver 409 em vez de 500
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-59
 - **Papel:** Engenheiro Backend
 - **Depende:** —
