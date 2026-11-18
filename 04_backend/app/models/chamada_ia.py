@@ -58,4 +58,4 @@ class ChamadaIA(Base):
     tokens_saida: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     custo_estimado_usd: Mapped[Decimal | None] = mapped_column(Numeric(12, 6), nullable=True)
     latencia_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
-    resposta: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    resposta: Mapped[dict | None] = mapped_column(JSONB(none_as_null=True), nullable=True)
