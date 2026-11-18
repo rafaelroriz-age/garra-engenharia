@@ -58,7 +58,7 @@ Objetos sem os atributos `cidade`/`uf` (`getattr` com padrão) também caem no f
 
 ## API
 
-`POST /api/v1/edificacoes` e `PUT /api/v1/edificacoes/{id}` aceitam `cidade` e `uf` opcionais, e as leituras os devolvem (`null` quando ausentes). O `PUT` substitui todos os campos (BL-08): se o corpo vier sem `cidade`/`uf`, os dois voltam a `null`. O cliente que só quer manter os valores precisa reenviá-los.
+`POST /api/v1/edificacoes` e `PUT /api/v1/edificacoes/{id}` aceitam `cidade` e `uf` opcionais, e as leituras os devolvem (`null` quando ausentes). O `PUT` substitui todos os campos (BL-08), mas `cidade`/`uf` ausentes no corpo são **preservados** (DEC-59, corrigido em `edificacao-put-preserva-cidade-uf.md`); `null` explícito os limpa.
 
 ## Testes
 

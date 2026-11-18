@@ -59,8 +59,16 @@ async def create(db: AsyncSession, dados: EdificacaoCreate) -> Edificacao:
     return edificacao
 
 
+# DEC-59: `cidade`/`uf` ausentes no corpo do PUT são preservados; enviados (inclusive `null`) são gravados.
+CAMPOS_PRESERVAVEIS_AUSENTES = ("cidade", "uf")
+
+
 async def update(db: AsyncSession, edificacao: Edificacao, dados: EdificacaoUpdate) -> Edificacao:
-    for campo, valor in dados.model_dump().items():
+    campos = dados.model_dump()
+    for campo in CAMPOS_PRESERVAVEIS_AUSENTES:
+        if campo not in dados.model_fields_set:
+            campos.pop(campo)
+    for campo, valor in campos.items():
         setattr(edificacao, campo, valor)
     await db.commit()
     await db.refresh(edificacao)

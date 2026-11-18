@@ -119,7 +119,7 @@ def test_cidade_acima_de_120_retorna_422(client, auth_headers, criadas):
     assert resposta.status_code == 422, resposta.text
 
 
-def test_atualizar_define_e_remove_cidade_uf(client, auth_headers, criadas):
+def test_atualizar_define_e_preserva_cidade_uf(client, auth_headers, criadas):
     edificacao_id = _criar(client, auth_headers, criadas).json()["id"]
     base = {"nome": "Ed. DEC-50 atualizada", "endereco": ENDERECO_GOIANIA}
 
@@ -129,10 +129,50 @@ def test_atualizar_define_e_remove_cidade_uf(client, auth_headers, criadas):
     assert resposta.status_code == 200, resposta.text
     assert (resposta.json()["cidade"], resposta.json()["uf"]) == ("Goiânia", "GO")
 
-    # PUT substitui todos os campos (BL-08): sem cidade/uf no corpo, voltam a None.
+    # DEC-59: cidade/uf ausentes no corpo são preservados (não zeram).
     resposta = client.put(f"/api/v1/edificacoes/{edificacao_id}", json=base, headers=auth_headers)
     assert resposta.status_code == 200, resposta.text
+    assert (resposta.json()["cidade"], resposta.json()["uf"]) == ("Goiânia", "GO")
+
+
+def test_put_sem_cidade_uf_preserva_valores_existentes(client, auth_headers, criadas):
+    edificacao_id = _criar(client, auth_headers, criadas, cidade="Anápolis", uf="GO").json()["id"]
+
+    resposta = client.put(
+        f"/api/v1/edificacoes/{edificacao_id}",
+        json={"nome": "Ed. DEC-59 sem campos", "endereco": ENDERECO_GOIANIA},
+        headers=auth_headers,
+    )
+    assert resposta.status_code == 200, resposta.text
+    assert resposta.json()["nome"] == "Ed. DEC-59 sem campos"
+    assert (resposta.json()["cidade"], resposta.json()["uf"]) == ("Anápolis", "GO")
+
+    detalhe = client.get(f"/api/v1/edificacoes/{edificacao_id}", headers=auth_headers)
+    assert (detalhe.json()["cidade"], detalhe.json()["uf"]) == ("Anápolis", "GO")
+
+
+def test_put_com_cidade_uf_null_zera_os_dois(client, auth_headers, criadas):
+    edificacao_id = _criar(client, auth_headers, criadas, cidade="Anápolis", uf="GO").json()["id"]
+
+    resposta = client.put(
+        f"/api/v1/edificacoes/{edificacao_id}",
+        json={"nome": "Ed. DEC-59 null", "endereco": ENDERECO_GOIANIA, "cidade": None, "uf": None},
+        headers=auth_headers,
+    )
+    assert resposta.status_code == 200, resposta.text
     assert (resposta.json()["cidade"], resposta.json()["uf"]) == (None, None)
+
+
+def test_put_com_cidade_vazia_e_uf_ausente_zera_so_cidade(client, auth_headers, criadas):
+    edificacao_id = _criar(client, auth_headers, criadas, cidade="Anápolis", uf="GO").json()["id"]
+
+    resposta = client.put(
+        f"/api/v1/edificacoes/{edificacao_id}",
+        json={"nome": "Ed. DEC-59 vazia", "endereco": ENDERECO_GOIANIA, "cidade": "   "},
+        headers=auth_headers,
+    )
+    assert resposta.status_code == 200, resposta.text
+    assert (resposta.json()["cidade"], resposta.json()["uf"]) == (None, "GO")
 
 
 def test_atualizar_com_uf_invalida_retorna_422(client, auth_headers, criadas):
