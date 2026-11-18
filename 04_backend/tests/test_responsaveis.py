@@ -103,3 +103,58 @@ def test_obter_responsavel_inexistente_retorna_404_rfc7807(auth_headers):
     response = client.get(f"/api/v1/responsaveis/{uuid.uuid4()}", headers=auth_headers)
     assert response.status_code == 404
     assert response.headers["content-type"] == "application/problem+json"
+
+
+async def _criar_usuario_async() -> uuid.UUID:
+    async with _TestSessionLocal() as session:
+        usuario = Usuario(
+            nome="Teste DEC-59",
+            email=f"responsaveis-dec59-{uuid.uuid4()}@garra-engenharia.com.br",
+            senha_hash=hash_password("senha-forte"),
+            ativo=True,
+        )
+        session.add(usuario)
+        await session.commit()
+        return usuario.id
+
+
+async def _remover_usuario_async(usuario_id: uuid.UUID) -> None:
+    async with _TestSessionLocal() as session:
+        await session.execute(delete(Responsavel).where(Responsavel.usuario_id == usuario_id))
+        await session.execute(delete(Usuario).where(Usuario.id == usuario_id))
+        await session.commit()
+
+
+def test_criar_responsavel_com_usuario_ja_vinculado_retorna_409_rfc7807(auth_headers):
+    usuario_id = run_async(_criar_usuario_async())
+    primeiro_id = None
+    try:
+        primeiro = client.post(
+            "/api/v1/responsaveis",
+            json={"nome": f"Fiscal DEC-59 A {uuid.uuid4()}", "tipo": "fiscal", "usuario_id": str(usuario_id)},
+            headers=auth_headers,
+        )
+        assert primeiro.status_code == 201
+        primeiro_id = primeiro.json()["id"]
+
+        segundo = client.post(
+            "/api/v1/responsaveis",
+            json={"nome": f"Fiscal DEC-59 B {uuid.uuid4()}", "tipo": "fiscal", "usuario_id": str(usuario_id)},
+            headers=auth_headers,
+        )
+        assert segundo.status_code == 409
+        assert segundo.headers["content-type"] == "application/problem+json"
+    finally:
+        if primeiro_id is not None:
+            _cleanup_responsavel(primeiro_id)
+        run_async(_remover_usuario_async(usuario_id))
+
+
+def test_criar_responsavel_com_usuario_inexistente_retorna_422_rfc7807(auth_headers):
+    response = client.post(
+        "/api/v1/responsaveis",
+        json={"nome": f"Fiscal DEC-59 C {uuid.uuid4()}", "tipo": "fiscal", "usuario_id": str(uuid.uuid4())},
+        headers=auth_headers,
+    )
+    assert response.status_code == 422
+    assert response.headers["content-type"] == "application/problem+json"
