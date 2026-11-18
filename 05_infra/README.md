@@ -63,6 +63,8 @@ Não há migração de schema nesta etapa (BL-01 é somente infraestrutura), por
 
 A produção oficial roda no PC do dono (seção "Produção no PC (DEC-57)"). `docker-compose.prod.yml` + `nginx/nginx.conf` ficam como caminho alternativo de VPS próprio (DEC-14/DEC-17), usado pelos workflows manuais `cd-staging.yml`/`cd-production.yml`.
 
+**Limite de corpo no nginx (T102, DEC-39):** `client_max_body_size` padrão `1m`; só `/api/v1/fotos/upload` e `/upload-clipboard` aceitam `40m` (teto do backend: 25 MiB). Atenção: o upload de documentos de edificação (até 25 MiB) recebe 413 nesta stack até ganhar `location` própria (R-25). `nginx -t` não foi executado. Doc: [nginx-limite-corpo-fotos.md](../00_docs/backlog-auto/nginx-limite-corpo-fotos.md).
+
 Diferenças em relação ao compose de desenvolvimento:
 
 - Usa **imagens prontas do GHCR** com tag imutável (`IMAGE_TAG`), nunca `build:` nem `latest` — permite rollback determinístico.
