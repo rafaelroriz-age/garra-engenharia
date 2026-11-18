@@ -1721,7 +1721,7 @@ Faça: adicione `PUT /api/v1/responsaveis/{responsavel_id}` em responsaveis.py. 
 ```
 
 ### T96 · Service Worker: logout em uma aba limpa o cache de dados nas outras abas
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-56
 - **Papel:** frontend
 - **Depende:** —
