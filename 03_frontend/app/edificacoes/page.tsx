@@ -154,7 +154,14 @@ export default function EdificacoesPage() {
                           {edificacao.nome}
                         </Link>
                       </TableCell>
-                      <TableCell>{edificacao.endereco}</TableCell>
+                      <TableCell>
+                        {edificacao.endereco}
+                        {edificacao.cidade || edificacao.uf ? (
+                          <span className="block text-xs text-muted-foreground">
+                            {[edificacao.cidade, edificacao.uf].filter(Boolean).join(" / ")}
+                          </span>
+                        ) : null}
+                      </TableCell>
                       <TableCell>{edificacao.tipologia ?? "—"}</TableCell>
                       <TableCell>{edificacao.area_total_m2 ?? "—"}</TableCell>
                       <TableCell>

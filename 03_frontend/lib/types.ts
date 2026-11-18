@@ -31,6 +31,10 @@ export interface Edificacao {
   nome: string;
   endereco: string;
   cep?: string | null;
+  /** DEC-50 P5 (T97): cidade, máx. 120 caracteres. */
+  cidade?: string | null;
+  /** DEC-50 P5 (T97): UF com 2 letras (normalizada para maiúsculas pelo backend). */
+  uf?: string | null;
   tipologia?: string | null;
   sistema_construtivo?: string | null;
   descricao_pavimentos?: string | null;

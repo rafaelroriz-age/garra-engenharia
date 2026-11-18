@@ -29,6 +29,8 @@ export function EdificacaoForm({ initialValue, submitLabel, onSubmit, onCancel }
   const [nome, setNome] = useState(initialValue?.nome ?? "");
   const [endereco, setEndereco] = useState(initialValue?.endereco ?? "");
   const [cep, setCep] = useState(initialValue?.cep ?? "");
+  const [cidade, setCidade] = useState(initialValue?.cidade ?? "");
+  const [uf, setUf] = useState(initialValue?.uf ?? "");
   const [tipologia, setTipologia] = useState(initialValue?.tipologia ?? "");
   const [sistemaConstrutivo, setSistemaConstrutivo] = useState(initialValue?.sistema_construtivo ?? "");
   const [descricaoPavimentos, setDescricaoPavimentos] = useState(initialValue?.descricao_pavimentos ?? "");
@@ -43,6 +45,7 @@ export function EdificacaoForm({ initialValue, submitLabel, onSubmit, onCancel }
     if (!nome.trim()) errors.nome = "Informe o nome da edificação.";
     if (!endereco.trim()) errors.endereco = "Informe o endereço completo.";
     if (areaTotal && Number.isNaN(Number(areaTotal))) errors.area_total_m2 = "Área deve ser numérica.";
+    if (uf.trim() && !/^[A-Za-z]{2}$/.test(uf.trim())) errors.uf = "UF deve ter 2 letras (ex.: SP).";
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   }
@@ -58,6 +61,8 @@ export function EdificacaoForm({ initialValue, submitLabel, onSubmit, onCancel }
         nome: nome.trim(),
         endereco: endereco.trim(),
         cep: cep.trim() || null,
+        cidade: cidade.trim() || null,
+        uf: uf.trim() ? uf.trim().toUpperCase() : null,
         tipologia: tipologia || null,
         sistema_construtivo: sistemaConstrutivo.trim() || null,
         descricao_pavimentos: descricaoPavimentos.trim() || null,
@@ -69,6 +74,11 @@ export function EdificacaoForm({ initialValue, submitLabel, onSubmit, onCancel }
         setError(err);
         const apiFieldErrors: Record<string, string> = {};
         err.errors.forEach((fieldError) => {
+          // 422 de UF (T97): mensagem em português, independente do texto do backend.
+          if (fieldError.field === "uf" || fieldError.field.endsWith(".uf")) {
+            apiFieldErrors.uf = "UF inválida. Informe a sigla de 2 letras do estado (ex.: SP).";
+            return;
+          }
           apiFieldErrors[fieldError.field] = fieldError.message;
         });
         setFieldErrors((prev) => ({ ...prev, ...apiFieldErrors }));
@@ -126,6 +136,34 @@ export function EdificacaoForm({ initialValue, submitLabel, onSubmit, onCancel }
         <div className="space-y-1.5">
           <Label htmlFor="cep">CEP</Label>
           <Input id="cep" value={cep} onChange={(event) => setCep(event.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="cidade">Cidade</Label>
+          <Input
+            id="cidade"
+            maxLength={120}
+            value={cidade}
+            onChange={(event) => setCidade(event.target.value)}
+            aria-invalid={Boolean(fieldErrors.cidade)}
+          />
+          {fieldErrors.cidade ? <p className="text-xs text-destructive">{fieldErrors.cidade}</p> : null}
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="uf">UF</Label>
+          <Input
+            id="uf"
+            maxLength={2}
+            placeholder="Ex.: SP"
+            value={uf}
+            onChange={(event) => setUf(event.target.value.toUpperCase())}
+            aria-invalid={Boolean(fieldErrors.uf)}
+            aria-describedby={fieldErrors.uf ? "uf-error" : undefined}
+          />
+          {fieldErrors.uf ? (
+            <p id="uf-error" className="text-xs text-destructive">
+              {fieldErrors.uf}
+            </p>
+          ) : null}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="tipologia">Tipologia</Label>
