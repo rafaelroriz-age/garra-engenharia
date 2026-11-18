@@ -34,10 +34,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import ConflictError, DomainError, NotFoundError
-from app.models import Inspecao, Relatorio
+from app.models import Foto, Inspecao, Relatorio
 from app.schemas.portal import PortalDownloadRead
 from app.services import portal_service
 from app.services.report_generator.imagem import otimizar_imagem
+from app.services.report_generator.legenda_foto import sinalizar_fotos_ia_em_rascunho
 from app.services.report_generator.ltip_contexto import (
     TIPO_LTIP,
     extrair_fotos_ltip,
@@ -376,6 +377,20 @@ async def _exigir_inspecao_do_tipo(db: AsyncSession, inspecao_id: uuid.UUID, tip
         )
 
 
+async def fotos_ia_em_rascunho(db: AsyncSession, chaves: Iterable[str]) -> list[uuid.UUID]:
+    """Ids das fotos usadas no relatório com legenda IA ainda em rascunho (BL-38, DEC-37 DP-9).
+
+    Alerta, não bloqueio. Devolve ids (estáveis) e não índices: o contexto de cada tipo não
+    carrega o status da IA e a ordem das fotos varia entre pipelines. Ordenado por `storage_key`.
+    """
+    chaves = sorted(set(chaves))
+    if not chaves:
+        return []
+    consulta = select(Foto).where(Foto.storage_key.in_(chaves)).order_by(Foto.storage_key, Foto.id)
+    fotos = list((await db.execute(consulta)).scalars().all())
+    return [fotos[i].id for i in sinalizar_fotos_ia_em_rascunho(fotos)]
+
+
 # --- emissão ----------------------------------------------------------------------------
 
 
@@ -401,7 +416,9 @@ async def emitir_relatorio(
     renderizador = renderizador or emissor.criar_renderizador()
     if emissor.anexar_do_storage is not None:
         await asyncio.to_thread(emissor.anexar_do_storage, contexto, storage)
-    fotos = await asyncio.to_thread(_baixar_fotos, storage, emissor.extrair_fotos(contexto))
+    chaves_fotos = emissor.extrair_fotos(contexto)
+    em_rascunho = await fotos_ia_em_rascunho(db, chaves_fotos)
+    fotos = await asyncio.to_thread(_baixar_fotos, storage, chaves_fotos)
     pdf = await asyncio.to_thread(renderizador.gerar_pdf, contexto, fotos)
     docx = await asyncio.to_thread(renderizador.gerar_docx, contexto, fotos)
 
@@ -444,6 +461,8 @@ async def emitir_relatorio(
         await asyncio.to_thread(_apagar_sem_falhar, storage, gravadas)
         raise
     await db.refresh(relatorio)
+    # Atributo transitório (não mapeado): a API o expõe em `RelatorioEmitidoRead`.
+    relatorio.fotos_ia_em_rascunho = em_rascunho
     return relatorio
 
 

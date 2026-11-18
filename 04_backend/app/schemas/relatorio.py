@@ -48,6 +48,8 @@ class RelatorioEmitidoRead(BaseModel):
     tem_pdf: bool
     tem_docx: bool
     criado_em: datetime | None = None
+    # Ids das fotos do relatório com legenda IA em rascunho (BL-38); alerta, não bloqueio.
+    fotos_ia_em_rascunho: list[uuid.UUID] = []
 
 
 class RelatorioVersaoRead(BaseModel):
