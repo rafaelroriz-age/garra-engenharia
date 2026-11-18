@@ -11,7 +11,8 @@ gap de integração encontrado ao implementar os testes E2E (BL-21).
 - `GET /responsaveis` — lista (filtro opcional por `tipo`), sem paginação
   (volume esperado é baixo: fiscais/executoras/contratantes de um único
   engenheiro ou pequena equipe).
-- `POST /responsaveis` — cria um Responsável.
+- `POST /responsaveis` — cria um Responsável; `usuario_id` segue a mesma regra
+  do `PUT` (422 se o usuário não existe, 409 se já vinculado) — DEC-59.
 - `PUT /responsaveis/{id}` — atualização parcial (DEC-50): só o auditor; campo
   omitido não muda; `usuario_id` segue a regra do `POST` (ver `atualizar_responsavel`).
 
@@ -48,16 +49,44 @@ async def listar_responsaveis(
     return list(result.scalars().all())
 
 
+async def _validar_vinculo_usuario(
+    db: AsyncSession,
+    usuario_id: uuid.UUID,
+    responsavel_id: uuid.UUID | None,
+) -> None:
+    """Regra de `usuario_id` (POST e PUT): o usuário precisa existir (422) e não
+    pode já estar vinculado a outro Responsável (409). `responsavel_id` é o
+    Responsável sendo atualizado (excluído da checagem); `None` na criação."""
+    if await db.get(Usuario, usuario_id) is None:
+        raise DomainError(detail=f"Usuário {usuario_id} não encontrado.")
+    filtros = [Responsavel.usuario_id == usuario_id]
+    if responsavel_id is not None:
+        filtros.append(Responsavel.id != responsavel_id)
+    ocupado = await db.execute(select(Responsavel.id).where(*filtros))
+    if ocupado.first() is not None:
+        raise ConflictError(f"O usuário {usuario_id} já está vinculado a outro Responsável.")
+
+
 @router.post("", response_model=ResponsavelRead, status_code=status.HTTP_201_CREATED)
 async def criar_responsavel(
     dados: ResponsavelCreate,
     db: AsyncSession = Depends(get_db),
     _usuario: Usuario = Depends(require_auditor),
 ) -> Responsavel:
-    """Cria um novo Responsável (fiscal, responsável legal, RTE ou contratante)."""
+    """Cria um novo Responsável (fiscal, responsável legal, RTE ou contratante).
+
+    `usuario_id` (opcional) segue a regra de `_validar_vinculo_usuario`: 422 se
+    o usuário não existe, 409 se já está vinculado a outro Responsável.
+    """
+    if dados.usuario_id is not None:
+        await _validar_vinculo_usuario(db, dados.usuario_id, responsavel_id=None)
     responsavel = Responsavel(**dados.model_dump())
     db.add(responsavel)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError as exc:
+        await db.rollback()
+        raise ConflictError("Conflito de unicidade ao criar o Responsável (usuario_id).") from exc
     await db.refresh(responsavel)
     return responsavel
 
@@ -88,16 +117,7 @@ async def atualizar_responsavel(
 
     novo_usuario_id = alteracoes.get("usuario_id")
     if novo_usuario_id is not None and novo_usuario_id != responsavel.usuario_id:
-        if await db.get(Usuario, novo_usuario_id) is None:
-            raise DomainError(detail=f"Usuário {novo_usuario_id} não encontrado.")
-        ocupado = await db.execute(
-            select(Responsavel.id).where(
-                Responsavel.usuario_id == novo_usuario_id,
-                Responsavel.id != responsavel_id,
-            )
-        )
-        if ocupado.first() is not None:
-            raise ConflictError(f"O usuário {novo_usuario_id} já está vinculado a outro Responsável.")
+        await _validar_vinculo_usuario(db, novo_usuario_id, responsavel_id=responsavel_id)
 
     for campo, valor in alteracoes.items():
         setattr(responsavel, campo, valor)
