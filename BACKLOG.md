@@ -1677,3 +1677,83 @@ Siga a 'Regra de pronto' do BACKLOG.md. Papel: devops. Leia DEC-57, os Docs de T
 ```text
 Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Esta tarefa exige credencial do Neon e acesso à máquina do dono: só a pessoa dona do projeto (ou sessão com a string de conexão no ambiente local, nunca no repositório) pode executá-la; um agente sem essa credencial deve apenas registrar no Doc que não rodou e encerrar. Contexto: R-24 em 00_docs/projeto/riscos.md e DEC-58: o backup diário do Neon (T89, 00_docs/backlog-auto/neon-backup.md) nunca foi exercitado contra o Neon real, e os dumps ficam numa pasta do OneDrive com dados pessoais. Leia 00_docs/backlog-auto/neon-backup.md, a seção «Banco no Neon» de 05_infra/README.md e 05_infra/backup/ (backup-db.sh, restore-db.sh). Passos: (1) rode `garra-local.ps1 backup` (veja o caminho do script no README de infra) e confirme o arquivo gerado e o tamanho; (2) crie um banco descartável (PostgreSQL local de 05_infra ou branch do Neon) e restaure o dump com restore-db.sh, jamais sobre o banco de produção; (3) compare contagens de linhas nas tabelas citadas no critério de pronto entre Neon e o banco restaurado; (4) verifique se a pasta de dumps está sob o OneDrive e proponha (no Doc, como proposta, sem editar decisoes.md) cifrar o dump ou movê-lo para fora do OneDrive; (5) apague o banco descartável. Escreva o resultado no Doc novo 00_docs/backlog-auto/neon-backup-teste-real.md, sem imprimir segredos. Não edite os documentos de gestão compartilhados. Commit só do Doc: `docs(infra): teste real de backup e restore do Neon (R-24)` com rodapé `Refs R-24`. Não faça push.
 ```
+
+---
+
+## Bloco H — Acabamento das consequências abertas das decisões propostas (DEC-50/51/52/56)
+
+### T94 · Legenda IA: expurgo de `resposta` expirada em `chamadas_ia` (script com dry-run)
+- **Status:** todo
+- **Origem:** DEC-52
+- **Papel:** backend
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** baixa
+- **Toca:** 04_backend/app/scripts/limpar_chamadas_ia.py, 04_backend/tests/test_limpar_chamadas_ia.py, 00_docs/backlog-auto/ia-retencao-chamadas.md
+- **Doc:** 00_docs/backlog-auto/ia-retencao-chamadas.md
+- **Pronto:** Existe `python -m app.scripts.limpar_chamadas_ia` com `--dry-run` por padrão e `--aplicar` para executar. O script anula a coluna `resposta` das linhas de `chamadas_ia` mais antigas que `LEGENDA_IA_CACHE_TTL_H` e preserva tokens, custo, latência e origem. Os testes novos passam no banco `garra_engenharia_test`, `ruff check .` está limpo e o Doc registra o resultado.
+- **Prompt:**
+```text
+Tarefa (origem DEC-52, consequência «a coluna `resposta` guarda a legenda saneada sem política de retenção»). Siga a "Regra de pronto" do BACKLOG.md, inclusive o `git merge --ff-only main` inicial e o uso do banco `garra_engenharia_test`. Papel: backend (.github/agents/backend.agent.md).
+
+Contexto: a T68 criou a tabela `chamadas_ia` (migration `b8d4f2a6c1e7`) e o cache local da legenda IA, com TTL de `LEGENDA_IA_CACHE_TTL_H` (padrão 720 h; `0` desliga o cache). Leia a seção DEC-52 em 00_docs/projeto/decisoes.md, o doc 00_docs/backlog-auto/ia-telemetria-cache.md e o modelo/serviço de telemetria em 04_backend/app (procure por `chamadas_ia` e `LEGENDA_IA_CACHE_TTL_H`). Hoje a coluna `resposta` fica guardada para sempre. Isso é dado derivado de fotos de clientes.
+
+Faça: crie 04_backend/app/scripts/limpar_chamadas_ia.py, seguindo o estilo dos outros scripts de `app/scripts/` (argparse, `python -m app.scripts.limpar_chamadas_ia`). Por padrão é dry-run: conta e imprime quantas linhas teriam `resposta` anulada, sem escrever. Com `--aplicar` executa um UPDATE que põe `resposta = NULL` nas linhas com `resposta IS NOT NULL` e `criado_em` anterior a agora menos o TTL (aceite `--ttl-horas` para sobrescrever). NUNCA apague linhas nem altere tokens, custo, latência ou origem. Se o TTL for 0, o script deve usar o padrão de 720 h ou exigir `--ttl-horas`, e documentar a escolha. Garanta que o cache local não devolva `resposta` nula como acerto, ou registre no Doc o comportamento verificado (cache vazio é miss). Crie 04_backend/tests/test_limpar_chamadas_ia.py: dry-run não altera nada, `--aplicar` anula só as vencidas, linhas recentes ficam intactas, idempotência e preservação das demais colunas. Variável de ambiente nova: nenhuma prevista; se criar, ponha no .env.example. Rode `pytest` dos testes novos mais `tests/test_ia_*` relacionados e `ruff check .` em 04_backend. Se o PostgreSQL de 05_infra (localhost:5433) não estiver no ar, diga isso no Doc em vez de inventar resultado. Registre no Doc 00_docs/backlog-auto/ia-retencao-chamadas.md: o que foi feito, comandos, saída dos testes e uma proposta (não decisão) de agendamento semanal. Não edite 00_docs/projeto/*.md. Commit: `feat(backend): script de expurgo de resposta expirada em chamadas_ia (DEC-52)` com rodapé `Refs DEC-52`. Nunca faça push.
+```
+
+### T95 · Rota `PUT /responsaveis/{id}` usando o `ResponsavelUpdate` já existente
+- **Status:** todo
+- **Origem:** DEC-50
+- **Papel:** backend
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** baixa
+- **Toca:** 04_backend/app/api/v1/responsaveis.py, 04_backend/tests/test_responsaveis_update.py, 00_docs/backlog-auto/responsaveis-update.md
+- **Doc:** 00_docs/backlog-auto/responsaveis-update.md
+- **Pronto:** `PUT /api/v1/responsaveis/{id}` existe, aceita atualização parcial via `ResponsavelUpdate` e é restrito ao auditor (403 para auxiliar e cliente). Responde 404 para id inexistente e 422 para dados inválidos. Os testes novos passam no banco de testes, `ruff check .` está limpo e o Doc registra o resultado.
+- **Prompt:**
+```text
+Tarefa (origem DEC-50, consequência «`ResponsavelUpdate` existe sem rota»). Siga a "Regra de pronto" do BACKLOG.md, inclusive o `git merge --ff-only main` inicial e o banco `garra_engenharia_test`. Papel: backend (.github/agents/backend.agent.md).
+
+Contexto: o schema `ResponsavelUpdate` foi criado pela T57 em 04_backend/app/schemas/ mas nenhum endpoint o usa; hoje só existem `POST` e `GET /responsaveis` (DEC-23). Leia a seção DEC-50 de 00_docs/projeto/decisoes.md e 00_docs/backlog-auto/v1-fundacao-dados.md. Leia também 04_backend/app/api/v1/responsaveis.py, o modelo `Responsavel`, `app/api/deps.py` (`require_auditor`/`require_equipe`, BL-42) e como os outros routers (ex.: edificacoes.py) fazem `PUT` parcial (`model_dump(exclude_unset=True)`).
+
+Faça: adicione `PUT /api/v1/responsaveis/{responsavel_id}` em responsaveis.py. Só o auditor pode (use a dependência já existente). Atualização parcial: campo omitido não muda. Campos sem validação de unicidade/formatos já existentes no `POST` devem seguir as mesmas regras do `POST` (reaproveite validações; se houver unicidade de e-mail/CPF, responda 409). Não permita alterar `usuario_id` por esta rota se isso abrir escalada de privilégio: confira como o vínculo do Portal do Cliente (`Responsavel.usuario_id`, DEC-18) é feito e, se `ResponsavelUpdate` o expõe, bloqueie-o ou justifique no Doc. Não altere os schemas fora do estritamente necessário. Escreva 04_backend/tests/test_responsaveis_update.py: auditor atualiza (200 e persiste), parcial preserva campos, id inexistente 404, auxiliar e cliente 403, sem token 401, payload inválido 422, e conflito se aplicável. Rode esses testes, os testes de responsáveis/RBAC já existentes (`pytest tests -k "responsave or rbac"`) e `ruff check .` em 04_backend. Se o PostgreSQL (localhost:5433) estiver fora do ar, registre que não rodou. Registre tudo no Doc 00_docs/backlog-auto/responsaveis-update.md (contrato da rota, decisões tomadas como proposta, saída dos testes). Não edite 00_docs/projeto/*.md. Commit: `feat(backend): PUT /responsaveis/{id} (DEC-50)` com rodapé `Refs DEC-50`. Nunca faça push.
+```
+
+### T96 · Service Worker: logout em uma aba limpa o cache de dados nas outras abas
+- **Status:** todo
+- **Origem:** DEC-56
+- **Papel:** frontend
+- **Depende:** —
+- **Ambiente:** offline
+- **Dificuldade:** media
+- **Toca:** 03_frontend/lib/sw-cache.ts, 03_frontend/lib/auth-token.ts, 03_frontend/public/sw.js, 03_frontend/lib/tests/, 00_docs/backlog-auto/pwa-logout-multiaba.md
+- **Doc:** 00_docs/backlog-auto/pwa-logout-multiaba.md
+- **Pronto:** Fazer logout (`clearAuthToken`) em uma aba apaga o cache de dados do Service Worker também quando outra aba está aberta, via evento `storage` ou BroadcastChannel, sem quebrar o caso de uma aba só. Há teste unitário de lógica pura com `node --test`. `npm run lint` e `npm run build` passam e o Doc registra o resultado.
+- **Prompt:**
+```text
+Tarefa (origem DEC-56, consequência «Logout em outra aba não limpa o cache da aba atual (TTL limita a exposição)»). Siga a "Regra de pronto" do BACKLOG.md, inclusive o `git merge --ff-only main` inicial. Papel: frontend (.github/agents/frontend.agent.md). Comandos npm a partir de 03_frontend/.
+
+Contexto: a T77 (DEC-56) criou o Service Worker de cache só de leitura: 03_frontend/public/sw.js e 03_frontend/lib/sw-cache.ts. Leia a seção DEC-56 de 00_docs/projeto/decisoes.md e 00_docs/backlog-auto/pwa-service-worker.md. O logout (`clearAuthToken`, procure por essa função em 03_frontend/lib/) já manda apagar o cache de dados, mas só na aba que fez o logout. O token fica em `localStorage`, então o evento `storage` dispara nas outras abas do mesmo origin quando a chave do token é removida. O app é export estático com `basePath` (DEC-55): qualquer caminho deve respeitar `NEXT_PUBLIC_BASE_PATH`. Isso pode não ser o caso do canal de mensagens, mas confira.
+
+Faça: faça as outras abas apagarem o cache de dados ao detectar o logout (remoção/limpeza da chave do token, ou mensagem em BroadcastChannel), reaproveitando a função que já limpa o cache; não duplique a lógica nem mude a allowlist, TTLs ou o que é cacheado. Cuide de: ouvinte registrado uma só vez (sem vazamento em re-render do React/Next), cleanup do listener, e nenhum erro quando `localStorage`/`BroadcastChannel`/Service Worker não existem (SSR do build, navegador sem suporte). A lógica de decisão («este evento representa logout?») deve ficar em função pura exportada para ser testada por `node --test`, no padrão dos testes unitários que a T77 criou (descubra onde estão e siga a mesma convenção). Não toque em `e2e/` nem em `next.config.mjs`. Escreva os testes unitários (evento do token removido → limpa; outra chave → ignora; valor trocado por outro token → não limpa; ambiente sem API → sem erro). Rode os testes unitários existentes mais os novos, `npm run lint` e `npm run build`. Playwright é opcional; se não rodar, diga. Registre no Doc 00_docs/backlog-auto/pwa-logout-multiaba.md o mecanismo escolhido, a limitação restante (ex.: aba fechada, navegador sem suporte) e a saída dos comandos. Não edite 00_docs/projeto/*.md. Commit: `feat(frontend): logout limpa o cache do Service Worker em todas as abas (DEC-56)` com rodapé `Refs DEC-56`. Nunca faça push.
+```
+
+### T97 · Edificação com `cidade` e `uf` próprios e uso na cidade da emissão dos relatórios
+- **Status:** todo
+- **Origem:** DEC-50
+- **Papel:** backend
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** alta
+- **Toca:** 04_backend/app/models/edificacao.py, 04_backend/app/schemas/edificacao.py, 04_backend/alembic/versions/, 04_backend/app/services/report_generator/contexto_comum.py, 04_backend/tests/test_edificacao_cidade_uf.py, 00_docs/backlog-auto/edificacao-cidade-uf.md
+- **Doc:** 00_docs/backlog-auto/edificacao-cidade-uf.md
+- **Pronto:** `Edificacao` tem `cidade` e `uf` opcionais, com migration de `upgrade()` e `downgrade()` testados e um único head do Alembic. Os schemas de criação, atualização e leitura aceitam os campos (`uf` validado com 2 letras maiúsculas). O contexto comum dos relatórios usa `cidade/uf` quando existirem e, caso contrário, mantém o fallback atual (cidade extraída do endereço). Testes novos passam, os testes de emissão não regridem, `ruff check .` está limpo e o Doc registra o resultado.
+- **Prompt:**
+```text
+Tarefa (origem DEC-50, P5: «A cidade da emissão sai do endereço (`Cidade-UF`) até existir `cidade`/`uf` em `Edificacao`»). Siga a "Regra de pronto" do BACKLOG.md, inclusive o `git merge --ff-only main` inicial e o banco `garra_engenharia_test` (rode `alembic upgrade head` nele). Papel: backend (.github/agents/backend.agent.md). Comandos Python/alembic a partir de 04_backend/.
+
+Contexto: leia a seção DEC-50 em 00_docs/projeto/decisoes.md e 00_docs/backlog-auto/v1-emissao-generica.md. Hoje a cidade da emissão dos relatórios é extraída do campo livre `endereco` da `Edificacao` (formato esperado `Cidade-UF`) no montador compartilhado 04_backend/app/services/report_generator/contexto_comum.py (procure pela função que deriva a cidade). Os montadores `rfo_contexto.py`, `ltip_contexto.py`, `rfip_contexto.py` e os de vistorias usam esse comum. Não crie nenhum campo obrigatório: dados antigos continuam válidos.
+
+Faça: (1) adicione `cidade` (String, nullable, até 120) e `uf` (String(2), nullable) ao modelo `Edificacao` e aos schemas Create/Update/Read em 04_backend/app/schemas/edificacao.py; `uf` é normalizada para maiúsculas e validada (2 letras); string vazia vira `None`. (2) Crie migration Alembic nova (com `downgrade()`) cujo `down_revision` seja o único head atual: rode `alembic heads` ANTES. Se houver mais de um head (R-17), NÃO faça merge sem registrar: descreva a situação no Doc e use um `alembic merge` apenas se for necessário para os testes, dizendo isso claramente. A migration não reescreve dados nem faz backfill automático. Valide upgrade, downgrade e novo upgrade no banco de testes, e `alembic check`. (3) No `contexto_comum.py`, use `cidade` e `uf` quando preenchidas (formato de saída idêntico ao de hoje, ex. `Cidade-UF` ou o que o template já espera: confira nos testes existentes) e mantenha o fallback pelo endereço quando ausentes. Não mude os templates nem o `layout.json`. (4) Não altere o frontend; registre no Doc que o formulário de edificação (03_frontend/app/edificacoes/) ainda precisa expor os campos, como pendência para uma próxima tarefa. (5) Testes em 04_backend/tests/test_edificacao_cidade_uf.py: criação/atualização/leitura com e sem os campos, `uf` inválida → 422, normalização, e o contexto comum com cidade/uf preenchidas, só uma delas, e ausentes (fallback). Rode esses testes, os de edificações e `pytest tests -k "contexto or emissao or relatorio"` e `ruff check .`. Registre tudo que não rodar por falta de PostgreSQL ou WeasyPrint em vez de inventar resultado. Documente no Doc 00_docs/backlog-auto/edificacao-cidade-uf.md: o que mudou, a revisão do migration, o fallback e a saída dos testes. Não edite 00_docs/projeto/*.md. Commit: `feat(backend): cidade e uf em Edificacao usadas na emissao (DEC-50)` com rodapé `Refs DEC-50`. Nunca faça push.
+```
