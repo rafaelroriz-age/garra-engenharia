@@ -27,13 +27,16 @@ parte, como `ltip_pipeline.py`):
 - `sistemas`: lista de `{nome, <rótulo>: [parágrafos]}` (ex.: `constatacoes`, `fundamentacao_tecnica`)
 - `figuras`: lista de `{numero, legenda, foto_data_uri (HTML) | imagem (DOCX, InlineImage)}`
 - `tabelas`: dict `chave -> [linhas]`, cada linha com as chaves das colunas medidas
-- HTML: `logo_data_uri`, `capa_fundo_data_uri`, `assinatura_data_uri` (opcionais)
+- HTML: `logo_data_uri`, `capa_fundo_data_uri`, `assinatura_data_uri` (opcionais).
+  `logo_data_uri` (o SVG) só entra na capa; no cabeçalho corrido ele apenas liga o
+  logo, que sai do PNG embutido no template (DEC-54, ver `_logo_cabecalho_data_uri`).
 - DOCX: `assinatura_imagem` (InlineImage, opcional)
 """
 
 from __future__ import annotations
 
 import argparse
+import base64
 import html
 import json
 import sys
@@ -68,6 +71,20 @@ CABECALHO_GERADO = (
 def _e(texto: str) -> str:
     """Escapa rótulo fixo vindo do layout (placeholders `{{ }}` não têm `<>&`)."""
     return html.escape(texto, quote=False)
+
+
+def _logo_cabecalho_data_uri() -> str:
+    """PNG da marca como data URI, para o logo do cabeçalho corrido (DEC-54).
+
+    O WeasyPrint 70 redesenha o SVG vetorizado (76 KB) em cada página de um
+    elemento `running()` (~0,12 s por página, T76). O PNG de `build_brand_assets`
+    tem a mesma arte e 600 px de largura (≈ 400 dpi nos 109 pt do cabeçalho).
+    Embutido no template porque o `url_fetcher` dos pipelines só resolve `data:`
+    e as fotos registradas (DEC-41).
+    """
+    if not LOGO_PNG.is_file():
+        raise FileNotFoundError(f"{LOGO_PNG} não existe: rode `python -m app.scripts.build_brand_assets`.")
+    return "data:image/png;base64," + base64.b64encode(LOGO_PNG.read_bytes()).decode("ascii")
 
 
 def _fonte_do_nivel(layout: dict[str, Any], nivel: int) -> float:
@@ -461,7 +478,7 @@ def gerar_html(layout: dict[str, Any]) -> str:
 </style>
 </head>
 <body>
-  <div class="cabecalho">{{% if logo_data_uri %}}<img src="{{{{ logo_data_uri }}}}" alt="Garra Engenharia">{{% endif %}}</div>
+  <div class="cabecalho">{{% if logo_data_uri %}}<img src="{_logo_cabecalho_data_uri()}" alt="Garra Engenharia">{{% endif %}}</div>
   <div class="rodape">
 {linhas_rodape}
   </div>
