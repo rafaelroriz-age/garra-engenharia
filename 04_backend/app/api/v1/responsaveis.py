@@ -12,6 +12,8 @@ gap de integração encontrado ao implementar os testes E2E (BL-21).
   (volume esperado é baixo: fiscais/executoras/contratantes de um único
   engenheiro ou pequena equipe).
 - `POST /responsaveis` — cria um Responsável.
+- `PUT /responsaveis/{id}` — atualização parcial (DEC-50): só o auditor; campo
+  omitido não muda; `usuario_id` segue a regra do `POST` (ver `atualizar_responsavel`).
 
 Leitura liberada à equipe (`auditor`/`auxiliar`); criação restrita ao `auditor`
 (RN-18, DEC-27) — responsável técnico/legal é dado contratual, não de campo.
@@ -20,13 +22,14 @@ import uuid
 
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import require_auditor, require_equipe
 from app.core.database import get_db
-from app.core.errors import NotFoundError
+from app.core.errors import ConflictError, DomainError, NotFoundError
 from app.models import Responsavel, Usuario
-from app.schemas import ResponsavelCreate, ResponsavelRead
+from app.schemas import ResponsavelCreate, ResponsavelRead, ResponsavelUpdate
 
 router = APIRouter(prefix="/api/v1/responsaveis", tags=["responsaveis"])
 
@@ -55,6 +58,54 @@ async def criar_responsavel(
     responsavel = Responsavel(**dados.model_dump())
     db.add(responsavel)
     await db.commit()
+    await db.refresh(responsavel)
+    return responsavel
+
+
+@router.put("/{responsavel_id}", response_model=ResponsavelRead)
+async def atualizar_responsavel(
+    responsavel_id: uuid.UUID,
+    dados: ResponsavelUpdate,
+    db: AsyncSession = Depends(get_db),
+    _usuario: Usuario = Depends(require_auditor),
+) -> Responsavel:
+    """Atualização parcial de um Responsável (DEC-50). Só o auditor.
+
+    Só os campos presentes no corpo mudam (`exclude_unset`). `nome` e `tipo`
+    são obrigatórios no banco: `null` explícito é 422. `usuario_id` segue a
+    mesma regra do `POST`: ele concede acesso ao Portal do Cliente (DEC-18), e
+    só o auditor o altera; o usuário precisa existir e não pode já estar
+    vinculado a outro Responsável (409). `null` desfaz o vínculo.
+    """
+    responsavel = await db.get(Responsavel, responsavel_id)
+    if responsavel is None:
+        raise NotFoundError(f"Responsável {responsavel_id} não encontrado.")
+
+    alteracoes = dados.model_dump(exclude_unset=True)
+    for campo in ("nome", "tipo"):
+        if campo in alteracoes and alteracoes[campo] is None:
+            raise DomainError(detail=f"O campo '{campo}' é obrigatório e não pode ser nulo.")
+
+    novo_usuario_id = alteracoes.get("usuario_id")
+    if novo_usuario_id is not None and novo_usuario_id != responsavel.usuario_id:
+        if await db.get(Usuario, novo_usuario_id) is None:
+            raise DomainError(detail=f"Usuário {novo_usuario_id} não encontrado.")
+        ocupado = await db.execute(
+            select(Responsavel.id).where(
+                Responsavel.usuario_id == novo_usuario_id,
+                Responsavel.id != responsavel_id,
+            )
+        )
+        if ocupado.first() is not None:
+            raise ConflictError(f"O usuário {novo_usuario_id} já está vinculado a outro Responsável.")
+
+    for campo, valor in alteracoes.items():
+        setattr(responsavel, campo, valor)
+    try:
+        await db.commit()
+    except IntegrityError as exc:
+        await db.rollback()
+        raise ConflictError("Conflito de unicidade ao atualizar o Responsável (usuario_id).") from exc
     await db.refresh(responsavel)
     return responsavel
 
