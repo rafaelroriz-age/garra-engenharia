@@ -122,3 +122,21 @@ export function cacheKeyUrl(rule: CacheRule, url: string, authFingerprint: strin
   u.searchParams.set("__sw_u", authFingerprint);
   return u.toString();
 }
+
+/** Subconjunto de `StorageEvent` usado na decisão (testável sem DOM). */
+export interface StorageEventLike {
+  key: string | null;
+  newValue: string | null;
+}
+
+/**
+ * Um evento `storage` de outra aba representa logout? Sim quando a chave do token
+ * foi removida (`newValue === null`) ou o storage inteiro foi limpo (`key === null`).
+ * Token trocado por outro (login/refresh) não é logout: o cache por usuário já é
+ * segregado pelo fingerprint do token (`cacheKeyUrl`).
+ */
+export function isLogoutStorageEvent(ev: StorageEventLike | null | undefined, tokenKey: string): boolean {
+  if (!ev) return false;
+  if (ev.key === null) return ev.newValue === null;
+  return ev.key === tokenKey && ev.newValue === null;
+}
