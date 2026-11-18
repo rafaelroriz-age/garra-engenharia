@@ -1789,7 +1789,7 @@ Faça: (1) adicione `cidade` (String, nullable, até 120) e `uf` (String(2), nul
 ```
 
 ### T98 · Frontend: enviar e exibir cidade e UF na Edificação
-- **Status:** doing
+- **Status:** done
 - **Origem:** T97
 - **Papel:** Engenheiro Frontend
 - **Depende:** —
