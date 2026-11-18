@@ -1819,7 +1819,7 @@ Contexto: `sinalizar_fotos_ia_em_rascunho(fotos)` existe em 04_backend/app/servi
 ```
 
 ### T100 · Frontend: mostrar na tela de relatório o aviso de fotos com legenda IA em rascunho
-- **Status:** todo
+- **Status:** doing
 - **Origem:** T36
 - **Papel:** Engenheiro Frontend
 - **Depende:** T99
