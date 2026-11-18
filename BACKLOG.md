@@ -1048,7 +1048,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T102 · Limite de corpo no proxy para o upload de fotos
-- **Status:** todo
+- **Status:** doing
 - **Origem:** T19
 - **Papel:** Engenheiro DevOps
 - **Depende:** —
@@ -1468,7 +1468,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T101 · Reabrir E2E da DEC-26: escrita sem rede falha com erro explícito
-- **Status:** todo
+- **Status:** doing
 - **Origem:** T78
 - **Papel:** Engenheiro Frontend
 - **Depende:** —
@@ -1789,7 +1789,7 @@ Faça: (1) adicione `cidade` (String, nullable, até 120) e `uf` (String(2), nul
 ```
 
 ### T98 · Frontend: enviar e exibir cidade e UF na Edificação
-- **Status:** todo
+- **Status:** doing
 - **Origem:** T97
 - **Papel:** Engenheiro Frontend
 - **Depende:** —
@@ -1804,7 +1804,7 @@ Contexto: a T97 (migration `d3e7a1c5f9b2`) adicionou `cidade` (str|None, máx. 1
 ```
 
 ### T99 · Backend: alertar na geração do relatório quando há fotos com legenda IA em rascunho
-- **Status:** todo
+- **Status:** doing
 - **Origem:** T36
 - **Papel:** Engenheiro Backend
 - **Depende:** —
