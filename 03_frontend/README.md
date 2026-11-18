@@ -82,6 +82,8 @@ npm run lint    # ESLint
 
 `public/sw.js` (registrado por `components/sw-register.tsx` só em produção) cacheia apenas GETs de leitura: dados mestre (24 h) e contratos (5 min, por usuário); entrada vencida não é servida. Escritas não são interceptadas e falham sem rede, sem fila. Navegação sem rede cai em `/offline.html`; o logout limpa o cache. Regras puras em `lib/sw-cache.ts`, testadas com `npm run test:unit` (`node --test`). Detalhes e limitações: [pwa-service-worker.md](../00_docs/backlog-auto/pwa-service-worker.md). Pendente: `basePath` do GitHub Pages no registro e teste em navegador real (R-22).
 
+Logout em uma aba limpa o cache de dados do SW nas demais (T96): `sw-register.tsx` ouve o evento `storage` da chave do token (`isLogoutStorageEvent` em `lib/sw-cache.ts`). Aba fechada no logout não é limpa; vale o TTL.
+
 ## Notas de implementação
 
 - **UI kit**: [shadcn/ui](https://ui.shadcn.com) (CLI clássica `2.10.0`, estilo `new-york`, Tailwind v3.4 — **não** a v4/"Nova" preset, incompatível com este projeto).
