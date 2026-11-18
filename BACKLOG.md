@@ -1202,7 +1202,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T91 · Embutir o gabarito de sistemas prediais na imagem do backend (seed sem depender de 00_docs/)
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-51
 - **Papel:** Engenheiro Backend
 - **Depende:** —
