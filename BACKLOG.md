@@ -1702,7 +1702,7 @@ Faça: crie 04_backend/app/scripts/limpar_chamadas_ia.py, seguindo o estilo dos 
 ```
 
 ### T95 · Rota `PUT /responsaveis/{id}` usando o `ResponsavelUpdate` já existente
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-50
 - **Papel:** backend
 - **Depende:** —
