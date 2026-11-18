@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 
+import { AUTH_TOKEN_STORAGE_KEY } from "@/lib/api-client";
+import { isLogoutStorageEvent } from "@/lib/sw-cache";
 import { withBasePath } from "@/lib/utils";
 
 /** Evento disparado por `clearAuthToken()` no logout (ver lib/api-client.ts). */
@@ -20,8 +22,17 @@ export function SwRegister() {
     function limpar() {
       navigator.serviceWorker.controller?.postMessage({ type: "CLEAR_DATA_CACHE" });
     }
+    // Logout em outra aba: o `storage` só dispara nas DEMAIS abas do mesmo origin
+    // (a aba que fez o logout usa SW_CLEAR_EVENT). Reaproveita `limpar` (DEC-56).
+    function aoMudarStorage(ev: StorageEvent) {
+      if (isLogoutStorageEvent(ev, AUTH_TOKEN_STORAGE_KEY)) limpar();
+    }
     window.addEventListener(SW_CLEAR_EVENT, limpar);
-    return () => window.removeEventListener(SW_CLEAR_EVENT, limpar);
+    window.addEventListener("storage", aoMudarStorage);
+    return () => {
+      window.removeEventListener(SW_CLEAR_EVENT, limpar);
+      window.removeEventListener("storage", aoMudarStorage);
+    };
   }, []);
 
   return null;

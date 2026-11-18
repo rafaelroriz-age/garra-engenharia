@@ -12,6 +12,7 @@ import {
   isNeverIntercepted,
   isCacheableResponse,
   isFresh,
+  isLogoutStorageEvent,
   matchCacheRule,
 } from "./sw-cache.ts";
 
@@ -117,4 +118,27 @@ test("public/sw.js resolve a página offline pelo scope (basePath do Pages)", ()
   const sw = readFileSync(new URL("../public/sw.js", import.meta.url), "utf8");
   assert.match(sw, /new URL\("offline\.html", self\.registration\.scope\)/);
   assert.doesNotMatch(sw, /OFFLINE_URL = "\//);
+});
+
+const TOKEN_KEY = "garra:access_token";
+
+test("logout em outra aba: token removido limpa o cache", () => {
+  assert.equal(isLogoutStorageEvent({ key: TOKEN_KEY, newValue: null }, TOKEN_KEY), true);
+});
+
+test("logout em outra aba: storage.clear() (key null) limpa o cache", () => {
+  assert.equal(isLogoutStorageEvent({ key: null, newValue: null }, TOKEN_KEY), true);
+});
+
+test("logout em outra aba: outra chave é ignorada", () => {
+  assert.equal(isLogoutStorageEvent({ key: "outra", newValue: null }, TOKEN_KEY), false);
+});
+
+test("logout em outra aba: token trocado por outro não limpa", () => {
+  assert.equal(isLogoutStorageEvent({ key: TOKEN_KEY, newValue: "novo.jwt" }, TOKEN_KEY), false);
+});
+
+test("logout em outra aba: evento ausente (ambiente sem API) não lança", () => {
+  assert.equal(isLogoutStorageEvent(undefined, TOKEN_KEY), false);
+  assert.equal(isLogoutStorageEvent(null, TOKEN_KEY), false);
 });

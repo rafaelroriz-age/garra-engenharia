@@ -54,7 +54,7 @@ import {
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
-const AUTH_TOKEN_STORAGE_KEY = "garra:access_token";
+export const AUTH_TOKEN_STORAGE_KEY = "garra:access_token";
 
 /** Campo a campo de violação de validação, conforme o contrato RFC 7807 (Seção 10.7). */
 export interface ProblemFieldError {
