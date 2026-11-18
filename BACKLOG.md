@@ -1834,7 +1834,7 @@ Contexto: a tarefa B (Doc 00_docs/backlog-auto/relatorio-alerta-ia-rascunho.md) 
 ```
 
 ### T103 · POST /responsaveis com usuario_id já vinculado deve devolver 409 em vez de 500
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-59
 - **Papel:** Engenheiro Backend
 - **Depende:** —
@@ -1853,7 +1853,7 @@ Tarefa: faça o POST se comportar como o PUT nesse ponto, reutilizando a mesma v
 ```
 
 ### T104 · PUT /edificacoes/{id} não pode zerar cidade/uf quando o corpo não os envia
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-59
 - **Papel:** Engenheiro Backend
 - **Depende:** —
@@ -1872,7 +1872,7 @@ Tarefa: faça a atualização distinguir 'campo ausente' de 'campo enviado como 
 ```
 
 ### T105 · Telemetria da IA: gravar SQL NULL (não JSON null) em chamadas_ia.resposta
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-59
 - **Papel:** Engenheiro Backend
 - **Depende:** —
