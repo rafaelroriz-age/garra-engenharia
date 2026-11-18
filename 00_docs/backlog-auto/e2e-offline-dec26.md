@@ -1,26 +1,34 @@
 # E2E offline online-first (DEC-26) — T78
 
-**Status: NÃO EXECUTADA — pré-requisito ausente neste worktree.**
+**Status: EXECUTADA (retomada na T101) — 2 cenários, 2 passaram (Chromium, build de produção).**
 
-## Verificação do pré-requisito
+Histórico: a T78 original foi marcada `done` sem executar, pois a branch não continha o Service Worker da T77 (`sw.js`, `offline.html`). Com o SW em `main` (DEC-26, DEC-56), o spec foi escrito e rodado.
 
-- `03_frontend/public/` contém apenas `brand/`, `icon.svg` e `manifest.json`; **não existem** `sw.js` nem `offline.html`.
-- `git ls-files` na branch `worktree-backlog-T78` não retorna nenhum arquivo de Service Worker.
-- O commit `d374837` ("feat(frontend): service worker de leitura e fallback offline (DEC-26)", tarefa A/T77) existe, mas está contido apenas em `main`; a branch deste worktree foi criada antes dele e não o inclui.
-- Conforme a instrução da tarefa, parei antes de escrever o spec. Não rodei nada (nem Playwright, nem lint, nem PostgreSQL/stack).
+## Entregáveis
 
-## O que já foi levantado para a retomada
+- `03_frontend/e2e/offline-dec26.spec.ts` — os dois cenários.
+- `03_frontend/playwright.offline.config.ts` — config separado (`playwright.config.ts` não foi alterado). O `webServer` roda `npm run build && node e2e/servir-out.mjs` com `NEXT_PUBLIC_API_URL=http://api.e2e.test:8000/api/v1`, `NEXT_PUBLIC_API_DISCOVERY_URL=""` (descoberta desligada, para a falha de rede virar erro explícito e não modo leitura) e `NEXT_PUBLIC_BASE_PATH=""`.
+- `03_frontend/e2e/servir-out.mjs` — servidor estático Node puro para `out/`.
+- Execução (a partir de `03_frontend/`): `npx playwright test -c playwright.offline.config.ts`.
 
-- E2E existentes: `03_frontend/e2e/*.spec.ts`, helpers em `e2e/helpers.ts` e `e2e/inspecao-helpers.ts`, config em `03_frontend/playwright.config.ts`, scripts `test:e2e`, `test:e2e:ui`, `test:e2e:report` no `package.json`. Reutilizar os helpers de login/seed.
-- `e2e/visitas-ocorrencias.spec.ts` é o ponto de partida para as ações de escrita (criar visita/ocorrência).
-- O spec `offline-dec26` precisará de config Playwright separada (ex.: `playwright.offline.config.ts`) com `webServer` em `npm run build && npm run start`, pois o SW só registra em produção. Não alterar o `playwright.config.ts` atual.
+**Desvio do pedido:** a tarefa pedia `npm run start`, mas o app usa `output: "export"` (`next.config.mjs`) e `next start` não serve o export estático. Usa-se `servir-out.mjs` no lugar (mesma abordagem do `sw-basepath.spec.ts`).
 
-## Como retomar
+## Cenários
 
-1. Integrar `main` (ao menos `d374837`) nesta branch (`git merge main` no worktree) ou refazer a tarefa a partir de `main`.
-2. Subir PostgreSQL/stack (`docker compose` em `05_infra/`, localhost:5433) e o backend.
-3. Executar os passos 2–5 da tarefa (spec, `npx playwright test`, `npm run lint`, atualizar este Doc).
+1. **Leitura offline.** Online, carrega `GET /sistemas-prediais` e `GET /contratos` (com `Authorization`) e confere que ficaram no cache do SW. Com `context.setOffline(true)`, as duas leituras seguem respondendo do cache dentro do TTL (mesmo com a "rede" mockada devolvendo outra versão). `GET /edificacoes` (fora da allowlist) falha com erro de rede. A navegação para `/edificacoes/` cai no `offline.html` (título "Sem conexão", "Você está sem conexão").
+2. **Escrita offline.** Em `/edificacoes/`, preenche "Nova edificação", corta a rede e envia: o diálogo continua aberto com o alerta de erro "Falha de conexão / Não foi possível conectar ao servidor". Verificado: nenhum POST chegou ao mock; `indexedDB.databases()` vazio; `localStorage` sem chave de fila (`fila|queue|pend|outbox|sync`) e sem o dado digitado; nenhum request não-GET nem de `/edificacoes` nos caches (`caches`). Ao reconectar, 1,5 s depois nada é reenviado.
+
+## O que foi mockado
+
+Toda a API, via `context.route` (necessário para o SW enxergar as requisições): `/auth/me` (auditor), `GET /sistemas-prediais` e `GET /contratos` (corpo `{versao, rota}`), `GET /edificacoes` (lista vazia), `POST /edificacoes` (contador). Com a rede "cortada" o mock aborta (`internetdisconnected`) além do `setOffline(true)`. O token é falso, em `localStorage`. **Não foi testado contra o backend real**, então o formato real das respostas e a UI com dados reais não foram exercitados.
+
+## Resultado da execução
+
+- `npx playwright test -c playwright.offline.config.ts`: **2 passed** (≈10 s), Chromium, incluindo o `npm run build` de produção feito pelo `webServer`.
+- `npm run lint`: sem avisos nem erros. `npx tsc --noEmit`: sem erros.
+- Backend/pytest não aplicável (só frontend alterado; nenhum PostgreSQL usado).
 
 ## Lacunas / propostas
 
-Nenhuma avaliada ainda: a UI de erro de escrita sem rede não foi inspecionada.
+- O E2E offline não faz parte do `playwright.config.ts` nem de CI; rodar manualmente (ou incluir um job próprio). Proposta: adicionar script `test:e2e:offline` ao `package.json` em tarefa futura.
+- A primeira execução em foreground travou o terminal por falta de saída (build longo); em ambientes interativos rodar com `--reporter=list`.
