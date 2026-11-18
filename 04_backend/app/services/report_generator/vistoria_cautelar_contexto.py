@@ -26,6 +26,7 @@ from app.core.errors import ConflictError, NotFoundError
 from app.models import Contrato, Foto, Inspecao, Ocorrencia, Responsavel
 from app.models.tipo_servico import TipoServico
 from app.services import relatorio_conteudo_service
+from app.services.report_generator.contexto_comum import cidade_emissao
 from app.services.report_generator.legenda_foto import legenda_para_relatorio
 
 TIPO_VISTORIA_CAUTELAR = TipoServico.VISTORIA_CAUTELAR.value
@@ -208,7 +209,7 @@ async def montar_contexto_vistoria_cautelar(db: AsyncSession, inspecao_id: uuid.
         "obra": {"descricao": contrato.objeto},
         "edificacao": {"nome": edificacao.nome},
         "data_emissao": dados.get("data_emissao") or date.today().isoformat(),
-        "local_emissao": dados.get("local_emissao") or cidade_do_endereco(edificacao.endereco),
+        "local_emissao": dados.get("local_emissao") or cidade_emissao(edificacao, cidade_do_endereco),
         "conteudo": conteudo,
         "complementos": {"parecer_tecnico": dados.get("parecer")},
         "tabelas": {

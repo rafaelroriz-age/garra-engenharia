@@ -39,6 +39,7 @@ from app.services.relatorio_conteudo_service import (
     preencher_placeholders,
     textos_padrao,
 )
+from app.services.report_generator.contexto_comum import cidade_emissao
 from app.services.report_generator.imagem import otimizar_imagem
 from app.services.report_generator.legenda_foto import legenda_para_relatorio
 from app.services.storage import StorageClient
@@ -314,7 +315,9 @@ async def montar_contexto_vistoria_residencial(db: AsyncSession, inspecao_id: uu
         "edificacao": edificacao_ctx,
         "fiscal": fiscal_ctx,
         "data_emissao": _data_iso(dados.get("data_emissao")) or hoje(),
-        "local_emissao": _texto(dados.get("local_emissao")) or cidade_do_endereco(edificacao.endereco) or VAZIO,
+        "local_emissao": _texto(dados.get("local_emissao"))
+        or cidade_emissao(edificacao, cidade_do_endereco)
+        or VAZIO,
         "textos": textos,
         "fotos": fotos,
         "sistemas": sistemas,

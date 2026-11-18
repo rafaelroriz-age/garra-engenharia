@@ -8,6 +8,7 @@ Campo de texto vazio vira '—' (DEC-33); número ausente fica `None` (o pipelin
 from __future__ import annotations
 
 import uuid
+from collections.abc import Callable
 from datetime import date
 from typing import Any
 
@@ -103,6 +104,32 @@ def edificacao_ctx(edificacao: Any) -> dict[str, Any]:
         "descricao_pavimentos": texto_ou_traco(edificacao.descricao_pavimentos),
         "area_total_m2": edificacao.area_total_m2,
     }
+
+
+def cidade_emissao(
+    edificacao: Any, extrair_do_endereco: Callable[[str | None], str | None] | None = None
+) -> str | None:
+    """Local de emissão `Cidade-UF` da edificação (DEC-50 P5); None se não houver como saber.
+
+    - `cidade` e `uf` preenchidas: `f"{cidade}-{uf}"` (mesmo formato que o endereço produz).
+    - Só a `cidade`: usa o resultado do endereço se ele for dessa cidade (completa a UF);
+      senão, a cidade sozinha (o campo explícito prevalece sobre o endereço livre).
+    - Só a `uf` ou nenhuma: fallback pelo endereço (`extrair_do_endereco`), como antes; a UF
+      sozinha não identifica o local.
+
+    `extrair_do_endereco` é o parser do montador (cautelar e residencial têm o seu); sem ele, só
+    os campos explícitos contam.
+    """
+    cidade = (getattr(edificacao, "cidade", None) or "").strip()
+    uf = (getattr(edificacao, "uf", None) or "").strip().upper()
+    if cidade and uf:
+        return f"{cidade}-{uf}"
+    do_endereco = extrair_do_endereco(getattr(edificacao, "endereco", None)) if extrair_do_endereco else None
+    if cidade:
+        if do_endereco and do_endereco.rsplit("-", 1)[0].strip().casefold() == cidade.casefold():
+            return do_endereco
+        return cidade
+    return do_endereco
 
 
 def contrato_ctx(contrato: Contrato) -> dict[str, Any]:

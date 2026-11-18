@@ -25,6 +25,9 @@ class Edificacao(Base):
     nome: Mapped[str] = mapped_column(String, nullable=False)
     endereco: Mapped[str] = mapped_column(String, nullable=False)
     cep: Mapped[str] = mapped_column(String, nullable=True)
+    # DEC-50 P5: local de emissão dos relatórios; ausentes, a emissão extrai do `endereco`.
+    cidade: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    uf: Mapped[str | None] = mapped_column(String(2), nullable=True)
     tipologia: Mapped[str] = mapped_column(String, nullable=True)
     sistema_construtivo: Mapped[str] = mapped_column(String, nullable=True)
     descricao_pavimentos: Mapped[str] = mapped_column(Text, nullable=True)
