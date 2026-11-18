@@ -162,6 +162,18 @@ export default function EdificacaoDetailPage() {
                 <dt className="text-muted-foreground">CEP</dt>
                 <dd className="font-medium">{edificacao.cep ?? "—"}</dd>
               </div>
+              {edificacao.cidade ? (
+                <div>
+                  <dt className="text-muted-foreground">Cidade</dt>
+                  <dd className="font-medium">{edificacao.cidade}</dd>
+                </div>
+              ) : null}
+              {edificacao.uf ? (
+                <div>
+                  <dt className="text-muted-foreground">UF</dt>
+                  <dd className="font-medium">{edificacao.uf}</dd>
+                </div>
+              ) : null}
               <div>
                 <dt className="text-muted-foreground">Sistema construtivo</dt>
                 <dd className="font-medium">{edificacao.sistema_construtivo ?? "—"}</dd>
