@@ -56,6 +56,8 @@ O backend lê a configuração pela classe `Settings` (`04_backend/app/core/conf
 | `JWT_ALGORITHM` | `HS256` | B, I, R | — | algoritmo do JWT |
 | `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` | `60` | B, I, R | — | validade do token |
 
+**Storage e Neon (DEC-58 P5):** o Neon hospeda só o banco. Embora ofereça bucket, o storage de arquivos permanece no MinIO/S3-compatível (`MINIO_*`) ou em disco local (`STORAGE_PROVEDOR`); nenhuma variável nova é necessária.
+
 **Storage em produção:** as variáveis `MINIO_*` estão comentadas no `render.yaml` ("FICOU FORA do escopo deste Blueprint") e vazias no `.env.render.example`. Sem elas, os padrões de `Settings` apontam para `localhost:9000` sem credenciais. O próprio `render.yaml` avisa que os endpoints de upload e foto falham nesse caso. Se a produção atual tem storage configurado no Dashboard: **não determinado**.
 
 ## 2. Scripts do backend

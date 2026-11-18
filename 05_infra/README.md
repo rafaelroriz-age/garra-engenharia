@@ -222,6 +222,7 @@ O Postgres portátil do PC (DEC-57 P1) passa a ser **opcional e fallback**: cont
 ### Operação
 
 - **`POSTGRES_SSL=true` é obrigatório no Neon.** Acrescenta `?ssl=require` à URL do banco (`config.py`). O `alembic`, as migrations e o backend usam a mesma URL.
+- **Storage de arquivos fora do Neon (por ora):** o Neon também oferece bucket, mas a DEC-58 (P5) mantém fotos e relatórios no MinIO/S3-compatível (`MINIO_*`) ou no disco local (`STORAGE_PROVEDOR=local`). Só o banco está no Neon; migrar o bucket é evolução futura.
 - **Cold start:** o Neon escala a zero após ociosidade (cerca de 5 min). A primeira conexão pode levar 1 a 2 s, ou falhar. Se o `start` falhar, rode de novo.
 - **Backup:** o plano gratuito do Neon **não substitui backup próprio**. `garra-local.ps1 backup` (e a rotina diária do agente, T82) faz `pg_dump -Fc` contra o Neon com `PGSSLMODE=require`, grava em `05_infra\local\backups\garra-AAAAMMDD-HHmm.dump` e mantém os últimos `BACKUP_RETENCAO` (padrão 14). O `pg_dump` precisa ser de versão igual ou maior que a do servidor Neon. O setup instala o PostgreSQL 16 portátil; se o servidor estiver em versão maior, o `pg_dump` recusa e o log mostra a versão.
 - **Restaurar em outro banco:** use o `pg_restore` de `05_infra\local\bin\pgsql\bin` com `PGSSLMODE=require` e a conexão direta do banco de destino (sem escrever a URL em arquivo ou no histórico):
