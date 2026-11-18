@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings
@@ -39,6 +39,11 @@ class Precos:
             entrada_cache_miss=settings.deepseek_preco_entrada_cache_miss_usd,
             saida=settings.deepseek_preco_saida_usd,
         )
+
+
+def tem_resposta():
+    """Filtro SQL: a linha tem legenda de verdade. Cobre SQL NULL e JSON `null` (o ORM grava `None` em JSONB como 'null')."""
+    return func.coalesce(func.jsonb_typeof(ChamadaIA.resposta), "null") != "null"
 
 
 def chave_cache(prompt_hash: str, modelo: str, contexto: ContextoLegenda, extra: str = "") -> str:
@@ -100,14 +105,16 @@ async def buscar_em_cache(db: AsyncSession, chave: str, ttl_h: int) -> LegendaIA
                 ChamadaIA.chave_cache == chave,
                 ChamadaIA.sucesso.is_(True),
                 ChamadaIA.origem == "api",
-                ChamadaIA.resposta.is_not(None),
+                tem_resposta(),
                 ChamadaIA.criado_em >= limite,
             )
             .order_by(ChamadaIA.criado_em.desc())
             .limit(1)
         )
     ).scalar_one_or_none()
-    return _resultado(linha.resposta) if linha is not None else None
+    if linha is None or linha.resposta is None:  # resposta nula nunca é acerto (DEC-52)
+        return None
+    return _resultado(linha.resposta)
 
 
 async def registrar(
