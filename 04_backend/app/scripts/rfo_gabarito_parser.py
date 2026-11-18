@@ -23,11 +23,19 @@ O arquivo tem duas seções relevantes:
 """
 from __future__ import annotations
 
+import json
+import logging
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 RFO_INSPECAO_MD = (
     Path(__file__).resolve().parents[3] / "00_docs" / "convertidos" / "RFO_INSPECAO.md"
 )
+
+# Gabarito embutido (DEC-51): cópia JSON gerada por `exportar_gabarito_embutido`,
+# usada quando o Markdown não está disponível (ex.: imagem Docker só com 04_backend).
+GABARITO_EMBUTIDO_JSON = Path(__file__).resolve().parents[1] / "data" / "gabarito_rfo.json"
 
 # Colunas (1-based, correspondentes a `Col_N` da tabela GABARITO) que trazem o
 # Subsistema de cada um dos 13 Sistemas com coluna própria na planilha original.
@@ -189,6 +197,19 @@ def parse_relatorio_subsistemas_por_sistema() -> dict[str, list[str]]:
 
 
 def build_gabarito() -> dict[str, object]:
+    """Gabarito completo: prefere o Markdown; sem ele, usa o JSON embutido (DEC-51)."""
+    if RFO_INSPECAO_MD.exists():
+        logger.info("Gabarito lido do Markdown: %s", RFO_INSPECAO_MD)
+        return build_gabarito_from_markdown()
+    if not GABARITO_EMBUTIDO_JSON.exists():
+        raise FileNotFoundError(
+            f"Gabarito não encontrado: nem {RFO_INSPECAO_MD} nem {GABARITO_EMBUTIDO_JSON}"
+        )
+    logger.info("Markdown ausente; gabarito lido do JSON embutido: %s", GABARITO_EMBUTIDO_JSON)
+    return json.loads(GABARITO_EMBUTIDO_JSON.read_text(encoding="utf-8"))
+
+
+def build_gabarito_from_markdown() -> dict[str, object]:
     """Combina `## GABARITO` (fonte principal) com `## Relatório` (complemento).
 
     Para sistemas cuja tabela GABARITO não trouxe nenhum subsistema, usa os
