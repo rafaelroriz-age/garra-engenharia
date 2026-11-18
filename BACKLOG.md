@@ -1683,7 +1683,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Esta tarefa exige
 ## Bloco H — Acabamento das consequências abertas das decisões propostas (DEC-50/51/52/56)
 
 ### T94 · Legenda IA: expurgo de `resposta` expirada em `chamadas_ia` (script com dry-run)
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-52
 - **Papel:** backend
 - **Depende:** —
