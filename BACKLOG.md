@@ -1832,3 +1832,60 @@ Contexto: `sinalizar_fotos_ia_em_rascunho(fotos)` existe em 04_backend/app/servi
 ```text
 Contexto: a tarefa B (Doc 00_docs/backlog-auto/relatorio-alerta-ia-rascunho.md) acrescentou ao schema de resposta da geração/emissão do relatório um campo de alerta com as fotos cuja legenda IA ainda está em rascunho (leia o Doc para o nome e o formato exatos e confira em 04_backend/app/schemas/relatorio.py). Tarefa: em 03_frontend/app/inspecoes/relatorio/page.tsx, trate esse campo após gerar/emitir: se houver itens, mostre um aviso visível e não bloqueante (ex.: «N foto(s) com legenda IA ainda em rascunho; só legendas aprovadas aparecem no relatório»), com o estilo de alertas já usado no app; se vier vazio ou ausente, não mostre nada. Atualize o tipo TypeScript da resposta. Não altere o backend. Rode `npm run lint` e `npm run build` a partir de 03_frontend/. Registre em 00_docs/backlog-auto/relatorio-alerta-ia-rascunho-frontend.md o que mudou (arquivo:linha), os comandos, a saída e o que não foi testado em navegador. Siga a 'Regra de pronto' do BACKLOG.md. Não edite os documentos de gestão em 00_docs/projeto/ nem o BACKLOG.md. Commit: `feat(frontend): aviso de legendas IA em rascunho na tela de relatório (BL-38)` com `Refs BL-38`. Não faça push.
 ```
+
+### T103 · POST /responsaveis com usuario_id já vinculado deve devolver 409 em vez de 500
+- **Status:** todo
+- **Origem:** DEC-59
+- **Papel:** Engenheiro Backend
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** baixa
+- **Toca:** 04_backend/app/api/v1/responsaveis.py, 04_backend/tests/test_responsaveis.py, 00_docs/backlog-auto/responsaveis-409-usuario.md
+- **Doc:** 00_docs/backlog-auto/responsaveis-409-usuario.md
+- **Pronto:** pytest tests/test_responsaveis.py tests/test_responsaveis_update.py verde (PostgreSQL de 05_infra em localhost:5433 no ar), com teste novo que cria dois responsáveis com o mesmo usuario_id e espera 409 no segundo POST; usuario_id inexistente no POST devolve 422, como no PUT; ruff check . limpo; Doc registra o resultado e o que foi decidido.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório) e as regras do projeto: monorepo (docs em 00_docs/, backend em 04_backend/), comandos Python a partir de 04_backend/, commits Conventional Commits com escopo e rodapé 'Refs DEC-59', sem push, sem tocar nas branches main_back/main_front/staging_back/staging_front, e sem editar backlog-tarefas.md, backlog-kanban.md, status.md, decisoes.md e riscos.md. Papel: Engenheiro Backend (siga .github/agents/backend.agent.md se existir).
+
+Contexto: DEC-59 (00_docs/projeto/decisoes.md, ~linha 785) registra como lacuna conhecida que `POST /responsaveis` com `usuario_id` já vinculado a outro Responsável resulta em erro 500 (violação de unicidade no banco). O `PUT /responsaveis/{id}` já trata o caso: 422 se o usuário não existe e 409 se já está vinculado. Veja a implementação em 04_backend/app/api/v1/responsaveis.py (funções `criar_responsavel`, linha ~52, e `atualizar_responsavel`, linha ~66), e os testes existentes em 04_backend/tests/test_responsaveis.py e test_responsaveis_update.py.
+
+Tarefa: faça o POST se comportar como o PUT nesse ponto, reutilizando a mesma verificação/helper em vez de duplicar código (422 para usuario_id inexistente; 409 para usuario_id já vinculado, com mensagem em Problem Details no mesmo formato do PUT). Não mude o contrato nos demais casos. Adicione testes em tests/test_responsaveis.py cobrindo 409 e 422 no POST. Rode `pytest` e `ruff check .` em 04_backend com o PostgreSQL de 05_infra/docker-compose.yml (localhost:5433); se ele não estiver no ar, registre que não rodou em vez de inventar resultado. Registre o resultado, os comandos rodados e qualquer decisão proposta em 00_docs/backlog-auto/responsaveis-409-usuario.md.
+```
+
+### T104 · PUT /edificacoes/{id} não pode zerar cidade/uf quando o corpo não os envia
+- **Status:** todo
+- **Origem:** DEC-59
+- **Papel:** Engenheiro Backend
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** baixa
+- **Toca:** 04_backend/app/repositories/edificacao_repository.py, 04_backend/app/services/edificacao_service.py, 04_backend/app/schemas/edificacao.py, 04_backend/tests/test_edificacao_cidade_uf.py, 00_docs/backlog-auto/edificacao-put-preserva-cidade-uf.md
+- **Doc:** 00_docs/backlog-auto/edificacao-put-preserva-cidade-uf.md
+- **Pronto:** pytest tests/test_edificacoes.py tests/test_edificacao_cidade_uf.py verde (PostgreSQL localhost:5433 no ar), com teste novo: PUT sem cidade/uf em edificação que já os tem mantém os valores; PUT com cidade/uf os altera; ruff check . limpo; Doc registra o comportamento escolhido.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md (raiz) e as regras do projeto: comandos Python a partir de 04_backend/, commits Conventional Commits com escopo e rodapé 'Refs DEC-59', sem push, sem tocar nas branches main_back/main_front/staging_back/staging_front, sem editar os documentos de gestão compartilhados (backlog-tarefas.md, backlog-kanban.md, status.md, decisoes.md, riscos.md). Papel: Engenheiro Backend.
+
+Contexto: DEC-59 (00_docs/projeto/decisoes.md, ~linha 785) registra que `PUT /edificacoes/{id}` sem os campos `cidade`/`uf` zera os dois (campos adicionados por T96 em Edificacao; ver 00_docs/backlog-auto/edificacao-cidade-uf.md). Arquivos: 04_backend/app/schemas/edificacao.py (EdificacaoUpdate), app/repositories/edificacao_repository.py (`update`, linha ~62), app/services/edificacao_service.py (`atualizar`, linha ~51), testes em tests/test_edificacao_cidade_uf.py e tests/test_edificacoes.py.
+
+Tarefa: faça a atualização distinguir 'campo ausente' de 'campo enviado como null/vazio' (por exemplo `model_dump(exclude_unset=True)` no update), de modo que cidade/uf ausentes no corpo sejam preservados e enviados explicitamente (inclusive null) sejam gravados. Não altere o comportamento dos demais campos além do estritamente necessário e confirme com os testes existentes que nada regride (se algum teste existente dependia de campos ausentes virarem null, ajuste-o e explique no Doc). Adicione testes novos. Rode `pytest` e `ruff check .` em 04_backend com o PostgreSQL de 05_infra (localhost:5433); se não estiver no ar, registre que não rodou. Registre o resultado e decisões propostas em 00_docs/backlog-auto/edificacao-put-preserva-cidade-uf.md.
+```
+
+### T105 · Telemetria da IA: gravar SQL NULL (não JSON null) em chamadas_ia.resposta
+- **Status:** todo
+- **Origem:** DEC-59
+- **Papel:** Engenheiro Backend
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** media
+- **Toca:** 04_backend/app/services/legenda_ia/telemetria.py, 04_backend/tests/test_limpar_chamadas_ia.py, 00_docs/backlog-auto/ia-resposta-sql-null.md
+- **Doc:** 00_docs/backlog-auto/ia-resposta-sql-null.md
+- **Pronto:** pytest tests/test_limpar_chamadas_ia.py e os testes de legenda_ia/telemetria (pytest -k 'legenda or telemetria or chamadas') verdes com PostgreSQL localhost:5433; teste novo comprova que registrar() sem resposta grava SQL NULL (IS NULL) e que o cache continua sem tratar resposta nula como acerto; ruff check . limpo.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md (raiz) e as regras do projeto: comandos Python a partir de 04_backend/, commits Conventional Commits com escopo e rodapé 'Refs DEC-59', sem push, sem tocar nas branches main_back/main_front/staging_back/staging_front, sem editar os documentos de gestão compartilhados. Papel: Engenheiro Backend.
+
+Contexto: DEC-59 P1 (00_docs/projeto/decisoes.md, ~linha 785) sugere que `registrar()` em 04_backend/app/services/legenda_ia/telemetria.py (linha ~120) grave SQL NULL em `chamadas_ia.resposta` quando não há resposta, em vez de JSON `null` (o campo é JSON/JSONB; sem `none_as_null`/`null()` o SQLAlchemy grava JSON null). A limpeza de retenção (`python -m app.scripts.limpar_chamadas_ia`) anula a coluna em SQL NULL, e o cache nunca deve tratar resposta nula (SQL NULL ou JSON null) como acerto. Veja 00_docs/backlog-auto/ia-retencao-chamadas.md e os testes em 04_backend/tests/test_limpar_chamadas_ia.py.
+
+Tarefa: faça `registrar()` gravar SQL NULL de forma consistente com o script de limpeza (ex.: `sqlalchemy.null()` ou `none_as_null=True` no tipo, sem exigir migration; se exigir, a migration precisa de downgrade()). Mantenha a proteção do cache contra resposta nula e adicione teste(s) que verifiquem `resposta IS NULL` no banco e que registros antigos com JSON null continuam sendo ignorados pelo cache. Rode `pytest` (ao menos os testes da legenda IA e da telemetria) e `ruff check .` em 04_backend com o PostgreSQL de 05_infra (localhost:5433); se não estiver no ar, registre que não rodou. Registre resultado e decisões propostas em 00_docs/backlog-auto/ia-resposta-sql-null.md.
+```
