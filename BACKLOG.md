@@ -1047,6 +1047,21 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro Backend (.github/agents/backend.agent.md). Contexto: a T20 (00_docs/backlog-auto/ltip-desempenho.md) deixou pendente 'foto no DOCX do LTIP'. Arquivo: 04_backend/app/services/report_generator/ltip_pipeline.py (`gerar_docx`); o PDF já usa fotos por `url_fetcher` (DEC-41, 00_docs/projeto/decisoes.md) e a legenda vem de `legenda_foto.py` (T36). Veja como `rfo_pipeline.py` (somente leitura) embute fotos no DOCX e como `foto_fetcher.py` obtém os bytes; siga o mesmo padrão, reduzindo a imagem para a largura útil da página (fotos de 1200 px, DEC-40) para não inflar o arquivo. Mantenha o contrato de `normalizar_contexto` e o PDF intactos; foto indisponível não derruba o DOCX (placeholder de texto e aviso no log). Crie tests/test_ltip_docx_fotos.py sem banco e sem rede (fetcher injetado/monkeypatch, imagens geradas com Pillow) e meça o tempo com ~239 fotos sintéticas. Rode, a partir de 04_backend, `pytest tests/test_ltip_docx_fotos.py tests/test_ltip_pipeline.py` e `ruff check .`. Registre fatos, tempos e saídas em 00_docs/backlog-auto/ltip-docx-fotos.md. Não edite 00_docs/projeto/* nem BACKLOG.md; não altere 01_output-context/. Commit: `feat(backend): fotos no DOCX do LTIP (BL-22)` com `Refs BL-22`. Não faça push.
 ```
 
+### T102 · Limite de corpo no proxy para o upload de fotos
+- **Status:** todo
+- **Origem:** T19
+- **Papel:** Engenheiro DevOps
+- **Depende:** —
+- **Ambiente:** offline
+- **Dificuldade:** baixa
+- **Toca:** 05_infra/nginx/nginx.conf, 05_infra/nginx/, 00_docs/backlog-auto/fotos-limite-corpo-proxy.md
+- **Doc:** 00_docs/backlog-auto/fotos-limite-corpo-proxy.md
+- **Pronto:** O nginx de produção tem `client_max_body_size` explícito: valor alinhado ao teto de upload do backend na rota de upload de fotos e valor menor nas demais rotas da API; a configuração foi validada com `nginx -t` (se houver nginx/Docker disponível) ou o Doc diz que não foi possível; o Doc cita o limite do backend com arquivo:linha.
+- **Prompt:**
+```text
+Contexto: a T19 (BL-11, DEC-39) deixou pendente o limite de corpo da requisição no proxy para o upload de fotos. A stack alternativa de produção em VPS usa 05_infra/nginx/nginx.conf (BL-27). Tarefa: leia o limite de tamanho de upload aplicado no backend (procure em 04_backend/app/api/v1/fotos.py e em app/core/config.py, por exemplo o máximo de bytes por foto) e em 05_infra/nginx/nginx.conf defina `client_max_body_size` com um valor um pouco acima do teto do backend na location do upload de fotos (ex.: `location = /api/v1/fotos/upload`) e um valor baixo (ex.: 1m) para o restante da API, retornando 413. Preserve rate limit, HSTS, CSP e as demais regras já existentes. Se houver nginx ou Docker disponível, valide com `nginx -t` (container `nginx:alpine` montando o arquivo, a partir de 05_infra/); se não, registre que não foi possível. Não altere o backend nem o frontend. Documente no Doc o limite do backend (arquivo:linha), o valor escolhido e por quê, e o comando e a saída da validação. Siga a 'Regra de pronto' do BACKLOG.md. Não edite os documentos de gestão em 00_docs/projeto/ nem o BACKLOG.md. Commit: `feat(infra): limite de corpo no nginx para upload de fotos (DEC-39)` com `Refs DEC-39`. Não faça push.
+```
+
 ---
 
 ## Bloco D — Entrega v1.0: emissão dos 5 relatórios
@@ -1452,6 +1467,21 @@ Commit em Conventional Commits: `test(frontend): e2e de escrita sem rede (DEC-26
 Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro Frontend (.github/agents/frontend.agent.md). Contexto: R-22 em 00_docs/projeto/riscos.md diz que o Service Worker (T77, DEC-56) nunca foi exercitado em navegador real e que o registro precisava respeitar o basePath do GitHub Pages (DEC-55). O registro já usa withBasePath (03_frontend/components/sw-register.tsx), mas falta a prova em navegador. Leia primeiro: 00_docs/backlog-auto/pwa-service-worker.md, 03_frontend/public/sw.js, 03_frontend/lib/sw-cache.ts, 03_frontend/next.config.mjs, 03_frontend/playwright.config.ts e playwright.modo-leitura.config.ts (modelo de config com servidor estático) e e2e/modo-leitura-dec57.spec.ts. Passos: (1) crie 03_frontend/playwright.sw.config.ts que builda com `NEXT_PUBLIC_BASE_PATH=/garra-engenharia` e serve a pasta `out/` sob o prefixo /garra-engenharia/ (por exemplo, com um servidor estático mínimo em Node ou `npx serve` já instalado; não adicione dependência nova sem necessidade, e se adicionar, justifique no Doc); o SW só registra com NODE_ENV=production; (2) escreva 03_frontend/e2e/sw-basepath.spec.ts cobrindo os 4 pontos do critério de pronto, mockando a API com page.route e usando um token falso no localStorage; para (3) dispare o logout pelo fluxo real da UI ou chamando clearAuthToken; (4) rode o spec, corrija só o que o teste revelar de defeito real em sw-register.tsx/sw.js se for pequeno (se for maior, registre como proposta no Doc e marque o teste como test.fixme com motivo). NÃO edite arquivos fora de `toca`, exceto o que o item (4) exigir, e nesse caso liste no Doc. Não mexa nos specs de T78 (escrita sem rede) se existirem. Rode `npm run lint` e `npm run build` a partir de 03_frontend. Registre no Doc: comandos, saída, o que foi provado e o novo estado de R-22. Não use `git add -A`; adicione só os arquivos tocados. Commit: `test(frontend): e2e do service worker com basePath (R-22)` com rodapé `Refs R-22`. Não faça push.
 ```
 
+### T101 · Reabrir E2E da DEC-26: escrita sem rede falha com erro explícito
+- **Status:** todo
+- **Origem:** T78
+- **Papel:** Engenheiro Frontend
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** media
+- **Toca:** 03_frontend/e2e/offline-dec26.spec.ts, 03_frontend/playwright.offline.config.ts, 00_docs/backlog-auto/e2e-offline-dec26.md
+- **Doc:** 00_docs/backlog-auto/e2e-offline-dec26.md
+- **Pronto:** Existe 03_frontend/e2e/offline-dec26.spec.ts que, contra `next build && next start` com Service Worker ativo, prova: (a) leituras da allowlist continuam dentro do TTL sem rede; (b) uma gravação sem rede mostra erro explícito e nada fica em fila local; o spec foi executado e a saída consta no Doc, ou o Doc diz explicitamente que não rodou e por quê.
+- **Prompt:**
+```text
+Contexto: a T78 foi marcada `done` mas o Doc 00_docs/backlog-auto/e2e-offline-dec26.md registra que NÃO foi executada e nenhum spec offline existe em 03_frontend/e2e/ (a branch do worktree não continha o Service Worker da T77). Agora o Service Worker existe em main: 03_frontend/public/sw.js, 03_frontend/lib/sw-cache.ts, offline.html (DEC-26, DEC-56). Tarefa: leia o Doc antigo, 03_frontend/playwright.config.ts e os specs atuais (ex.: sw-basepath.spec.ts, helpers.ts) e crie 03_frontend/e2e/offline-dec26.spec.ts com uma configuração separada 03_frontend/playwright.offline.config.ts que sobe `npm run build && npm run start` (o SW só vale em build de produção; não altere o playwright.config.ts existente). Cenários: (1) após carregar dados mestre/contratos online, `context.setOffline(true)` e a leitura dentro do TTL segue funcionando e fora da allowlist cai no `offline.html`; (2) com a rede cortada, uma gravação (ex.: criar edificação) exibe erro explícito ao usuário e nenhum mecanismo de fila é criado (verifique que `localStorage`/IndexedDB não guardam requisição pendente). Mocke a API com `page.route` se o backend não estiver disponível, e diga no Doc o que foi mockado. Se não conseguir executar o Playwright aqui (navegadores ausentes), registre isso sem inventar resultado. Rode `npm run lint` e `npm run build` em 03_frontend. Atualize o Doc existente (substitua o status de 'não executada' pelo real). Siga a 'Regra de pronto' do BACKLOG.md. Não edite os documentos de gestão em 00_docs/projeto/ nem o BACKLOG.md. Commit: `test(frontend): E2E offline da DEC-26 com Service Worker (R-22)` com `Refs T78`. Não faça push.
+```
+
 ## Bloco G — Sair do Render: backend no PC, front no Pages público, snapshot cifrado (DEC-57)
 
 Contexto comum (DEC-57 em 00_docs/projeto/decisoes.md): o repositório `garra-engenharia` é **público** (desde 2026-11-17). O site estático continua no GitHub Pages do próprio repositório (`https://rafaelroriz-age.github.io/garra-engenharia/`, `deploy-pages.yml` com `GITHUB_TOKEN`), e a branch órfã `snapshot` do mesmo repositório guarda com `api.json` (URL atual do túnel + heartbeat) e `snapshot.enc` (dados de leitura da equipe cifrados com AES-256-GCM). Backend FastAPI, PostgreSQL e arquivos rodam no PC do dono, com dados fora do git; sobe sozinho no logon do Windows e é exposto por `cloudflared tunnel --url` (URL aleatória por boot, publicada em `api.json`). PC desligado → site abre em modo leitura com o snapshot; nenhuma gravação.
@@ -1756,4 +1786,49 @@ Tarefa (origem DEC-50, P5: «A cidade da emissão sai do endereço (`Cidade-UF`)
 Contexto: leia a seção DEC-50 em 00_docs/projeto/decisoes.md e 00_docs/backlog-auto/v1-emissao-generica.md. Hoje a cidade da emissão dos relatórios é extraída do campo livre `endereco` da `Edificacao` (formato esperado `Cidade-UF`) no montador compartilhado 04_backend/app/services/report_generator/contexto_comum.py (procure pela função que deriva a cidade). Os montadores `rfo_contexto.py`, `ltip_contexto.py`, `rfip_contexto.py` e os de vistorias usam esse comum. Não crie nenhum campo obrigatório: dados antigos continuam válidos.
 
 Faça: (1) adicione `cidade` (String, nullable, até 120) e `uf` (String(2), nullable) ao modelo `Edificacao` e aos schemas Create/Update/Read em 04_backend/app/schemas/edificacao.py; `uf` é normalizada para maiúsculas e validada (2 letras); string vazia vira `None`. (2) Crie migration Alembic nova (com `downgrade()`) cujo `down_revision` seja o único head atual: rode `alembic heads` ANTES. Se houver mais de um head (R-17), NÃO faça merge sem registrar: descreva a situação no Doc e use um `alembic merge` apenas se for necessário para os testes, dizendo isso claramente. A migration não reescreve dados nem faz backfill automático. Valide upgrade, downgrade e novo upgrade no banco de testes, e `alembic check`. (3) No `contexto_comum.py`, use `cidade` e `uf` quando preenchidas (formato de saída idêntico ao de hoje, ex. `Cidade-UF` ou o que o template já espera: confira nos testes existentes) e mantenha o fallback pelo endereço quando ausentes. Não mude os templates nem o `layout.json`. (4) Não altere o frontend; registre no Doc que o formulário de edificação (03_frontend/app/edificacoes/) ainda precisa expor os campos, como pendência para uma próxima tarefa. (5) Testes em 04_backend/tests/test_edificacao_cidade_uf.py: criação/atualização/leitura com e sem os campos, `uf` inválida → 422, normalização, e o contexto comum com cidade/uf preenchidas, só uma delas, e ausentes (fallback). Rode esses testes, os de edificações e `pytest tests -k "contexto or emissao or relatorio"` e `ruff check .`. Registre tudo que não rodar por falta de PostgreSQL ou WeasyPrint em vez de inventar resultado. Documente no Doc 00_docs/backlog-auto/edificacao-cidade-uf.md: o que mudou, a revisão do migration, o fallback e a saída dos testes. Não edite 00_docs/projeto/*.md. Commit: `feat(backend): cidade e uf em Edificacao usadas na emissao (DEC-50)` com rodapé `Refs DEC-50`. Nunca faça push.
+```
+
+### T98 · Frontend: enviar e exibir cidade e UF na Edificação
+- **Status:** todo
+- **Origem:** T97
+- **Papel:** Engenheiro Frontend
+- **Depende:** —
+- **Ambiente:** offline
+- **Dificuldade:** baixa
+- **Toca:** 03_frontend/app/edificacoes/, 00_docs/backlog-auto/edificacao-cidade-uf-frontend.md
+- **Doc:** 00_docs/backlog-auto/edificacao-cidade-uf-frontend.md
+- **Pronto:** O formulário de edificação (criar e editar) tem os campos Cidade (texto, máx. 120) e UF (2 letras, convertida para maiúsculas) e os envia no payload; a página de detalhe e a lista exibem cidade/UF quando preenchidos; `npm run lint` e `npm run build` em 03_frontend passam; o Doc registra os comandos e a saída.
+- **Prompt:**
+```text
+Contexto: a T97 (migration `d3e7a1c5f9b2`) adicionou `cidade` (str|None, máx. 120) e `uf` (str|None, 2 letras A-Z, normalizada para maiúsculas, 422 se inválida) a Edificação no backend (`04_backend/app/schemas/edificacao.py`, DEC-50 P5). O frontend ainda não envia nem mostra esses campos. Tarefa: em 03_frontend/app/edificacoes/ (`edificacao-form.tsx`, `page.tsx` e `detalhe/page.tsx`) adicione os campos Cidade e UF ao formulário de criação/edição, inclua-os no payload (envie `null` quando vazios), mostre-os na lista e no detalhe quando existirem, e ajuste os tipos TypeScript da edificação. Trate o erro 422 de UF com mensagem clara em português. Use apenas os componentes e o estilo já existentes. Não mexa no backend nem em outros diretórios além do listado em `toca`. Rode `npm run lint` e `npm run build` a partir de 03_frontend/. Registre em 00_docs/backlog-auto/edificacao-cidade-uf-frontend.md o que mudou (arquivo:linha), os comandos e a saída e o que não foi testado. Siga a 'Regra de pronto' do BACKLOG.md. Não edite os documentos de gestão em 00_docs/projeto/ nem o BACKLOG.md. Commit: `feat(frontend): campos cidade e UF na edificação (DEC-50)` com rodapé `Refs DEC-50`. Não faça push.
+```
+
+### T99 · Backend: alertar na geração do relatório quando há fotos com legenda IA em rascunho
+- **Status:** todo
+- **Origem:** T36
+- **Papel:** Engenheiro Backend
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** media
+- **Toca:** 04_backend/app/services/relatorio_service.py, 04_backend/app/schemas/relatorio.py, 04_backend/tests/test_relatorio_alerta_ia_rascunho.py, 00_docs/backlog-auto/relatorio-alerta-ia-rascunho.md
+- **Doc:** 00_docs/backlog-auto/relatorio-alerta-ia-rascunho.md
+- **Pronto:** A resposta da emissão/geração do relatório traz um campo de alerta (lista de ids ou contagem de fotos com legenda IA ainda em rascunho) calculado por `sinalizar_fotos_ia_em_rascunho`; a geração NÃO é bloqueada; testes novos cobrem com e sem rascunhos e passam; `ruff check .` passa; o Doc registra a saída do pytest ou que o PostgreSQL não estava no ar.
+- **Prompt:**
+```text
+Contexto: `sinalizar_fotos_ia_em_rascunho(fotos)` existe em 04_backend/app/services/report_generator/legenda_foto.py (devolve os índices das fotos com legenda IA em rascunho) e é testada em tests/test_legenda_relatorio.py, mas não é usada em nenhum fluxo de geração (pendência da T36/BL-38; DEC-37 DP-9 é proposta: só legenda aprovada entra no relatório). Tarefa: localize onde o relatório é gerado/emitido (comece por 04_backend/app/services/relatorio_service.py e pelo endpoint correspondente em app/api/v1/), chame a função sobre as fotos usadas e devolva no schema de resposta (04_backend/app/schemas/relatorio.py) um campo opcional e retrocompatível, por exemplo `fotos_ia_em_rascunho: list[int]` (use ids de foto se os índices não forem estáveis; documente a escolha). A geração continua normalmente: é alerta, não bloqueio. Não altere os pipelines (rfo/ltip/rfip/vistorias) nem legenda_foto.py, salvo se estritamente necessário, e nesse caso justifique no Doc. Crie tests/test_relatorio_alerta_ia_rascunho.py com ao menos: sem rascunhos (lista vazia), com rascunhos e com legenda aprovada ignorada. Rode a partir de 04_backend/: `pytest tests/test_relatorio_alerta_ia_rascunho.py tests/test_legenda_relatorio.py` e `ruff check .`. O PostgreSQL de 05_infra/docker-compose.yml (localhost:5433) é necessário; se não estiver no ar, registre que não rodou, sem inventar resultado. Registre em 00_docs/backlog-auto/relatorio-alerta-ia-rascunho.md o formato do campo, arquivo:linha, comandos e saída. Siga a 'Regra de pronto' do BACKLOG.md. Não edite os documentos de gestão em 00_docs/projeto/ nem o BACKLOG.md. Commit: `feat(backend): alerta de fotos com legenda IA em rascunho na geração do relatório (BL-38)` com `Refs BL-38`. Não faça push.
+```
+
+### T100 · Frontend: mostrar na tela de relatório o aviso de fotos com legenda IA em rascunho
+- **Status:** todo
+- **Origem:** T36
+- **Papel:** Engenheiro Frontend
+- **Depende:** T99
+- **Ambiente:** offline
+- **Dificuldade:** media
+- **Toca:** 03_frontend/app/inspecoes/relatorio/page.tsx, 00_docs/backlog-auto/relatorio-alerta-ia-rascunho-frontend.md
+- **Doc:** 00_docs/backlog-auto/relatorio-alerta-ia-rascunho-frontend.md
+- **Pronto:** A tela de relatório exibe aviso não bloqueante, com a contagem, quando a resposta da geração traz fotos com legenda IA em rascunho, e nada quando o campo vem vazio ou ausente; `npm run lint` e `npm run build` passam; o Doc registra os comandos e a saída.
+- **Prompt:**
+```text
+Contexto: a tarefa B (Doc 00_docs/backlog-auto/relatorio-alerta-ia-rascunho.md) acrescentou ao schema de resposta da geração/emissão do relatório um campo de alerta com as fotos cuja legenda IA ainda está em rascunho (leia o Doc para o nome e o formato exatos e confira em 04_backend/app/schemas/relatorio.py). Tarefa: em 03_frontend/app/inspecoes/relatorio/page.tsx, trate esse campo após gerar/emitir: se houver itens, mostre um aviso visível e não bloqueante (ex.: «N foto(s) com legenda IA ainda em rascunho; só legendas aprovadas aparecem no relatório»), com o estilo de alertas já usado no app; se vier vazio ou ausente, não mostre nada. Atualize o tipo TypeScript da resposta. Não altere o backend. Rode `npm run lint` e `npm run build` a partir de 03_frontend/. Registre em 00_docs/backlog-auto/relatorio-alerta-ia-rascunho-frontend.md o que mudou (arquivo:linha), os comandos, a saída e o que não foi testado em navegador. Siga a 'Regra de pronto' do BACKLOG.md. Não edite os documentos de gestão em 00_docs/projeto/ nem o BACKLOG.md. Commit: `feat(frontend): aviso de legendas IA em rascunho na tela de relatório (BL-38)` com `Refs BL-38`. Não faça push.
 ```
