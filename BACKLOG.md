@@ -1048,7 +1048,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T102 · Limite de corpo no proxy para o upload de fotos
-- **Status:** doing
+- **Status:** done
 - **Origem:** T19
 - **Papel:** Engenheiro DevOps
 - **Depende:** —
