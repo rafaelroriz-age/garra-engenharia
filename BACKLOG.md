@@ -1217,7 +1217,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 ```
 
 ### T92 · Cabeçalho corrido das Vistorias (Cautelar e Residencial) com logo raster em vez de SVG (DEC-54)
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-54
 - **Papel:** Engenheiro Backend
 - **Depende:** —
