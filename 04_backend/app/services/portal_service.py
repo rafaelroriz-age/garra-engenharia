@@ -191,6 +191,12 @@ def _montar_contrato_acompanhamento(
     )
 
 
+def _numero_versao(versao: str) -> int:
+    """'V02' -> 2 (comparação numérica, não lexicográfica)."""
+    digitos = "".join(c for c in versao if c.isdigit())
+    return int(digitos) if digitos else 0
+
+
 async def listar_relatorios(
     db: AsyncSession, responsavel_id: uuid.UUID
 ) -> list[PortalRelatorioRead]:
@@ -202,6 +208,12 @@ async def listar_relatorios(
         .where(Contrato.contratante_id == responsavel_id)
         .order_by(Relatorio.emitido_em.desc().nullslast(), Relatorio.versao)
     )
+    linhas = result.all()
+    # Vigente = maior versão do mesmo (inspecao, tipo) entre os relatórios visíveis a este cliente.
+    maxima: dict[tuple[uuid.UUID, str], int] = {}
+    for relatorio, _, _ in linhas:
+        chave = (relatorio.inspecao_id, relatorio.tipo)
+        maxima[chave] = max(maxima.get(chave, -1), _numero_versao(relatorio.versao))
     return [
         PortalRelatorioRead(
             id=relatorio.id,
@@ -211,13 +223,15 @@ async def listar_relatorios(
             emitido_em=relatorio.emitido_em,
             tem_pdf=bool(relatorio.pdf_key),
             tem_docx=bool(relatorio.docx_key),
+            vigente=_numero_versao(relatorio.versao)
+            == maxima[(relatorio.inspecao_id, relatorio.tipo)],
             inspecao_id=relatorio.inspecao_id,
             contrato_id=contrato.id,
             contrato_numero=contrato.numero,
             edificacao_id=edificacao.id,
             edificacao_nome=edificacao.nome,
         )
-        for relatorio, contrato, edificacao in result.all()
+        for relatorio, contrato, edificacao in linhas
     ]
 
 

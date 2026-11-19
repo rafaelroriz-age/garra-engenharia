@@ -132,16 +132,35 @@ def test_listagem_expoe_o_campo_versao_e_flags_de_arquivo(cenario):
     assert item["tem_docx"] is True
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEC-48 P1: a listagem não distingue a versão vigente; não há campo "
-    "(ex.: `vigente`/`mais_recente`) nem filtro, o cliente vê V01 e V02 em pé de igualdade.",
-)
 def test_listagem_sinaliza_qual_versao_e_a_vigente(cenario):
     body = client.get("/api/v1/portal/relatorios", headers=_auth(cenario["user_a"].id)).json()
 
     flags = [item.get("vigente", item.get("mais_recente")) for item in body]
     assert flags == [True, False]
+
+
+@pytest.mark.asyncio
+async def test_cada_tipo_tem_sua_propria_versao_vigente(cenario):
+    async with _TestSessionLocal() as s:
+        outro = Relatorio(inspecao_id=cenario["inspecao_id"], versao="V01", tipo="rfa",
+                          status="emitido", pdf_key=None, docx_key=None,
+                          emitido_em=datetime(2026, 1, 1, tzinfo=UTC))
+        s.add(outro)
+        await s.commit()
+
+    body = client.get("/api/v1/portal/relatorios", headers=_auth(cenario["user_a"].id)).json()
+    vig = {(i["tipo"], i["versao"]): i["vigente"] for i in body}
+    assert vig == {("rfo", "V02"): True, ("rfo", "V01"): False, ("rfa", "V01"): True}
+
+
+@pytest.mark.asyncio
+async def test_relatorio_com_uma_so_versao_e_vigente(cenario):
+    async with _TestSessionLocal() as s:
+        await s.execute(delete(Relatorio).where(Relatorio.id == cenario["v01"].id))
+        await s.commit()
+
+    body = client.get("/api/v1/portal/relatorios", headers=_auth(cenario["user_a"].id)).json()
+    assert [(i["versao"], i["vigente"]) for i in body] == [("V02", True)]
 
 
 # (b) isolamento entre contratantes --------------------------------------------
