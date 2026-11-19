@@ -1929,7 +1929,7 @@ Tarefa: faça `registrar()` gravar SQL NULL de forma consistente com o script de
 ```
 
 ### T106 · nginx: location própria para o upload de documentos de edificação (limite de corpo)
-- **Status:** doing
+- **Status:** done
 - **Origem:** R-25
 - **Papel:** Engenheiro DevOps
 - **Depende:** —
