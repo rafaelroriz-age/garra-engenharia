@@ -1063,7 +1063,7 @@ Contexto: a T19 (BL-11, DEC-39) deixou pendente o limite de corpo da requisiçã
 ```
 
 ### T107 · Legenda IA: limpar os xfail estritos de test_seguranca_legenda_ia.py que o código já cumpre
-- **Status:** todo
+- **Status:** doing
 - **Origem:** T35
 - **Papel:** Engenheiro Backend
 - **Depende:** —
@@ -1929,7 +1929,7 @@ Tarefa: faça `registrar()` gravar SQL NULL de forma consistente com o script de
 ```
 
 ### T106 · nginx: location própria para o upload de documentos de edificação (limite de corpo)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** R-25
 - **Papel:** Engenheiro DevOps
 - **Depende:** —
@@ -1948,7 +1948,7 @@ Tarefa: (1) Leia edificacoes.py e descubra o caminho exato (método e rota) do u
 ```
 
 ### T109 · Portal do Cliente: sinalizar a versão vigente de cada relatório na listagem (fecha o xfail da T51)
-- **Status:** todo
+- **Status:** doing
 - **Origem:** T51
 - **Papel:** Engenheiro Backend
 - **Depende:** —
