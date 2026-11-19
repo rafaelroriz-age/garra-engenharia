@@ -1062,6 +1062,44 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz do repositório). Papel: Engenheiro
 Contexto: a T19 (BL-11, DEC-39) deixou pendente o limite de corpo da requisição no proxy para o upload de fotos. A stack alternativa de produção em VPS usa 05_infra/nginx/nginx.conf (BL-27). Tarefa: leia o limite de tamanho de upload aplicado no backend (procure em 04_backend/app/api/v1/fotos.py e em app/core/config.py, por exemplo o máximo de bytes por foto) e em 05_infra/nginx/nginx.conf defina `client_max_body_size` com um valor um pouco acima do teto do backend na location do upload de fotos (ex.: `location = /api/v1/fotos/upload`) e um valor baixo (ex.: 1m) para o restante da API, retornando 413. Preserve rate limit, HSTS, CSP e as demais regras já existentes. Se houver nginx ou Docker disponível, valide com `nginx -t` (container `nginx:alpine` montando o arquivo, a partir de 05_infra/); se não, registre que não foi possível. Não altere o backend nem o frontend. Documente no Doc o limite do backend (arquivo:linha), o valor escolhido e por quê, e o comando e a saída da validação. Siga a 'Regra de pronto' do BACKLOG.md. Não edite os documentos de gestão em 00_docs/projeto/ nem o BACKLOG.md. Commit: `feat(infra): limite de corpo no nginx para upload de fotos (DEC-39)` com `Refs DEC-39`. Não faça push.
 ```
 
+### T107 · Legenda IA: limpar os xfail estritos de test_seguranca_legenda_ia.py que o código já cumpre
+- **Status:** todo
+- **Origem:** T35
+- **Papel:** Engenheiro Backend
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** baixa
+- **Toca:** 04_backend/tests/test_seguranca_legenda_ia.py, 00_docs/backlog-auto/legenda-ia-xfail-limpeza.md
+- **Doc:** 00_docs/backlog-auto/legenda-ia-xfail-limpeza.md
+- **Pronto:** pytest tests/test_seguranca_legenda_ia.py com PostgreSQL localhost:5433 sem nenhum teste XPASS(strict) nem falha: cada `xfail` cuja lacuna (SEG-IA-01..06) já foi corrigida (limite de taxa 429, aprovação limpa ao regerar/editar, teto de 500 caracteres, 403 ao auxiliar) vira teste normal passando; os que seguem lacuna real permanecem `xfail(strict=True)` com motivo atualizado; Doc lista, por teste, a decisão e a evidência (saída do pytest); ruff check . limpo.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md (raiz) e as regras do projeto: comandos Python a partir de 04_backend/ no venv 04_backend/.venv, banco isolado garra_engenharia_test (veja a regra de pronto item 6), commits Conventional Commits com escopo 'test(backend)' e rodapé 'Refs T35', sem push, sem tocar nas branches main_back/main_front/staging_back/staging_front, sem editar documentos de gestão compartilhados. Papel: Engenheiro Backend. Antes de tudo rode `git merge --ff-only main`.
+
+Contexto: 04_backend/tests/test_seguranca_legenda_ia.py nasceu da T29 com testes `@pytest.mark.xfail(strict=True)` que afirmam o comportamento correto das lacunas SEG-IA-01..06 (limite de taxa em /legenda-ia/gerar, aprovador mantido ao regerar/editar, sugestão do LLM acima de 500 caracteres, auxiliar removendo foto aprovada etc.). As tarefas T33 e T35 depois implementaram limite de taxa (429), teto de 500 caracteres, saneamento e aprovação só pelo auditor (DEC-42). A pendência registrada na T35 é remover as marcas xfail que deixaram de valer. Detalhes em 00_docs/backlog-auto/seguranca-legenda-ia.md e nos Docs da T33/T35 (procure em 00_docs/backlog-auto/ com Grep por 'DEC-42' e 'limite').
+
+Tarefa: (1) Suba o PostgreSQL de 05_infra (docker compose a partir de 05_infra/, porta 5433) se não estiver no ar, aplique `alembic upgrade head` no garra_engenharia_test e rode `pytest tests/test_seguranca_legenda_ia.py -v -rxX`. (2) Para cada teste xfail: se aparece XPASS/ falha por strict, a lacuna foi corrigida — remova a marca `xfail`, ajuste o teste só se o contrato correto mudou (ex.: status/mensagem), e confira que ele passa de verdade; se continua XFAIL, mantenha a marca e atualize o `reason` com o estado atual (cite o SEG-IA-xx). NÃO altere código de produção nem enfraqueça asserções para fazer passar; se um teste revelar bug real, mantenha xfail e descreva no Doc como proposta. (3) Rode também `pytest -k legenda` e `ruff check .` para garantir que nada quebrou. (4) Registre no Doc a tabela teste → decisão → evidência e a saída literal do pytest. Se o PostgreSQL não subir, registre que não rodou e não altere nenhum teste às cegas.
+```
+
+### T108 · Legenda IA: devolver o cabeçalho Retry-After no 429 de /legenda-ia/gerar
+- **Status:** todo
+- **Origem:** T35
+- **Papel:** Engenheiro Backend
+- **Depende:** T107
+- **Ambiente:** docker
+- **Dificuldade:** media
+- **Toca:** 04_backend/app/core/errors.py, 04_backend/app/core/exception_handlers.py, 04_backend/app/services/legenda_ia/limites.py, 04_backend/tests/test_legenda_ia_retry_after.py, 00_docs/backlog-auto/legenda-ia-retry-after.md
+- **Doc:** 00_docs/backlog-auto/legenda-ia-retry-after.md
+- **Pronto:** Resposta 429 de POST /api/v1/fotos/{id}/legenda-ia/gerar carrega o header `Retry-After` (inteiro > 0, em segundos) além do corpo RFC 7807 atual (que continua com `retry_after_segundos` em `errors`); outras DomainError continuam sem esse header; teste novo cobre header presente no 429 de legenda, ausente em um 4xx comum e o login (que já tem Retry-After) intacto; pytest -k 'legenda or seguranca' e ruff check . verdes com PostgreSQL localhost:5433.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md (raiz) e as regras do projeto: comandos Python a partir de 04_backend/ no venv 04_backend/.venv, banco isolado garra_engenharia_test, commits Conventional Commits com escopo 'feat(backend)' e rodapé 'Refs T35', sem push, sem tocar nas branches main_back/main_front/staging_back/staging_front, sem editar documentos de gestão compartilhados. Papel: Engenheiro Backend. Antes de tudo rode `git merge --ff-only main`. Não use nova variável de ambiente nem migration.
+
+Contexto: 04_backend/app/services/legenda_ia/limites.py define `LimiteLegendaIAExcedido(DomainError)` (429, atributo `retry_after`), e o docstring admite que 'o handler global não repassa headers' — por isso o tempo de espera só vai no corpo. O handler global é `_handle_domain_error` em 04_backend/app/core/exception_handlers.py (registrado na linha ~85); `DomainError` está em 04_backend/app/core/errors.py. O login (04_backend/app/api/v1/auth.py, ~linha 67-75) já devolve 429 com Retry-After de forma própria — veja como e não quebre. A T35 deixou 'Retry-After no header' como pendência.
+
+Tarefa: (1) Leia os três arquivos e os testes existentes de limite (Grep por 'legenda-ia-limite-excedido' em 04_backend/tests). (2) Faça o `DomainError` poder carregar `headers: dict[str,str] | None` (ou equivalente mínimo e retrocompatível) e o `_handle_domain_error` repassá-los à resposta; faça `LimiteLegendaIAExcedido` preencher `Retry-After` com `str(retry_after)` (garanta inteiro >= 1). Mantenha o corpo RFC 7807 idêntico. (3) Escreva tests/test_legenda_ia_retry_after.py reaproveitando as fixtures/ helpers dos testes de limite existentes (cliente fake, usuário auditor/auxiliar, foto): estoure o limite configurando valores pequenos, confira status 429, header Retry-After inteiro > 0 igual ao `retry_after_segundos` do corpo, e que um erro 404/422 comum não tem Retry-After. (4) Rode `pytest -k 'legenda or seguranca or auth'` e `ruff check .`; se o PostgreSQL (localhost:5433) não estiver no ar, suba-o via docker compose em 05_infra ou registre que não rodou. (5) Registre no Doc o diff resumido, a saída dos testes e eventuais propostas (ex.: limitador compartilhado entre workers continua pendente, não faça agora).
+```
+
 ---
 
 ## Bloco D — Entrega v1.0: emissão dos 5 relatórios
@@ -1888,4 +1926,42 @@ Siga a 'Regra de pronto' do BACKLOG.md (raiz) e as regras do projeto: comandos P
 Contexto: DEC-59 P1 (00_docs/projeto/decisoes.md, ~linha 785) sugere que `registrar()` em 04_backend/app/services/legenda_ia/telemetria.py (linha ~120) grave SQL NULL em `chamadas_ia.resposta` quando não há resposta, em vez de JSON `null` (o campo é JSON/JSONB; sem `none_as_null`/`null()` o SQLAlchemy grava JSON null). A limpeza de retenção (`python -m app.scripts.limpar_chamadas_ia`) anula a coluna em SQL NULL, e o cache nunca deve tratar resposta nula (SQL NULL ou JSON null) como acerto. Veja 00_docs/backlog-auto/ia-retencao-chamadas.md e os testes em 04_backend/tests/test_limpar_chamadas_ia.py.
 
 Tarefa: faça `registrar()` gravar SQL NULL de forma consistente com o script de limpeza (ex.: `sqlalchemy.null()` ou `none_as_null=True` no tipo, sem exigir migration; se exigir, a migration precisa de downgrade()). Mantenha a proteção do cache contra resposta nula e adicione teste(s) que verifiquem `resposta IS NULL` no banco e que registros antigos com JSON null continuam sendo ignorados pelo cache. Rode `pytest` (ao menos os testes da legenda IA e da telemetria) e `ruff check .` em 04_backend com o PostgreSQL de 05_infra (localhost:5433); se não estiver no ar, registre que não rodou. Registre resultado e decisões propostas em 00_docs/backlog-auto/ia-resposta-sql-null.md.
+```
+
+### T106 · nginx: location própria para o upload de documentos de edificação (limite de corpo)
+- **Status:** todo
+- **Origem:** R-25
+- **Papel:** Engenheiro DevOps
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** baixa
+- **Toca:** 05_infra/nginx/nginx.conf, 00_docs/backlog-auto/nginx-upload-documentos.md
+- **Doc:** 00_docs/backlog-auto/nginx-upload-documentos.md
+- **Pronto:** nginx.conf tem location própria (client_max_body_size ~30m, acima dos 25 MiB do backend) para o POST de documento de edificação, sem afetar o teto de 1m das demais rotas nem o de 40m do upload de fotos; `nginx -t` executado com a config (via container nginx) e saída registrada no Doc, ou registro explícito de que o Docker não estava disponível; Doc lista a rota exata e o limite escolhido.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md (raiz) e as regras do projeto: não crie pastas na raiz, commits Conventional Commits com escopo e rodapé 'Refs R-25', sem push, sem tocar nas branches main_back/main_front/staging_back/staging_front, sem editar os documentos de gestão compartilhados (riscos.md, decisoes.md, status.md, backlog-tarefas.md, backlog-kanban.md). Papel: Engenheiro DevOps (siga .github/agents/ correspondente se existir). Antes de tudo rode `git merge --ff-only main` no worktree.
+
+Contexto: o risco R-25 (00_docs/projeto/riscos.md) registra que a T102 passou o `client_max_body_size` padrão do nginx a `1m` em 05_infra/nginx/nginx.conf (linha ~33) e liberou `40m` só para `location ~ ^/api/v1/fotos/upload(-clipboard)?$` (linha ~95). O POST de documento de edificação aceita até 25 MiB (04_backend/app/api/v1/edificacoes.py, constante perto da linha 35) e, atrás desse nginx, recebe 413. A stack VPS (05_infra/docker-compose.prod.yml) é caminho alternativo; a produção oficial é o PC (DEC-57), sem nginx, então a mudança é de baixo risco e só vale para o fallback.
+
+Tarefa: (1) Leia edificacoes.py e descubra o caminho exato (método e rota) do upload de documento e o limite real em bytes; não suponha. (2) Em 05_infra/nginx/nginx.conf adicione uma `location` com regex específica para essa rota, com `client_max_body_size` ligeiramente acima do limite do backend (ex.: 30m), copiando as diretivas de proxy (proxy_pass, headers, timeouts) da location `/api/` ou da de upload de fotos — não duplique de forma divergente e mantenha a ordem para que a regex vença a `/api/` prefixada. Não aumente o padrão global de 1m. (3) Valide a sintaxe com `docker run --rm -v <caminho absoluto de 05_infra/nginx/nginx.conf>:/etc/nginx/nginx.conf:ro nginx:1.27-alpine nginx -t` (o Docker fica em C:/Program Files/Docker/Docker/resources/bin; se o nginx.conf referenciar certificados/upstream inexistentes no teste, monte stubs temporários FORA do repositório, no scratchpad, ou registre a limitação). Se o Docker não estiver no ar, registre que `nginx -t` não rodou. (4) Registre no Doc: rota, limite, diff resumido, saída do `nginx -t`. Proponha no Doc (não em riscos.md) o fechamento do R-25. Nenhum teste Python é necessário; não toque em 04_backend.
+```
+
+### T109 · Portal do Cliente: sinalizar a versão vigente de cada relatório na listagem (fecha o xfail da T51)
+- **Status:** todo
+- **Origem:** T51
+- **Papel:** Engenheiro Backend
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** media
+- **Toca:** 04_backend/app/services/portal_service.py, 04_backend/app/schemas/portal.py, 04_backend/tests/test_portal_versoes_relatorio.py, 00_docs/backlog-auto/portal-versao-vigente.md
+- **Doc:** 00_docs/backlog-auto/portal-versao-vigente.md
+- **Pronto:** GET /api/v1/portal/relatorios devolve, em cada item, um booleano `vigente` verdadeiro só para a maior `versao` de cada par (inspecao_id, tipo); o teste `test_listagem_sinaliza_qual_versao_e_a_vigente` perde o `xfail` e passa; demais testes de test_portal_versoes_relatorio.py e test_portal_cliente.py continuam verdes; sem migration (campo calculado); pytest -k portal e ruff check . verdes com PostgreSQL localhost:5433.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md (raiz) e as regras do projeto: comandos Python a partir de 04_backend/ no venv 04_backend/.venv, banco isolado garra_engenharia_test, commits Conventional Commits com escopo 'feat(backend)' e rodapé 'Refs T51', sem push, sem tocar nas branches main_back/main_front/staging_back/staging_front, sem editar documentos de gestão compartilhados. Papel: Engenheiro Backend. Antes de tudo rode `git merge --ff-only main`.
+
+Contexto: a T51 criou 04_backend/tests/test_portal_versoes_relatorio.py com um `xfail(strict=True)` em `test_listagem_sinaliza_qual_versao_e_a_vigente` (linhas ~135-145): a listagem do Portal do Cliente (rota `GET /portal/relatorios` em 04_backend/app/api/v1/portal.py, lógica em `portal_service.listar_relatorios`) devolve V01 e V02 em pé de igualdade, sem distinguir a vigente (DEC-48 P1; a unicidade `(inspecao_id, tipo, versao)` já existe via migration da T49). Veja 00_docs/backlog-auto/portal-versoes-relatorio.md. O teste aceita o campo `vigente` ou `mais_recente`; use `vigente`.
+
+Tarefa: (1) Leia portal_service.listar_relatorios, o schema de resposta do portal (localize com Grep por 'RelatorioPortal' em 04_backend/app/schemas) e o teste. (2) Acrescente ao schema o campo `vigente: bool` calculado no serviço: vigente = a versão máxima do mesmo (inspecao_id, tipo) entre os relatórios visíveis a esse cliente (calcule em Python sobre a lista já filtrada por `Responsavel.usuario_id`, sem nova query e sem vazar versões de outro contratante). Não mude a ordenação nem o filtro existentes e não altere o download. (3) Remova o `xfail` do teste, ajuste-o só se necessário (sem enfraquecer a asserção) e acrescente testes: dois tipos distintos na mesma inspeção têm cada um sua vigente; relatório com uma só versão é vigente. (4) Verifique se o frontend consome o tipo (Grep 'portal/relatorios' em 03_frontend); NÃO altere o frontend — apenas registre no Doc, como proposta, o uso do campo (selo 'vigente') em 03_frontend/app/portal/documentos/page.tsx. (5) Rode `pytest -k portal` e `ruff check .` com PostgreSQL localhost:5433 (suba via docker compose em 05_infra se necessário; se não for possível, registre que não rodou). (6) Registre resultado e saída dos testes no Doc.
 ```
