@@ -76,12 +76,23 @@ async def ctx(db_session):
         status="EM_ANDAMENTO",
         art_fiscalizacao="ART-014",
     )
-    db_session.add(contrato)
+    # Inspeção é 1:1 com Contrato (`inspecoes.contrato_id` UNIQUE): a outra inspeção
+    # precisa do próprio contrato.
+    outro_contrato = Contrato(
+        edificacao_id=edificacao.id,
+        fiscal_id=fiscal.id,
+        numero=f"CT-BL14-{uuid.uuid4()}",
+        tipo_servico="RFO",
+        status="EM_ANDAMENTO",
+        art_fiscalizacao="ART-014",
+    )
+    db_session.add_all([contrato, outro_contrato])
     await db_session.commit()
     await db_session.refresh(contrato)
+    await db_session.refresh(outro_contrato)
 
     inspecao = Inspecao(contrato_id=contrato.id, tipo="RFO", status="EM_ANDAMENTO")
-    outra_inspecao = Inspecao(contrato_id=contrato.id, tipo="RFO", status="EM_ANDAMENTO")
+    outra_inspecao = Inspecao(contrato_id=outro_contrato.id, tipo="RFO", status="EM_ANDAMENTO")
     db_session.add_all([inspecao, outra_inspecao])
     await db_session.commit()
     await db_session.refresh(inspecao)
@@ -110,7 +121,7 @@ async def ctx(db_session):
     await db_session.execute(
         delete(Ocorrencia).where(Ocorrencia.inspecao_id.in_([inspecao.id, outra_inspecao.id]))
     )
-    for obj in (inspecao, outra_inspecao, contrato, fiscal, subsistema, subsistema_outro, sistema, outro_sistema, edificacao):
+    for obj in (inspecao, outra_inspecao, contrato, outro_contrato, fiscal, subsistema, subsistema_outro, sistema, outro_sistema, edificacao):
         await db_session.delete(obj)
     await db_session.commit()
 

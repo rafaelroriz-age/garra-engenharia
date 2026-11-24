@@ -27,13 +27,17 @@ async def inspecao(db_session: AsyncSession):
     insp = Inspecao(contrato_id=ct.id, tipo="RFO", status="em_andamento")
     db_session.add(insp)
     await db_session.commit()
+    ids = (insp.id, ct.id, resp.id, ed.id)
     yield insp
+    # Após o rollback os objetos expiram; `session.delete(obj)` tentaria lazy-load das
+    # relações fora do greenlet (MissingGreenlet). Apaga por id, na ordem das FKs.
     await db_session.rollback()
-    await db_session.execute(delete(Relatorio).where(Relatorio.inspecao_id == insp.id))
-    await db_session.delete(insp)
-    await db_session.delete(ct)
-    await db_session.delete(resp)
-    await db_session.delete(ed)
+    insp_id, ct_id, resp_id, ed_id = ids
+    await db_session.execute(delete(Relatorio).where(Relatorio.inspecao_id == insp_id))
+    await db_session.execute(delete(Inspecao).where(Inspecao.id == insp_id))
+    await db_session.execute(delete(Contrato).where(Contrato.id == ct_id))
+    await db_session.execute(delete(Responsavel).where(Responsavel.id == resp_id))
+    await db_session.execute(delete(Edificacao).where(Edificacao.id == ed_id))
     await db_session.commit()
 
 
