@@ -137,6 +137,10 @@ def test_erro_do_provedor_nao_vaza_detalhe_nem_grava_sugestao(usuarios, prompt_a
 
 
 def test_erro_de_arquivo_ausente_nao_expoe_storage_key(usuarios, prompt_ativo, fake_ia, criar_foto):
+    # O arquivo só é lido no modo imagem (DEEPSEEK_ENVIAR_IMAGEM=true); no modo texto o serviço
+    # não toca o storage por design (`legenda_ia/contrato.py`). Liga o modo imagem no fake
+    # para exercitar o caminho de erro `storage-key-inexistente` (T110).
+    fake_ia.enviar_imagem = True
     foto_id = _nova_foto(criar_foto)
     chave = client.put(f"/api/v1/fotos/{foto_id}", json={}, headers=_headers(usuarios["auditor"])).json()[
         "storage_key"
@@ -161,7 +165,6 @@ def test_gerar_tem_limite_de_taxa_por_usuario(usuarios, prompt_ativo, fake_ia, c
     assert 429 in codigos, "40 gerações seguidas (40 chamadas pagas ao LLM) não foram limitadas"
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-IA-02: regerar mantém aprovador/data da aprovação anterior")
 def test_regerar_apos_aprovar_limpa_aprovacao_anterior(usuarios, prompt_ativo, fake_ia, criar_foto):
     foto_id = _nova_foto(criar_foto)
     _gerar(foto_id, usuarios["auditor"], {"legenda_bruta": "trinca"})
@@ -173,7 +176,6 @@ def test_regerar_apos_aprovar_limpa_aprovacao_anterior(usuarios, prompt_ativo, f
     assert novo["aprovado_por_id"] is None and novo["aprovado_em"] is None  # RN-17
 
 
-@pytest.mark.xfail(strict=True, reason="SEG-IA-03 (DEC-37 DP-10): editar legenda aprovada mantém o aprovador antigo")
 def test_editar_legenda_aprovada_nao_atribui_edicao_ao_aprovador_anterior(
     usuarios, prompt_ativo, fake_ia, criar_foto
 ):
@@ -207,10 +209,6 @@ def test_sugestao_longa_do_llm_nao_burla_limite_da_legenda(usuarios, prompt_ativ
         assert len(gerada.json()["alertas_ia"]) <= 50
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="SEG-IA-05 (decisão pendente): RN-16 exige aprovação do profissional responsável; hoje o auxiliar aprova",
-)
 def test_auxiliar_nao_aprova_legenda_ia(usuarios, prompt_ativo, fake_ia, criar_foto):
     foto_id = _nova_foto(criar_foto)
     _gerar(foto_id, usuarios["auxiliar"], {"legenda_bruta": "trinca"})
