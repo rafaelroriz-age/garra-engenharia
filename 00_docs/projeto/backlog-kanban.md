@@ -51,7 +51,7 @@ last_updated: 2026-09-17
 | BL-27 | `docker-compose.prod.yml` + `nginx/nginx.conf` | DEC-14 | Engenheiro DevOps |
 | BL-29 | `backup-db.sh` / `restore-db.sh` + agendamento (verificado com stubs, T42) | DEC-14, RNF-08 | Engenheiro DevOps |
 | BL-32 | Portal do Cliente — dashboard e acompanhamento da auditoria (E2E, T41) | RF-13, RN-14 | Engenheiro Backend + Frontend |
-| BL-33 | Portal do Cliente — documentos/relatórios (download real aguarda B-02) (E2E, T41) | RF-13, RN-14 | Engenheiro Backend + Frontend |
+| BL-33 | Portal do Cliente — documentos/relatórios (download real aguarda B-02) (E2E, T41; T109: listagem com campo `vigente`) | RF-13, RN-14 | Engenheiro Backend + Frontend |
 
 ## 🟠 In progress (5)
 
