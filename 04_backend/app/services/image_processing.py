@@ -18,7 +18,7 @@ embutir em relatório (mais agressiva) fica em
 """
 import io
 
-from PIL import Image, ImageOps, UnidentifiedImageError
+from PIL import Image, ImageFile, ImageOps, UnidentifiedImageError
 
 from app.core.errors import DomainError
 
@@ -50,6 +50,10 @@ def reprocessar_imagem(conteudo: bytes) -> tuple[bytes, str, str]:
     Lança `DomainError` (422) se o conteúdo não for uma imagem válida ou se o
     formato detectado não estiver entre os aceitos (JPEG, PNG, WEBP).
     """
+    # O `weasyprint` liga esta flag global ao ser importado; com ela o Pillow aceita
+    # foto truncada (preenchendo o que falta) em vez de recusar o upload.
+    ImageFile.LOAD_TRUNCATED_IMAGES = False
+
     try:
         imagem_verificacao = Image.open(io.BytesIO(conteudo))
         if imagem_verificacao.width * imagem_verificacao.height > MAX_PIXELS_DECODIFICADOS:
