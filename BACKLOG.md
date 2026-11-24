@@ -2018,3 +2018,18 @@ Tarefa: valide o front para o go-live no GitHub Pages com API fixa (lib/api-clie
 ```text
 Siga a 'Regra de pronto' do BACKLOG.md (sem push, 'Refs DEC-59'). Papel: Engenheiro DevOps. Rode `git merge --ff-only main` primeiro. Leia .github/workflows/deploy-pages.yml, 04_backend/Dockerfile.render, 04_backend/.env.example e 00_docs/backlog-auto/aposentar-render.md. O render.yaml antigo está em `git show 20930f5^:render.yaml`: use como referência de variáveis (sem recriar o arquivo na raiz; se útil, crie 05_infra/render.yaml.example). Produza os arquivos do Pronto. Não escreva segredos. Não chame o Render nem a rede.
 ```
+
+### T113 · Go-live: enviar main para origin e acompanhar CI, Pages e sync de main_back
+- **Status:** todo
+- **Origem:** DEC-59
+- **Papel:** Engenheiro DevOps
+- **Depende:** T110, T111, T112
+- **Ambiente:** offline
+- **Dificuldade:** media
+- **Toca:** 00_docs/backlog-auto/golive-envio.md
+- **Doc:** 00_docs/backlog-auto/golive-envio.md
+- **Pronto:** a `main` local foi enviada à origin (sem --force); `git rev-list --count origin/main..main` = 0; workflows ci.yml, deploy-pages.yml e sync-deploy-branches.yml acompanhados com `gh run list` e `gh run watch`, status final no Doc; main_back contém main; falhas de CI causadas pelo código corrigidas em commits pequenos e reenviadas.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md. Papel: Engenheiro DevOps. O DONO AUTORIZOU explicitamente, nesta tarefa e só nela, enviar a branch main à origin (comando `git push origin main`, sem --force) e liberou a barreira com BACKLOG_ESCRITA=1. Passos: `git status` limpo; revise `git log origin/main..main --oneline`; confirme que não há .env, chaves ou dumps no diff; envie a main; acompanhe ci.yml, deploy-pages.yml e sync-deploy-branches.yml (a mudança em sync-deploy-branches.yml propaga main para main_back via API de merge). Se o Pages falhar porque Source não está em GitHub Actions, registre como ação humana. Se o sync reportar conflito, registre no Doc. Corrija falhas de CI causadas pelo código e reenvie. Nunca toque em main_front/staging_*, nunca force, não mexa no Render.
+```

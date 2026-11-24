@@ -1,58 +1,42 @@
-# Propaga automaticamente todo push em `main` para `main_back` e `main_front`
-# (DEC-22, 2026-08-05). Resolve a causa raiz da desorganização anterior:
-# commits/PRs eram integrados só em `main`, mas o deploy no Render
-# (render.yaml, DEC-17) é disparado por `main_back`/`main_front` — que
-# ficavam manualmente defasadas, às vezes por semanas, exigindo sincronismo
-# manual (ou pior, redirecionamento ad-hoc de PRs de dependência direto para
-# uma das duas, gerando divergência de conteúdo entre elas).
-#
-# Regra de ouro a partir de agora: TODO commit/PR (inclusive Dependabot) é
-# integrado em `main`. Nunca commitar direto em `main_back`/`main_front` nem
-# redirecionar o `base` de um PR para elas — este workflow cuida de propagar.
-#
-# Faz merge (não force-push) de `main` em cada branch de deploy, então um
-# hotfix aplicado diretamente em `main_back`/`main_front` (cenário
-# excepcional) não é descartado — só passa a existir também em `main` no
-# próximo merge manual de volta.
-# DESATIVADO (T85, DEC-57): o deploy no Render foi aposentado. Produção roda no
-# PC do dono (05_infra/local) e o front no GitHub Pages (deploy-pages.yml), que
-# não usa main_back/main_front. O gatilho `push` foi removido e o job abaixo
-# está com `if: false`, para não empurrar nada para main_back/main_front.
-# Mantido sem apagar, como registro histórico do modelo anterior (DEC-17/DEC-22).
-name: Sync deploy branches (main -> main_back/main_front) [DESATIVADO, T85]
+# Propaga todo envio para `main` à branch de deploy do backend (`main_back`),
+# que o serviço do Render observa (DEC-59, go-live no Render + GitHub Pages).
+# O front não precisa de branch própria: o GitHub Pages publica direto de `main`
+# (deploy-pages.yml). A propagação usa o merge do lado do servidor da API do
+# GitHub (sem checkout, sem force). Se houver conflito, abre issue.
+name: Sync deploy branches (main -> main_back)
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: write
+  issues: write
+
+concurrency:
+  group: sync-deploy-branches
+  cancel-in-progress: false
 
 jobs:
   sync:
-    if: false
-    name: Merge main em ${{ matrix.branch }}
+    name: Merge main em main_back
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        branch: [main_back, main_front]
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ matrix.branch }}
-
-      - name: Configura autor do merge
+      - name: Merge no servidor
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Merge main
-        run: |
-          git merge --no-edit origin/main -m "chore(infra): sincroniza ${{ matrix.branch }} com main [skip ci]"
-
-      - name: Push
-        run: git push origin ${{ matrix.branch }}
+          set +e
+          out=$(gh api -X POST "repos/${{ github.repository }}/merges" \
+            -f base=main_back -f head=main \
+            -f commit_message="chore(infra): sincroniza main_back com main [skip ci]" 2>&1)
+          code=$?
+          echo "$out"
+          # 204 (já em dia) vem sem corpo e sem erro; 409 = conflito
+          if [ $code -ne 0 ] && ! echo "$out" | grep -q "Nothing to merge"; then
+            exit 1
+          fi
 
       - name: Falha -> abrir issue de conflito
         if: failure()
@@ -62,7 +46,7 @@ jobs:
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `Conflito ao sincronizar main -> ${{ matrix.branch }}`,
-              body: `O merge automático de \`main\` em \`${{ matrix.branch }}\` falhou (provável conflito). Resolva manualmente: \n\n\`\`\`\ngit checkout ${{ matrix.branch }}\ngit merge main\n# resolver conflitos\ngit push origin ${{ matrix.branch }}\n\`\`\`\n\nCommit: ${{ github.sha }}`,
+              title: "Conflito ao sincronizar main -> main_back",
+              body: `O merge automático de main em main_back falhou (provável conflito). Resolva localmente com merge de main em main_back e envie. Commit: ${context.sha}`,
               labels: ["ci-failure", "deploy"]
             });
