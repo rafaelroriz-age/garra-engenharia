@@ -30,6 +30,7 @@ def _problem_response(
     title: str,
     detail: str,
     errors: list[dict] | None = None,
+    headers: dict[str, str] | None = None,
 ) -> JSONResponse:
     body: dict = {
         "type": f"{_BASE_TYPE_URI}/{type_suffix}",
@@ -40,7 +41,9 @@ def _problem_response(
     }
     if errors:
         body["errors"] = errors
-    return JSONResponse(status_code=status_code, content=body, media_type=_PROBLEM_JSON_MEDIA_TYPE)
+    return JSONResponse(
+        status_code=status_code, content=body, headers=headers, media_type=_PROBLEM_JSON_MEDIA_TYPE
+    )
 
 
 async def _handle_domain_error(request: Request, exc: DomainError) -> JSONResponse:
@@ -51,6 +54,7 @@ async def _handle_domain_error(request: Request, exc: DomainError) -> JSONRespon
         title=exc.title,
         detail=exc.detail,
         errors=exc.errors,
+        headers=exc.headers,
     )
 
 

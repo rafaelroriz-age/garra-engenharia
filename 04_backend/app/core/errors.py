@@ -12,6 +12,7 @@ class DomainError(Exception):
 
     `type_suffix` compõe a URI `https://garra-engenharia/erros/{type_suffix}`
     (ver ADR-07). `errors` é a lista opcional de violações campo a campo.
+    `headers` são cabeçalhos HTTP extras da resposta (ex.: `Retry-After` em 429); o handler global os repassa.
     """
 
     def __init__(
@@ -22,6 +23,7 @@ class DomainError(Exception):
         title: str = "Violação de regra de negócio",
         status_code: int = 422,
         errors: list[dict] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> None:
         super().__init__(detail)
         self.detail = detail
@@ -29,6 +31,7 @@ class DomainError(Exception):
         self.title = title
         self.status_code = status_code
         self.errors = errors
+        self.headers = headers
 
 
 class NotFoundError(DomainError):
