@@ -1973,7 +1973,7 @@ Tarefa: (1) Leia portal_service.listar_relatorios, o schema de resposta do porta
 Alvo: backend e banco no Render (Dockerfile.render), front estático no GitHub Pages com NEXT_PUBLIC_API_URL fixa. Sem Neon, sem PC local. Push e painel do Render ficam para uma pessoa.
 
 ### T110 · Go-live: backend verde (pytest + ruff) e prontidão de produção
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-59
 - **Papel:** Engenheiro Backend
 - **Depende:** —
