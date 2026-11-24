@@ -1965,3 +1965,56 @@ Contexto: a T51 criou 04_backend/tests/test_portal_versoes_relatorio.py com um `
 
 Tarefa: (1) Leia portal_service.listar_relatorios, o schema de resposta do portal (localize com Grep por 'RelatorioPortal' em 04_backend/app/schemas) e o teste. (2) Acrescente ao schema o campo `vigente: bool` calculado no serviço: vigente = a versão máxima do mesmo (inspecao_id, tipo) entre os relatórios visíveis a esse cliente (calcule em Python sobre a lista já filtrada por `Responsavel.usuario_id`, sem nova query e sem vazar versões de outro contratante). Não mude a ordenação nem o filtro existentes e não altere o download. (3) Remova o `xfail` do teste, ajuste-o só se necessário (sem enfraquecer a asserção) e acrescente testes: dois tipos distintos na mesma inspeção têm cada um sua vigente; relatório com uma só versão é vigente. (4) Verifique se o frontend consome o tipo (Grep 'portal/relatorios' em 03_frontend); NÃO altere o frontend — apenas registre no Doc, como proposta, o uso do campo (selo 'vigente') em 03_frontend/app/portal/documentos/page.tsx. (5) Rode `pytest -k portal` e `ruff check .` com PostgreSQL localhost:5433 (suba via docker compose em 05_infra se necessário; se não for possível, registre que não rodou). (6) Registre resultado e saída dos testes no Doc.
 ```
+
+---
+
+## Bloco GL — Go-live no Render + GitHub Pages (DEC-59)
+
+Alvo: backend e banco no Render (Dockerfile.render), front estático no GitHub Pages com NEXT_PUBLIC_API_URL fixa. Sem Neon, sem PC local. Push e painel do Render ficam para uma pessoa.
+
+### T110 · Go-live: backend verde (pytest + ruff) e prontidão de produção
+- **Status:** todo
+- **Origem:** DEC-59
+- **Papel:** Engenheiro Backend
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** alta
+- **Toca:** 04_backend/app, 04_backend/tests, 04_backend/.env.example, 00_docs/backlog-auto/golive-backend.md
+- **Doc:** 00_docs/backlog-auto/golive-backend.md
+- **Pronto:** `pytest` e `ruff check .` em 04_backend verdes (ou falhas restantes listadas com causa); com ENVIRONMENT=production o app sobe com RUN_MIGRATIONS_ON_STARTUP=true e STORAGE_PROVEDOR=local em diretório configurável por env (documentado em .env.example); `GET /health` responde; Doc lista as variáveis obrigatórias do Render.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md e as regras do projeto (sem push, commits Conventional Commits com 'Refs DEC-59'). Papel: Engenheiro Backend. Rode `git merge --ff-only main` primeiro.
+Contexto: go-live amanhã no Render (Dockerfile.render, disco persistente montado, STORAGE_PROVEDOR=local ou s3) com front no GitHub Pages. Tarefa: (1) suba o PostgreSQL de 05_infra (localhost:5433) e rode pytest e ruff em 04_backend no banco garra_engenharia_test; corrija falhas reais do código (não enfraqueça testes) ou liste as que são de ambiente Windows. (2) Confirme em app/core/config.py e app/main.py que: ENVIRONMENT=production valida JWT/CORS, migrations rodam com RUN_MIGRATIONS_ON_STARTUP=true, e o diretório do storage local vem de variável de ambiente (se for fixo, torne configurável com padrão atual; documente em .env.example). (3) Confirme que /health funciona sem auth e que o seed do admin roda no boot ou documente o comando. (4) Registre no Doc a lista exata de variáveis de ambiente do Render (obrigatórias/opcionais) e o resultado dos testes.
+```
+
+### T111 · Go-live: frontend verde (lint, build, testes) com API fixa do Render
+- **Status:** todo
+- **Origem:** DEC-59
+- **Papel:** Engenheiro Frontend
+- **Depende:** —
+- **Ambiente:** offline
+- **Dificuldade:** media
+- **Toca:** 03_frontend, 00_docs/backlog-auto/golive-frontend.md
+- **Doc:** 00_docs/backlog-auto/golive-frontend.md
+- **Pronto:** `npm run lint`, `npm run test:unit` e `npm run build` em 03_frontend verdes com NEXT_PUBLIC_API_URL=https://garra-backend.onrender.com/api/v1 e NEXT_PUBLIC_BASE_PATH=/garra-engenharia (sem NEXT_PUBLIC_API_DISCOVERY_URL); `out/` gerado; o front usa a API fixa e NUNCA entra em modo leitura quando a URL fixa está definida; login e rotas principais funcionam sob o basePath; Doc registra comandos e saída.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md e as regras do projeto (sem push, 'Refs DEC-59'). Papel: Engenheiro Frontend. Rode `git merge --ff-only main` primeiro. Em bash use MSYS_NO_PATHCONV=1 ao passar NEXT_PUBLIC_BASE_PATH (senão o Git Bash converte /garra-engenharia em caminho do Windows); o build pode demorar vários minutos no OneDrive: rode em background com timeout alto.
+Tarefa: valide o front para o go-live no GitHub Pages com API fixa (lib/api-client.ts e lib/api-descoberta.ts). Rode lint, test:unit e build conforme o Pronto; corrija erros reais. Confirme que links, assets e service worker respeitam o basePath. Registre no Doc o resultado e o tamanho de out/.
+```
+
+### T112 · Go-live: runbook, checklist e script de smoke-test pós-deploy
+- **Status:** todo
+- **Origem:** DEC-59
+- **Papel:** Engenheiro DevOps
+- **Depende:** —
+- **Ambiente:** offline
+- **Dificuldade:** media
+- **Toca:** 00_docs/backlog-auto/golive-runbook.md, 05_infra/smoke/smoke.sh, 05_infra/.env.render.example
+- **Doc:** 00_docs/backlog-auto/golive-runbook.md
+- **Pronto:** runbook com passos numerados (dump do banco, env do Render, serviço Docker apontando para a branch main e Dockerfile.render, Render Disk persistente em STORAGE, Pages com Source=GitHub Actions e variável de repositório API_URL_PROD, CORS com https://rafaelroriz-age.github.io, rollback); .env.render.example sem segredos; smoke.sh (curl, parametrizado por API_URL, ADMIN_EMAIL e ADMIN_SENHA lidos de variáveis) testa /health, login, listagem e CORS preflight, saindo com código != 0 em falha, validado com `bash -n`.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md (sem push, 'Refs DEC-59'). Papel: Engenheiro DevOps. Rode `git merge --ff-only main` primeiro. Leia .github/workflows/deploy-pages.yml, 04_backend/Dockerfile.render, 04_backend/.env.example e 00_docs/backlog-auto/aposentar-render.md. O render.yaml antigo está em `git show 20930f5^:render.yaml`: use como referência de variáveis (sem recriar o arquivo na raiz; se útil, crie 05_infra/render.yaml.example). Produza os arquivos do Pronto. Não escreva segredos. Não chame o Render nem a rede.
+```
