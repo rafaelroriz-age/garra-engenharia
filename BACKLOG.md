@@ -1989,7 +1989,7 @@ Contexto: go-live amanhã no Render (Dockerfile.render, disco persistente montad
 ```
 
 ### T111 · Go-live: frontend verde (lint, build, testes) com API fixa do Render
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-59
 - **Papel:** Engenheiro Frontend
 - **Depende:** —
