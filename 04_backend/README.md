@@ -359,7 +359,7 @@ Para rodar os testes de lacuna: `docker compose up -d` em `05_infra/`, `alembic 
 | Legendas por IA, endpoints (BL-34) | `legenda-ia-endpoints.md` | `POST /api/v1/fotos/{id}/legenda-ia/gerar` e `PUT /api/v1/fotos/{id}` com `aprovar_legenda_ia`; dependência `get_legenda_ia_client` (503 até haver adapter, B-04) | 14 testes em `test_legenda_ia_endpoints.py`; adapter concreto pendente |
 | `url_fetcher` de fotos em RFO, Cautelar e Residencial (DEC-41 B) | `pipelines-url-fetcher.md` | `report_generator/foto_fetcher.py` (só `garra-foto:<n>` registrado e `data:`); `renderizar_html` segue com data URI | 18 passed, 2 pulados (sem GTK); PDF real e medição não executados |
 | Revisão de segurança de legenda IA, fotos e visitas (BL-23, T29) | `seguranca-legenda-ia.md` | só revisão e `tests/test_seguranca_legenda_ia.py`; 9 achados SEG-IA abertos (sem limite de taxa/custo em `gerar`, aprovação mantida ao regerar/editar, IDOR entre contratos) | 8 passaram, 9 não rodaram (MinIO indisponível) |
-| Legendas por IA, aprovação e limites (DEC-42, T33/T35) | `legenda-ia-aprovacao-auditor.md`, `legenda-ia-limites.md` | `PUT /fotos/{id}` com `aprovar_legenda_ia` só para `auditor` (403 ao `auxiliar`); editar/regerar foto aprovada volta a `rascunho`. `app/services/legenda_ia/` (`limites.py`, `saneamento.py`, `contrato.py`): 429 em `gerar` por usuário e por foto, saída truncada em 500 caracteres e saneada, `legenda_bruta` delimitada. 8 variáveis `LEGENDA_IA_*` (já em `.env.example`; ainda não repassadas pelo `docker-compose.yml`) | 53 testes de limites passaram; os testes com PostgreSQL não rodaram. Sem `Retry-After` no header; janela em memória por processo |
+| Legendas por IA, aprovação e limites (DEC-42, T33/T35) | `legenda-ia-aprovacao-auditor.md`, `legenda-ia-limites.md` | `PUT /fotos/{id}` com `aprovar_legenda_ia` só para `auditor` (403 ao `auxiliar`); editar/regerar foto aprovada volta a `rascunho`. `app/services/legenda_ia/` (`limites.py`, `saneamento.py`, `contrato.py`): 429 em `gerar` por usuário e por foto, saída truncada em 500 caracteres e saneada, `legenda_bruta` delimitada. 8 variáveis `LEGENDA_IA_*` (já em `.env.example`; ainda não repassadas pelo `docker-compose.yml`) | 53 testes de limites passaram; os testes com PostgreSQL não rodaram. `Retry-After` no header desde a T108; janela em memória por processo |
 | Legenda aprovada nas Vistorias Cautelar e Residencial (BL-38, T37) | `legenda-relatorio-vistorias.md` | `normalizar_contexto` dos dois pipelines usa `legenda_para_relatorio`: só `legenda` é impressa, nunca `legenda_ia_sugerida` (PDF e DOCX). Testes de PDF puladas sem WeasyPrint/GTK |
 | Legenda aprovada no LTIP e no RFIP (BL-38, T36) | `legenda-relatorio-ltip-rfip.md` | `_normalizar_ocorrencia` do `ltip_pipeline.py` passa cada foto por `legenda_para_relatorio`; o `rfip_pipeline.py` herda, sem edição. Hoje nenhum template imprime legenda de foto | `test_legenda_relatorio_ltip_rfip.py`: 42 passed, 5 skipped (sem WeasyPrint/GTK) com os testes de pipeline; PDF não executado |
 
@@ -374,3 +374,11 @@ python -m app.scripts.exportar_dataset_legenda --saida D:/dados/legenda [--desde
 ```
 
 Somente leitura; gera `dataset_legenda.jsonl` (formato chat) e `metricas_legenda.csv` das fotos com legenda IA aprovada. `--saida` dentro de repositório git é recusada. Detalhes em [ia-dataset-feedback.md](../00_docs/backlog-auto/ia-dataset-feedback.md).
+
+## Produção no Render (T108, T110; DEC-60 proposta)
+
+- Imagem `Dockerfile.render`: `render-start.sh` prepara `STORAGE_LOCAL_DIR` como root e roda o uvicorn como `appuser`.
+- Boot: `RUN_MIGRATIONS_ON_STARTUP=true` aplica as migrations; `SEED_ON_STARTUP=true` (exige `ADMIN_SENHA` forte) semeia gabarito e admin. Fora de dev, `seed_admin` sem `ADMIN_SENHA` falha.
+- `GET /health` informa também `storage`; com disco local sem escrita, `status` vira `degraded`.
+- O 429 de `/legenda-ia/gerar` traz o header `Retry-After` (a janela segue em memória por processo).
+- Variáveis e estado dos testes: [golive-backend.md](../00_docs/backlog-auto/golive-backend.md).

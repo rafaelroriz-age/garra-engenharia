@@ -176,3 +176,6 @@ Variáveis opcionais (default já apontam para o `docker-compose.yml` local): `E
 
 Comandos `npm`/`next` deste app são executados a partir desta pasta (`03_frontend/`). O `Dockerfile` de desenvolvimento também vive aqui; o `docker-compose.yml` que o referencia está em [05_infra/](../05_infra/) (build context `../03_frontend`).
 
+## Go-live com API fixa (T111; DEC-60 proposta)
+
+Build de produção: `NEXT_PUBLIC_API_URL=<backend>/api/v1` e `NEXT_PUBLIC_BASE_PATH=/garra-engenharia`, sem `NEXT_PUBLIC_API_DISCOVERY_URL` (assim o app não entra em modo leitura). No workflow a URL vem da variável de repositório `API_URL_PROD`. Evidências em [golive-frontend.md](../00_docs/backlog-auto/golive-frontend.md); o E2E do Service Worker não foi rodado nessa validação.
