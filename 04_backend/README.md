@@ -381,4 +381,5 @@ Somente leitura; gera `dataset_legenda.jsonl` (formato chat) e `metricas_legenda
 - Boot: `RUN_MIGRATIONS_ON_STARTUP=true` aplica as migrations; `SEED_ON_STARTUP=true` (exige `ADMIN_SENHA` forte) semeia gabarito e admin. Fora de dev, `seed_admin` sem `ADMIN_SENHA` falha.
 - `GET /health` informa também `storage`; com disco local sem escrita, `status` vira `degraded`.
 - O 429 de `/legenda-ia/gerar` traz o header `Retry-After` (a janela segue em memória por processo).
+- O upload de foto recusa JPEG truncado (422) mesmo com o WeasyPrint carregado, que liga `ImageFile.LOAD_TRUNCATED_IMAGES` no processo inteiro (T113; `tests/test_imagem_truncada.py`).
 - Variáveis e estado dos testes: [golive-backend.md](../00_docs/backlog-auto/golive-backend.md).

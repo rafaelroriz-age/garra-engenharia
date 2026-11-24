@@ -803,3 +803,16 @@ last_updated: 2026-11-24
 | **Decisão proposta** | (P1) Backend (`04_backend/Dockerfile.render`) e PostgreSQL no Render; front estático no GitHub Pages com API fixa (variável de repositório `API_URL_PROD`), sem descoberta nem modo leitura. (P2) Storage `local` em Render Disk (`STORAGE_LOCAL_DIR=/var/data/storage`) ou `s3`. (P3) O container inicia como root só para preparar o diretório do disco e roda o uvicorn como `appuser` via `setpriv` (T110). (P4) Seeds idempotentes no boot com `SEED_ON_STARTUP=true`, que fora de dev exige `ADMIN_SENHA` forte; `seed_admin` nunca usa senha padrão fora de dev/teste. (P5) Todo push em `main` é propagado para `main_back` pela API de merge do GitHub. |
 | **Consequências** | Disco persistente exige plano pago. Nada foi validado no Render real. O runtime no PC, o Neon e o modo leitura deixam de ser o caminho de produção, mas o código permanece. |
 | **Referência** | `00_docs/backlog-auto/golive-backend.md`, `golive-frontend.md`, `golive-runbook.md`, `legenda-ia-retry-after.md` |
+
+---
+
+## DEC-61 — Sync para `main_back` condicionado ao CI verde (proposta de T113)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-24 |
+| **Status** | Proposta (aguarda aprovação do dono; não implementada) |
+| **Contexto** | O P5 da DEC-60 propaga todo push da `main` para `main_back`. O sync não espera o CI, que falhava em `4ce09c3`; o Render pode publicar código não validado (R-28). |
+| **Decisão proposta** | `sync-deploy-branches.yml` passa a disparar por `workflow_run` do CI, só com sucesso na `main`, mantendo o `workflow_dispatch`. Ajusta o P5 da DEC-60. |
+| **Consequências** | O deploy espera o CI inteiro; um job instável (E2E, Trivy) atrasa a publicação. Exige tarefa própria de DevOps. |
+| **Referência** | `00_docs/backlog-auto/golive-envio.md` |

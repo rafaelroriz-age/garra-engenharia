@@ -325,6 +325,7 @@ last_updated: 2026-11-24
 |---|---|
 | **Origem** | T110 e T108 (2026-11-24), em [golive-backend.md](../backlog-auto/golive-backend.md) |
 | **Descrição** | Última rodada completa em banco limpo: 865 passed, 24 failed, 7 skipped, 4 xfailed. Houve correções depois e a suíte não foi rodada inteira de novo (falta de memória); esperam-se cerca de 19 falhas (16 de ordem/event loop, 2 do volume do container, 1 de versão do zlib). O CI usa `--maxfail=1` e pode parar na primeira. `garra_engenharia_test` está poluído. |
+| **Atualização (T113, 2026-11-24)** | Causas do CI vermelho corrigidas na `main` local (migrations e MinIO no job, `NullPool`, vetor de snapshot, foto truncada). Reprodução do CI em Linux: 897 passed, 3 skipped, 4 xfailed, 0 falhas; substitui os números acima. Segue aberto: nada rodou no GitHub Actions, e `docker-build-scan` (Trivy) e `e2e` não foram verificados. |
 | **Probabilidade / Impacto** | Alta / Média |
 | **Mitigação** | Corrigir o event loop entre módulos (engine por loop ou `NullPool` nos testes), comparar o texto decifrado no vetor de `test_snapshot`, recriar o banco de teste e acompanhar o CI na T113. |
 | **Gatilho de escalada** | CI vermelho após o envio da `main` |
@@ -339,4 +340,15 @@ last_updated: 2026-11-24
 | **Probabilidade / Impacto** | Média / Alta |
 | **Mitigação** | No Render, definir `LEGENDA_IA_RAG_ATIVO=false` até a decisão de LGPD; seguir a §5 de `golive-backend.md` para as variáveis; corrigir o `.env.render.example` em tarefa própria; conferir `GET /health` com `storage: ok` e rodar o smoke-test após o deploy. |
 | **Gatilho de escalada** | `storage: unavailable`, smoke-test com falha ou dados reais com RAG ligado |
+| **Responsável** | Engenheiro DevOps |
+
+### R-28 — Push na `main` publica o backend sem esperar o CI
+
+| Campo | Valor |
+|---|---|
+| **Origem** | T113 (2026-11-24), em [golive-envio.md](../backlog-auto/golive-envio.md) |
+| **Descrição** | `sync-deploy-branches.yml` dispara em todo push na `main` e propaga para `main_back`, observada pelo Render, sem depender do `ci.yml`. Código com CI vermelho pode ser publicado. Além disso, o backlog-auto marca a T113 como `done` sem nada ter sido enviado (mesmo padrão do R-23). |
+| **Probabilidade / Impacto** | Média / Alta |
+| **Mitigação** | Disparar o sync só após CI verde (`workflow_run`, DEC-61 proposta). Até lá, conferir o CI e o `GET /health` logo após o envio. Não tratar a T113 como concluída até `origin/main_back` conter a `main`. |
+| **Gatilho de escalada** | CI vermelho num commit já presente em `main_back` |
 | **Responsável** | Engenheiro DevOps |

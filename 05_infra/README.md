@@ -270,4 +270,7 @@ Alvo atual do go-live. Enquanto a DEC-60 não for aprovada, vale como proposta; 
 - Recomendado: `SEED_ON_STARTUP=true` com `ADMIN_SENHA` (12+ caracteres), ainda ausentes do `.env.render.example`. Definir `LEGENDA_IA_RAG_ATIVO=false` (R-21, R-27).
 - Front: a URL da API vem da variável de repositório `API_URL_PROD` (com `/api/v1`); não é mais preciso editar o `deploy-pages.yml`.
 - `sync-deploy-branches.yml` foi reativado: propaga `main` para `main_back`.
+- O sync não espera o CI: um push na `main` pode publicar o backend com CI vermelho (R-28; DEC-61 proposta).
+- Em 2026-11-24 a `main` ainda não tinha sido enviada (T113 bloqueada pela barreira de push): ver `00_docs/backlog-auto/golive-envio.md`.
+- O job de backend do `ci.yml` aplica `alembic upgrade head` e sobe o MinIO antes do `pytest` (T113; ainda não executado no GitHub Actions).
 - Pós-deploy: `API_URL=<raiz do backend> ADMIN_EMAIL=... ADMIN_SENHA=... bash 05_infra/smoke/smoke.sh`.

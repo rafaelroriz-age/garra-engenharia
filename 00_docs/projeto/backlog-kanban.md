@@ -61,7 +61,7 @@ last_updated: 2026-11-24
 | BL-11 | Upload de fotos (clipboard paste + upload manual) — T16: 9 lacunas; T19 corrigiu 8 (faltam `UNIQUE(storage_key)` e URL pré-assinada; T31: `origem` do vínculo em enum fechado) | RF-05, RNF-02 | Engenheiro Backend + Frontend |
 | BL-14 | CRUD de Ocorrências (sistema, subsistema, localização, classificação) — regras revisadas (T06); correções L1–L7 aplicadas (T08), testes ainda não rodados (sem PostgreSQL) | RF-04, RN-03, RN-05, RN-10 | Engenheiro Backend + Frontend |
 | BL-16 | Dashboard de saúde por edificação/sistema predial | RF-07 | Engenheiro Backend + Frontend |
-| BL-24 | Deploy de produção (Render) — go-live preparado (T110–T112, DEC-60 proposta); falta enviar a `main` (T113), configurar o Render e rodar o smoke-test (R-26, R-27) | HT-04, DEC-22 | Engenheiro DevOps |
+| BL-24 | Deploy de produção (Render) — go-live preparado (T110–T112, DEC-60 proposta); falta enviar a `main` à mão (T113 bloqueada pela barreira de push), configurar o Render e rodar o smoke-test (R-26, R-27) | HT-04, DEC-22 | Engenheiro DevOps |
 
 ## 🟢 Done (22)
 
