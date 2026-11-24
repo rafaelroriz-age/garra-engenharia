@@ -1082,7 +1082,7 @@ Tarefa: (1) Suba o PostgreSQL de 05_infra (docker compose a partir de 05_infra/,
 ```
 
 ### T108 · Legenda IA: devolver o cabeçalho Retry-After no 429 de /legenda-ia/gerar
-- **Status:** doing
+- **Status:** done
 - **Origem:** T35
 - **Papel:** Engenheiro Backend
 - **Depende:** T107
