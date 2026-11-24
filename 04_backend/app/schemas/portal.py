@@ -64,6 +64,7 @@ class PortalRelatorioRead(BaseModel):
     emitido_em: datetime | None = None
     tem_pdf: bool
     tem_docx: bool
+    vigente: bool
     inspecao_id: uuid.UUID
     contrato_id: uuid.UUID
     contrato_numero: str
