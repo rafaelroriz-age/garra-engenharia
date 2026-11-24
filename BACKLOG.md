@@ -2005,7 +2005,7 @@ Tarefa: valide o front para o go-live no GitHub Pages com API fixa (lib/api-clie
 ```
 
 ### T112 · Go-live: runbook, checklist e script de smoke-test pós-deploy
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-59
 - **Papel:** Engenheiro DevOps
 - **Depende:** —
