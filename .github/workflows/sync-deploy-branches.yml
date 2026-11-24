@@ -6,7 +6,10 @@
 name: Sync deploy branches (main -> main_back)
 
 on:
-  push:
+  # Só propaga depois que o CI de `main` passar: o Render observa `main_back`.
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
@@ -21,6 +24,10 @@ concurrency:
 jobs:
   sync:
     name: Merge main em main_back
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     steps:
       - name: Merge no servidor
