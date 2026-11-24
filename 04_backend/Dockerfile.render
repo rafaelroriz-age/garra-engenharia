@@ -1,0 +1,39 @@
+# =============================================================================
+# 04_backend/Dockerfile.render
+# Imagem de PRODUÇÃO do backend FastAPI, usada exclusivamente pelo deploy no
+# Render (ver ../render.yaml). Não substitui `04_backend/Dockerfile` (imagem de
+# DESENVOLVIMENTO com --reload, usada por `05_infra/docker-compose.yml`).
+#
+# Diferenças em relação ao Dockerfile de desenvolvimento:
+#   - sem `--reload` (não há bind mount de código em produção);
+#   - escuta na porta indicada por `$PORT` (Render injeta essa variável em
+#     tempo de execução; padrão local 8000 se não definida);
+#   - roda como usuário não-root (hardening básico de imagem).
+# =============================================================================
+FROM python:3.12-slim
+
+# Bibliotecas de sistema exigidas pelo WeasyPrint para geração de PDF (DEC-01).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libgdk-pixbuf-2.0-0 \
+    libcairo2 \
+    libffi-dev \
+    shared-mime-info \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+RUN useradd --create-home --shell /usr/sbin/nologin appuser \
+    && chown -R appuser:appuser /app
+USER appuser
+
+EXPOSE 8000
+
+# Shell form: necessário para expandir ${PORT} em tempo de execução.
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
