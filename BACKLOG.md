@@ -1082,7 +1082,7 @@ Tarefa: (1) Suba o PostgreSQL de 05_infra (docker compose a partir de 05_infra/,
 ```
 
 ### T108 · Legenda IA: devolver o cabeçalho Retry-After no 429 de /legenda-ia/gerar
-- **Status:** todo
+- **Status:** doing
 - **Origem:** T35
 - **Papel:** Engenheiro Backend
 - **Depende:** T107
@@ -1989,7 +1989,7 @@ Contexto: go-live amanhã no Render (Dockerfile.render, disco persistente montad
 ```
 
 ### T111 · Go-live: frontend verde (lint, build, testes) com API fixa do Render
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-59
 - **Papel:** Engenheiro Frontend
 - **Depende:** —
@@ -2005,7 +2005,7 @@ Tarefa: valide o front para o go-live no GitHub Pages com API fixa (lib/api-clie
 ```
 
 ### T112 · Go-live: runbook, checklist e script de smoke-test pós-deploy
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-59
 - **Papel:** Engenheiro DevOps
 - **Depende:** —
