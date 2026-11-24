@@ -15,7 +15,10 @@ config = context.config
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
-if config.config_file_name is not None:
+# Com RUN_MIGRATIONS_ON_STARTUP o Alembic roda dentro da app (`app/core/migrations.py` passa
+# configure_logger=False): reconfigurar aqui baixava o root para WARN e desligava os loggers
+# `app.*`, sumindo com os logs do boot (seeds, storage) depois das migrations (T110).
+if config.config_file_name is not None and config.attributes.get("configure_logger", True):
     fileConfig(config.config_file_name)
 
 # URL de conexão obtida das Settings da aplicação (env vars / .env), não do

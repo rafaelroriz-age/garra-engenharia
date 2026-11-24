@@ -11,6 +11,9 @@ from typing import Literal
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Senha usada pelo `seed_admin` só em desenvolvimento/teste, quando ADMIN_SENHA não é definida.
+SENHA_ADMIN_PADRAO_DEV = "Admin@Garra123"
+
 
 class Settings(BaseSettings):
     """Configurações da aplicação lidas do ambiente (case-insensitive)."""
@@ -24,6 +27,12 @@ class Settings(BaseSettings):
     # Para plataformas sem Pre-Deploy Command (Render, runtime nativo): aplica
     # `alembic upgrade head` no boot. Ver `app/core/migrations.py`.
     run_migrations_on_startup: bool = False
+    # Go-live (T110, DEC-59): roda os seeds idempotentes (gabarito + admin) no boot, depois das
+    # migrations. Ver `app/core/bootstrap.py`. O admin só é criado se ADMIN_SENHA estiver definida.
+    seed_on_startup: bool = False
+    admin_email: str = "admin@garra-engenharia.com.br"
+    admin_nome: str = "Administrador"
+    admin_senha: SecretStr | None = None
 
     # --- PostgreSQL (DEC-07) ---------------------------------------------------
     postgres_user: str = "garra"
@@ -134,6 +143,15 @@ class Settings(BaseSettings):
                 raise ValueError(
                     "LEGENDA_IA_PROVEDOR=deepseek exige DEEPSEEK_API_KEY em ENVIRONMENT="
                     f"'{self.environment}'. Defina a chave ou use LEGENDA_IA_PROVEDOR=fake."
+                )
+            senha_admin = self.admin_senha.get_secret_value() if self.admin_senha else ""
+            # Sem admin semeado no boot, o 1º POST /auth/register da internet vira auditor.
+            if self.seed_on_startup and (
+                len(senha_admin) < 12 or senha_admin == SENHA_ADMIN_PADRAO_DEV
+            ):
+                raise ValueError(
+                    "SEED_ON_STARTUP=true exige ADMIN_SENHA com pelo menos 12 caracteres (e "
+                    f"diferente da senha padrão de dev) em ENVIRONMENT='{self.environment}'."
                 )
         return self
 

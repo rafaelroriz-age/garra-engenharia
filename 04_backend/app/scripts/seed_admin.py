@@ -19,7 +19,7 @@ import sys
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from app.core.config import get_settings
+from app.core.config import SENHA_ADMIN_PADRAO_DEV, get_settings
 from app.core.security import hash_password
 from app.models import Usuario
 
@@ -54,8 +54,15 @@ async def criar_admin(email: str, senha: str, nome: str) -> str:
 
 def main() -> int:
     email = os.getenv("ADMIN_EMAIL", "admin@garra-engenharia.com.br")
-    senha = os.getenv("ADMIN_SENHA", "Admin@Garra123")
+    senha = os.getenv("ADMIN_SENHA", "")
     nome = os.getenv("ADMIN_NOME", "Administrador")
+
+    if not senha:
+        # Senha previsível só em dev/teste (CI e E2E); fora disso exige ADMIN_SENHA (T110).
+        if not get_settings().is_development:
+            print("ERRO: defina ADMIN_SENHA fora de desenvolvimento.", file=sys.stderr)
+            return 1
+        senha = SENHA_ADMIN_PADRAO_DEV
 
     if len(senha) < SENHA_MINIMA:
         print(f"ERRO: ADMIN_SENHA precisa ter ao menos {SENHA_MINIMA} caracteres.", file=sys.stderr)
