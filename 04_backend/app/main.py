@@ -27,6 +27,7 @@ from app.api.v1.portal import router as portal_router
 from app.api.v1.relatorios import router as relatorios_router
 from app.api.v1.responsaveis import router as responsaveis_router
 from app.api.v1.visitas import router as visitas_router
+from app.core.bootstrap import semear_no_boot, verificar_storage_local
 from app.core.config import get_settings
 from app.core.database import engine
 from app.core.exception_handlers import register_exception_handlers
@@ -50,6 +51,12 @@ async def lifespan(_app: FastAPI):
         logger.info("Aplicando migrations Alembic (RUN_MIGRATIONS_ON_STARTUP=true)...")
         await asyncio.to_thread(aplicar_migrations)
         logger.info("Migrations aplicadas com sucesso.")
+    if settings.seed_on_startup:
+        logger.info("Rodando seeds idempotentes (SEED_ON_STARTUP=true)...")
+        await semear_no_boot(settings)
+    if settings.storage_provedor == "local":
+        estado = await asyncio.to_thread(verificar_storage_local, settings)
+        logger.info("Storage local em %s: %s", settings.storage_local_dir, estado)
     yield
 
 # Documentação interativa só em desenvolvimento (OWASP A05, arquitetura.md Seção 10.1).
@@ -110,9 +117,13 @@ async def health() -> dict:
         logger.exception("Healthcheck: falha ao conectar ao PostgreSQL")
         database_status = "unavailable"
 
+    storage_status = await asyncio.to_thread(verificar_storage_local, settings)
+    saudavel = database_status == "ok" and storage_status != "unavailable"
+
     return {
-        "status": "ok" if database_status == "ok" else "degraded",
+        "status": "ok" if saudavel else "degraded",
         "app": settings.app_name,
         "environment": settings.environment,
         "database": database_status,
+        "storage": storage_status,
     }

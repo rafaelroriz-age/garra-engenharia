@@ -19,7 +19,7 @@ import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 from PIL import Image
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
@@ -28,6 +28,7 @@ from app.core.database import get_db
 from app.core.security import create_access_token, hash_password
 from app.main import app
 from app.models import (
+    ChamadaIA,
     Contrato,
     Edificacao,
     Foto,
@@ -90,6 +91,8 @@ async def usuarios():
         await session.commit()
     yield ids
     async with _Session() as session:
+        # Telemetria (BL-34) referencia o usuário sem cascade: apaga antes do usuário.
+        await session.execute(delete(ChamadaIA).where(ChamadaIA.usuario_id.in_(ids.values())))
         await session.execute(delete(Usuario).where(Usuario.id.in_(ids.values())))
         await session.commit()
 
@@ -101,6 +104,8 @@ async def nome_prompt(monkeypatch):
     monkeypatch.setattr(foto_service, "PROMPT_LEGENDA_IA_NOME", nome)
     yield nome
     async with _Session() as session:
+        ids_prompt = select(PromptIA.id).where(PromptIA.nome == nome)
+        await session.execute(delete(ChamadaIA).where(ChamadaIA.prompt_ia_id.in_(ids_prompt)))
         await session.execute(delete(PromptIA).where(PromptIA.nome == nome))
         await session.commit()
 

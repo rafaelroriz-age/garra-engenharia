@@ -120,7 +120,7 @@ def test_criar_sem_prioridade_deriva_sugestao_do_grau_risco(auth, inspecao_conte
     response = client.post(
         f"/api/v1/inspecoes/{inspecao_context['inspecao'].id}/ocorrencias",
         json=_base_payload(inspecao_context, grau_risco="CRITICO"),
-        headers=auth["Authorization"],
+        headers={"Authorization": auth["Authorization"]},
     )
 
     assert response.status_code == 201
@@ -135,7 +135,7 @@ def test_criar_prioridade_igual_a_sugestao_nao_registra_ajuste(auth, inspecao_co
     response = client.post(
         f"/api/v1/inspecoes/{inspecao_context['inspecao'].id}/ocorrencias",
         json=_base_payload(inspecao_context, grau_risco="MEDIO", prioridade=3),
-        headers=auth["Authorization"],
+        headers={"Authorization": auth["Authorization"]},
     )
 
     assert response.status_code == 201
@@ -149,7 +149,7 @@ def test_criar_sobrescrita_registra_autoria_do_ajuste(auth, inspecao_context):
     response = client.post(
         f"/api/v1/inspecoes/{inspecao_context['inspecao'].id}/ocorrencias",
         json=_base_payload(inspecao_context, grau_risco="MEDIO", prioridade=5),
-        headers=auth["Authorization"],
+        headers={"Authorization": auth["Authorization"]},
     )
 
     assert response.status_code == 201
@@ -170,7 +170,7 @@ def test_criar_conforme_prioridade_nao_aplicavel(auth, inspecao_context):
             tipo_anomalia=None,
             grau_risco="MINIMO",
         ),
-        headers=auth["Authorization"],
+        headers={"Authorization": auth["Authorization"]},
     )
 
     assert response.status_code == 201
@@ -184,7 +184,7 @@ def test_atualizar_sobrescrita_registra_autoria_do_ajuste(auth, inspecao_context
     criado = client.post(
         f"/api/v1/inspecoes/{inspecao_context['inspecao'].id}/ocorrencias",
         json=_base_payload(inspecao_context, grau_risco="MEDIO"),
-        headers=auth["Authorization"],
+        headers={"Authorization": auth["Authorization"]},
     ).json()
     assert criado["prioridade"] == 3
     assert criado["prioridade_ajustada_por_id"] is None
@@ -192,7 +192,7 @@ def test_atualizar_sobrescrita_registra_autoria_do_ajuste(auth, inspecao_context
     atualizado = client.put(
         f"/api/v1/ocorrencias/{criado['id']}",
         json=_base_payload(inspecao_context, grau_risco="CRITICO", prioridade=3),
-        headers=auth["Authorization"],
+        headers={"Authorization": auth["Authorization"]},
     )
 
     assert atualizado.status_code == 200

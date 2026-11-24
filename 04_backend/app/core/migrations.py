@@ -21,4 +21,5 @@ def aplicar_migrations() -> None:
     config = Config(str(BACKEND_DIR / "alembic.ini"))
     config.set_main_option("script_location", str(BACKEND_DIR / "alembic"))
     config.set_main_option("sqlalchemy.url", get_settings().database_url)
+    config.attributes["configure_logger"] = False  # preserva o logging da app (alembic/env.py)
     command.upgrade(config, "head")

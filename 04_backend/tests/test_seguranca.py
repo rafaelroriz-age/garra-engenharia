@@ -61,6 +61,18 @@ def test_request_id_enviado_pelo_cliente_e_ecoado_para_correlacao():
 
 
 def test_registro_publico_bloqueado_quando_ja_existem_usuarios():
+    # Pré-condição explícita (T110): num banco recém-migrado o 1º registro é aberto
+    # (bootstrap); garante que exista ao menos um usuário antes de testar o bloqueio.
+    primeiro = client.post(
+        "/api/v1/auth/register",
+        json={
+            "nome": "Bootstrap",
+            "email": f"bootstrap-{uuid.uuid4()}@garra-engenharia.com.br",
+            "senha": "senha-forte-123",
+        },
+    )
+    assert primeiro.status_code in (201, 403)
+
     response = client.post(
         "/api/v1/auth/register",
         json={
