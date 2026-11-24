@@ -1948,7 +1948,7 @@ Tarefa: (1) Leia edificacoes.py e descubra o caminho exato (método e rota) do u
 ```
 
 ### T109 · Portal do Cliente: sinalizar a versão vigente de cada relatório na listagem (fecha o xfail da T51)
-- **Status:** doing
+- **Status:** done
 - **Origem:** T51
 - **Papel:** Engenheiro Backend
 - **Depende:** —
