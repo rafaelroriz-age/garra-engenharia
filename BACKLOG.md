@@ -2020,7 +2020,7 @@ Siga a 'Regra de pronto' do BACKLOG.md (sem push, 'Refs DEC-59'). Papel: Engenhe
 ```
 
 ### T113 · Go-live: enviar main para origin e acompanhar CI, Pages e sync de main_back
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-59
 - **Papel:** Engenheiro DevOps
 - **Depende:** T110, T111, T112
