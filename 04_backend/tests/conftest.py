@@ -10,11 +10,16 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
 from app.core.config import get_settings
+from app.core.database import AsyncSessionLocal
 
 settings = get_settings()
 
 test_engine = create_async_engine(settings.database_url, poolclass=NullPool, future=True)
 TestSessionLocal = async_sessionmaker(bind=test_engine, expire_on_commit=False)
+
+# A API sob teste (`get_db`) também precisa do NullPool: cada `TestClient` roda em um
+# event loop próprio e o asyncpg não permite reaproveitar conexão do pool entre loops.
+AsyncSessionLocal.configure(bind=test_engine)
 
 
 @pytest_asyncio.fixture

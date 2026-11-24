@@ -60,6 +60,8 @@ jobs:
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
       JWT_SECRET_KEY: ci-only-secret-not-for-production
+      MINIO_ROOT_USER: garra_ci
+      MINIO_ROOT_PASSWORD: garra_ci_secret
     steps:
       - uses: actions/checkout@v4
 
@@ -81,6 +83,23 @@ jobs:
       - name: Lint (ruff)
         run: ruff check .
         continue-on-error: true
+
+      # Os testes de storage/fotos precisam de um S3 real. `services:` não aceita o
+      # comando `server /data`, por isso o MinIO sobe num passo próprio.
+      - name: Subir MinIO e criar o bucket
+        run: |
+          docker run -d --name minio --network host \
+            -e MINIO_ROOT_USER -e MINIO_ROOT_PASSWORD minio/minio:latest server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 2
+          done
+          docker run --rm --network host --entrypoint sh minio/mc:latest -c \
+            "mc alias set local http://localhost:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD && mc mb --ignore-existing local/relatorios-prediais"
+
+      # Os testes usam o schema real: sem as migrations o banco do service está vazio.
+      - name: Aplicar migrations
+        run: alembic upgrade head
 
       - name: Testes (pytest)
         run: pytest --maxfail=1
