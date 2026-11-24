@@ -3,12 +3,12 @@ title: Status do Projeto — Sistema de Automação de Relatórios Prediais
 type: gestao
 status: ativo
 owner: Garra Engenharia
-last_updated: 2026-11-10
+last_updated: 2026-11-24
 ---
 
 # Status do Projeto
 
-**Última atualização:** 2026-11-11  
+**Última atualização:** 2026-11-24  
 **Fase atual:** MVP funcional do sistema em evolução, com backend e frontend já operando para os fluxos principais de cadastro, inspeção, ocorrências, dashboard e portal do cliente. Os templates do RFO e do LTIP já são derivados por script determinístico dos originais do cliente (BL-12/BL-13/BL-17, ADR-13), agora com a marca vetorizada no cabeçalho (DEC-30/ADR-16). **A validação de requisitos foi concluída em 2026-09-17 (DEC-29): B-01 encerrado, nenhuma tarefa segue bloqueada por lacuna; B-02 também foi encerrado na mesma data (DEC-30).** Em 2026-11-04 os 5 modelos passaram a ter template (RFIP, T13) e LTIP, Vistoria Cautelar e Vistoria Residencial ganharam pipeline de renderização (T05, T11, T12). Restam a montagem banco → contexto dos demais modelos (RFO feita na T45, ainda sem endpoint), a conferência visual do PDF (HT-09) e a decisão de provedor de IA (B-04). A T22 criou a persistência das legendas por IA (BL-36, migration `f7c2a9d4e6b1`). O lote T14–T17 não alterou código de produção: revisou o modelo de dados das legendas por IA, as regras de Visitas e o upload de fotos (testes de lacuna escritos e ainda não executados, R-15) e mostrou que o **LTIP viola o RNF-06** (R-03 reaberto).  
 **Progresso geral:** ████████████████░ 88%
 
@@ -156,6 +156,10 @@ last_updated: 2026-11-10
 | T106 (backlog-auto) — nginx: `location` própria para upload de documentos de edificação (R-25) | [nginx-limite-corpo-documentos.md](../backlog-auto/nginx-limite-corpo-documentos.md) | 2026-11-24 | ✅ `nginx.conf`: `location ~ ^/api/v1/edificacoes/[^/]+/documentos$` com `30m` (teto do backend 25 MiB); padrão `1m` mantido; `nginx -t` OK em Docker; sem teste de roteamento com tráfego real. R-25 mitigado |
 | T107 (backlog-auto) — Limpeza dos `xfail` de `test_seguranca_legenda_ia.py` | [seguranca-legenda-ia-xfail-T107.md](../backlog-auto/seguranca-legenda-ia-xfail-T107.md) | 2026-11-24 | 🟡 **Parcial, nenhum teste alterado:** rodada 1 deu 1 failed, 8 passed, 8 xfailed, 3 errors (XPASS(strict) em SEG-IA-05, auxiliar recebe 403); rodada 2 morreu por falta de memória; erros possivelmente do ambiente Windows (boto3 `OSError`). Marcas só saem após rodada limpa |
 | T109 (backlog-auto) — Portal: campo `vigente` na listagem de relatórios (DEC-48 P1) | [T109-portal-versao-vigente.md](../backlog-auto/T109-portal-versao-vigente.md) | 2026-11-24 | ✅ `PortalRelatorioRead.vigente` calculado em `portal_service.listar_relatorios` (maior versão por `(inspecao_id, tipo)`, comparação numérica); `xfail` da T51 removido; `test_portal_versoes_relatorio.py` 18 passed, `ruff` limpo. Frontend (selo «vigente») só proposto; `-k portal` global não concluiu (WeasyPrint/MinIO no Windows) |
+| T108 (backlog-auto) — `Retry-After` no 429 da legenda IA | [legenda-ia-retry-after.md](../backlog-auto/legenda-ia-retry-after.md) | 2026-11-24 | ✅ 56 testes de limite passaram; a seleção ampla teve 39 falhas e 27 erros, não comparados com a `main` |
+| T110 (backlog-auto) — Go-live: backend | [golive-backend.md](../backlog-auto/golive-backend.md) | 2026-11-24 | 🟡 Boot de produção pronto e `ruff` limpo; suíte completa não está verde (R-26). Removidos os `xfail` obsoletos de SEG-IA-02/03/05, o que fecha a pendência da T107 |
+| T111 (backlog-auto) — Go-live: frontend com API fixa | [golive-frontend.md](../backlog-auto/golive-frontend.md) | 2026-11-24 | ✅ Lint, 23 testes unitários e build verdes; sem mudança de código |
+| T112 (backlog-auto) — Go-live: runbook e smoke-test | [golive-runbook.md](../backlog-auto/golive-runbook.md) | 2026-11-24 | 🟡 Entregue; `smoke.sh` só validado com `bash -n` (R-27) |
 | Assets oficiais de marca organizados para o frontend | `03_frontend/public/brand/logos/` | 2026-08-11 | ✅ Organizado — 4 variantes JPEG da marca foram movidas da raiz do repositório para uma pasta canônica de branding com nomes semânticos; a aplicação na interface ficou formalizada na BL-41 |
 | Pauta da sessão de validação das lacunas (entregável de agente para HT-01) | [pauta-validacao-lacunas.md](pauta-validacao-lacunas.md) | 2026-08-07 | ✅ Usada — **Bloco 1 respondido em 2026-09-10** (lacunas #2, #3 e #9), gerando DEC-26/DEC-27/DEC-28 e a tarefa BL-42. Blocos 2, 3 e 4 seguem pendentes |
 | Ata de validação das lacunas — Bloco 1 (HT-01/BL-18) | [ata-validacao-lacunas.md](ata-validacao-lacunas.md), [decisoes.md](decisoes.md) (DEC-26/27/28), [arquitetura.md](../arquitetura.md) (ADR-14/ADR-15) | 2026-09-10 | ✅ Registrada — offline fora de escopo (online-first confirmado), perfil `auxiliar` no RBAC e ausência de assinatura ICP-Brasil; RNF-02 fechado, risco R-07 encerrado, R-06 rebaixado |

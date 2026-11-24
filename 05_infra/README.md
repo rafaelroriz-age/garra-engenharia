@@ -260,3 +260,14 @@ O benchmark dos pipelines finais (`00_docs/backlog-auto/benchmark-pipelines-fina
 
 - Entregues: `local/garra-local.ps1` (runtime, `install`/`uninstall`/`agente`) e `local/garra-agente.ps1` (túnel, `api.json`, snapshot, backup) — [agente-inicializacao.md](../00_docs/backlog-auto/agente-inicializacao.md); storage em disco com download assinado (`STORAGE_PROVEDOR`, T80) — [storage-local.md](../00_docs/backlog-auto/storage-local.md).
 - Pendentes: importação do Render (T84, `importar-render.ps1` ainda inexistente), aposentadoria de `render.yaml` e da seção "Deploy em produção (Render)" (T85), E2E do modo leitura (T86), Neon (T87/T88, sem DEC-58 registrada). Até lá a seção do Render acima continua vigente.
+
+## Go-live no Render + GitHub Pages (T110–T112, DEC-60 proposta)
+
+Alvo atual do go-live. Enquanto a DEC-60 não for aprovada, vale como proposta; as seções acima que dão o Render como aposentado (DEC-57) descrevem o estado anterior.
+
+- Passo a passo e rollback: [golive-runbook.md](../00_docs/backlog-auto/golive-runbook.md). Variáveis: §5 de [golive-backend.md](../00_docs/backlog-auto/golive-backend.md) e [.env.render.example](.env.render.example).
+- Backend: `04_backend/Dockerfile.render` + `render-start.sh`; Render Disk em `/var/data` e `STORAGE_LOCAL_DIR=/var/data/storage`.
+- Recomendado: `SEED_ON_STARTUP=true` com `ADMIN_SENHA` (12+ caracteres), ainda ausentes do `.env.render.example`. Definir `LEGENDA_IA_RAG_ATIVO=false` (R-21, R-27).
+- Front: a URL da API vem da variável de repositório `API_URL_PROD` (com `/api/v1`); não é mais preciso editar o `deploy-pages.yml`.
+- `sync-deploy-branches.yml` foi reativado: propaga `main` para `main_back`.
+- Pós-deploy: `API_URL=<raiz do backend> ADMIN_EMAIL=... ADMIN_SENHA=... bash 05_infra/smoke/smoke.sh`.

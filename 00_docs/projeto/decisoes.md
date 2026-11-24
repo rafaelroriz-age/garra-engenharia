@@ -3,7 +3,7 @@ title: Registro de Decisões — Sistema de Automação de Relatórios Prediais
 type: gestao
 status: ativo
 owner: Garra Engenharia
-last_updated: 2026-09-17
+last_updated: 2026-11-24
 ---
 
 # Registro de Decisões (Decision Log)
@@ -792,3 +792,14 @@ last_updated: 2026-09-17
 | **Decisão proposta** | (P1) `chamadas_ia.resposta` é anulada (SQL `NULL`) após o TTL por `python -m app.scripts.limpar_chamadas_ia` (dry-run por padrão, `--aplicar` grava); com `LEGENDA_IA_CACHE_TTL_H=0` o script usa 720 h e avisa. Cache nunca trata `resposta` nula (SQL `NULL` ou JSON `null`) como acerto. Sugestão a decidir: `registrar()` gravar SQL `NULL` em vez de JSON `null`. (P2) `PUT /responsaveis/{id}` só para `auditor`, atualização parcial; `nome` e `tipo` não aceitam `null`; `usuario_id` deve existir (422) e ser exclusivo (409); sem regra de unicidade de e-mail/CPF. (P3) Com `cidade` e `uf` preenchidas em `Edificacao`, elas prevalecem sobre o endereço na `local_emissao`; só `cidade` prevalece e sai sem UF se o endereço for de outra cidade; só `uf` é ignorada; os parsers de endereço ficam como fallback para dados antigos. (P4) Logout em uma aba limpa o cache de dados do SW nas demais pelo evento `storage` da chave do token. |
 | **Consequências** | **Lacunas fechadas em 2026-11-18:** `POST /responsaveis` com `usuario_id` já vinculado devolve 409 (inexistente, 422), mesma regra do `PUT` (T103); `PUT /edificacoes/{id}` preserva `cidade`/`uf` ausentes e só limpa com `null`/vazio explícito (T104); `registrar()` grava SQL `NULL` em `chamadas_ia.resposta` via `JSONB(none_as_null=True)`, sem migration (T105; linhas legadas com JSON `null` seguem inofensivas). Aba fechada no logout não é limpa (TTL de 5 min limita). Substitui a consequência «logout em outra aba não limpa o cache» da DEC-56 e a de retenção da DEC-52. |
 | **Referência** | `00_docs/backlog-auto/ia-retencao-chamadas.md`, `responsaveis-update.md`, `edificacao-cidade-uf.md`, `pwa-logout-multiaba.md` |
+
+## DEC-60 — Go-live no Render + GitHub Pages com API fixa (proposta de T108, T110–T112)
+
+| Campo | Valor |
+|---|---|
+| **Data** | 2026-11-24 |
+| **Status** | Proposta (aguarda aprovação do dono). Se aprovada, substitui o alvo de produção da DEC-57 (PC) e da DEC-58 (Neon) |
+| **Contexto** | O bloco GL do backlog-auto, os commits e o `sync-deploy-branches.yml` citam "DEC-59" para o go-live no Render, mas a DEC-59 registrada neste documento trata de outro assunto e nenhuma decisão registrava a volta ao Render. Esta entrada dá número próprio a ela; onde o go-live cita DEC-59, ler DEC-60. |
+| **Decisão proposta** | (P1) Backend (`04_backend/Dockerfile.render`) e PostgreSQL no Render; front estático no GitHub Pages com API fixa (variável de repositório `API_URL_PROD`), sem descoberta nem modo leitura. (P2) Storage `local` em Render Disk (`STORAGE_LOCAL_DIR=/var/data/storage`) ou `s3`. (P3) O container inicia como root só para preparar o diretório do disco e roda o uvicorn como `appuser` via `setpriv` (T110). (P4) Seeds idempotentes no boot com `SEED_ON_STARTUP=true`, que fora de dev exige `ADMIN_SENHA` forte; `seed_admin` nunca usa senha padrão fora de dev/teste. (P5) Todo push em `main` é propagado para `main_back` pela API de merge do GitHub. |
+| **Consequências** | Disco persistente exige plano pago. Nada foi validado no Render real. O runtime no PC, o Neon e o modo leitura deixam de ser o caminho de produção, mas o código permanece. |
+| **Referência** | `00_docs/backlog-auto/golive-backend.md`, `golive-frontend.md`, `golive-runbook.md`, `legenda-ia-retry-after.md` |

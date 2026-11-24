@@ -3,7 +3,7 @@ title: Registro de Riscos — Sistema de Automação de Relatórios Prediais
 type: gestao
 status: ativo
 owner: Garra Engenharia
-last_updated: 2026-09-17
+last_updated: 2026-11-24
 ---
 
 # Registro de Riscos
@@ -318,3 +318,25 @@ last_updated: 2026-09-17
 | **Mitigação** | Decidir na IA-07 (DEC-53 e LGPD) entre manter a anonimização ou restringir a busca ao mesmo contrato/cliente; revisar `--dry-run --amostras` antes de ingerir em produção; concluir T66/T67 e rodar o harness live com `--rag 3` contra o baseline; manter `LEGENDA_IA_RAG_ATIVO=false` em ambientes com dados reais até lá. |
 | **Gatilho de escalada** | Ligar o RAG em produção sem decisão de LGPD, ou achar nome de cliente em trecho ou few-shot |
 | **Responsável** | Engenheiro Backend / Arquiteto |
+
+### R-26 — Suíte completa do backend não está verde no go-live
+
+| Campo | Valor |
+|---|---|
+| **Origem** | T110 e T108 (2026-11-24), em [golive-backend.md](../backlog-auto/golive-backend.md) |
+| **Descrição** | Última rodada completa em banco limpo: 865 passed, 24 failed, 7 skipped, 4 xfailed. Houve correções depois e a suíte não foi rodada inteira de novo (falta de memória); esperam-se cerca de 19 falhas (16 de ordem/event loop, 2 do volume do container, 1 de versão do zlib). O CI usa `--maxfail=1` e pode parar na primeira. `garra_engenharia_test` está poluído. |
+| **Probabilidade / Impacto** | Alta / Média |
+| **Mitigação** | Corrigir o event loop entre módulos (engine por loop ou `NullPool` nos testes), comparar o texto decifrado no vetor de `test_snapshot`, recriar o banco de teste e acompanhar o CI na T113. |
+| **Gatilho de escalada** | CI vermelho após o envio da `main` |
+| **Responsável** | Engenheiro Backend |
+
+### R-27 — Go-live não validado no ambiente real e checklist de env incompleto
+
+| Campo | Valor |
+|---|---|
+| **Origem** | T110, T111, T112 (2026-11-24) |
+| **Descrição** | Permissão do Render Disk testada só com volume Docker; `smoke.sh` validado só com `bash -n`; login e rotas sob o basePath conferidos só no build estático. `05_infra/.env.render.example` não lista `SEED_ON_STARTUP`/`ADMIN_SENHA`, trata o seed como comando manual e traz `LEGENDA_IA_RAG_ATIVO=true` (também o padrão do código), contra a mitigação do R-21. |
+| **Probabilidade / Impacto** | Média / Alta |
+| **Mitigação** | No Render, definir `LEGENDA_IA_RAG_ATIVO=false` até a decisão de LGPD; seguir a §5 de `golive-backend.md` para as variáveis; corrigir o `.env.render.example` em tarefa própria; conferir `GET /health` com `storage: ok` e rodar o smoke-test após o deploy. |
+| **Gatilho de escalada** | `storage: unavailable`, smoke-test com falha ou dados reais com RAG ligado |
+| **Responsável** | Engenheiro DevOps |
