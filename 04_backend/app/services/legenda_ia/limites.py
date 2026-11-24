@@ -28,15 +28,17 @@ _INTERVALO_EXPURGO_SEGUNDOS = 60
 
 
 class LimiteLegendaIAExcedido(DomainError):
-    """429 RFC 7807. `retry_after` também vai no corpo: o handler global não repassa headers."""
+    """429 RFC 7807. `retry_after` vai no corpo e no header `Retry-After` (inteiro >= 1)."""
 
     def __init__(self, retry_after: int) -> None:
+        retry_after = max(1, math.ceil(retry_after))
         super().__init__(
             f"Limite de geração de legenda por IA excedido. Tente novamente em {retry_after} segundos.",
             type_suffix="legenda-ia-limite-excedido",
             title="Limite de legenda por IA excedido",
             status_code=429,
             errors=[{"field": "retry_after_segundos", "message": str(retry_after)}],
+            headers={"Retry-After": str(retry_after)},
         )
         self.retry_after = retry_after
 
