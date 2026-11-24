@@ -1063,7 +1063,7 @@ Contexto: a T19 (BL-11, DEC-39) deixou pendente o limite de corpo da requisiçã
 ```
 
 ### T107 · Legenda IA: limpar os xfail estritos de test_seguranca_legenda_ia.py que o código já cumpre
-- **Status:** doing
+- **Status:** done
 - **Origem:** T35
 - **Papel:** Engenheiro Backend
 - **Depende:** —
