@@ -48,7 +48,6 @@ export default function LoginPage() {
       <div aria-hidden="true" className="h-[3px] w-full bg-primary" />
       <CardHeader className="space-y-3 pb-5">
         <Logo variant="principal" className="mx-auto mb-2 lg:hidden" />
-        <span className="rotulo">Acesso restrito</span>
         <CardTitle className="display-wide text-2xl font-bold">Acessar sua conta</CardTitle>
         <CardDescription>Informe suas credenciais para continuar.</CardDescription>
       </CardHeader>

@@ -1,10 +1,9 @@
 import { Logo } from "@/components/brand/logo";
 import { RegistroMarks } from "@/components/prancha/registro-marks";
-import { Stamp } from "@/components/prancha/stamp";
 
 /**
  * Layout de autenticação "prancha": à esquerda (desktop) uma folha em tinta
- * com malha milimetrada e o selo/carimbo da prancha; à direita o formulário
+ * com malha milimetrada e o selo da prancha; à direita o formulário
  * sobre papel milimetrado. No mobile, só o formulário.
  */
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -17,29 +16,19 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <Logo variant="horizontal" />
 
         <div className="max-w-xl">
-          <p className="rotulo text-sidebar-muted">Acesso restrito</p>
-          <p className="display-wide mt-4 text-4xl font-bold uppercase leading-[1.02] tracking-tight xl:text-5xl">
+          <p className="display-wide text-4xl font-bold uppercase leading-[1.02] tracking-tight xl:text-5xl">
             Sistema de Automação de Relatórios Prediais
           </p>
           <div aria-hidden="true" className="mt-6 h-[3px] w-16 bg-sinal" />
         </div>
 
         {/* Selo da prancha (title block) */}
-        <div className="flex items-end justify-between gap-6">
-          <dl className="grid w-full max-w-md grid-cols-3 border border-sidebar-border text-left">
-            <div className="col-span-3 border-b border-sidebar-border px-3 py-2">
-              <dt className="rotulo text-[0.625rem] text-sidebar-muted">Escopo</dt>
-              <dd className="dado mt-0.5 text-sm">RFO · LTIP · Vistoria cautelar</dd>
-            </div>
-            <div className="col-span-3 border-t border-sidebar-border px-3 py-2">
-              <dt className="rotulo text-[0.625rem] text-sidebar-muted">Entrega</dt>
-              <dd className="dado mt-0.5 text-sm">Relatório em PDF e DOCX editável</dd>
-            </div>
-          </dl>
-          <Stamp tone="sinal" className="shrink-0">
-            Acesso restrito
-          </Stamp>
-        </div>
+        <dl className="w-full max-w-md border border-sidebar-border text-left">
+          <div className="px-3 py-2">
+            <dt className="rotulo text-[0.625rem] text-sidebar-muted">Entrega</dt>
+            <dd className="dado mt-0.5 text-sm">Relatório em PDF e DOCX editável</dd>
+          </div>
+        </dl>
       </aside>
 
       <div className="prancha-grid relative flex items-center justify-center px-4 py-10 sm:px-8">
