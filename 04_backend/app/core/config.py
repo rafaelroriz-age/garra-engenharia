@@ -12,14 +12,9 @@ from typing import Literal
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-<<<<<<< ours
-=======
-# Senha usada pelo `seed_admin` só em desenvolvimento/teste, quando ADMIN_SENHA não é definida.
-SENHA_ADMIN_PADRAO_DEV = "Admin@Garra123"
 # Origem do front publicado (GitHub Pages, DEC-59): sempre liberada no CORS quando no Render.
 ORIGEM_FRONT_PRODUCAO = "https://rafaelroriz-age.github.io"
 
->>>>>>> theirs
 
 class Settings(BaseSettings):
     """Configurações da aplicação lidas do ambiente (case-insensitive)."""
