@@ -2065,7 +2065,7 @@ Siga a 'Regra de pronto' do BACKLOG.md. Papel: Engenheiro DevOps. Compare 04_bac
 ```
 
 ### T116 · Portal do Cliente: selo "vigente" na lista de documentos
-- **Status:** doing
+- **Status:** done
 - **Origem:** T109
 - **Papel:** Engenheiro Frontend
 - **Depende:** —
