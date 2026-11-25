@@ -5,12 +5,21 @@ Em desenvolvimento local (fora de Docker), copie `04_backend/.env.example` para
 `04_backend/.env`. Ao rodar via `docker compose` (05_infra/), as variáveis são
 injetadas diretamente pelo serviço `backend` e este arquivo `.env` não é necessário.
 """
+import os
 from functools import lru_cache
 from typing import Literal
 
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+<<<<<<< ours
+=======
+# Senha usada pelo `seed_admin` só em desenvolvimento/teste, quando ADMIN_SENHA não é definida.
+SENHA_ADMIN_PADRAO_DEV = "Admin@Garra123"
+# Origem do front publicado (GitHub Pages, DEC-59): sempre liberada no CORS quando no Render.
+ORIGEM_FRONT_PRODUCAO = "https://rafaelroriz-age.github.io"
+
+>>>>>>> theirs
 
 class Settings(BaseSettings):
     """Configurações da aplicação lidas do ambiente (case-insensitive)."""
@@ -108,7 +117,12 @@ class Settings(BaseSettings):
     @property
     def cors_origins_list(self) -> list[str]:
         """Lista de origens permitidas para CORS a partir da string separada por vírgulas."""
-        return [origin.strip() for origin in self.backend_cors_origins.split(",") if origin.strip()]
+        origens = [o.strip().rstrip("/") for o in self.backend_cors_origins.split(",") if o.strip()]
+        # O Render define RENDER=true. Evita que um BACKEND_CORS_ORIGINS errado no painel
+        # bloqueie o login ("Falha de conexão") no front publicado.
+        if os.environ.get("RENDER") and ORIGEM_FRONT_PRODUCAO not in origens:
+            origens.append(ORIGEM_FRONT_PRODUCAO)
+        return origens
 
     @property
     def is_development(self) -> bool:
