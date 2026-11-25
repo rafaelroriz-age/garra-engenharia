@@ -2035,7 +2035,7 @@ Siga a 'Regra de pronto' do BACKLOG.md. Papel: Engenheiro DevOps. O DONO AUTORIZ
 ```
 
 ### T114 · Go-live: reproduzir e deixar verdes os jobs E2E e Trivy do CI
-- **Status:** todo
+- **Status:** doing
 - **Origem:** T113
 - **Papel:** Engenheiro DevOps
 - **Depende:** —
@@ -2050,7 +2050,7 @@ Siga a 'Regra de pronto' do BACKLOG.md. Papel: Engenheiro DevOps. Não envie nad
 ```
 
 ### T115 · Go-live: conferir variáveis de ambiente entre config.py, exemplo do Render e runbook
-- **Status:** todo
+- **Status:** doing
 - **Origem:** DEC-59
 - **Papel:** Engenheiro DevOps
 - **Depende:** —
@@ -2065,7 +2065,7 @@ Siga a 'Regra de pronto' do BACKLOG.md. Papel: Engenheiro DevOps. Compare 04_bac
 ```
 
 ### T116 · Portal do Cliente: selo "vigente" na lista de documentos
-- **Status:** todo
+- **Status:** doing
 - **Origem:** T109
 - **Papel:** Engenheiro Frontend
 - **Depende:** —
@@ -2080,7 +2080,7 @@ Siga a 'Regra de pronto' do BACKLOG.md. Papel: Engenheiro Frontend. GET /portal/
 ```
 
 ### T117 · Compose de produção (VPS): validar o YAML e fechar o R-16
-- **Status:** todo
+- **Status:** doing
 - **Origem:** R-16
 - **Papel:** Engenheiro DevOps
 - **Depende:** —
