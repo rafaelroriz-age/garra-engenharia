@@ -110,7 +110,10 @@ export default function PortalDocumentosPage() {
                 <TableCell>
                   <Badge variant="outline">{relatorio.tipo}</Badge>
                 </TableCell>
-                <TableCell>{relatorio.versao}</TableCell>
+                <TableCell className="space-x-2">
+                  <span>{relatorio.versao}</span>
+                  {relatorio.vigente && <Badge variant="default">Vigente</Badge>}
+                </TableCell>
                 <TableCell>
                   {relatorio.emitido_em
                     ? new Date(relatorio.emitido_em).toLocaleDateString("pt-BR")
