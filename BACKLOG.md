@@ -2033,3 +2033,63 @@ Siga a 'Regra de pronto' do BACKLOG.md (sem push, 'Refs DEC-59'). Papel: Engenhe
 ```text
 Siga a 'Regra de pronto' do BACKLOG.md. Papel: Engenheiro DevOps. O DONO AUTORIZOU explicitamente, nesta tarefa e só nela, enviar a branch main à origin (comando `git push origin main`, sem --force) e liberou a barreira com BACKLOG_ESCRITA=1. Passos: `git status` limpo; revise `git log origin/main..main --oneline`; confirme que não há .env, chaves ou dumps no diff; envie a main; acompanhe ci.yml, deploy-pages.yml e sync-deploy-branches.yml (a mudança em sync-deploy-branches.yml propaga main para main_back via API de merge). Se o Pages falhar porque Source não está em GitHub Actions, registre como ação humana. Se o sync reportar conflito, registre no Doc. Corrija falhas de CI causadas pelo código e reenvie. Nunca toque em main_front/staging_*, nunca force, não mexa no Render.
 ```
+
+### T114 · Go-live: reproduzir e deixar verdes os jobs E2E e Trivy do CI
+- **Status:** todo
+- **Origem:** T113
+- **Papel:** Engenheiro DevOps
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** alta
+- **Toca:** .github/workflows/ci.yml, 03_frontend/e2e, 04_backend/Dockerfile, 04_backend/requirements.txt, 00_docs/backlog-auto/golive-ci-e2e-trivy.md
+- **Doc:** 00_docs/backlog-auto/golive-ci-e2e-trivy.md
+- **Pronto:** os jobs `e2e` e `docker-build-scan` do ci.yml foram reproduzidos localmente; falhas causadas pelo código ou pelo workflow corrigidas; o que não puder ser reproduzido está registrado no Doc com a causa.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md. Papel: Engenheiro DevOps. Não envie nada à origem. Contexto: esses dois jobs vinham sendo pulados porque o backend falhava (veja 00_docs/backlog-auto/golive-envio.md), e agora o sync para main_back só roda com o CI verde. Leia .github/workflows/ci.yml, reproduza `docker-build-scan` (build e Trivy com a mesma severidade) e `e2e` com containers descartáveis, corrija o que for defeito real sem silenciar achados nem enfraquecer testes (se um achado do Trivy não tiver correção, registre e proponha a exceção no Doc). Registre comandos e saídas no Doc.
+```
+
+### T115 · Go-live: conferir variáveis de ambiente entre config.py, exemplo do Render e runbook
+- **Status:** todo
+- **Origem:** DEC-59
+- **Papel:** Engenheiro DevOps
+- **Depende:** —
+- **Ambiente:** offline
+- **Dificuldade:** baixa
+- **Toca:** 05_infra/.env.render.example, 00_docs/backlog-auto/golive-runbook.md, 00_docs/backlog-auto/golive-env-checklist.md
+- **Doc:** 00_docs/backlog-auto/golive-env-checklist.md
+- **Pronto:** toda variável obrigatória em produção de app/core/config.py e do golive-backend.md consta no .env.render.example e no runbook; divergências corrigidas e listadas no Doc, incluindo SEED_ON_STARTUP e ADMIN_SENHA.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md. Papel: Engenheiro DevOps. Compare 04_backend/app/core/config.py, 04_backend/render-start.sh, 00_docs/backlog-auto/golive-backend.md (seção 5), 05_infra/.env.render.example e 00_docs/backlog-auto/golive-runbook.md. Corrija só o exemplo e o runbook, sem segredos. O serviço do Render observa a branch main_back. Registre o resultado no Doc.
+```
+
+### T116 · Portal do Cliente: selo "vigente" na lista de documentos
+- **Status:** todo
+- **Origem:** T109
+- **Papel:** Engenheiro Frontend
+- **Depende:** —
+- **Ambiente:** offline
+- **Dificuldade:** baixa
+- **Toca:** 03_frontend/app/portal, 03_frontend/lib, 00_docs/backlog-auto/portal-selo-vigente.md
+- **Doc:** 00_docs/backlog-auto/portal-selo-vigente.md
+- **Pronto:** a página de documentos do portal mostra um selo quando o item vem com `vigente: true`; `npm run lint`, `npm run test:unit` e `npm run build` verdes.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md. Papel: Engenheiro Frontend. GET /portal/relatorios agora devolve `vigente` (00_docs/backlog-auto/T109-portal-versao-vigente.md). Em 03_frontend/app/portal/documentos/page.tsx e no tipo correspondente, mostre um selo 'Vigente' reaproveitando os componentes existentes, sem mudar regras nem ordenação. Em Git Bash use MSYS_NO_PATHCONV=1 se definir NEXT_PUBLIC_BASE_PATH. Registre no Doc.
+```
+
+### T117 · Compose de produção (VPS): validar o YAML e fechar o R-16
+- **Status:** todo
+- **Origem:** R-16
+- **Papel:** Engenheiro DevOps
+- **Depende:** —
+- **Ambiente:** docker
+- **Dificuldade:** baixa
+- **Toca:** 05_infra/docker-compose.prod.yml, 05_infra/README.md, 00_docs/backlog-auto/compose-prod-yaml.md
+- **Doc:** 00_docs/backlog-auto/compose-prod-yaml.md
+- **Pronto:** `docker compose -f docker-compose.prod.yml config -q` passa com variáveis de teste; Doc propõe o fechamento do R-16 ou descreve o erro restante.
+- **Prompt:**
+```text
+Siga a 'Regra de pronto' do BACKLOG.md. Papel: Engenheiro DevOps. Leia o R-16 em 00_docs/projeto/riscos.md. Valide 05_infra/docker-compose.prod.yml com `docker compose ... config -q` usando variáveis de teste fora do repositório, sem subir containers. Corrija se preciso e ajuste a nota correspondente no 05_infra/README.md. Não edite riscos.md. Registre no Doc.
+```
