@@ -86,7 +86,7 @@ services:
       - garra-net
 
   backend:
-    image: ghcr.io/${GITHUB_REPOSITORY:-rafaelroriz-age/garra-engenharia}/backend:${IMAGE_TAG:?defina IMAGE_TAG (ex.: v1.0.0 ou staging-<sha>)}
+    image: "ghcr.io/${GITHUB_REPOSITORY:-rafaelroriz-age/garra-engenharia}/backend:${IMAGE_TAG:?defina IMAGE_TAG (ex.: v1.0.0 ou staging-<sha>)}"
     container_name: garra-backend
     restart: unless-stopped
     environment:
