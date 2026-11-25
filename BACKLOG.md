@@ -2050,7 +2050,7 @@ Siga a 'Regra de pronto' do BACKLOG.md. Papel: Engenheiro DevOps. Não envie nad
 ```
 
 ### T115 · Go-live: conferir variáveis de ambiente entre config.py, exemplo do Render e runbook
-- **Status:** doing
+- **Status:** done
 - **Origem:** DEC-59
 - **Papel:** Engenheiro DevOps
 - **Depende:** —
