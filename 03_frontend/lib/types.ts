@@ -441,6 +441,8 @@ export interface PortalRelatorio {
   contrato_numero: string;
   edificacao_id: UUID;
   edificacao_nome?: string | null;
+  /** Versão mais alta do mesmo (inspecao_id, tipo) visível ao cliente (T109). */
+  vigente: boolean;
 }
 
 /** Resposta de `GET /portal/relatorios/{id}/download/{formato}` — URL pré-assinada. */
