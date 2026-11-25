@@ -2080,7 +2080,7 @@ Siga a 'Regra de pronto' do BACKLOG.md. Papel: Engenheiro Frontend. GET /portal/
 ```
 
 ### T117 · Compose de produção (VPS): validar o YAML e fechar o R-16
-- **Status:** doing
+- **Status:** done
 - **Origem:** R-16
 - **Papel:** Engenheiro DevOps
 - **Depende:** —
