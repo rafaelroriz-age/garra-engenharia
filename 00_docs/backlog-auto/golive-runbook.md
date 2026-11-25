@@ -14,7 +14,7 @@
 3. **Criar o serviço web** (New > Web Service > Docker): repositório `rafaelroriz-age/garra-engenharia`, **branch `main_back`** (recebe a `main` automaticamente depois que o CI passa), Dockerfile Path `./04_backend/Dockerfile.render`, Docker Build Context `./04_backend`, Health Check Path `/health`. Nome sugerido `garra-backend` (a URL padrão do front é `https://garra-backend.onrender.com`; se o Render der outro hostname, use-o no passo 7).
 4. **Render Disk persistente**: no serviço, Disks > Add Disk, Mount Path `/var/data` (tamanho conforme o volume de fotos). Disco exige plano pago. Sem ele, os arquivos somem a cada deploy.
 5. **Variáveis de ambiente** (Environment): preencher conforme `05_infra/.env.render.example`. Obrigatórias: `ENVIRONMENT=production`, `RUN_MIGRATIONS_ON_STARTUP=true` (o `preDeployCommand` do render.yaml antigo não existe mais; as migrations rodam no boot), `BACKEND_CORS_ORIGINS=https://rafaelroriz-age.github.io` (sem path), `POSTGRES_*`, `JWT_SECRET_KEY` (aleatório, longo), `STORAGE_PROVEDOR=local`, `STORAGE_LOCAL_DIR=/var/data/storage`. Salve e aguarde o deploy; confira os logs (migrations e "Application startup complete").
-6. **Admin inicial** (só se o banco for novo): Shell do serviço no Render, `ADMIN_EMAIL=... ADMIN_SENHA=... python -m app.scripts.seed_admin`. Use senha própria; o padrão do script não serve em produção.
+6. **Admin inicial e gabarito** (só se o banco for novo): no Environment, definir `SEED_ON_STARTUP=true` e `ADMIN_SENHA` (12+ caracteres, segredo próprio, nunca o padrão de dev); o boot roda os seeds idempotentes e cria o admin. Confira nos logs "Seed do admin no boot". Alternativa manual, se preferir não usar a flag: Shell do serviço, `ADMIN_EMAIL=... ADMIN_SENHA=... python -m app.scripts.seed_admin`.
 7. **GitHub Pages**: Settings > Pages > Build and deployment > Source = **GitHub Actions**. Em Settings > Secrets and variables > Actions > **Variables**, criar `API_URL_PROD` = `https://<host-do-backend>/api/v1` (o `deploy-pages.yml` usa esse valor, com fallback `https://garra-backend.onrender.com/api/v1`). O `NEXT_PUBLIC_BASE_PATH` já é `/garra-engenharia` no workflow.
 8. **Publicar o front**: o push na `main` com mudança em `03_frontend/**` dispara o workflow; sem mudança, rode manualmente Actions > "Deploy frontend (GitHub Pages)" > Run workflow. Confirme que a URL `https://rafaelroriz-age.github.io/garra-engenharia/` abre.
 9. **Smoke-test**, de qualquer máquina com bash e curl:
@@ -34,7 +34,7 @@
 - `BACKEND_CORS_ORIGINS` leva só a origem (`https://rafaelroriz-age.github.io`), nunca `/garra-engenharia`.
 - Plano gratuito do Render dorme após inatividade e não tem disco; para fotos persistentes usar plano pago ou `STORAGE_PROVEDOR=s3`.
 - O `20930f5^:render.yaml` é só referência; não recriar na raiz (DEC-09).
-- Não validado: `STORAGE_LOCAL_DIR` e o seed dependem do que T110 confirmar em `app/core/config.py` (o padrão do código é `../05_infra/local/storage`, por isso o runbook exige sobrescrever).
+- `STORAGE_LOCAL_DIR` confirmado em `app/core/config.py` (padrão `../05_infra/local/storage`, por isso o passo 5 exige `/var/data/storage`). Seed no boot: flag `SEED_ON_STARTUP` (passo 6), confirmada em `config.py` e `bootstrap.py`.
 
 ## Verificação feita
 
